@@ -1,0 +1,38 @@
+{
+  "name": "ssalgten",
+  "version": "0.1.0",
+  "description": "Multi-node network diagnostic aggregation system like looking.house",
+  "keywords": ["network", "diagnostic", "looking-glass", "vps", "monitoring"],
+  "homepage": "https://github.com/yourusername/SsalgTen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/SsalgTen.git"
+  },
+  "license": "MIT",
+  "author": "Your Name",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "start": "cd backend && npm start",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../agent && npm install",
+    "clean": "rimraf frontend/dist backend/dist agent/dist",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "type-check": "npm run type-check:frontend && npm run type-check:backend",
+    "type-check:frontend": "cd frontend && npm run type-check",
+    "type-check:backend": "cd backend && npm run type-check"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
