@@ -1,0 +1,41 @@
+{
+  "name": "ssalgten-agent",
+  "version": "0.1.0",
+  "description": "SsalgTen Network Diagnostic Agent",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "nodemon src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "install-service": "node scripts/install-service.js",
+    "uninstall-service": "node scripts/uninstall-service.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "network",
+    "diagnostic",
+    "agent",
+    "ping",
+    "traceroute"
+  ],
+  "author": "SsalgTen Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/uuid": "^10.0.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "uuid": "^11.1.0"
+  }
+}
