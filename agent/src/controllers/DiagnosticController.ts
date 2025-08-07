@@ -1,6 +1,19 @@
 import { Request, Response } from 'express';
 import { networkService } from '../services/NetworkService';
 import { logger } from '../utils/logger';
+import { config } from '../config';
+
+export interface DiagnosticResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+  agent?: {
+    id: string;
+    name: string;
+    location: string;
+  };
+  timestamp?: string;
+}
 
 export class DiagnosticController {
   
@@ -10,32 +23,56 @@ export class DiagnosticController {
     const { count } = req.query;
     
     if (!target) {
-      res.status(400).json({
+      const response: DiagnosticResponse = {
         success: false,
         error: 'Target parameter is required'
-      });
+      };
+      res.status(400).json(response);
       return;
     }
 
     try {
-      logger.info(`Ping request: ${target}`);
+      logger.info(`Starting ping test to ${target}`);
+      const startTime = Date.now();
       
       const result = await networkService.ping(
         target,
         count ? parseInt(count as string) : undefined
       );
       
-      res.json({
+      const duration = Date.now() - startTime;
+      
+      const response: DiagnosticResponse = {
         success: true,
-        data: result,
+        data: {
+          ...result,
+          duration,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      logger.info(`Ping test completed for ${target}: ${result.avg}ms avg`);
+      res.json(response);
     } catch (error) {
-      logger.error('Ping controller error:', error);
-      res.status(500).json({
+      logger.error(`Ping test failed for ${target}:`, error);
+      const response: DiagnosticResponse = {
         success: false,
-        error: error instanceof Error ? error.message : 'Ping failed'
-      });
+        error: error instanceof Error ? error.message : 'Ping test failed',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
     }
   }
 
@@ -45,32 +82,56 @@ export class DiagnosticController {
     const { maxHops } = req.query;
     
     if (!target) {
-      res.status(400).json({
+      const response: DiagnosticResponse = {
         success: false,
         error: 'Target parameter is required'
-      });
+      };
+      res.status(400).json(response);
       return;
     }
 
     try {
-      logger.info(`Traceroute request: ${target}`);
+      logger.info(`Starting traceroute test to ${target}`);
+      const startTime = Date.now();
       
       const result = await networkService.traceroute(
         target,
         maxHops ? parseInt(maxHops as string) : undefined
       );
       
-      res.json({
+      const duration = Date.now() - startTime;
+      
+      const response: DiagnosticResponse = {
         success: true,
-        data: result,
+        data: {
+          ...result,
+          duration,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      logger.info(`Traceroute test completed for ${target}: ${result.totalHops} hops`);
+      res.json(response);
     } catch (error) {
-      logger.error('Traceroute controller error:', error);
-      res.status(500).json({
+      logger.error(`Traceroute test failed for ${target}:`, error);
+      const response: DiagnosticResponse = {
         success: false,
-        error: error instanceof Error ? error.message : 'Traceroute failed'
-      });
+        error: error instanceof Error ? error.message : 'Traceroute test failed',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
     }
   }
 
@@ -80,32 +141,56 @@ export class DiagnosticController {
     const { count } = req.query;
     
     if (!target) {
-      res.status(400).json({
+      const response: DiagnosticResponse = {
         success: false,
         error: 'Target parameter is required'
-      });
+      };
+      res.status(400).json(response);
       return;
     }
 
     try {
-      logger.info(`MTR request: ${target}`);
+      logger.info(`Starting MTR test to ${target}`);
+      const startTime = Date.now();
       
       const result = await networkService.mtr(
         target,
         count ? parseInt(count as string) : undefined
       );
       
-      res.json({
+      const duration = Date.now() - startTime;
+      
+      const response: DiagnosticResponse = {
         success: true,
-        data: result,
+        data: {
+          ...result,
+          duration,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      logger.info(`MTR test completed for ${target}`);
+      res.json(response);
     } catch (error) {
-      logger.error('MTR controller error:', error);
-      res.status(500).json({
+      logger.error(`MTR test failed for ${target}:`, error);
+      const response: DiagnosticResponse = {
         success: false,
-        error: error instanceof Error ? error.message : 'MTR failed'
-      });
+        error: error instanceof Error ? error.message : 'MTR test failed',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
     }
   }
 
@@ -114,58 +199,128 @@ export class DiagnosticController {
     const { serverId } = req.query;
     
     try {
-      logger.info('Speedtest request started');
+      logger.info('Starting speedtest');
+      const startTime = Date.now();
       
-      // 发送开始响应
-      res.writeHead(200, {
-        'Content-Type': 'text/plain',
-        'Transfer-Encoding': 'chunked'
-      });
+      const result = await networkService.speedtest(serverId as string | undefined);
       
-      res.write('Starting speedtest...\n');
+      const duration = Date.now() - startTime;
       
-      const result = await networkService.speedtest(serverId as string);
-      
-      res.write(JSON.stringify({
+      const response: DiagnosticResponse = {
         success: true,
-        data: result,
+        data: {
+          ...result,
+          duration,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
         timestamp: new Date().toISOString()
-      }));
-      
-      res.end();
-    } catch (error) {
-      logger.error('Speedtest controller error:', error);
-      
-      const errorResponse = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Speedtest failed'
       };
       
-      if (!res.headersSent) {
-        res.status(500).json(errorResponse);
-      } else {
-        res.write(JSON.stringify(errorResponse));
-        res.end();
-      }
+      logger.info(`Speedtest completed: ${result.download}Mbps down, ${result.upload}Mbps up`);
+      res.json(response);
+    } catch (error) {
+      logger.error('Speedtest failed:', error);
+      const response: DiagnosticResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Speedtest failed',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
     }
   }
 
   // 网络信息
   async networkInfo(req: Request, res: Response): Promise<void> {
     try {
-      const info = await networkService.getNetworkInfo();
+      logger.info('Getting network information');
       
-      res.json({
+      const result = await networkService.getNetworkInfo();
+      
+      const response: DiagnosticResponse = {
         success: true,
-        data: info,
+        data: {
+          ...result,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      logger.info('Network information retrieved');
+      res.json(response);
     } catch (error) {
-      logger.error('Network info error:', error);
-      res.status(500).json({
+      logger.error('Failed to get network info:', error);
+      const response: DiagnosticResponse = {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get network info'
-      });
+        error: error instanceof Error ? error.message : 'Failed to get network info',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
+    }
+  }
+
+  // 连接性测试
+  async connectivity(req: Request, res: Response): Promise<void> {
+    try {
+      logger.info('Starting connectivity test');
+      const startTime = Date.now();
+      
+      const result = await networkService.testConnectivity();
+      
+      const duration = Date.now() - startTime;
+      
+      const response: DiagnosticResponse = {
+        success: true,
+        data: {
+          connectivity: result,
+          duration,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      logger.info('Connectivity test completed');
+      res.json(response);
+    } catch (error) {
+      logger.error('Connectivity test failed:', error);
+      const response: DiagnosticResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Connectivity test failed',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
     }
   }
 }

@@ -97,13 +97,22 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     getDiskUsage()
   ]);
   
+  const memoryInfo = getMemoryUsage();
+  
   return {
     platform: `${os.type()} ${os.release()}`,
     arch: os.arch(),
+    hostname: os.hostname(),
+    version: os.version ? os.version() : os.release(),
     cpuUsage,
-    memoryUsage: getMemoryUsage(),
-    diskUsage,
+    memoryUsage: memoryInfo.used / memoryInfo.total * 100, // 转换为百分比
+    diskUsage: diskUsage.total > 0 ? diskUsage.used / diskUsage.total * 100 : 0, // 转换为百分比
+    memory: memoryInfo,
+    disk: diskUsage,
     networkInterface: getNetworkInterface(),
-    uptime: Math.round(os.uptime())
+    uptime: Math.round(os.uptime()),
+    loadAverage: os.loadavg(),
+    cpuCount: os.cpus().length,
+    nodeVersion: process.version
   };
 };

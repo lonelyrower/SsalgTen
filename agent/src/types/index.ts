@@ -39,19 +39,26 @@ export interface DiagnosticResult {
 export interface SystemInfo {
   platform: string;
   arch: string;
+  hostname: string;
+  version: string;
   cpuUsage: number;
-  memoryUsage: {
+  memoryUsage: number; // 百分比
+  diskUsage: number;   // 百分比
+  memory: {
     total: number;
     used: number;
     free: number;
   };
-  diskUsage: {
+  disk: {
     total: number;
     used: number;
     free: number;
   };
   networkInterface: string;
   uptime: number;
+  loadAverage: number[];
+  cpuCount: number;
+  nodeVersion: string;
 }
 
 export interface HeartbeatData {

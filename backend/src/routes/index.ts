@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { ApiResponse } from '@/types';
+import { nodeController } from '@/controllers/NodeController';
 
 const router = Router();
 
@@ -32,7 +33,8 @@ router.get('/info', (req: Request, res: Response) => {
         health: '/api/health',
         info: '/api/info',
         nodes: '/api/nodes',
-        diagnostics: '/api/diagnostics',
+        stats: '/api/stats',
+        agent: '/api/agent',
         admin: '/api/admin'
       },
       features: [
@@ -47,24 +49,22 @@ router.get('/info', (req: Request, res: Response) => {
   res.json(response);
 });
 
-// 节点相关路由（占位符）
-router.get('/nodes', (req: Request, res: Response) => {
-  const response: ApiResponse = {
-    success: true,
-    data: [],
-    message: 'Node management endpoints - Coming soon'
-  };
-  res.json(response);
-});
+// 节点管理路由
+router.get('/nodes', nodeController.getAllNodes.bind(nodeController));
+router.get('/nodes/:id', nodeController.getNodeById.bind(nodeController));
+router.post('/nodes', nodeController.createNode.bind(nodeController));
+router.put('/nodes/:id', nodeController.updateNode.bind(nodeController));
+router.delete('/nodes/:id', nodeController.deleteNode.bind(nodeController));
 
-// 诊断相关路由（占位符）
-router.get('/diagnostics', (req: Request, res: Response) => {
-  const response: ApiResponse = {
-    success: true,
-    data: [],
-    message: 'Diagnostic tool endpoints - Coming soon'
-  };
-  res.json(response);
-});
+// 节点诊断路由
+router.get('/nodes/:id/diagnostics', nodeController.getNodeDiagnostics.bind(nodeController));
+
+// 统计信息路由
+router.get('/stats', nodeController.getNodeStats.bind(nodeController));
+
+// Agent相关路由
+router.post('/agent/register', nodeController.registerAgent.bind(nodeController));
+router.post('/agent/:agentId/heartbeat', nodeController.heartbeat.bind(nodeController));
+router.post('/agent/:agentId/diagnostic', nodeController.reportDiagnostic.bind(nodeController));
 
 export default router;

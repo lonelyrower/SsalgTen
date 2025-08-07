@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 节点模型 - 代表每个VPS节点
+model Node {
+  id          String   @id @default(cuid())
+  name        String   // 节点名称，如 "Tokyo Node"
+  hostname    String?  // 主机名
+  
+  // 地理信息
+  country     String   // 国家
+  city        String   // 城市
+  latitude    Float    // 纬度
+  longitude   Float    // 经度
+  
+  // 网络信息
+  ipv4        String?  // IPv4地址
+  ipv6        String?  // IPv6地址
+  
+  // 提供商信息
+  provider    String   // 服务提供商，如 "DigitalOcean"
+  datacenter  String?  // 数据中心信息
+  
+  // Agent信息
+  agentId     String   @unique // Agent唯一标识
+  apiKey      String   // API密钥用于认证
+  
+  // 状态信息
+  status      NodeStatus @default(UNKNOWN)
+  lastSeen    DateTime?  // 最后在线时间
+  
+  // 元数据
+  tags        String?    // 标签，JSON字符串
+  description String?    // 描述/备注
+  
+  // 系统信息
+  osType      String?    // 操作系统类型
+  osVersion   String?    // 操作系统版本
+  
+  // 时间戳
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // 关系
+  diagnosticRecords DiagnosticRecord[]
+  heartbeatLogs     HeartbeatLog[]
+  
+  @@map("nodes")
+}
+
+// 网络诊断记录
+model DiagnosticRecord {
+  id        String      @id @default(cuid())
+  nodeId    String      // 执行诊断的节点ID
+  node      Node        @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  
+  // 诊断类型和目标
+  type      DiagnosticType  // ping, traceroute, mtr, speedtest
+  target    String?         // 诊断目标，speedtest可能为空
+  
+  // 诊断结果
+  success   Boolean         // 是否成功
+  result    String          // JSON格式的结果数据
+  error     String?         // 错误信息
+  
+  // 性能指标
+  duration  Int?            // 耗时（毫秒）
+  
+  // 时间戳
+  timestamp DateTime        @default(now())
+  
+  @@map("diagnostic_records")
+}
+
+// 心跳日志
+model HeartbeatLog {
+  id        String   @id @default(cuid())
+  nodeId    String   // 节点ID
+  node      Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  
+  // 心跳数据
+  status    String   // healthy, degraded, unhealthy
+  uptime    Float?   // 运行时间（秒）
+  
+  // 系统指标
+  cpuUsage  Float?   // CPU使用率
+  memoryUsage Float? // 内存使用率
+  diskUsage Float?   // 磁盘使用率
+  
+  // 网络状态
+  connectivity Json?  // 网络连接测试结果
+  
+  // 时间戳
+  timestamp DateTime @default(now())
+  
+  @@map("heartbeat_logs")
+}
+
+// 管理员用户
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String   // bcrypt哈希
+  
+  // 用户信息
+  name      String?
+  avatar    String?
+  
+  // 权限
+  role      UserRole @default(ADMIN)
+  active    Boolean  @default(true)
+  
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+  
+  @@map("users")
+}
+
+// 系统配置
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique  // 配置键
+  value     String   // 配置值（JSON字符串）
+  
+  // 元数据
+  category  String?  // 配置分类
+  description String? // 描述
+  
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("settings")
+}
+
+// 枚举类型
+enum NodeStatus {
+  ONLINE
+  OFFLINE
+  UNKNOWN
+  MAINTENANCE
+}
+
+enum DiagnosticType {
+  PING
+  TRACEROUTE
+  MTR
+  SPEEDTEST
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+  VIEWER
+}

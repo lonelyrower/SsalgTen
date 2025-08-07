@@ -24,7 +24,7 @@ export const StatsCards = ({
       subtitle: `${onlineNodes} online`,
       icon: <Server className="h-5 w-5 text-blue-500" />,
       badge: `${uptime}% uptime`,
-      badgeVariant: parseFloat(uptime) > 90 ? 'default' : 'destructive' as const
+      badgeVariant: parseFloat(uptime) > 90 ? 'default' : 'destructive'
     },
     {
       title: 'Countries',
@@ -63,7 +63,7 @@ export const StatsCards = ({
                 {stat.title}
               </span>
             </div>
-            <Badge variant={stat.badgeVariant} className="text-xs">
+            <Badge variant={stat.badgeVariant as any} className="text-xs">
               {stat.badge}
             </Badge>
           </div>

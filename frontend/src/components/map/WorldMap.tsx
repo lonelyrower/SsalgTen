@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
+import type { NodeData } from '@/services/api';
 import 'leaflet/dist/leaflet.css';
 
 // 修复 Leaflet 默认图标问题
@@ -12,20 +13,6 @@ Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-interface NodeData {
-  id: string;
-  name: string;
-  country: string;
-  city: string;
-  latitude: number;
-  longitude: number;
-  status: 'online' | 'offline' | 'unknown';
-  provider: string;
-  ipv4?: string;
-  ipv6?: string;
-  lastPing?: number;
-}
-
 interface WorldMapProps {
   nodes?: NodeData[];
   onNodeClick?: (node: NodeData) => void;
@@ -33,9 +20,11 @@ interface WorldMapProps {
 
 // 状态对应的图标颜色
 const getMarkerColor = (status: string) => {
-  switch (status) {
+  const normalizedStatus = status.toLowerCase();
+  switch (normalizedStatus) {
     case 'online': return '#22c55e'; // green-500
     case 'offline': return '#ef4444'; // red-500
+    case 'maintenance': return '#f59e0b'; // amber-500
     default: return '#6b7280'; // gray-500
   }
 };
@@ -59,59 +48,8 @@ const createCustomIcon = (status: string) => {
 export const WorldMap = ({ nodes = [], onNodeClick }: WorldMapProps) => {
   const mapRef = useRef<any>(null);
 
-  // 默认示例节点数据
-  const defaultNodes: NodeData[] = [
-    {
-      id: '1',
-      name: 'New York Node',
-      country: 'United States',
-      city: 'New York',
-      latitude: 40.7128,
-      longitude: -74.0060,
-      status: 'online',
-      provider: 'DigitalOcean',
-      ipv4: '192.168.1.1',
-      lastPing: 23
-    },
-    {
-      id: '2', 
-      name: 'London Node',
-      country: 'United Kingdom',
-      city: 'London',
-      latitude: 51.5074,
-      longitude: -0.1278,
-      status: 'online',
-      provider: 'Vultr',
-      ipv4: '192.168.1.2',
-      lastPing: 45
-    },
-    {
-      id: '3',
-      name: 'Tokyo Node', 
-      country: 'Japan',
-      city: 'Tokyo',
-      latitude: 35.6762,
-      longitude: 139.6503,
-      status: 'offline',
-      provider: 'Linode',
-      ipv4: '192.168.1.3',
-      lastPing: 892
-    },
-    {
-      id: '4',
-      name: 'Sydney Node',
-      country: 'Australia', 
-      city: 'Sydney',
-      latitude: -33.8688,
-      longitude: 151.2093,
-      status: 'online',
-      provider: 'AWS',
-      ipv4: '192.168.1.4',
-      lastPing: 156
-    }
-  ];
-
-  const displayNodes = nodes.length > 0 ? nodes : defaultNodes;
+  // 使用传入的节点数据，如果没有则显示空地图
+  const displayNodes = nodes || [];
 
   return (
     <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
@@ -141,10 +79,14 @@ export const WorldMap = ({ nodes = [], onNodeClick }: WorldMapProps) => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-gray-900">{node.name}</h3>
                   <Badge 
-                    variant={node.status === 'online' ? 'default' : 'destructive'}
+                    variant={
+                      node.status.toLowerCase() === 'online' ? 'default' : 
+                      node.status.toLowerCase() === 'maintenance' ? 'secondary' : 
+                      'destructive'
+                    }
                     className="text-xs"
                   >
-                    {node.status}
+                    {node.status.toUpperCase()}
                   </Badge>
                 </div>
                 <div className="space-y-1 text-sm text-gray-600">
@@ -162,10 +104,22 @@ export const WorldMap = ({ nodes = [], onNodeClick }: WorldMapProps) => {
                       <span className="font-mono text-xs">{node.ipv4}</span>
                     </div>
                   )}
-                  {node.lastPing && (
+                  {node.ipv6 && (
                     <div className="flex justify-between">
-                      <span>Ping:</span>
-                      <span className="font-mono text-xs">{node.lastPing}ms</span>
+                      <span>IPv6:</span>
+                      <span className="font-mono text-xs">{node.ipv6.substring(0, 16)}...</span>
+                    </div>
+                  )}
+                  {node.lastSeen && (
+                    <div className="flex justify-between">
+                      <span>Last Seen:</span>
+                      <span className="text-xs">{new Date(node.lastSeen).toLocaleTimeString()}</span>
+                    </div>
+                  )}
+                  {node._count && (
+                    <div className="flex justify-between text-xs pt-1 border-t">
+                      <span>Records:</span>
+                      <span>{node._count.diagnosticRecords} diagnostics</span>
                     </div>
                   )}
                 </div>
