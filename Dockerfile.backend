@@ -64,4 +64,4 @@ EXPOSE 3001
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["sh", "-c", "npx prisma db push && npm start"]
+CMD ["npm", "start"]
