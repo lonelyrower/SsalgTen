@@ -4,16 +4,17 @@ import { AgentConfig } from '../types';
 
 dotenv.config();
 
-// 生成唯一的 Agent ID
+// 生成简单的 Agent ID (不依赖 uuid 包)
 const generateAgentId = (): string => {
-  const hostname = require('os').hostname();
+  const hostname = os.hostname();
   const timestamp = Date.now();
-  return `agent-${hostname}-${timestamp}`;
+  const random = Math.random().toString(36).substring(2, 8);
+  return `agent-${hostname}-${timestamp}-${random}`;
 };
 
 export const config: AgentConfig = {
   id: process.env.AGENT_ID || generateAgentId(),
-  name: process.env.NODE_NAME || 'Unknown Node',
+  name: process.env.NODE_NAME || 'Development Node',
   location: {
     country: process.env.NODE_COUNTRY || 'Unknown',
     city: process.env.NODE_CITY || 'Unknown',
