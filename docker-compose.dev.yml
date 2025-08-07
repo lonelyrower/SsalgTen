@@ -1,0 +1,55 @@
+# Docker Compose for Local Development
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Development
+  dev-database:
+    image: postgres:15-alpine
+    container_name: ssalgten-dev-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ssalgten
+      POSTGRES_USER: ssalgten
+      POSTGRES_PASSWORD: ssalgten_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - dev_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ssalgten-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ssalgten -d ssalgten"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis for Development (Optional)
+  dev-redis:
+    image: redis:7-alpine
+    container_name: ssalgten-dev-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - dev_redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ssalgten-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  ssalgten-dev-network:
+    driver: bridge
+    name: ssalgten-dev-network
+
+volumes:
+  dev_postgres_data:
+    name: ssalgten-dev-postgres-data
+  dev_redis_data:
+    name: ssalgten-dev-redis-data
