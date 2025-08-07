@@ -1,6 +1,6 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { NodeStatus } from '@prisma/client';
-import { logger } from '@/utils/logger';
+import { logger } from './logger';
 import crypto from 'crypto';
 
 // 示例节点数据

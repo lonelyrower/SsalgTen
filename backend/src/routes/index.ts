@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { ApiResponse } from '@/types';
-import { nodeController } from '@/controllers/NodeController';
+import { ApiResponse } from '../types';
+import { nodeController } from '../controllers/NodeController';
+import { authController } from '../controllers/AuthController';
+import { adminController } from '../controllers/AdminController';
+import { authenticateToken, requireAdmin, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -35,7 +38,8 @@ router.get('/info', (req: Request, res: Response) => {
         nodes: '/api/nodes',
         stats: '/api/stats',
         agent: '/api/agent',
-        admin: '/api/admin'
+        admin: '/api/admin',
+        auth: '/api/auth'
       },
       features: [
         'Multi-node network diagnostics',
@@ -66,5 +70,30 @@ router.get('/stats', nodeController.getNodeStats.bind(nodeController));
 router.post('/agent/register', nodeController.registerAgent.bind(nodeController));
 router.post('/agent/:agentId/heartbeat', nodeController.heartbeat.bind(nodeController));
 router.post('/agent/:agentId/diagnostic', nodeController.reportDiagnostic.bind(nodeController));
+
+// 认证相关路由
+router.post('/auth/login', authController.login.bind(authController));
+router.post('/auth/logout', authController.logout.bind(authController));
+router.post('/auth/refresh', authenticateToken, authController.refreshToken.bind(authController));
+
+// 用户相关路由（需要认证）
+router.get('/auth/profile', authenticateToken, authController.getProfile.bind(authController));
+router.put('/auth/password', authenticateToken, authController.changePassword.bind(authController));
+
+// 管理员相关路由（需要管理员权限）
+// 节点管理
+router.get('/admin/nodes', authenticateToken, requireAdmin, nodeController.getAllNodes.bind(nodeController));
+router.post('/admin/nodes', authenticateToken, requireAdmin, adminController.createNode.bind(adminController));
+router.put('/admin/nodes/:id', authenticateToken, requireAdmin, adminController.updateNode.bind(adminController));
+router.delete('/admin/nodes/:id', authenticateToken, requireAdmin, adminController.deleteNode.bind(adminController));
+
+// 用户管理
+router.get('/admin/users', authenticateToken, requireAdmin, adminController.getAllUsers.bind(adminController));
+router.post('/admin/users', authenticateToken, requireAdmin, adminController.createUser.bind(adminController));
+router.put('/admin/users/:id', authenticateToken, requireAdmin, adminController.updateUser.bind(adminController));
+router.delete('/admin/users/:id', authenticateToken, requireAdmin, adminController.deleteUser.bind(adminController));
+
+// 系统统计
+router.get('/admin/stats', authenticateToken, requireAdmin, adminController.getSystemStats.bind(adminController));
 
 export default router;

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { nodeService, CreateNodeInput, UpdateNodeInput } from '@/services/NodeService';
-import { ApiResponse } from '@/types';
+import { nodeService, CreateNodeInput, UpdateNodeInput } from '../services/NodeService';
+import { ApiResponse } from '../types';
 import { NodeStatus, DiagnosticType } from '@prisma/client';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 
 export class NodeController {
 

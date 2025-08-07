@@ -27,7 +27,7 @@
     "paths": {
       "@/*": ["./*"],
       "@/controllers/*": ["controllers/*"],
-      "@/middlewares/*": ["middlewares/*"],
+      "@/middleware/*": ["middleware/*"],
       "@/routes/*": ["routes/*"],
       "@/models/*": ["models/*"],
       "@/services/*": ["services/*"],

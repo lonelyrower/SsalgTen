@@ -1,6 +1,6 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { Node, NodeStatus, DiagnosticType, Prisma } from '@prisma/client';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 import crypto from 'crypto';
 
 export interface CreateNodeInput {

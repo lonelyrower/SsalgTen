@@ -2,10 +2,10 @@ import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import { corsMiddleware } from '@/middlewares/cors';
-import { logger } from '@/utils/logger';
-import router from '@/routes';
-import { ApiResponse } from '@/types';
+import { corsMiddleware } from './middleware/cors';
+import { logger } from './utils/logger';
+import router from './routes';
+import { ApiResponse } from './types';
 
 // 加载环境变量
 dotenv.config();
