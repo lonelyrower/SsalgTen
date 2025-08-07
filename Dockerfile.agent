@@ -1,0 +1,72 @@
+# Multi-stage build for SsalgTen Agent
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY agent/package*.json ./
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci
+
+# Copy source code
+COPY agent/src ./src/
+COPY agent/tsconfig.json ./
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine AS production
+
+# Install system dependencies for network tools
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    iputils \
+    traceroute \
+    mtr \
+    bind-tools \
+    iperf3 \
+    python3 \
+    py3-pip
+
+# Install speedtest-cli
+RUN pip3 install speedtest-cli
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S ssalgten -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files and install production dependencies
+COPY agent/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=ssalgten:nodejs /app/dist ./dist
+
+# Copy environment file template
+COPY agent/.env.docker ./.env
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs
+
+# Switch to app user
+USER ssalgten
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3002) + '/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Expose port
+EXPOSE 3002
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["npm", "start"]

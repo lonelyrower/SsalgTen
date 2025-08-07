@@ -1,0 +1,67 @@
+# Multi-stage build for SsalgTen Backend
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY backend/package*.json ./
+COPY backend/prisma ./prisma/
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci --only=production=false
+
+# Copy source code
+COPY backend/src ./src/
+COPY backend/tsconfig.json ./
+
+# Build the application
+RUN npm run build
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Production stage
+FROM node:18-alpine AS production
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S ssalgten -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files and install production dependencies
+COPY backend/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=ssalgten:nodejs /app/dist ./dist
+COPY --from=builder --chown=ssalgten:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=ssalgten:nodejs /app/prisma ./prisma
+
+# Copy environment file template
+COPY backend/.env.docker ./.env
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs
+RUN mkdir -p /app/data && chown ssalgten:nodejs /app/data
+
+# Switch to app user
+USER ssalgten
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3001) + '/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Expose port
+EXPOSE 3001
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["sh", "-c", "npx prisma db push && npm start"]

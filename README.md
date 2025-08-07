@@ -1,22 +1,36 @@
-# SsalgTen
+# SsalgTen Network Monitor
 
-> A modern multi-node network diagnostic aggregation system, inspired by looking.house
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
-![TypeScript](https://img.shields.io/badge/typescript-%5E5.0.0-blue.svg)
-![Development Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)
+A comprehensive multi-node network diagnostic and monitoring system inspired by Looking Glass networks. SsalgTen provides real-time network monitoring, diagnostics, and visualization through a distributed agent architecture with complete admin management capabilities.
 
 ## 🌟 Features
 
-- 🗺️ **Interactive World Map**: Visualize all your VPS nodes on an interactive map with clustering
-- 🔧 **Network Diagnostic Tools**: Ping, Traceroute, MTR, Speedtest support
-- 📊 **Real-time Statistics**: Live dashboard with node count, countries, and providers
-- 🚀 **One-click Deployment**: Auto-generated scripts for easy agent installation
-- 🎨 **Modern UI**: Clean, responsive design with dark/light theme support
-- 🔐 **Admin Panel**: Complete node management and configuration interface
-- 🤖 **Agent Architecture**: Lightweight agents deployable to any VPS
-- 🌐 **Cross-platform**: Windows and Linux support
+### Core Functionality
+- **🌍 Global Network Monitoring** - Deploy agents worldwide for comprehensive network visibility
+- **📊 Real-time Diagnostics** - Ping, Traceroute, MTR, and Speed tests from multiple locations
+- **🗺️ Interactive World Map** - Visualize your network nodes and their status in real-time
+- **⚡ Agent Architecture** - Lightweight, distributed monitoring agents
+- **🔐 Complete Admin System** - Full user management, authentication, and system configuration
+
+### Network Diagnostic Tools
+- **Ping Tests** - Basic connectivity and latency measurements
+- **Traceroute** - Network path analysis and hop identification  
+- **MTR (My Traceroute)** - Combined ping and traceroute analysis
+- **Speed Tests** - Bandwidth measurement capabilities
+- **Connectivity Checks** - Multi-target reachability verification
+
+### Management Features
+- **👥 User Management** - Role-based access control (Admin/Operator/Viewer)
+- **🖥️ Node Management** - Add, edit, and monitor network nodes
+- **⚙️ System Configuration** - 25+ configurable system parameters
+- **📈 Statistics Dashboard** - Real-time system health and performance metrics
+- **🔍 Live Monitoring** - Agent status tracking with heartbeat monitoring
+- **🔑 JWT Authentication** - Secure API access with token-based authentication
 
 ## 🏗️ Architecture
 

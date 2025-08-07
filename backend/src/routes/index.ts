@@ -3,6 +3,7 @@ import { ApiResponse } from '../types';
 import { nodeController } from '../controllers/NodeController';
 import { authController } from '../controllers/AuthController';
 import { adminController } from '../controllers/AdminController';
+import { systemConfigController } from '../controllers/SystemConfigController';
 import { authenticateToken, requireAdmin, optionalAuth } from '../middleware/auth';
 
 const router = Router();
@@ -95,5 +96,14 @@ router.delete('/admin/users/:id', authenticateToken, requireAdmin, adminControll
 
 // 系统统计
 router.get('/admin/stats', authenticateToken, requireAdmin, adminController.getSystemStats.bind(adminController));
+
+// 系统配置管理
+router.get('/admin/configs', authenticateToken, requireAdmin, systemConfigController.getAllConfigs.bind(systemConfigController));
+router.get('/admin/configs/categories', authenticateToken, requireAdmin, systemConfigController.getCategories.bind(systemConfigController));
+router.get('/admin/configs/:key', authenticateToken, requireAdmin, systemConfigController.getConfig.bind(systemConfigController));
+router.put('/admin/configs/:key', authenticateToken, requireAdmin, systemConfigController.updateConfig.bind(systemConfigController));
+router.delete('/admin/configs/:key', authenticateToken, requireAdmin, systemConfigController.deleteConfig.bind(systemConfigController));
+router.post('/admin/configs/batch', authenticateToken, requireAdmin, systemConfigController.batchUpdateConfigs.bind(systemConfigController));
+router.post('/admin/configs/reset', authenticateToken, requireAdmin, systemConfigController.resetToDefaults.bind(systemConfigController));
 
 export default router;
