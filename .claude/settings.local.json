@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(copy \"backend\\.env.example\" \"backend\\.env\")",
+      "Bash(copy \"frontend\\.env.example\" \"frontend\\.env\")",
+      "Bash(copy \"agent\\.env.example\" \"agent\\.env\")",
+      "Bash(docker-compose:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)",
+      "Bash(curl:*)",
+      "Bash(npm install:*)"
+    ],
+    "deny": []
+  }
+}

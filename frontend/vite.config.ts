@@ -18,4 +18,37 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core vendor libraries
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['lucide-react'],
+          'vendor-utils': ['clsx', 'tailwind-merge'],
+          
+          // Admin components chunk
+          'admin': [
+            './src/components/admin/UserManagement',
+            './src/components/admin/SystemSettings',
+            './src/components/admin/UserModal'
+          ],
+          
+          // Map and diagnostics chunk
+          'map-diagnostics': [
+            './src/components/map/WorldMap',
+            './src/components/diagnostics/NetworkDiagnostics'
+          ],
+          
+          // Dashboard components chunk
+          'dashboard': [
+            './src/components/dashboard/EnhancedStats',
+            './src/components/dashboard/ActivityLog'
+          ]
+        }
+      }
+    },
+    // Increase chunk size warning limit since we're optimizing chunks
+    chunkSizeWarningLimit: 1000
+  }
 })

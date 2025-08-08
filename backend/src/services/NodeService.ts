@@ -365,6 +365,29 @@ export class NodeService {
       logger.error('Failed to cleanup old records:', error);
     }
   }
+
+  // 静态方法：计算节点统计信息
+  static calculateStats(nodes: Node[]): {
+    totalNodes: number;
+    onlineNodes: number;
+    offlineNodes: number;
+    totalCountries: number;
+    totalProviders: number;
+  } {
+    const totalNodes = nodes.length;
+    const onlineNodes = nodes.filter(node => node.status === NodeStatus.ONLINE).length;
+    const offlineNodes = totalNodes - onlineNodes;
+    const countries = new Set(nodes.map(node => node.country));
+    const providers = new Set(nodes.map(node => node.provider));
+
+    return {
+      totalNodes,
+      onlineNodes,
+      offlineNodes,
+      totalCountries: countries.size,
+      totalProviders: providers.size
+    };
+  }
 }
 
 export const nodeService = new NodeService();

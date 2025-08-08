@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
+    "@types/socket.io": "^3.0.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -59,6 +60,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
-    "prisma": "^6.13.0"
+    "prisma": "^6.13.0",
+    "socket.io": "^4.8.1"
   }
 }

@@ -1,12 +1,32 @@
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import app from './app';
 import { logger } from './utils/logger';
 import { initSystemConfig } from './utils/initSystemConfig';
+import { setupSocketHandlers } from './sockets/socketHandlers';
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || 'localhost';
 
-const server = app.listen(PORT, async () => {
+// 创建 HTTP 服务器和 Socket.IO 实例
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// 设置 Socket.IO 处理程序
+setupSocketHandlers(io);
+
+// 将 io 实例添加到 app 中以便在路由中使用
+app.set('io', io);
+
+const server = httpServer.listen(PORT, async () => {
   logger.info(`🚀 SsalgTen API Server is running on http://${HOST}:${PORT}`);
+  logger.info(`🌐 Socket.IO server is ready for real-time connections`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔍 Health check: http://${HOST}:${PORT}/api/health`);
   logger.info(`📖 API info: http://${HOST}:${PORT}/api/info`);
