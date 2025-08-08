@@ -9,7 +9,9 @@
       "Bash(npx prisma:*)",
       "Bash(npm run:*)",
       "Bash(curl:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:looking.house)"
     ],
     "deny": []
   }

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, memo, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
@@ -45,11 +45,48 @@ const createCustomIcon = (status: string) => {
   });
 };
 
-export const WorldMap = ({ nodes = [], onNodeClick }: WorldMapProps) => {
+export const WorldMap = memo(({ nodes = [], onNodeClick }: WorldMapProps) => {
   const mapRef = useRef<any>(null);
 
-  // 使用传入的节点数据，如果没有则显示空地图
-  const displayNodes = nodes || [];
+  // 使用 useMemo 缓存标记组件，避免不必要的重新渲染
+  const markers = useMemo(() => {
+    return nodes.map((node) => (
+      <Marker
+        key={`${node.id}-${node.status}`} // 包含状态的 key 确保状态变化时更新
+        position={[node.latitude, node.longitude]}
+        icon={createCustomIcon(node.status)}
+        eventHandlers={{
+          click: () => onNodeClick?.(node),
+        }}
+      >
+        <Popup>
+          <div className="p-2 min-w-[200px]">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-900">{node.name}</h3>
+              <Badge 
+                className={`ml-2 ${
+                  node.status.toLowerCase() === 'online' ? 'bg-green-100 text-green-800' :
+                  node.status.toLowerCase() === 'offline' ? 'bg-red-100 text-red-800' :
+                  node.status.toLowerCase() === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {node.status.toUpperCase()}
+              </Badge>
+            </div>
+            <div className="space-y-1 text-sm text-gray-600">
+              <p><span className="font-medium">位置:</span> {node.city}, {node.country}</p>
+              <p><span className="font-medium">供应商:</span> {node.provider}</p>
+              {node.ipv4 && <p><span className="font-medium">IP:</span> {node.ipv4}</p>}
+              {node.lastSeen && (
+                <p><span className="font-medium">最后在线:</span> {new Date(node.lastSeen).toLocaleString()}</p>
+              )}
+            </div>
+          </div>
+        </Popup>
+      </Marker>
+    ));
+  }, [nodes, onNodeClick]);
 
   return (
     <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
@@ -65,69 +102,8 @@ export const WorldMap = ({ nodes = [], onNodeClick }: WorldMapProps) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {displayNodes.map((node) => (
-          <Marker
-            key={node.id}
-            position={[node.latitude, node.longitude]}
-            icon={createCustomIcon(node.status)}
-            eventHandlers={{
-              click: () => onNodeClick?.(node)
-            }}
-          >
-            <Popup>
-              <div className="p-2 min-w-[200px]">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900">{node.name}</h3>
-                  <Badge 
-                    variant={
-                      node.status.toLowerCase() === 'online' ? 'default' : 
-                      node.status.toLowerCase() === 'maintenance' ? 'secondary' : 
-                      'destructive'
-                    }
-                    className="text-xs"
-                  >
-                    {node.status.toUpperCase()}
-                  </Badge>
-                </div>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Location:</span>
-                    <span>{node.city}, {node.country}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Provider:</span>
-                    <span>{node.provider}</span>
-                  </div>
-                  {node.ipv4 && (
-                    <div className="flex justify-between">
-                      <span>IPv4:</span>
-                      <span className="font-mono text-xs">{node.ipv4}</span>
-                    </div>
-                  )}
-                  {node.ipv6 && (
-                    <div className="flex justify-between">
-                      <span>IPv6:</span>
-                      <span className="font-mono text-xs">{node.ipv6.substring(0, 16)}...</span>
-                    </div>
-                  )}
-                  {node.lastSeen && (
-                    <div className="flex justify-between">
-                      <span>Last Seen:</span>
-                      <span className="text-xs">{new Date(node.lastSeen).toLocaleTimeString()}</span>
-                    </div>
-                  )}
-                  {node._count && (
-                    <div className="flex justify-between text-xs pt-1 border-t">
-                      <span>Records:</span>
-                      <span>{node._count.diagnosticRecords} diagnostics</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {markers}
       </MapContainer>
     </div>
   );
-};
+});

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { socketService } from '@/services/socketService';
+import { compareNodes, compareStats } from '@/utils/deepCompare';
 import type { NodeData, NodeStats } from '@/services/api';
 
 interface RealtimeData {
@@ -26,30 +27,57 @@ export function useRealTime() {
     connected: false
   });
 
-  // 节点状态更新处理
+  // 节点状态更新处理（带深度比较优化）
   const handleNodesStatusUpdate = useCallback((data: any) => {
     if (data.nodes && data.stats) {
-      setRealtimeData(prev => ({
-        ...prev,
-        nodes: data.nodes,
-        stats: data.stats,
-        lastUpdate: data.timestamp || new Date().toISOString()
-      }));
+      setRealtimeData(prev => {
+        // 只有数据真正发生变化时才更新
+        const nodesChanged = !compareNodes(prev.nodes, data.nodes);
+        const statsChanged = !compareStats(prev.stats, data.stats);
+        
+        if (!nodesChanged && !statsChanged) {
+          // 只更新时间戳，不触发组件重新渲染
+          return {
+            ...prev,
+            lastUpdate: data.timestamp || new Date().toISOString()
+          };
+        }
+
+        return {
+          ...prev,
+          nodes: data.nodes,
+          stats: data.stats,
+          lastUpdate: data.timestamp || new Date().toISOString()
+        };
+      });
     }
   }, []);
 
-  // 单个节点状态变化处理
+  // 单个节点状态变化处理（带优化）
   const handleNodeStatusChanged = useCallback((data: any) => {
     if (data.nodeId && data.status) {
-      setRealtimeData(prev => ({
-        ...prev,
-        nodes: prev.nodes.map(node => 
-          node.id === data.nodeId 
-            ? { ...node, ...data.status }
-            : node
-        ),
-        lastUpdate: data.timestamp || new Date().toISOString()
-      }));
+      setRealtimeData(prev => {
+        const targetNode = prev.nodes.find(node => node.id === data.nodeId);
+        
+        // 检查节点状态是否真正发生变化
+        if (targetNode && targetNode.status === data.status.status) {
+          return {
+            ...prev,
+            lastUpdate: data.timestamp || new Date().toISOString()
+          };
+        }
+
+        // 只有状态真正变化时才更新
+        return {
+          ...prev,
+          nodes: prev.nodes.map(node => 
+            node.id === data.nodeId 
+              ? { ...node, ...data.status }
+              : node
+          ),
+          lastUpdate: data.timestamp || new Date().toISOString()
+        };
+      });
     }
   }, []);
 

@@ -77,21 +77,33 @@ export function setupSocketHandlers(io: Server) {
     });
   });
 
-  // 定期广播系统状态更新
+  // 定期广播系统状态更新（降低频率以减少闪跳）
+  let lastBroadcastData: any = null;
+  
   setInterval(async () => {
     try {
       const nodes = await nodeService.getAllNodes();
       const stats = NodeService.calculateStats(nodes);
       
-      io.to('nodes_updates').emit('nodes_status_update', {
-        nodes,
-        stats,
-        timestamp: new Date().toISOString()
-      });
+      // 简单比较，只有数据真正变化时才广播
+      const currentData = { nodes, stats };
+      const dataChanged = !lastBroadcastData || 
+        JSON.stringify(lastBroadcastData.stats) !== JSON.stringify(stats) ||
+        nodes.length !== lastBroadcastData.nodes.length;
+      
+      if (dataChanged) {
+        io.to('nodes_updates').emit('nodes_status_update', {
+          nodes,
+          stats,
+          timestamp: new Date().toISOString()
+        });
+        lastBroadcastData = currentData;
+        logger.debug(`广播节点状态更新: ${nodes.length} 个节点`);
+      }
     } catch (error) {
       logger.error('广播节点状态更新失败:', error);
     }
-  }, 10000); // 每10秒更新一次
+  }, 15000); // 每15秒检查一次，减少频率
 
   logger.info('Socket.IO handlers 已设置完成');
 }

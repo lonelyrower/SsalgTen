@@ -9,8 +9,9 @@ import { Activity, Users, Settings, BarChart3, Loader2 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 // Lazy load heavy components
-const WorldMap = lazy(() => import('@/components/map/WorldMap').then(module => ({ default: module.WorldMap })));
-const NetworkDiagnostics = lazy(() => import('@/components/diagnostics/NetworkDiagnostics').then(module => ({ default: module.NetworkDiagnostics })));
+const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
+const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
+const AnalyticsPanel = lazy(() => import('@/components/analytics/AnalyticsPanel').then(module => ({ default: module.AnalyticsPanel })));
 const UserManagement = lazy(() => import('@/components/admin/UserManagement').then(module => ({ default: module.UserManagement })));
 const SystemSettings = lazy(() => import('@/components/admin/SystemSettings').then(module => ({ default: module.SystemSettings })));
 
@@ -63,8 +64,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
               <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
             </div>
           }>
-            <NetworkDiagnostics 
-              node={selectedNode} 
+            <NetworkToolkit 
+              selectedNode={selectedNode} 
               onClose={handleDiagnosticsClose} 
             />
           </Suspense>
@@ -200,7 +201,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
                       <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
                     </div>
                   }>
-                    <WorldMap nodes={nodes} onNodeClick={handleNodeClick} />
+                    <EnhancedWorldMap 
+                      nodes={nodes} 
+                      onNodeClick={handleNodeClick} 
+                      selectedNode={selectedNode}
+                      showHeatmap={false}
+                      className="mb-4"
+                    />
                   </Suspense>
                 </div>
               </div>
@@ -265,14 +272,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
         )}
 
         {activeView === 'analytics' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              数据分析
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              数据分析功能开发中...
-            </p>
-          </div>
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+            </div>
+          }>
+            <AnalyticsPanel />
+          </Suspense>
         )}
 
         {/* 连接状态提示 */}

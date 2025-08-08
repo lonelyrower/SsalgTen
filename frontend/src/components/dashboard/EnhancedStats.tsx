@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { 
   Activity, 
@@ -130,7 +130,7 @@ interface EnhancedStatsProps {
   className?: string;
 }
 
-export const EnhancedStats: React.FC<EnhancedStatsProps> = ({
+export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
   totalNodes,
   onlineNodes,
   totalCountries,
@@ -185,4 +185,4 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = ({
       />
     </div>
   );
-};
+});
