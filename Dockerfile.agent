@@ -37,7 +37,7 @@ RUN pip3 install --break-system-packages speedtest-cli
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs
-RUN adduser -S ssalgten -u 1001
+RUN adduser -S -u 1001 ssalgten
 
 # Set working directory
 WORKDIR /app
