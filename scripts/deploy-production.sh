@@ -103,28 +103,71 @@ collect_deployment_info() {
     log_info "收集部署配置信息..."
     
     echo ""
-    echo "请提供以下部署配置信息："
+    echo "请选择部署方式："
+    echo "1. 完整部署 (域名 + SSL证书 + HTTPS)"
+    echo "2. 简单部署 (仅HTTP，使用服务器IP)"
     echo ""
     
-    # 域名配置
     while true; do
-        read -p "您的域名 (如: example.com): " DOMAIN
-        if [[ -n "$DOMAIN" && "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-            break
-        else
-            log_error "请输入有效的域名"
-        fi
+        read -p "请选择 (1/2): " DEPLOY_MODE
+        case $DEPLOY_MODE in
+            1)
+                log_info "选择完整部署模式"
+                ENABLE_SSL=true
+                break
+                ;;
+            2)
+                log_info "选择简单部署模式"
+                ENABLE_SSL=false
+                break
+                ;;
+            *)
+                log_error "请输入 1 或 2"
+                ;;
+        esac
     done
     
-    # SSL邮箱
-    while true; do
-        read -p "SSL证书邮箱: " SSL_EMAIL
-        if [[ -n "$SSL_EMAIL" && "$SSL_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-            break
-        else
-            log_error "请输入有效的邮箱地址"
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        echo ""
+        echo "完整部署需要以下信息："
+        
+        # 域名配置
+        while true; do
+            read -p "您的域名 (如: example.com): " DOMAIN
+            if [[ -n "$DOMAIN" && "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                break
+            else
+                log_error "请输入有效的域名"
+            fi
+        done
+        
+        # SSL邮箱
+        while true; do
+            read -p "SSL证书邮箱: " SSL_EMAIL
+            if [[ -n "$SSL_EMAIL" && "$SSL_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                break
+            else
+                log_error "请输入有效的邮箱地址"
+            fi
+        done
+    else
+        echo ""
+        log_info "简单部署模式，将使用HTTP访问"
+        
+        # 获取服务器公网IP
+        SERVER_IP=$(curl -s http://ipinfo.io/ip 2>/dev/null || curl -s http://icanhazip.com 2>/dev/null || echo "未知")
+        DOMAIN="$SERVER_IP"
+        SSL_EMAIL=""
+        
+        log_info "检测到服务器IP: $SERVER_IP"
+        log_info "将使用 http://$SERVER_IP 访问服务"
+        
+        echo ""
+        read -p "确认使用此IP地址？ (y/n): " confirm_ip
+        if [[ "$confirm_ip" != "y" && "$confirm_ip" != "Y" ]]; then
+            read -p "请手动输入服务器IP地址: " DOMAIN
         fi
-    done
+    fi
     
     echo ""
     echo "安全配置 (留空将自动生成):"
@@ -326,7 +369,7 @@ JWT_EXPIRES_IN=7d
 
 # API安全配置
 API_KEY_SECRET=$API_SECRET
-CORS_ORIGIN=https://$DOMAIN
+CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
 
 # 日志配置
 LOG_LEVEL=info
@@ -343,7 +386,7 @@ EOF
     # 创建前端环境配置
     cat > frontend/.env << EOF
 # API配置
-VITE_API_URL=https://$DOMAIN/api
+VITE_API_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
 
 # 生产环境设置
 VITE_NODE_ENV=production
@@ -357,7 +400,7 @@ EOF
     cat > agent/.env.template << EOF
 # 代理配置模板
 AGENT_ID=your-unique-agent-id
-MASTER_URL=https://$DOMAIN
+MASTER_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
 AGENT_API_KEY=$AGENT_KEY
 
 # 节点信息
@@ -377,8 +420,10 @@ EOF
 create_nginx_config() {
     log_info "创建Nginx配置..."
     
-    sudo tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
-# SsalgTen Nginx 配置
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        # HTTPS模式配置
+        sudo tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
+# SsalgTen Nginx 配置 (HTTPS模式)
 server {
     listen 80;
     server_name $DOMAIN www.$DOMAIN;
@@ -443,6 +488,64 @@ server {
     }
 }
 EOF
+    else
+        # HTTP模式配置
+        sudo tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
+# SsalgTen Nginx 配置 (HTTP模式)
+server {
+    listen 80;
+    server_name $DOMAIN;
+    
+    # 基础安全头
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    
+    # 前端静态文件
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # 静态资源缓存
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
+            proxy_pass http://localhost:3000;
+            proxy_set_header Host \$host;
+            proxy_cache_valid 200 1d;
+            add_header Cache-Control "public, max-age=86400";
+        }
+    }
+    
+    # API代理
+    location /api {
+        proxy_pass http://localhost:3001;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # WebSocket支持
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # 超时配置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+    
+    # 健康检查端点
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+    fi
     
     # 启用站点
     sudo ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/
@@ -450,23 +553,31 @@ EOF
     # 测试配置
     sudo nginx -t
     
-    log_success "Nginx配置创建完成"
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        log_success "Nginx HTTPS配置创建完成"
+    else
+        log_success "Nginx HTTP配置创建完成"
+    fi
 }
 
 # 安装SSL证书
 install_ssl_certificate() {
-    log_info "安装SSL证书..."
-    
-    # 安装Certbot
-    sudo apt install -y certbot python3-certbot-nginx
-    
-    # 获取SSL证书
-    sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
-    
-    # 设置自动续期
-    echo "0 12 * * * /usr/bin/certbot renew --quiet" | sudo crontab -
-    
-    log_success "SSL证书安装完成"
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        log_info "安装SSL证书..."
+        
+        # 安装Certbot
+        sudo apt install -y certbot python3-certbot-nginx
+        
+        # 获取SSL证书
+        sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+        
+        # 设置自动续期
+        echo "0 12 * * * /usr/bin/certbot renew --quiet" | sudo crontab -
+        
+        log_success "SSL证书安装完成"
+    else
+        log_info "跳过SSL证书安装 (HTTP模式)"
+    fi
 }
 
 # 构建和启动服务
@@ -519,9 +630,10 @@ verify_deployment() {
             continue
         fi
         
-        # 检查HTTPS访问
-        if ! curl -f https://$DOMAIN/api/health >/dev/null 2>&1; then
-            log_warning "HTTPS访问失败，等待10秒..."
+        # 检查外部访问
+        local protocol=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https"; else echo "http"; fi)
+        if ! curl -f "$protocol://$DOMAIN/api/health" >/dev/null 2>&1; then
+            log_warning "外部访问失败($protocol)，等待10秒..."
             sleep 10
             attempt=$((attempt + 1))
             continue
@@ -650,12 +762,12 @@ SsalgTen 部署信息
 - 服务管理: ./manage.sh [start|stop|restart|status|logs|update|backup]
 - 系统监控: ./monitor.sh
 - 节点管理: ./scripts/node-manager.sh
-- 生产测试: ./scripts/production-test.sh --url https://$DOMAIN
+- 生产测试: ./scripts/production-test.sh --url $(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
 
 访问地址:
-- 前端界面: https://$DOMAIN
-- API接口: https://$DOMAIN/api
-- 健康检查: https://$DOMAIN/api/health
+- 前端界面: $(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
+- API接口: $(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+- 健康检查: $(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api/health"; else echo "http://$DOMAIN/api/health"; fi)
 
 重要文件:
 - 环境配置: $APP_DIR/.env, backend/.env, frontend/.env
@@ -687,20 +799,21 @@ show_deployment_result() {
     echo -e "${GREEN}  🎉 SsalgTen 部署完成！${NC}"
     echo -e "${GREEN}================================${NC}"
     echo ""
+    local protocol=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https"; else echo "http"; fi)
     echo "🌐 访问地址:"
-    echo "  - 前端界面: https://$DOMAIN"
-    echo "  - API接口: https://$DOMAIN/api"
-    echo "  - 健康检查: https://$DOMAIN/api/health"
+    echo "  - 前端界面: $protocol://$DOMAIN"
+    echo "  - API接口: $protocol://$DOMAIN/api"
+    echo "  - 健康检查: $protocol://$DOMAIN/api/health"
     echo ""
     echo "🔧 管理命令:"
     echo "  - 服务管理: ./manage.sh [start|stop|restart|status|logs|update|backup]"
     echo "  - 系统监控: ./monitor.sh"
     echo "  - 节点管理: ./scripts/node-manager.sh"
-    echo "  - 生产测试: ./scripts/production-test.sh --url https://$DOMAIN --verbose"
+    echo "  - 生产测试: ./scripts/production-test.sh --url $protocol://$DOMAIN --verbose"
     echo ""
     echo "📱 Agent节点安装:"
     echo "  在其他VPS上运行: ./scripts/install-agent.sh"
-    echo "  主服务器地址: https://$DOMAIN"
+    echo "  主服务器地址: $protocol://$DOMAIN"
     echo "  Agent密钥: $AGENT_KEY"
     echo ""
     echo "📋 重要信息:"
@@ -708,8 +821,15 @@ show_deployment_result() {
     echo "  - 请妥善保管密钥信息"
     echo "  - 建议立即运行生产测试验证功能"
     echo ""
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        echo -e "${GREEN}✅ 完整部署模式${NC} - HTTPS + SSL证书已配置"
+    else
+        echo -e "${YELLOW}📋 简单部署模式${NC} - 仅HTTP访问"
+        echo -e "${YELLOW}💡 如需HTTPS，可稍后配置域名和SSL证书${NC}"
+    fi
+    echo ""
     echo -e "${YELLOW}下一步建议:${NC}"
-    echo "1. 运行生产测试: ./scripts/production-test.sh --url https://$DOMAIN --verbose"
+    echo "1. 运行生产测试: ./scripts/production-test.sh --url $protocol://$DOMAIN --verbose"
     echo "2. 添加监控告警系统"
     echo "3. 设置定期备份任务"
     echo "4. 部署Agent节点扩展网络"
