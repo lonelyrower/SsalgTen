@@ -33,7 +33,7 @@ router.get('/info', (req: Request, res: Response) => {
       version: '0.1.0',
       description: 'Multi-node network diagnostic aggregation system',
       author: 'SsalgTen Team',
-      repository: 'https://github.com/yourusername/SsalgTen',
+      repository: 'https://github.com/lonelyrower/SsalgTen',
       endpoints: {
         health: '/api/health',
         info: '/api/info',

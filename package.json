@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "Multi-node network diagnostic aggregation system like looking.house",
   "keywords": ["network", "diagnostic", "looking-glass", "vps", "monitoring"],
-  "homepage": "https://github.com/yourusername/SsalgTen",
+  "homepage": "https://github.com/lonelyrower/SsalgTen",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/SsalgTen.git"
+    "url": "https://github.com/lonelyrower/SsalgTen.git"
   },
   "license": "MIT",
   "author": "Your Name",

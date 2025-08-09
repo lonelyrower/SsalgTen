@@ -267,7 +267,7 @@ download_source_code() {
     log_info "下载源码..."
     
     # 克隆项目
-    git clone https://github.com/yourusername/SsalgTen.git .
+    git clone https://github.com/lonelyrower/SsalgTen.git .
     
     log_success "源码下载完成"
 }
@@ -643,7 +643,7 @@ SsalgTen 部署信息
 
 Agent节点安装:
 1. 在新VPS上运行: curl -sSL https://$DOMAIN/install-agent.sh | bash
-2. 或手动下载: wget https://raw.githubusercontent.com/yourusername/SsalgTen/main/scripts/install-agent.sh
+2. 或手动下载: wget https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh
 
 注意事项:
 - 请妥善保管此文件中的密钥信息

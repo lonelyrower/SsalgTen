@@ -84,7 +84,7 @@ docker-compose --version
 ```bash
 # 克隆项目
 cd ~
-git clone https://github.com/yourusername/SsalgTen.git
+git clone https://github.com/lonelyrower/SsalgTen.git
 cd SsalgTen
 
 # 创建生产环境配置

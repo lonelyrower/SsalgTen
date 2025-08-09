@@ -62,7 +62,7 @@ docker-compose --version
 # 克隆到生产目录
 sudo mkdir -p /opt/ssalgten
 cd /opt/ssalgten
-sudo git clone https://github.com/yourusername/SsalgTen.git .
+sudo git clone https://github.com/lonelyrower/SsalgTen.git .
 sudo chown -R $USER:$USER /opt/ssalgten
 ```
 

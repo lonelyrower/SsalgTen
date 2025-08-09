@@ -17,7 +17,7 @@
    ssh your_user@your_server_ip
    
    # 下载并运行部署脚本
-   curl -sSL https://raw.githubusercontent.com/yourusername/SsalgTen/main/scripts/deploy-production.sh -o deploy.sh
+   curl -sSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh -o deploy.sh
    chmod +x deploy.sh
    ./deploy.sh
    ```
@@ -37,7 +37,7 @@
 1. **在任意新VPS上运行**
    ```bash
    # 下载安装脚本
-   curl -sSL https://raw.githubusercontent.com/yourusername/SsalgTen/main/scripts/install-agent.sh -o install-agent.sh
+   curl -sSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh -o install-agent.sh
    chmod +x install-agent.sh
    ./install-agent.sh
    ```
@@ -64,7 +64,7 @@ ssh your_user@your_server_ip
 mkdir -p ~/ssalgten-deploy && cd ~/ssalgten-deploy
 
 # 3. 下载部署脚本
-wget https://raw.githubusercontent.com/yourusername/SsalgTen/main/scripts/deploy-production.sh
+wget https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh
 chmod +x deploy-production.sh
 
 # 4. 运行部署
@@ -87,7 +87,7 @@ chmod +x deploy-production.sh
 ssh your_user@agent_server_ip
 
 # 2. 下载安装脚本
-wget https://raw.githubusercontent.com/yourusername/SsalgTen/main/scripts/install-agent.sh
+wget https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh
 chmod +x install-agent.sh
 
 # 3. 运行安装

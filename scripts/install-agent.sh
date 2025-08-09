@@ -244,7 +244,7 @@ download_agent_code() {
     
     # 下载主项目
     cd $TEMP_DIR
-    git clone https://github.com/yourusername/SsalgTen.git .
+    git clone https://github.com/lonelyrower/SsalgTen.git .
     
     # 复制Agent相关文件
     cp -r agent/* $APP_DIR/
