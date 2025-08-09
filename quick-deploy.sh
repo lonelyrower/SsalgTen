@@ -24,12 +24,12 @@ DEFAULT_AGENT_API_KEY=default-production-agent-key-change-immediately
 
 # 系统配置
 DATABASE_URL=postgresql://ssalgten:ssalgten_prod_db_2024@database:5432/ssalgten
-CORS_ORIGIN=http://localhost
+CORS_ORIGIN=http://\$EXTERNAL_IP
 LOG_LEVEL=info
 ENABLE_MORGAN=false
 
 # 前端配置
-VITE_API_BASE_URL=http://localhost:3001/api
+VITE_API_BASE_URL=http://\$EXTERNAL_IP:3001/api
 VITE_APP_NAME=SsalgTen Network Monitor
 VITE_APP_VERSION=1.0.0
 
@@ -66,6 +66,12 @@ docker-compose ps
 
 # 获取外网IP
 EXTERNAL_IP=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+
+# 更新.env中的CORS配置
+if [ -f ".env" ]; then
+    sed -i "s|CORS_ORIGIN=http://\\\$EXTERNAL_IP|CORS_ORIGIN=http://$EXTERNAL_IP|g" .env
+    sed -i "s|VITE_API_BASE_URL=http://localhost:3001/api|VITE_API_BASE_URL=http://$EXTERNAL_IP:3001/api|g" .env
+fi
 
 echo ""
 echo "🎉 Deployment Complete!"

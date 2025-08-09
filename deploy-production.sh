@@ -59,7 +59,7 @@ echo -e "${BLUE}🔍 Validating configuration...${NC}"
 source .env
 
 # 自动更新域名配置
-if [[ "$DOMAIN" == "your-domain.com" ]]; then
+if grep -q "DOMAIN=your-domain.com" .env; then
     echo -e "${YELLOW}📝 Auto-configuring domain with public IP...${NC}"
     sed -i "s/DOMAIN=your-domain.com/DOMAIN=$PUBLIC_IP/g" .env
     sed -i "s#CORS_ORIGIN=http://your-domain.com#CORS_ORIGIN=http://$PUBLIC_IP#g" .env  
