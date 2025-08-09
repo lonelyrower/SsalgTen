@@ -339,6 +339,13 @@ create_application_directory() {
 download_source_code() {
     log_info "下载源码..."
     
+    # 检查目录是否为空，如果不为空则清理
+    if [[ "$(ls -A .)" ]]; then
+        log_warning "目录不为空，清理现有文件..."
+        rm -rf * .git 2>/dev/null || true
+        rm -rf .[^.]* 2>/dev/null || true
+    fi
+    
     # 克隆项目
     git clone https://github.com/lonelyrower/SsalgTen.git .
     
