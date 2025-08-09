@@ -1,6 +1,6 @@
 // API服务 - 与后端通信的统一接口
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 // JWT 令牌管理
 class TokenManager {

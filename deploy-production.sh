@@ -45,9 +45,27 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
+# 自动检测公网IP
+echo -e "${BLUE}🌐 Detecting public IP address...${NC}"
+PUBLIC_IP=$(curl -s ifconfig.me || curl -s icanhazip.com || curl -s ipecho.net/plain)
+if [ -z "$PUBLIC_IP" ]; then
+    echo -e "${RED}❌ Unable to detect public IP. Please set DOMAIN manually in .env file${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Detected public IP: $PUBLIC_IP${NC}"
+
 # 验证关键配置
 echo -e "${BLUE}🔍 Validating configuration...${NC}"
 source .env
+
+# 自动更新域名配置
+if [[ "$DOMAIN" == "your-domain.com" ]]; then
+    echo -e "${YELLOW}📝 Auto-configuring domain with public IP...${NC}"
+    sed -i "s/DOMAIN=your-domain.com/DOMAIN=$PUBLIC_IP/g" .env
+    sed -i "s#CORS_ORIGIN=http://your-domain.com#CORS_ORIGIN=http://$PUBLIC_IP#g" .env  
+    sed -i "s#VITE_API_BASE_URL=http://your-domain.com:3001/api#VITE_API_BASE_URL=http://$PUBLIC_IP:3001/api#g" .env
+    source .env
+fi
 
 if [[ "$JWT_SECRET" == "your-super-secret-jwt-key"* ]]; then
     echo -e "${RED}❌ Please change JWT_SECRET in .env file!${NC}"
