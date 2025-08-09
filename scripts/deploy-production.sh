@@ -631,6 +631,9 @@ EOF
     # 测试配置
     run_as_root nginx -t
     
+    # 重新加载Nginx配置
+    run_as_root systemctl reload nginx
+    
     if [[ "$ENABLE_SSL" == "true" ]]; then
         log_success "Nginx HTTPS配置创建完成"
     else
