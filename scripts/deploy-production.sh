@@ -228,7 +228,13 @@ install_docker() {
     sudo chmod +x /usr/local/bin/docker-compose
     
     # 添加用户到docker组
-    sudo usermod -aG docker $USER
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        # root运行时，确保ssalgten用户可以使用docker
+        usermod -aG docker ssalgten
+        log_info "已将ssalgten用户添加到docker组"
+    else
+        sudo usermod -aG docker $USER
+    fi
     
     # 启动Docker服务
     sudo systemctl start docker
@@ -255,10 +261,26 @@ install_nginx() {
 create_application_directory() {
     log_info "创建应用目录..."
     
-    sudo mkdir -p $APP_DIR
-    sudo chown $USER:$USER $APP_DIR
-    cd $APP_DIR
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        # 创建ssalgten用户用于运行应用
+        if ! id "ssalgten" &>/dev/null; then
+            log_info "创建专用应用用户 ssalgten..."
+            useradd -r -s /bin/bash -d $APP_DIR ssalgten
+        fi
+        
+        mkdir -p $APP_DIR
+        chown -R ssalgten:ssalgten $APP_DIR
+        
+        # 确保root可以访问目录进行管理
+        chmod 755 $APP_DIR
+        
+        log_info "应用将以 ssalgten 用户身份运行"
+    else
+        sudo mkdir -p $APP_DIR
+        sudo chown $USER:$USER $APP_DIR
+    fi
     
+    cd $APP_DIR
     log_success "应用目录创建: $APP_DIR"
 }
 
@@ -700,8 +722,28 @@ main() {
     
     # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
-        log_error "请不要使用root用户运行此脚本"
-        exit 1
+        log_warning "⚠️ 检测到root用户运行"
+        echo ""
+        echo -e "${YELLOW}安全提醒：${NC}"
+        echo "- 使用root用户运行应用程序存在安全风险"
+        echo "- 建议创建专用用户： useradd -m -s /bin/bash ssalgten"
+        echo "- 然后切换用户运行： su - ssalgten"
+        echo ""
+        read -p "继续使用root用户？ (yes/no): " confirm_root
+        if [[ "$confirm_root" != "yes" ]]; then
+            log_info "已取消部署，请创建专用用户后重试"
+            echo ""
+            echo "创建用户命令："
+            echo "  useradd -m -s /bin/bash ssalgten"
+            echo "  usermod -aG sudo ssalgten"
+            echo "  passwd ssalgten"
+            echo "  su - ssalgten"
+            exit 0
+        fi
+        
+        # 使用root用户时的特殊处理
+        export RUNNING_AS_ROOT=true
+        log_warning "继续使用root用户部署，将进行安全加固配置"
     fi
     
     log_info "开始SsalgTen生产环境部署..."

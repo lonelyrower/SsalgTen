@@ -575,17 +575,30 @@ EOF
 main() {
     show_welcome
     
-    # 检查是否为root用户运行
+    # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
-        log_error "请不要使用root用户运行此脚本"
-        log_info "建议使用普通用户，脚本会在需要时请求sudo权限"
-        exit 1
-    fi
-    
-    # 检查sudo权限
-    if ! sudo -v >/dev/null 2>&1; then
-        log_error "需要sudo权限来安装系统依赖"
-        exit 1
+        log_warning "⚠️ 检测到root用户运行"
+        echo ""
+        echo -e "${YELLOW}安全提醒：${NC}"
+        echo "- 使用root用户运行Agent存在安全风险"
+        echo "- 建议创建专用用户： useradd -m -s /bin/bash agentuser"
+        echo "- 然后切换用户运行： su - agentuser"
+        echo ""
+        read -p "继续使用root用户？ (yes/no): " confirm_root
+        if [[ "$confirm_root" != "yes" ]]; then
+            log_info "已取消安装，请创建专用用户后重试"
+            exit 0
+        fi
+        
+        # 使用root用户时的特殊处理
+        export RUNNING_AS_ROOT=true
+        log_warning "继续使用root用户部署Agent"
+    else
+        # 检查sudo权限
+        if ! sudo -v >/dev/null 2>&1; then
+            log_error "需要sudo权限来安装系统依赖"
+            exit 1
+        fi
     fi
     
     log_info "开始SsalgTen Agent安装流程..."
