@@ -167,46 +167,92 @@ export const EnhancedWorldMap = memo(({
                 </div>
 
                 {/* 详细信息网格 */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <Globe className="h-4 w-4 mr-2 text-blue-500" />
-                      <span className="text-gray-600">供应商:</span>
-                    </div>
-                    <p className="font-medium text-gray-900 ml-6">{node.provider}</p>
-                  </div>
-
-                  {node.ipv4 && (
-                    <div className="space-y-2">
+                <div className="space-y-3 mb-4">
+                  {/* 基础信息行 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
                       <div className="flex items-center text-sm">
-                        <Wifi className="h-4 w-4 mr-2 text-green-500" />
-                        <span className="text-gray-600">IPv4:</span>
+                        <Globe className="h-4 w-4 mr-2 text-blue-500" />
+                        <span className="text-gray-600">供应商:</span>
                       </div>
-                      <p className="font-mono text-sm text-gray-900 ml-6">{node.ipv4}</p>
+                      <p className="font-medium text-gray-900 ml-6 text-sm">{node.provider}</p>
                     </div>
-                  )}
 
-                  {node.lastSeen && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div className="flex items-center text-sm">
-                        <Clock className="h-4 w-4 mr-2 text-orange-500" />
-                        <span className="text-gray-600">最后在线:</span>
+                        <Server className="h-4 w-4 mr-2 text-purple-500" />
+                        <span className="text-gray-600">坐标:</span>
                       </div>
-                      <p className="text-sm text-gray-900 ml-6">
-                        {new Date(node.lastSeen).toLocaleString()}
+                      <p className="font-mono text-xs text-gray-900 ml-6">
+                        {node.latitude.toFixed(4)}, {node.longitude.toFixed(4)}
                       </p>
                     </div>
+                  </div>
+
+                  {/* IP地址信息 */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {node.ipv4 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm">
+                          <Wifi className="h-4 w-4 mr-2 text-green-500" />
+                          <span className="text-gray-600">IPv4:</span>
+                        </div>
+                        <p className="font-mono text-sm text-blue-600 ml-6">{node.ipv4}</p>
+                      </div>
+                    )}
+
+                    {node.ipv6 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm">
+                          <Wifi className="h-4 w-4 mr-2 text-green-500" />
+                          <span className="text-gray-600">IPv6:</span>
+                        </div>
+                        <p className="font-mono text-xs text-blue-600 ml-6 break-all">{node.ipv6}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ASN信息 */}
+                  {node.asnNumber && (
+                    <div className="border-t pt-3">
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center text-sm">
+                            <TrendingUp className="h-4 w-4 mr-2 text-purple-500" />
+                            <span className="text-gray-600">ASN:</span>
+                          </div>
+                          <p className="font-mono text-sm text-purple-600 ml-6">{node.asnNumber}</p>
+                        </div>
+                        
+                        {(node.asnName || node.asnOrg) && (
+                          <div className="space-y-1">
+                            <div className="flex items-center text-sm">
+                              <Globe className="h-4 w-4 mr-2 text-indigo-500" />
+                              <span className="text-gray-600">ASN组织:</span>
+                            </div>
+                            <p className="text-xs text-gray-900 ml-6 break-words">
+                              {node.asnName || node.asnOrg}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
 
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <Server className="h-4 w-4 mr-2 text-purple-500" />
-                      <span className="text-gray-600">坐标:</span>
+                  {/* 状态信息 */}
+                  {node.lastSeen && (
+                    <div className="border-t pt-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm">
+                          <Clock className="h-4 w-4 mr-2 text-orange-500" />
+                          <span className="text-gray-600">最后在线:</span>
+                        </div>
+                        <p className="text-sm text-gray-900 ml-6">
+                          {new Date(node.lastSeen).toLocaleString()}
+                        </p>
+                      </div>
                     </div>
-                    <p className="font-mono text-xs text-gray-900 ml-6">
-                      {node.latitude.toFixed(4)}, {node.longitude.toFixed(4)}
-                    </p>
-                  </div>
+                  )}
                 </div>
 
                 {/* 操作按钮 */}

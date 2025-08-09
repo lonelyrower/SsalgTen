@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { Node, NodeStatus, DiagnosticType, Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { ipInfoService } from './IPInfoService';
 import crypto from 'crypto';
 
 export interface CreateNodeInput {
@@ -18,6 +19,12 @@ export interface CreateNodeInput {
   description?: string;
   osType?: string;
   osVersion?: string;
+  // ASN信息（可选，如果不提供将自动查询）
+  asnNumber?: string;
+  asnName?: string;
+  asnOrg?: string;
+  asnRoute?: string;
+  asnType?: string;
 }
 
 export interface UpdateNodeInput {
@@ -36,6 +43,12 @@ export interface UpdateNodeInput {
   osType?: string;
   osVersion?: string;
   status?: NodeStatus;
+  // ASN信息
+  asnNumber?: string;
+  asnName?: string;
+  asnOrg?: string;
+  asnRoute?: string;
+  asnType?: string;
 }
 
 export interface NodeWithStats extends Node {
@@ -59,16 +72,47 @@ export class NodeService {
       const agentId = crypto.randomUUID();
       const apiKey = crypto.randomBytes(32).toString('hex');
 
+      // 如果提供了IP地址但没有ASN信息，自动查询ASN
+      let asnInfo = {
+        asnNumber: input.asnNumber,
+        asnName: input.asnName,
+        asnOrg: input.asnOrg,
+        asnRoute: input.asnRoute,
+        asnType: input.asnType
+      };
+
+      if ((input.ipv4 || input.ipv6) && !input.asnNumber) {
+        try {
+          const targetIP = input.ipv4 || input.ipv6;
+          const ipInfo = await ipInfoService.getIPInfo(targetIP!);
+          
+          if (ipInfo && ipInfo.asn) {
+            asnInfo = {
+              asnNumber: ipInfo.asn.asn,
+              asnName: ipInfo.asn.name,
+              asnOrg: ipInfo.asn.org,
+              asnRoute: ipInfo.asn.route,
+              asnType: ipInfo.asn.type
+            };
+            
+            logger.info(`自动获取ASN信息: ${targetIP} -> ${ipInfo.asn.asn} (${ipInfo.asn.name})`);
+          }
+        } catch (asnError) {
+          logger.warn(`Failed to fetch ASN info for IP ${input.ipv4 || input.ipv6}:`, asnError);
+        }
+      }
+
       const node = await prisma.node.create({
         data: {
           ...input,
+          ...asnInfo,
           agentId,
           apiKey,
           status: NodeStatus.UNKNOWN
         }
       });
 
-      logger.info(`Node created: ${node.name} (${node.id})`);
+      logger.info(`Node created: ${node.name} (${node.id}) with ASN: ${asnInfo.asnNumber}`);
       return node;
     } catch (error) {
       logger.error('Failed to create node:', error);
@@ -334,6 +378,60 @@ export class NodeService {
     } catch (error) {
       logger.error(`Failed to fetch diagnostics for node ${nodeId}:`, error);
       throw new Error('Failed to fetch node diagnostics');
+    }
+  }
+
+  // 批量更新节点ASN信息
+  async updateNodesASN(): Promise<void> {
+    try {
+      const nodes = await prisma.node.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { asnNumber: null },
+                { asnNumber: '' }
+              ]
+            },
+            {
+              OR: [
+                { ipv4: { not: null } },
+                { ipv6: { not: null } }
+              ]
+            }
+          ]
+        }
+      });
+
+      logger.info(`Found ${nodes.length} nodes without ASN information`);
+
+      for (const node of nodes) {
+        try {
+          const targetIP = node.ipv4 || node.ipv6;
+          if (!targetIP) continue;
+
+          const ipInfo = await ipInfoService.getIPInfo(targetIP);
+          
+          if (ipInfo && ipInfo.asn) {
+            await this.updateNode(node.id, {
+              asnNumber: ipInfo.asn.asn,
+              asnName: ipInfo.asn.name,
+              asnOrg: ipInfo.asn.org,
+              asnRoute: ipInfo.asn.route,
+              asnType: ipInfo.asn.type
+            });
+
+            logger.info(`Updated ASN for node ${node.name}: ${ipInfo.asn.asn} (${ipInfo.asn.name})`);
+          }
+
+          // 避免API限制，每次请求间隔500ms
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          logger.warn(`Failed to update ASN for node ${node.name}:`, error);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to update nodes ASN:', error);
     }
   }
 

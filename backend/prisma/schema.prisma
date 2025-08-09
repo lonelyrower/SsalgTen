@@ -26,6 +26,13 @@ model Node {
   ipv4        String?  // IPv4地址
   ipv6        String?  // IPv6地址
   
+  // ASN信息
+  asnNumber   String?  // ASN号码，如 "AS13335"
+  asnName     String?  // ASN名称，如 "Cloudflare, Inc."
+  asnOrg      String?  // ASN组织
+  asnRoute    String?  // ASN路由
+  asnType     String?  // ASN类型
+  
   // 提供商信息
   provider    String   // 服务提供商，如 "DigitalOcean"
   datacenter  String?  // 数据中心信息
@@ -143,6 +150,46 @@ model Setting {
   updatedAt DateTime @updatedAt
   
   @@map("settings")
+}
+
+// 访问者信息记录
+model VisitorLog {
+  id          String   @id @default(cuid())
+  
+  // 基础信息
+  ip          String   // 访问者IP
+  userAgent   String   // 用户代理
+  
+  // 地理位置信息
+  city        String?  // 城市
+  region      String?  // 地区/省份
+  country     String?  // 国家
+  latitude    Float?   // 纬度
+  longitude   Float?   // 经度
+  timezone    String?  // 时区
+  
+  // ASN信息
+  asnNumber   String?  // ASN号码
+  asnName     String?  // ASN名称
+  asnOrg      String?  // ASN组织
+  
+  // 运营商信息
+  company     String?  // 运营商名称
+  
+  // 访问信息
+  endpoint    String?  // 访问的端点
+  method      String?  // HTTP方法
+  referer     String?  // 来源
+  
+  // 诊断相关
+  nodeId      String?  // 关联的节点ID（如果是通过节点访问）
+  
+  // 时间戳
+  createdAt   DateTime @default(now())
+  
+  @@map("visitor_logs")
+  @@index([ip])
+  @@index([createdAt])
 }
 
 // 枚举类型

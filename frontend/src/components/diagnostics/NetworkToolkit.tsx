@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +14,12 @@ import {
   Clock,
   Download,
   Upload,
-  Server
+  Server,
+  MapPin,
+  Network
 } from 'lucide-react';
-import type { NodeData } from '@/services/api';
+import type { NodeData, VisitorInfo } from '@/services/api';
+import { apiService } from '@/services/api';
 
 interface NetworkToolkitProps {
   selectedNode: NodeData;
@@ -35,6 +38,27 @@ interface DiagnosticResult {
 export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, onClose }) => {
   const [results, setResults] = useState<Record<string, DiagnosticResult>>({});
   const [activeTab, setActiveTab] = useState<string>('ping');
+  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo | null>(null);
+  const [loadingVisitorInfo, setLoadingVisitorInfo] = useState(false);
+
+  // 获取访问者IP信息
+  useEffect(() => {
+    const fetchVisitorInfo = async () => {
+      try {
+        setLoadingVisitorInfo(true);
+        const response = await apiService.getVisitorInfo();
+        if (response.success && response.data) {
+          setVisitorInfo(response.data);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch visitor info:', error);
+      } finally {
+        setLoadingVisitorInfo(false);
+      }
+    };
+
+    fetchVisitorInfo();
+  }, []);
 
   const tools = [
     {
@@ -261,12 +285,115 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">网络诊断工具</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            目标节点: <span className="font-medium">{selectedNode.name}</span> ({selectedNode.ipv4})
+            目标节点: <span className="font-medium">{selectedNode.name}</span> ({selectedNode.ipv4 || selectedNode.ipv6})
           </p>
         </div>
         <Button variant="outline" onClick={onClose}>
           关闭
         </Button>
+      </div>
+
+      {/* 节点和访问者信息 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* 目标节点信息 */}
+        <Card className="p-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <Server className="h-5 w-5 text-blue-600" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">目标节点信息</h3>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">节点名称:</span>
+              <span className="font-medium">{selectedNode.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">位置:</span>
+              <span className="font-medium">{selectedNode.city}, {selectedNode.country}</span>
+            </div>
+            {selectedNode.ipv4 && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">IPv4:</span>
+                <span className="font-mono text-blue-600">{selectedNode.ipv4}</span>
+              </div>
+            )}
+            {selectedNode.ipv6 && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">IPv6:</span>
+                <span className="font-mono text-blue-600 text-xs">{selectedNode.ipv6}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">服务商:</span>
+              <span className="font-medium">{selectedNode.provider}</span>
+            </div>
+            {selectedNode.asnNumber && (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">ASN:</span>
+                  <span className="font-mono text-purple-600">{selectedNode.asnNumber}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">ASN组织:</span>
+                  <span className="font-medium text-xs">{selectedNode.asnName || selectedNode.asnOrg}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+
+        {/* 访问者信息 */}
+        <Card className="p-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <MapPin className="h-5 w-5 text-green-600" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">您的IP信息</h3>
+            {loadingVisitorInfo && (
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+            )}
+          </div>
+          {visitorInfo ? (
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">您的IP:</span>
+                <span className="font-mono text-green-600">{visitorInfo.ip}</span>
+              </div>
+              {visitorInfo.city && visitorInfo.country && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">位置:</span>
+                  <span className="font-medium">{visitorInfo.city}, {visitorInfo.country}</span>
+                </div>
+              )}
+              {visitorInfo.asn && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">ASN:</span>
+                    <span className="font-mono text-purple-600">{visitorInfo.asn.asn}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">网络运营商:</span>
+                    <span className="font-medium text-xs">{visitorInfo.asn.name}</span>
+                  </div>
+                </>
+              )}
+              {visitorInfo.company && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">服务商:</span>
+                  <span className="font-medium text-xs">{visitorInfo.company.name}</span>
+                </div>
+              )}
+              {visitorInfo.timezone && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">时区:</span>
+                  <span className="font-medium">{visitorInfo.timezone}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              <Network className="h-6 w-6 mx-auto mb-2" />
+              <p className="text-xs">获取IP信息中...</p>
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* 工具选择标签 */}

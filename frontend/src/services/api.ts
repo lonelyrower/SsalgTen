@@ -57,6 +57,12 @@ export interface NodeData {
   provider: string;
   ipv4?: string;
   ipv6?: string;
+  // ASN信息
+  asnNumber?: string;
+  asnName?: string;
+  asnOrg?: string;
+  asnRoute?: string;
+  asnType?: string;
   agentId: string;
   lastSeen?: string;
   createdAt: string;
@@ -130,6 +136,67 @@ export interface SystemConfig {
   description?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ASN信息接口
+export interface ASNInfo {
+  asn: string;
+  name: string;
+  org: string;
+  route: string;
+  type: string;
+}
+
+// 访问者信息接口
+export interface VisitorInfo {
+  ip: string;
+  userAgent: string;
+  hostname?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  loc?: string; // "latitude,longitude"
+  timezone?: string;
+  asn?: ASNInfo;
+  company?: {
+    name: string;
+    domain?: string;
+    type?: string;
+  };
+}
+
+// IP详细信息接口
+export interface IPInfo {
+  ip: string;
+  hostname?: string;
+  city: string;
+  region: string;
+  country: string;
+  loc: string; // "latitude,longitude"
+  postal?: string;
+  timezone: string;
+  asn: ASNInfo;
+  company?: {
+    name: string;
+    domain?: string;
+    type?: string;
+  };
+}
+
+// 访问者统计接口
+export interface VisitorStats {
+  totalVisitors: number;
+  uniqueIPs: number;
+  topCountries: Array<{ country: string; count: number }>;
+  topASNs: Array<{ asn: string; count: number }>;
+  recentVisitors: Array<{
+    ip: string;
+    country?: string;
+    city?: string;
+    asnName?: string;
+    userAgent: string;
+    createdAt: string;
+  }>;
 }
 
 class ApiService {
@@ -410,6 +477,30 @@ class ApiService {
   // API信息
   async getApiInfo(): Promise<ApiResponse<any>> {
     return this.request<any>('/info');
+  }
+
+  // 访问者信息API
+  async getVisitorInfo(): Promise<ApiResponse<VisitorInfo>> {
+    return this.request<VisitorInfo>('/visitor/info');
+  }
+
+  async getIPInfo(ip: string): Promise<ApiResponse<IPInfo>> {
+    return this.request<IPInfo>(`/visitor/ip/${encodeURIComponent(ip)}`);
+  }
+
+  // 访问者统计API（管理员专用）
+  async getVisitorStats(days: number = 7): Promise<ApiResponse<VisitorStats>> {
+    return this.request<VisitorStats>(`/admin/visitors/stats?days=${days}`, {}, true);
+  }
+
+  async getVisitorCacheStats(): Promise<ApiResponse<{ size: number; ttl: number }>> {
+    return this.request<{ size: number; ttl: number }>('/admin/visitors/cache', {}, true);
+  }
+
+  async clearVisitorCache(): Promise<ApiResponse<void>> {
+    return this.request<void>('/admin/visitors/cache/clear', {
+      method: 'POST'
+    }, true);
   }
 }
 

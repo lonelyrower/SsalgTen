@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx src/utils/seed.ts",
+    "db:update-asn": "tsx src/scripts/update-asn.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
@@ -53,6 +54,7 @@
   "dependencies": {
     "@prisma/client": "^6.13.0",
     "@types/socket.io": "^3.0.1",
+    "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",

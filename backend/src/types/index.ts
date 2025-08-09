@@ -10,6 +10,12 @@ export interface Node {
   provider: string;
   ipv4?: string;
   ipv6?: string;
+  // ASN信息
+  asnNumber?: string;
+  asnName?: string;
+  asnOrg?: string;
+  asnRoute?: string;
+  asnType?: string;
   status: 'online' | 'offline' | 'unknown';
   lastHeartbeat?: Date;
   apiKey: string;
@@ -45,5 +51,49 @@ export interface AgentHeartbeat {
     cpuUsage: number;
     memoryUsage: number;
     diskUsage: number;
+  };
+}
+
+export interface VisitorInfo {
+  ip: string;
+  userAgent: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+  asnNumber?: string;
+  asnName?: string;
+  asnOrg?: string;
+  company?: string;
+  endpoint?: string;
+  method?: string;
+  referer?: string;
+  nodeId?: string;
+}
+
+export interface ASNInfo {
+  asn: string;
+  name: string;
+  org: string;
+  route: string;
+  type: string;
+}
+
+export interface IPGeolocation {
+  ip: string;
+  hostname?: string;
+  city: string;
+  region: string;
+  country: string;
+  loc: string; // "latitude,longitude"
+  postal?: string;
+  timezone: string;
+  asn: ASNInfo;
+  company?: {
+    name: string;
+    domain?: string;
+    type?: string;
   };
 }
