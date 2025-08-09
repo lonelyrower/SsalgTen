@@ -424,6 +424,9 @@ create_environment_config() {
 NODE_ENV=production
 DOMAIN=$DOMAIN
 
+# 前端配置
+VITE_API_BASE_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+
 # 数据库配置
 POSTGRES_USER=ssalgten
 POSTGRES_PASSWORD=$DB_PASSWORD
