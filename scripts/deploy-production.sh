@@ -610,8 +610,9 @@ build_and_start_services() {
     log_info "等待数据库启动..."
     sleep 15
     
-    # 运行数据库迁移
-    docker-compose -f $compose_file run --rm backend npm run db:migrate
+    # 运行数据库初始化 (非交互式)
+    log_info "初始化数据库..."
+    docker-compose -f $compose_file run --rm backend npm run db:push
     
     # 启动所有服务
     docker-compose -f $compose_file up -d

@@ -43,6 +43,9 @@ COPY --from=builder --chown=ssalgten:nodejs /app/dist ./dist
 COPY --from=builder --chown=ssalgten:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=ssalgten:nodejs /app/prisma ./prisma
 
+# Ensure node_modules has correct permissions
+RUN chown -R ssalgten:nodejs /app/node_modules
+
 # Copy environment file template
 COPY backend/.env.docker ./.env
 
