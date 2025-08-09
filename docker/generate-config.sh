@@ -1,7 +1,15 @@
 #!/bin/sh
 
 # Generate runtime configuration for frontend
-echo "Generating frontend runtime configuration..."
+echo "🔧 [ENTRYPOINT] Generating frontend runtime configuration..."
+
+# Debug: Print environment variables
+echo "🔍 [DEBUG] Environment variables:"
+echo "  VITE_API_BASE_URL: ${VITE_API_BASE_URL:-not set}"
+echo "  VITE_APP_NAME: ${VITE_APP_NAME:-not set}"
+
+# Ensure the html directory exists
+mkdir -p /usr/share/nginx/html
 
 # Create config.js file with runtime environment variables
 cat > /usr/share/nginx/html/config.js << EOF
@@ -15,5 +23,12 @@ window.APP_CONFIG = {
 };
 EOF
 
-echo "Frontend configuration generated successfully"
-echo "API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001/api}"
+# Verify the file was created
+if [ -f "/usr/share/nginx/html/config.js" ]; then
+    echo "✅ [SUCCESS] Frontend configuration generated successfully"
+    echo "📍 [INFO] API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001/api}"
+    echo "📁 [INFO] Config file created at: /usr/share/nginx/html/config.js"
+else
+    echo "❌ [ERROR] Failed to create config.js file"
+    exit 1
+fi

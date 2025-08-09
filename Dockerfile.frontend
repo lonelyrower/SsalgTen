@@ -37,19 +37,23 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built application
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy runtime configuration script
+# Copy runtime configuration script and ensure it runs before nginx starts
 COPY docker/generate-config.sh /docker-entrypoint.d/40-generate-config.sh
 RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
 
-# Health check
+# Create a custom entrypoint that ensures config generation
+COPY docker/custom-entrypoint.sh /custom-entrypoint.sh  
+RUN chmod +x /custom-entrypoint.sh
+
+# Health check - use IPv4 explicitly to avoid connection issues
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:80/health || exit 1
 
 # Expose port
 EXPOSE 80
 
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["dumb-init", "--"]
+# Use custom entrypoint to ensure config generation
+ENTRYPOINT ["dumb-init", "--", "/custom-entrypoint.sh"]
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
