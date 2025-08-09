@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ssalgten-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ssalgten
+      POSTGRES_USER: ssalgten
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ssalgten_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ssalgten -d ssalgten"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ssalgten-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+      
+      # Database Configuration
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@postgres:5432/ssalgten
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      
+      # API Security
+      API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      
+      # Agent Configuration
+      DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
+      AGENT_HEARTBEAT_INTERVAL: ${AGENT_HEARTBEAT_INTERVAL:-30000}
+      
+      # IP Info Service
+      IPINFO_TOKEN: ${IPINFO_TOKEN:-}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ENABLE_MORGAN: ${ENABLE_MORGAN:-true}
+    volumes:
+      - backend_logs:/app/logs
+    ports:
+      - "3001:3001"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Frontend Web Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ssalgten-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Frontend Environment Variables
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
+      VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
+      VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
+    ports:
+      - "3000:80"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ssalgten-network:
+    driver: bridge
+    name: ssalgten-network
+
+volumes:
+  postgres_data:
+    name: ssalgten-postgres-data
+  backend_logs:
+    name: ssalgten-backend-logs

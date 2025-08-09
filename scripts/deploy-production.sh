@@ -592,19 +592,22 @@ install_ssl_certificate() {
 build_and_start_services() {
     log_info "构建和启动服务..."
     
+    # 使用生产专用docker-compose文件
+    local compose_file="docker-compose.production.yml"
+    
     # 构建Docker镜像
-    docker-compose build --no-cache
+    docker-compose -f $compose_file build --no-cache
     
     # 启动数据库
-    docker-compose up -d postgres
+    docker-compose -f $compose_file up -d postgres
     log_info "等待数据库启动..."
     sleep 15
     
     # 运行数据库迁移
-    docker-compose run --rm backend npm run db:migrate
+    docker-compose -f $compose_file run --rm backend npm run db:migrate
     
     # 启动所有服务
-    docker-compose up -d
+    docker-compose -f $compose_file up -d
     
     log_info "等待服务启动..."
     sleep 30
@@ -623,7 +626,7 @@ verify_deployment() {
         log_info "验证尝试 $attempt/$max_attempts..."
         
         # 检查容器状态
-        if ! docker-compose ps | grep -q "Up"; then
+        if ! docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
             log_warning "容器未全部启动，等待10秒..."
             sleep 10
             attempt=$((attempt + 1))
@@ -667,33 +670,33 @@ create_management_scripts() {
 case "$1" in
     start)
         echo "启动SsalgTen服务..."
-        docker-compose up -d
+        docker-compose -f docker-compose.production.yml up -d
         ;;
     stop)
         echo "停止SsalgTen服务..."
-        docker-compose down
+        docker-compose -f docker-compose.production.yml down
         ;;
     restart)
         echo "重启SsalgTen服务..."
-        docker-compose restart
+        docker-compose -f docker-compose.production.yml restart
         ;;
     status)
         echo "查看服务状态..."
-        docker-compose ps
+        docker-compose -f docker-compose.production.yml ps
         ;;
     logs)
         echo "查看服务日志..."
-        docker-compose logs -f ${2:-""}
+        docker-compose -f docker-compose.production.yml logs -f ${2:-""}
         ;;
     update)
         echo "更新服务..."
         git pull
-        docker-compose build --no-cache
-        docker-compose up -d
+        docker-compose -f docker-compose.production.yml build --no-cache
+        docker-compose -f docker-compose.production.yml up -d
         ;;
     backup)
         echo "备份数据库..."
-        docker-compose exec postgres pg_dump -U ssalgten ssalgten > backup_$(date +%Y%m%d_%H%M%S).sql
+        docker-compose -f docker-compose.production.yml exec postgres pg_dump -U ssalgten ssalgten > backup_$(date +%Y%m%d_%H%M%S).sql
         echo "备份完成"
         ;;
     *)
@@ -715,7 +718,7 @@ echo "==============================="
 
 # 容器状态
 echo "容器状态:"
-docker-compose ps
+docker-compose -f docker-compose.production.yml ps
 
 echo ""
 
