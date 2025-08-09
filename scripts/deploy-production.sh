@@ -452,16 +452,17 @@ EOF
     
     # 创建前端环境配置
     cat > frontend/.env << EOF
-# API配置
-VITE_API_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
-
-# 生产环境设置
-VITE_NODE_ENV=production
+# API配置 - 使用正确的环境变量名
+VITE_API_BASE_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+VITE_APP_NAME=SsalgTen Network Monitor
+VITE_APP_VERSION=1.0.0
 VITE_ENABLE_DEBUG=false
-
-# 地图配置
-VITE_MAP_TILE_URL=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+VITE_MAP_PROVIDER=openstreetmap
+VITE_MAP_API_KEY=
 EOF
+
+    # 确保前端配置在Docker构建时可用
+    cp frontend/.env frontend/.env.production
     
     # 创建Agent环境配置模板
     cat > agent/.env.template << EOF
