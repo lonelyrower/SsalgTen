@@ -23,6 +23,17 @@ JWT_SECRET=""
 API_SECRET=""
 AGENT_KEY=""
 
+# 通用sudo函数
+run_as_root() {
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        # 直接执行命令
+        "$@"
+    else
+        # 使用sudo执行
+        sudo "$@"
+    fi
+}
+
 # 日志函数
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -66,16 +77,13 @@ check_system_requirements() {
     source /etc/os-release
     log_success "操作系统: $PRETTY_NAME"
     
-    # 检查用户权限
-    if [[ $EUID -eq 0 ]]; then
-        log_error "请不要使用root用户运行，脚本会在需要时请求sudo权限"
-        exit 1
-    fi
-    
-    # 检查sudo权限
-    if ! sudo -v >/dev/null 2>&1; then
-        log_error "需要sudo权限"
-        exit 1
+    # 检查权限（主检查已在main函数中完成）
+    if [[ "$RUNNING_AS_ROOT" != "true" ]]; then
+        # 非root用户需要检查sudo权限
+        if ! sudo -v >/dev/null 2>&1; then
+            log_error "需要sudo权限来安装系统依赖"
+            exit 1
+        fi
     fi
     
     # 检查系统资源
@@ -224,18 +232,18 @@ install_system_dependencies() {
     log_info "安装系统依赖..."
     
     # 更新系统
-    sudo apt update
-    sudo apt upgrade -y
+    run_as_root apt update
+    run_as_root apt upgrade -y
     
     # 安装基础工具
-    sudo apt install -y curl wget git vim ufw htop unzip jq
+    run_as_root apt install -y curl wget git vim ufw htop unzip jq
     
     # 配置防火墙
-    sudo ufw --force reset
-    sudo ufw allow ssh
-    sudo ufw allow 80
-    sudo ufw allow 443
-    sudo ufw --force enable
+    run_as_root ufw --force reset
+    run_as_root ufw allow ssh
+    run_as_root ufw allow 80
+    run_as_root ufw allow 443
+    run_as_root ufw --force enable
     
     log_success "系统依赖安装完成"
 }
@@ -250,25 +258,25 @@ install_docker() {
     fi
     
     # 卸载旧版本
-    sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+    run_as_root apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
     
     # 安装依赖
-    sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+    run_as_root apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
     
     # 添加Docker GPG密钥
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     
     # 添加Docker仓库
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
     
     # 安装Docker
-    sudo apt update
-    sudo apt install -y docker-ce docker-ce-cli containerd.io
+    run_as_root apt update
+    run_as_root apt install -y docker-ce docker-ce-cli containerd.io
     
     # 安装Docker Compose
     COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
-    sudo curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
+    run_as_root curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    run_as_root chmod +x /usr/local/bin/docker-compose
     
     # 添加用户到docker组
     if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
@@ -276,12 +284,12 @@ install_docker() {
         usermod -aG docker ssalgten
         log_info "已将ssalgten用户添加到docker组"
     else
-        sudo usermod -aG docker $USER
+        run_as_root usermod -aG docker $USER
     fi
     
     # 启动Docker服务
-    sudo systemctl start docker
-    sudo systemctl enable docker
+    run_as_root systemctl start docker
+    run_as_root systemctl enable docker
     
     log_success "Docker安装完成"
 }
@@ -290,12 +298,12 @@ install_docker() {
 install_nginx() {
     log_info "安装Nginx..."
     
-    sudo apt install -y nginx
-    sudo systemctl start nginx
-    sudo systemctl enable nginx
+    run_as_root apt install -y nginx
+    run_as_root systemctl start nginx
+    run_as_root systemctl enable nginx
     
     # 删除默认站点
-    sudo rm -f /etc/nginx/sites-enabled/default
+    run_as_root rm -f /etc/nginx/sites-enabled/default
     
     log_success "Nginx安装完成"
 }
@@ -319,8 +327,8 @@ create_application_directory() {
         
         log_info "应用将以 ssalgten 用户身份运行"
     else
-        sudo mkdir -p $APP_DIR
-        sudo chown $USER:$USER $APP_DIR
+        run_as_root mkdir -p $APP_DIR
+        run_as_root chown $USER:$USER $APP_DIR
     fi
     
     cd $APP_DIR
@@ -422,7 +430,7 @@ create_nginx_config() {
     
     if [[ "$ENABLE_SSL" == "true" ]]; then
         # HTTPS模式配置
-        sudo tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
+        run_as_root tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTPS模式)
 server {
     listen 80;
@@ -490,7 +498,7 @@ server {
 EOF
     else
         # HTTP模式配置
-        sudo tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
+        run_as_root tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTP模式)
 server {
     listen 80;
@@ -548,10 +556,10 @@ EOF
     fi
     
     # 启用站点
-    sudo ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/
+    run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/
     
     # 测试配置
-    sudo nginx -t
+    run_as_root nginx -t
     
     if [[ "$ENABLE_SSL" == "true" ]]; then
         log_success "Nginx HTTPS配置创建完成"
@@ -566,13 +574,13 @@ install_ssl_certificate() {
         log_info "安装SSL证书..."
         
         # 安装Certbot
-        sudo apt install -y certbot python3-certbot-nginx
+        run_as_root apt install -y certbot python3-certbot-nginx
         
         # 获取SSL证书
-        sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+        run_as_root certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
         
         # 设置自动续期
-        echo "0 12 * * * /usr/bin/certbot renew --quiet" | sudo crontab -
+        echo "0 12 * * * /usr/bin/certbot renew --quiet" | run_as_root crontab -
         
         log_success "SSL证书安装完成"
     else
