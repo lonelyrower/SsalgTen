@@ -14,7 +14,8 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # 配置变量
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.1.0"
+SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh"
 APP_DIR="/opt/ssalgten"
 DOMAIN=""
 SSL_EMAIL=""
@@ -51,6 +52,56 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# 检查脚本更新
+check_script_update() {
+    log_info "检查脚本更新..."
+    
+    # 获取远程版本号
+    REMOTE_VERSION=$(curl -s "$SCRIPT_URL" | grep '^SCRIPT_VERSION=' | cut -d'"' -f2 2>/dev/null)
+    
+    if [[ -n "$REMOTE_VERSION" && "$REMOTE_VERSION" != "$SCRIPT_VERSION" ]]; then
+        log_warning "发现新版本: $REMOTE_VERSION (当前: $SCRIPT_VERSION)"
+        echo ""
+        echo -e "${YELLOW}建议更新到最新版本以获得最佳体验${NC}"
+        echo ""
+        read -p "是否立即更新脚本？ (y/n): " update_choice
+        if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
+            update_script
+            return 0
+        else
+            log_warning "继续使用当前版本，可能遇到已知问题"
+            echo ""
+            read -p "确认继续？ (y/n): " confirm_continue
+            if [[ "$confirm_continue" != "y" && "$confirm_continue" != "Y" ]]; then
+                log_info "已取消部署"
+                exit 0
+            fi
+        fi
+    else
+        log_success "脚本已是最新版本"
+    fi
+}
+
+# 更新脚本
+update_script() {
+    log_info "下载最新脚本..."
+    
+    # 备份当前脚本
+    cp "$0" "$0.backup.$(date +%Y%m%d_%H%M%S)"
+    
+    # 下载新脚本
+    if curl -fsSL "$SCRIPT_URL" -o "$0.new"; then
+        chmod +x "$0.new"
+        mv "$0.new" "$0"
+        log_success "脚本更新完成！重新启动..."
+        echo ""
+        exec "$0" "$@"
+    else
+        log_error "脚本更新失败"
+        exit 1
+    fi
+}
+
 # 显示欢迎信息
 show_welcome() {
     clear
@@ -61,6 +112,7 @@ show_welcome() {
     echo -e "${NC}"
     echo "版本: $SCRIPT_VERSION"
     echo "功能: 一键部署SsalgTen完整系统"
+    echo "更新: 支持自动版本检查和更新"
     echo ""
 }
 
@@ -857,7 +909,21 @@ show_deployment_result() {
 
 # 主部署流程
 main() {
-    show_welcome
+    # 处理命令行参数
+    case "${1:-}" in
+        --update)
+            log_info "强制更新脚本..."
+            update_script
+            ;;
+        --no-update-check)
+            log_info "跳过更新检查"
+            show_welcome
+            ;;
+        *)
+            show_welcome
+            check_script_update
+            ;;
+    esac
     
     # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
