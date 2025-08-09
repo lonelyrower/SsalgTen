@@ -332,9 +332,13 @@ install_docker() {
     
     # 添加用户到docker组
     if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-        # root运行时，确保ssalgten用户可以使用docker
-        usermod -aG docker ssalgten
-        log_info "已将ssalgten用户添加到docker组"
+        # root运行时，确保ssalgten用户可以使用docker（如果用户已存在）
+        if id "ssalgten" &>/dev/null; then
+            usermod -aG docker ssalgten
+            log_info "已将ssalgten用户添加到docker组"
+        else
+            log_info "ssalgten用户尚未创建，稍后添加到docker组"
+        fi
     else
         run_as_root usermod -aG docker $USER
     fi
@@ -369,6 +373,12 @@ create_application_directory() {
         if ! id "ssalgten" &>/dev/null; then
             log_info "创建专用应用用户 ssalgten..."
             useradd -r -s /bin/bash -d $APP_DIR ssalgten
+            
+            # 添加到docker组（如果docker已安装）
+            if command -v docker >/dev/null 2>&1; then
+                usermod -aG docker ssalgten
+                log_info "已将ssalgten用户添加到docker组"
+            fi
         fi
         
         mkdir -p $APP_DIR
