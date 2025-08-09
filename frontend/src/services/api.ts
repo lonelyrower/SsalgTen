@@ -1,6 +1,16 @@
 // API服务 - 与后端通信的统一接口
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+// Get API base URL from runtime config or fallback to env var or default
+const getApiBaseUrl = (): string => {
+  // Check runtime config first
+  if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_BASE_URL) {
+    return (window as any).APP_CONFIG.API_BASE_URL;
+  }
+  // Fallback to build-time env var or default
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // JWT 令牌管理
 class TokenManager {

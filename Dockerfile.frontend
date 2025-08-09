@@ -37,9 +37,9 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built application
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy environment configuration script
-COPY docker/inject-env.sh /docker-entrypoint.d/40-inject-env.sh
-RUN chmod +x /docker-entrypoint.d/40-inject-env.sh
+# Copy runtime configuration script
+COPY docker/generate-config.sh /docker-entrypoint.d/40-generate-config.sh
+RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
