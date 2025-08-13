@@ -32,7 +32,19 @@ class SocketServiceImpl implements SocketService {
       return;
     }
 
-    const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    // Get the base URL and extract the server URL (without /api)
+    const getServerUrl = (): string => {
+      // Check runtime config first
+      if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_BASE_URL) {
+        const apiUrl = (window as any).APP_CONFIG.API_BASE_URL;
+        return apiUrl.replace('/api', '');
+      }
+      // Fallback to build-time env var or default
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+      return apiBaseUrl.replace('/api', '');
+    };
+    
+    const serverUrl = getServerUrl();
     
     this.socket = io(serverUrl, {
       auth: {
