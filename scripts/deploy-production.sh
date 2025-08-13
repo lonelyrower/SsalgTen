@@ -446,8 +446,63 @@ download_source_code() {
         rm -rf .[^.]* 2>/dev/null || true
     fi
     
-    # 克隆项目
-    git clone https://github.com/lonelyrower/SsalgTen.git .
+    # 尝试多种下载方式
+    local download_success=false
+    local methods=(
+        "git clone https://github.com/lonelyrower/SsalgTen.git ."
+        "git clone https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git ."
+        "git clone https://hub.fastgit.xyz/lonelyrower/SsalgTen.git ."
+    )
+    
+    # 尝试Git克隆
+    for method in "${methods[@]}"; do
+        log_info "尝试: $method"
+        if eval "$method" 2>/dev/null; then
+            download_success=true
+            log_success "Git克隆成功"
+            break
+        else
+            log_warning "Git克隆失败，尝试下一种方法..."
+        fi
+    done
+    
+    # 如果Git克隆都失败，使用wget下载ZIP包
+    if [[ "$download_success" == false ]]; then
+        log_warning "Git克隆失败，使用wget下载ZIP包..."
+        
+        local zip_urls=(
+            "https://github.com/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+            "https://github.com.cnpmjs.org/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+            "https://hub.fastgit.xyz/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+        )
+        
+        for zip_url in "${zip_urls[@]}"; do
+            log_info "尝试下载: $zip_url"
+            if wget -q "$zip_url" -O main.zip 2>/dev/null; then
+                if unzip -q main.zip 2>/dev/null; then
+                    mv SsalgTen-main/* . 2>/dev/null
+                    mv SsalgTen-main/.* . 2>/dev/null || true
+                    rmdir SsalgTen-main 2>/dev/null
+                    rm -f main.zip
+                    download_success=true
+                    log_success "ZIP包下载成功"
+                    break
+                fi
+            fi
+        done
+    fi
+    
+    # 最后检查是否下载成功
+    if [[ "$download_success" == false ]]; then
+        log_error "所有下载方法都失败了"
+        log_error "请检查网络连接或手动下载源码"
+        echo ""
+        echo "手动下载方法："
+        echo "1. 访问 https://github.com/lonelyrower/SsalgTen"
+        echo "2. 下载ZIP文件并解压到 $APP_DIR"
+        echo "3. 重新运行此脚本"
+        exit 1
+    fi
     
     log_success "源码下载完成"
 }
