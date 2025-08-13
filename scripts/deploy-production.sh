@@ -388,9 +388,46 @@ collect_deployment_info() {
     fi
 }
 
+# 彻底清理Docker源残留配置
+cleanup_docker_sources() {
+    log_info "彻底清理Docker源残留配置..."
+    
+    # 停止可能运行的apt进程
+    run_as_root pkill -f apt || true
+    sleep 2
+    
+    # 删除所有Docker相关源文件
+    run_as_root rm -f /etc/apt/sources.list.d/docker*.list
+    run_as_root rm -f /etc/apt/sources.list.d/*docker*.list
+    run_as_root rm -f /usr/share/keyrings/docker*.gpg
+    run_as_root rm -f /usr/share/keyrings/*docker*.gpg
+    
+    # 从主源文件中删除docker.com条目
+    if run_as_root grep -q "docker\.com" /etc/apt/sources.list 2>/dev/null; then
+        log_info "从主源文件中移除Docker条目..."
+        run_as_root sed -i '/docker\.com/d' /etc/apt/sources.list
+    fi
+    
+    # 检查并清理sources.list.d目录中的docker.com条目
+    if run_as_root find /etc/apt/sources.list.d/ -name "*.list" -exec grep -l "docker\.com" {} \; 2>/dev/null | grep -q .; then
+        log_info "从sources.list.d目录中移除Docker条目..."
+        run_as_root find /etc/apt/sources.list.d/ -name "*.list" -exec sed -i '/docker\.com/d' {} \;
+    fi
+    
+    # 彻底清理APT缓存
+    run_as_root apt clean
+    run_as_root apt autoclean
+    run_as_root rm -rf /var/lib/apt/lists/*
+    
+    log_success "Docker源清理完成"
+}
+
 # 安装系统依赖
 install_system_dependencies() {
     log_info "安装系统依赖..."
+    
+    # 先彻底清理Docker源
+    cleanup_docker_sources
     
     # 更新系统
     run_as_root apt update
@@ -437,22 +474,17 @@ install_docker() {
     
     log_info "系统检测结果: OS=$os_id, Codename=$os_codename"
     
-    # 全面清理所有可能的Docker源配置
-    log_info "清理旧的Docker源配置..."
-    run_as_root rm -f /etc/apt/sources.list.d/docker.list
-    run_as_root rm -f /etc/apt/sources.list.d/docker-ce.list  
-    run_as_root rm -f /etc/apt/sources.list.d/docker*.list
-    run_as_root rm -f /usr/share/keyrings/docker-archive-keyring.gpg
-    run_as_root rm -f /usr/share/keyrings/docker*.gpg
+    # 再次确保Docker源完全清理（双重保险）
+    log_info "最终验证Docker源清理状态..."
     
-    # 检查是否还有其他Docker相关的源
-    echo "检查现有的Docker相关源配置..."
-    if run_as_root grep -r "docker.com" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
-        log_warning "发现其他Docker源配置，正在清理..."
-        run_as_root sed -i '/docker\.com/d' /etc/apt/sources.list
-        run_as_root find /etc/apt/sources.list.d/ -name "*.list" -exec sed -i '/docker\.com/d' {} \;
+    # 检查是否还有残留的Docker源
+    if run_as_root find /etc/apt -name "*.list" -exec grep -l "docker\.com" {} \; 2>/dev/null | grep -q .; then
+        log_warning "发现残留的Docker源，进行最终清理..."
+        cleanup_docker_sources
+        # 强制重新更新
+        run_as_root apt update
     else
-        log_info "未发现其他Docker源配置"
+        log_info "Docker源清理验证通过"
     fi
     
     if [[ "$os_id" == "debian" ]]; then
@@ -499,9 +531,17 @@ install_docker() {
         exit 1
     fi
     
-    # 清理APT缓存并更新
-    log_info "清理APT缓存并更新源..."
+    # 最终验证和更新
+    log_info "最终验证Docker源配置并更新..."
+    
+    # 显示所有Docker相关的源（用于调试）
+    echo "=== 当前所有包含docker的源配置 ==="
+    run_as_root find /etc/apt -name "*.list" -exec grep -H "docker" {} \; 2>/dev/null || echo "无Docker源配置"
+    echo "=================================="
+    
+    # 清理APT缓存并强制更新
     run_as_root apt clean
+    run_as_root rm -rf /var/lib/apt/lists/*
     run_as_root apt update
     
     log_info "安装Docker软件包..."
