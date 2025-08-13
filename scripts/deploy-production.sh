@@ -435,6 +435,12 @@ install_docker() {
     local os_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
     local os_codename=$(lsb_release -cs)
     
+    log_info "系统检测结果: OS=$os_id, Codename=$os_codename"
+    
+    # 清理可能存在的旧Docker源配置
+    run_as_root rm -f /etc/apt/sources.list.d/docker.list
+    run_as_root rm -f /usr/share/keyrings/docker-archive-keyring.gpg
+    
     if [[ "$os_id" == "debian" ]]; then
         log_info "检测到Debian系统，使用Debian Docker源"
         curl -fsSL https://download.docker.com/linux/debian/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -464,8 +470,11 @@ install_docker() {
         return 0
     fi
     
-    # 安装Docker
+    # 清理APT缓存并安装Docker
+    run_as_root apt clean
     run_as_root apt update
+    
+    log_info "安装Docker软件包..."
     run_as_root apt install -y docker-ce docker-ce-cli containerd.io
     
     # 安装Docker Compose
