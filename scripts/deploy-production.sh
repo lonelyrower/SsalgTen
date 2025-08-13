@@ -353,11 +353,38 @@ install_docker() {
     # 安装依赖
     run_as_root apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
     
-    # 添加Docker GPG密钥
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    # 检测操作系统并添加相应的Docker GPG密钥和仓库
+    local os_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+    local os_codename=$(lsb_release -cs)
     
-    # 添加Docker仓库
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+    if [[ "$os_id" == "debian" ]]; then
+        log_info "检测到Debian系统，使用Debian Docker源"
+        curl -fsSL https://download.docker.com/linux/debian/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $os_codename stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+    elif [[ "$os_id" == "ubuntu" ]]; then
+        log_info "检测到Ubuntu系统，使用Ubuntu Docker源"
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $os_codename stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+    else
+        log_warning "未知操作系统，尝试使用官方安装脚本"
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        run_as_root sh get-docker.sh
+        rm get-docker.sh
+        
+        # 如果使用官方脚本，跳过后面的apt安装步骤
+        if command -v docker >/dev/null 2>&1; then
+            log_success "Docker安装完成: $(docker --version)"
+        else
+            log_error "Docker安装失败"
+            exit 1
+        fi
+        
+        # 安装Docker Compose
+        COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+        run_as_root curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        run_as_root chmod +x /usr/local/bin/docker-compose
+        return 0
+    fi
     
     # 安装Docker
     run_as_root apt update
