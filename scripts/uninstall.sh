@@ -169,19 +169,47 @@ cleanup_ssl_certificates() {
 
 # 重置防火墙规则
 reset_firewall() {
-    log_info "重置防火墙规则..."
+    log_info "配置防火墙规则..."
     
     if command -v ufw >/dev/null 2>&1; then
-        log_info "重置UFW防火墙规则..."
-        $SUDO ufw --force reset
-        $SUDO ufw default deny incoming
-        $SUDO ufw default allow outgoing
-        $SUDO ufw allow ssh
-        $SUDO ufw --force enable
-        log_info "防火墙已重置为默认状态（仅允许SSH）"
+        # 询问用户是否要完全重置防火墙
+        echo ""
+        log_warning "防火墙配置选项："
+        echo "1. 仅删除SsalgTen相关端口规则 (保留其他服务端口)"
+        echo "2. 完全重置防火墙规则 (会删除所有自定义规则)"
+        echo ""
+        
+        read -p "选择防火墙配置方式 [1/2] (回车默认选择 1): " fw_choice < /dev/tty
+        fw_choice=${fw_choice:-1}
+        
+        if [[ "$fw_choice" == "2" ]]; then
+            log_info "完全重置UFW防火墙规则..."
+            $SUDO ufw --force reset
+            $SUDO ufw default deny incoming
+            $SUDO ufw default allow outgoing
+            $SUDO ufw allow ssh
+            $SUDO ufw --force enable
+            log_info "防火墙已重置为默认状态（仅允许SSH）"
+        else
+            log_info "仅清理SsalgTen相关端口规则..."
+            
+            # 删除常见的SsalgTen端口
+            $SUDO ufw delete allow 80 2>/dev/null || true
+            $SUDO ufw delete allow 443 2>/dev/null || true
+            $SUDO ufw delete allow 3000 2>/dev/null || true
+            $SUDO ufw delete allow 3001 2>/dev/null || true
+            $SUDO ufw delete allow 5432 2>/dev/null || true
+            
+            # 显示当前规则
+            echo ""
+            log_info "当前防火墙规则："
+            $SUDO ufw status numbered
+            echo ""
+            log_info "已删除SsalgTen相关端口，保留其他服务端口"
+        fi
     fi
     
-    log_success "防火墙规则重置完成"
+    log_success "防火墙规则配置完成"
 }
 
 # 清理Docker源配置
@@ -209,7 +237,7 @@ ask_deep_cleanup() {
     echo "2. 清理所有未使用的Docker资源"
     echo "3. 卸载相关系统依赖包"
     echo ""
-    read -p "是否执行深度清理？(y/N): " deep_clean < /dev/tty
+    read -p "是否执行深度清理？[Y/N] (回车默认选择 N): " deep_clean < /dev/tty
     
     if [[ "$deep_clean" =~ ^[Yy]$ ]]; then
         deep_cleanup
@@ -225,7 +253,7 @@ deep_cleanup() {
     docker system prune -af --volumes 2>/dev/null || true
     
     # 询问是否卸载Docker
-    read -p "是否完全卸载Docker？这会影响其他Docker项目 (y/N): " remove_docker < /dev/tty
+    read -p "是否完全卸载Docker？这会影响其他Docker项目 [Y/N] (回车默认选择 N): " remove_docker < /dev/tty
     if [[ "$remove_docker" =~ ^[Yy]$ ]]; then
         log_info "卸载Docker..."
         $SUDO apt remove -y docker-ce docker-ce-cli containerd.io docker-compose-plugin 2>/dev/null || true
@@ -233,7 +261,7 @@ deep_cleanup() {
     fi
     
     # 询问是否清理依赖包
-    read -p "是否清理系统依赖包？(curl, wget, git, nginx等) (y/N): " remove_deps < /dev/tty
+    read -p "是否清理系统依赖包？(curl, wget, git, nginx等) [Y/N] (回车默认选择 N): " remove_deps < /dev/tty
     if [[ "$remove_deps" =~ ^[Yy]$ ]]; then
         log_info "清理系统依赖包..."
         # 这里列出的是部署脚本安装的包，用户可能其他地方也在用，所以默认不删除
