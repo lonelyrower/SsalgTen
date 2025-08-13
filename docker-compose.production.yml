@@ -87,7 +87,7 @@ services:
       VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
       VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
     ports:
-      - "3000:80"
+      - "3000:80"  # Nginx will proxy to this container on port 3000
     networks:
       - ssalgten-network
     healthcheck:

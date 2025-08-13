@@ -225,9 +225,11 @@ export async function runSeed() {
     
     await seedSystemSettings();
     await seedAdminUser();
-    await seedNodes();
+    // 注释掉示例节点数据，用户可以通过Agent自动注册或手动添加
+    // await seedNodes();
     
     logger.info('🎉 Database seeding completed successfully!');
+    logger.info('💡 Note: No sample nodes created. Nodes will be added when agents register or via admin panel.');
     
   } catch (error) {
     logger.error('💥 Database seeding failed:', error);

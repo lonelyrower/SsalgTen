@@ -116,6 +116,41 @@ show_welcome() {
     echo ""
 }
 
+# 检查端口冲突
+check_port_conflicts() {
+    log_info "检查端口占用..."
+    
+    # 检查关键端口
+    local ports_to_check=(80 443 3000 3001 5432 6379)
+    local conflicted_ports=()
+    
+    for port in "${ports_to_check[@]}"; do
+        if netstat -tuln 2>/dev/null | grep -q ":$port " || ss -tuln 2>/dev/null | grep -q ":$port "; then
+            conflicted_ports+=($port)
+            log_warning "端口 $port 已被占用"
+        fi
+    done
+    
+    # 如果端口80被占用，提供解决方案
+    if [[ " ${conflicted_ports[*]} " == *" 80 "* ]]; then
+        log_warning "端口80已被占用，这可能会导致Nginx无法启动"
+        echo ""
+        echo "解决方案选择："
+        echo "1. 停止占用端口80的服务"
+        echo "2. 使用其他端口（如8080）"
+        echo ""
+        read -p "是否继续部署？ (y/n): " continue_deploy
+        if [[ "$continue_deploy" != "y" && "$continue_deploy" != "Y" ]]; then
+            log_info "部署已取消"
+            exit 0
+        fi
+    fi
+    
+    if [[ ${#conflicted_ports[@]} -eq 0 ]]; then
+        log_success "所有必需端口都可用"
+    fi
+}
+
 # 检查系统要求
 check_system_requirements() {
     log_info "检查系统要求..."
@@ -148,6 +183,9 @@ check_system_requirements() {
     
     local disk_available=$(df -h . | awk 'NR==2{print $4}')
     log_success "可用磁盘空间: $disk_available"
+    
+    # 检查端口占用
+    check_port_conflicts
     
     # 检查网络连接
     if ! ping -c 1 github.com >/dev/null 2>&1; then
