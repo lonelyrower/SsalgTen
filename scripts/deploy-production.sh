@@ -647,8 +647,8 @@ NODE_ENV=production
 PORT=$BACKEND_PORT
 HOST=0.0.0.0
 
-# 数据库配置
-DATABASE_URL="postgresql://ssalgten:$DB_PASSWORD@postgres:$DB_PORT/ssalgten?schema=public"
+# 数据库配置 (Docker内部通信使用默认端口5432)
+DATABASE_URL="postgresql://ssalgten:$DB_PASSWORD@postgres:5432/ssalgten?schema=public"
 
 # JWT安全配置
 JWT_SECRET=$JWT_SECRET
@@ -884,10 +884,33 @@ build_and_start_services() {
     # 启动数据库
     docker-compose -f $compose_file up -d postgres
     log_info "等待数据库启动..."
-    sleep 15
+    
+    # 等待数据库健康检查通过
+    local max_attempts=30
+    local attempt=0
+    while [ $attempt -lt $max_attempts ]; do
+        if docker-compose -f $compose_file exec postgres pg_isready -U ssalgten -d ssalgten > /dev/null 2>&1; then
+            log_success "数据库已启动完成"
+            break
+        fi
+        attempt=$((attempt + 1))
+        echo "等待数据库启动... ($attempt/$max_attempts)"
+        sleep 2
+    done
+    
+    if [ $attempt -eq $max_attempts ]; then
+        log_error "数据库启动超时"
+        exit 1
+    fi
     
     # 运行数据库初始化 (非交互式)
     log_info "初始化数据库..."
+    
+    # 显示数据库连接信息用于调试
+    echo "数据库连接调试信息："
+    echo "数据库用户: ssalgten"
+    echo "数据库名: ssalgten"
+    echo "数据库密码长度: ${#DB_PASSWORD} 字符"
     
     # 运行数据库迁移
     log_info "运行数据库迁移..."
