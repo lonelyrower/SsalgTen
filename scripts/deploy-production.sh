@@ -164,6 +164,33 @@ update_script() {
     fi
 }
 
+# 显示使用帮助
+show_usage() {
+    echo -e "${CYAN}"
+    echo "========================================"
+    echo "    SsalgTen 部署脚本使用说明"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+    echo "用法: $0 [选项]"
+    echo ""
+    echo "选项:"
+    echo "  --uninstall       完全卸载SsalgTen系统"
+    echo "  --update          强制更新脚本到最新版本"
+    echo "  --no-update-check 跳过脚本版本检查"
+    echo "  --help, -h        显示此帮助信息"
+    echo ""
+    echo "示例:"
+    echo "  $0                # 正常安装"
+    echo "  $0 --uninstall    # 完全卸载"
+    echo "  $0 --update       # 更新脚本"
+    echo ""
+    echo "📥 在线运行:"
+    echo "  安装: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh | bash"
+    echo "  卸载: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh | bash -s -- --uninstall"
+    echo ""
+}
+
 # 显示欢迎信息
 show_welcome() {
     clear
@@ -175,6 +202,8 @@ show_welcome() {
     echo "版本: $SCRIPT_VERSION"
     echo "功能: 一键部署SsalgTen完整系统"
     echo "更新: 支持自动版本检查和更新"
+    echo ""
+    echo "💡 提示: 使用 --help 查看所有选项"
     echo ""
 }
 
@@ -1293,6 +1322,13 @@ show_deployment_result() {
 main() {
     # 处理命令行参数
     case "${1:-}" in
+        --uninstall)
+            log_info "启动卸载程序..."
+            echo ""
+            echo "正在下载卸载脚本..."
+            curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash
+            exit 0
+            ;;
         --update)
             log_info "强制更新脚本..."
             update_script
@@ -1300,6 +1336,10 @@ main() {
         --no-update-check)
             log_info "跳过更新检查"
             show_welcome
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
             ;;
         *)
             show_welcome
