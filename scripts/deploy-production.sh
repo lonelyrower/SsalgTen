@@ -56,17 +56,17 @@ prompt_input() {
     echo "$response"
 }
 
-# Y/N选择函数 - 支持回车默认为Y
+# Y/N选择函数 - 支持回车选择默认值
 prompt_yes_no() {
     local prompt="$1"
     local default="${2:-y}"
     local response
     
     if [[ "$default" == "y" || "$default" == "Y" ]]; then
-        read -p "$prompt [Y/n]: " response
+        read -p "$prompt [Y/n] (回车默认选择 Y): " response
         response="${response:-y}"
     else
-        read -p "$prompt [y/N]: " response
+        read -p "$prompt [y/N] (回车默认选择 N): " response
         response="${response:-n}"
     fi
     
@@ -1187,20 +1187,24 @@ main() {
     if [[ $EUID -eq 0 ]]; then
         log_warning "⚠️ 检测到root用户运行"
         echo ""
-        echo -e "${YELLOW}安全提醒：${NC}"
-        echo "- 使用root用户运行应用程序存在安全风险"
-        echo "- 建议创建专用用户： useradd -m -s /bin/bash ssalgten"
+        echo -e "${YELLOW}安全建议：${NC}"
+        echo "- 为了系统安全，建议使用专用用户运行应用程序"
+        echo "- 推荐创建专用用户： useradd -m -s /bin/bash ssalgten"
         echo "- 然后切换用户运行： su - ssalgten"
         echo ""
-        confirm_root=$(prompt_yes_no "继续使用root用户" "N")
+        echo -e "${YELLOW}注意：按回车将默认选择安全选项（不使用root）${NC}"
+        echo ""
+        confirm_root=$(prompt_yes_no "是否仍要继续使用root用户部署" "N")
         if [[ "$confirm_root" != "y" ]]; then
-            log_info "已取消部署，请创建专用用户后重试"
+            log_info "已选择创建专用用户，这是更安全的选择！"
             echo ""
-            echo "创建用户命令："
+            echo -e "${GREEN}请执行以下命令创建专用用户：${NC}"
             echo "  useradd -m -s /bin/bash ssalgten"
             echo "  usermod -aG sudo ssalgten"
             echo "  passwd ssalgten"
             echo "  su - ssalgten"
+            echo ""
+            echo "然后重新运行此脚本即可。"
             exit 0
         fi
         
