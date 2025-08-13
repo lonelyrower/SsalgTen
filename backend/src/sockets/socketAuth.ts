@@ -8,6 +8,12 @@ export function authenticateSocket(socket: Socket, next: (err?: Error) => void) 
     // 从握手认证或查询参数中获取token
     const token = socket.handshake.auth.token || socket.handshake.query.token as string;
     
+    logger.info('Socket认证尝试:', {
+      hasAuthToken: !!socket.handshake.auth.token,
+      hasQueryToken: !!socket.handshake.query.token,
+      tokenLength: token?.length || 0
+    });
+    
     if (!token) {
       logger.warn('Socket连接缺少认证token');
       return next(new Error('未提供认证token'));
@@ -24,7 +30,7 @@ export function authenticateSocket(socket: Socket, next: (err?: Error) => void) 
     
     // 将用户信息添加到socket对象
     (socket as AuthenticatedSocket).user = {
-      id: decoded.id,
+      id: decoded.userId,
       username: decoded.username,
       role: decoded.role
     };

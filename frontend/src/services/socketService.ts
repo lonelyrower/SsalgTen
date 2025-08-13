@@ -40,7 +40,7 @@ class SocketServiceImpl implements SocketService {
         return apiUrl.replace('/api', '');
       }
       // Fallback to build-time env var or default
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       return apiBaseUrl.replace('/api', '');
     };
     
