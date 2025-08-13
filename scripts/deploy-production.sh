@@ -191,7 +191,7 @@ show_usage() {
     echo ""
 }
 
-# 显示欢迎信息
+# 显示欢迎信息和主菜单
 show_welcome() {
     clear
     echo -e "${CYAN}"
@@ -203,8 +203,86 @@ show_welcome() {
     echo "功能: 一键部署SsalgTen完整系统"
     echo "更新: 支持自动版本检查和更新"
     echo ""
-    echo "💡 提示: 使用 --help 查看所有选项"
+    show_main_menu
+}
+
+# 显示主菜单
+show_main_menu() {
+    echo "📋 请选择操作："
     echo ""
+    echo "  1️⃣  安装 SsalgTen 系统"
+    echo "  2️⃣  卸载 SsalgTen 系统"
+    echo "  3️⃣  修复数据库问题"
+    echo "  4️⃣  强制重新构建"
+    echo "  5️⃣  更新脚本"
+    echo "  6️⃣  显示帮助信息"
+    echo "  0️⃣  退出"
+    echo ""
+    
+    while true; do
+        read -p "请输入选项 [1-6, 0]: " choice < /dev/tty
+        case $choice in
+            1)
+                log_info "开始安装 SsalgTen 系统..."
+                return 0  # 继续正常的安装流程
+                ;;
+            2)
+                log_info "开始卸载 SsalgTen 系统..."
+                run_uninstall
+                exit 0
+                ;;
+            3)
+                log_info "开始修复数据库..."
+                run_database_fix
+                exit 0
+                ;;
+            4)
+                log_info "开始强制重新构建..."
+                run_force_rebuild
+                exit 0
+                ;;
+            5)
+                log_info "更新脚本..."
+                update_script
+                exit 0
+                ;;
+            6)
+                show_usage
+                echo ""
+                echo "按回车键返回主菜单..."
+                read -r < /dev/tty
+                show_main_menu
+                ;;
+            0)
+                log_info "已退出"
+                exit 0
+                ;;
+            *)
+                echo "❌ 无效选项，请输入 1-6 或 0"
+                ;;
+        esac
+    done
+}
+
+# 运行卸载程序
+run_uninstall() {
+    echo ""
+    echo "正在下载卸载脚本..."
+    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash
+}
+
+# 运行数据库修复
+run_database_fix() {
+    echo ""
+    echo "正在下载数据库修复脚本..."
+    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/fix-database.sh | bash
+}
+
+# 运行强制重构建
+run_force_rebuild() {
+    echo ""
+    echo "正在下载强制重新构建脚本..."
+    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/force-rebuild.sh | bash
 }
 
 # 检查端口冲突
@@ -1337,13 +1415,20 @@ main() {
             log_info "跳过更新检查"
             show_welcome
             ;;
+        --install)
+            # 直接安装模式，跳过菜单
+            check_script_update
+            ;;
         --help|-h)
             show_usage
             exit 0
             ;;
         *)
-            show_welcome
+            # 默认显示菜单模式
             check_script_update
+            show_welcome
+            # 如果用户选择安装（返回0），继续执行安装流程
+            # 其他选择会在show_main_menu中处理并退出
             ;;
     esac
     
