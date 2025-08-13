@@ -62,7 +62,7 @@ prompt_yes_no() {
     local default="${2:-y}"
     local response
     
-    if [[ "$default" == "y" ]]; then
+    if [[ "$default" == "y" || "$default" == "Y" ]]; then
         read -p "$prompt [Y/n]: " response
         response="${response:-y}"
     else
@@ -70,7 +70,12 @@ prompt_yes_no() {
         response="${response:-n}"
     fi
     
-    [[ "$response" =~ ^[Yy]$ ]]
+    # 返回标准化的 y 或 n
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        echo "y"
+    else
+        echo "n"
+    fi
 }
 
 # 端口输入函数 - 支持默认端口和验证
@@ -196,7 +201,8 @@ check_port_conflicts() {
         echo "1. 停止占用端口80的服务"
         echo "2. 使用其他端口（如8080）"
         echo ""
-        if ! prompt_yes_no "是否继续部署？"; then
+        continue_deploy=$(prompt_yes_no "是否继续部署" "Y")
+        if [[ "$continue_deploy" != "y" ]]; then
             log_info "部署已取消"
             exit 0
         fi
@@ -310,7 +316,8 @@ collect_deployment_info() {
         log_info "将使用 http://$SERVER_IP 访问服务"
         
         echo ""
-        if ! prompt_yes_no "确认使用此IP地址？"; then
+        confirm_ip=$(prompt_yes_no "确认使用此IP地址" "Y")
+        if [[ "$confirm_ip" != "y" ]]; then
             DOMAIN=$(prompt_input "请手动输入服务器IP地址")
         fi
     fi
@@ -1185,7 +1192,7 @@ main() {
         echo "- 建议创建专用用户： useradd -m -s /bin/bash ssalgten"
         echo "- 然后切换用户运行： su - ssalgten"
         echo ""
-        confirm_root=$(prompt_yes_no "继续使用root用户" "Y")
+        confirm_root=$(prompt_yes_no "继续使用root用户" "N")
         if [[ "$confirm_root" != "y" ]]; then
             log_info "已取消部署，请创建专用用户后重试"
             echo ""
