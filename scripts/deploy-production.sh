@@ -35,6 +35,63 @@ run_as_root() {
     fi
 }
 
+# 改进的输入函数 - 支持默认值和回车确认
+prompt_input() {
+    local prompt="$1"
+    local default="$2"
+    local var_name="$3"
+    local response
+    
+    if [[ -n "$default" ]]; then
+        read -p "$prompt [默认: $default]: " response
+        response="${response:-$default}"
+    else
+        read -p "$prompt: " response
+    fi
+    
+    if [[ -n "$var_name" ]]; then
+        eval "$var_name=\"$response\""
+    fi
+    
+    echo "$response"
+}
+
+# Y/N选择函数 - 支持回车默认为Y
+prompt_yes_no() {
+    local prompt="$1"
+    local default="${2:-y}"
+    local response
+    
+    if [[ "$default" == "y" ]]; then
+        read -p "$prompt [Y/n]: " response
+        response="${response:-y}"
+    else
+        read -p "$prompt [y/N]: " response
+        response="${response:-n}"
+    fi
+    
+    [[ "$response" =~ ^[Yy]$ ]]
+}
+
+# 端口输入函数 - 支持默认端口和验证
+prompt_port() {
+    local prompt="$1"
+    local default="$2"
+    local port
+    
+    while true; do
+        read -p "$prompt [默认: $default]: " port
+        port="${port:-$default}"
+        
+        if [[ "$port" =~ ^[0-9]+$ ]] && [[ "$port" -ge 1 ]] && [[ "$port" -le 65535 ]]; then
+            echo "$port"
+            break
+        else
+            echo "错误: 请输入有效的端口号 (1-65535)"
+        fi
+    done
+}
+
 # 日志函数
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -64,15 +121,15 @@ check_script_update() {
         echo ""
         echo -e "${YELLOW}建议更新到最新版本以获得最佳体验${NC}"
         echo ""
-        read -p "是否立即更新脚本？ (y/n): " update_choice
-        if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
+        update_choice=$(prompt_yes_no "是否立即更新脚本" "Y")
+        if [[ "$update_choice" == "y" ]]; then
             update_script
             return 0
         else
             log_warning "继续使用当前版本，可能遇到已知问题"
             echo ""
-            read -p "确认继续？ (y/n): " confirm_continue
-            if [[ "$confirm_continue" != "y" && "$confirm_continue" != "Y" ]]; then
+            confirm_continue=$(prompt_yes_no "确认继续" "Y")
+            if [[ "$confirm_continue" != "y" ]]; then
                 log_info "已取消部署"
                 exit 0
             fi
@@ -139,8 +196,7 @@ check_port_conflicts() {
         echo "1. 停止占用端口80的服务"
         echo "2. 使用其他端口（如8080）"
         echo ""
-        read -p "是否继续部署？ (y/n): " continue_deploy
-        if [[ "$continue_deploy" != "y" && "$continue_deploy" != "Y" ]]; then
+        if ! prompt_yes_no "是否继续部署？"; then
             log_info "部署已取消"
             exit 0
         fi
@@ -206,24 +262,17 @@ collect_deployment_info() {
     echo "2. 简单部署 (仅HTTP，使用服务器IP)"
     echo ""
     
-    while true; do
-        read -p "请选择 (1/2): " DEPLOY_MODE
-        case $DEPLOY_MODE in
-            1)
-                log_info "选择完整部署模式"
-                ENABLE_SSL=true
-                break
-                ;;
-            2)
-                log_info "选择简单部署模式"
-                ENABLE_SSL=false
-                break
-                ;;
-            *)
-                log_error "请输入 1 或 2"
-                ;;
-        esac
-    done
+    DEPLOY_MODE=$(prompt_input "请选择 (1/2)" "2")
+    case $DEPLOY_MODE in
+        1)
+            log_info "选择完整部署模式"
+            ENABLE_SSL=true
+            ;;
+        *)
+            log_info "选择简单部署模式"
+            ENABLE_SSL=false
+            ;;
+    esac
     
     if [[ "$ENABLE_SSL" == "true" ]]; then
         echo ""
@@ -231,7 +280,7 @@ collect_deployment_info() {
         
         # 域名配置
         while true; do
-            read -p "您的域名 (如: example.com): " DOMAIN
+            DOMAIN=$(prompt_input "您的域名 (如: example.com)")
             if [[ -n "$DOMAIN" && "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
                 break
             else
@@ -241,7 +290,7 @@ collect_deployment_info() {
         
         # SSL邮箱
         while true; do
-            read -p "SSL证书邮箱: " SSL_EMAIL
+            SSL_EMAIL=$(prompt_input "SSL证书邮箱")
             if [[ -n "$SSL_EMAIL" && "$SSL_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
                 break
             else
@@ -261,38 +310,48 @@ collect_deployment_info() {
         log_info "将使用 http://$SERVER_IP 访问服务"
         
         echo ""
-        read -p "确认使用此IP地址？ (y/n): " confirm_ip
-        if [[ "$confirm_ip" != "y" && "$confirm_ip" != "Y" ]]; then
-            read -p "请手动输入服务器IP地址: " DOMAIN
+        if ! prompt_yes_no "确认使用此IP地址？"; then
+            DOMAIN=$(prompt_input "请手动输入服务器IP地址")
         fi
     fi
+    
+    echo ""
+    echo "端口配置 (回车使用默认值):"
+    
+    # 端口配置
+    HTTP_PORT=$(prompt_port "HTTP端口" "80")
+    HTTPS_PORT=$(prompt_port "HTTPS端口" "443")
+    FRONTEND_PORT=$(prompt_port "前端服务端口" "3000")
+    BACKEND_PORT=$(prompt_port "后端API端口" "3001")
+    DB_PORT=$(prompt_port "数据库端口" "5432")
+    REDIS_PORT=$(prompt_port "Redis端口" "6379")
     
     echo ""
     echo "安全配置 (留空将自动生成):"
     
     # 数据库密码
-    read -p "数据库密码 (留空自动生成): " DB_PASSWORD
+    DB_PASSWORD=$(prompt_input "数据库密码 (留空自动生成)")
     if [[ -z "$DB_PASSWORD" ]]; then
         DB_PASSWORD=$(openssl rand -base64 32 | tr -d '=' | tr '+/' '-_')
         echo "  自动生成数据库密码: ${DB_PASSWORD:0:8}..."
     fi
     
     # JWT密钥
-    read -p "JWT密钥 (留空自动生成): " JWT_SECRET
+    JWT_SECRET=$(prompt_input "JWT密钥 (留空自动生成)")
     if [[ -z "$JWT_SECRET" ]]; then
         JWT_SECRET=$(openssl rand -base64 64 | tr -d '=' | tr '+/' '-_')
         echo "  自动生成JWT密钥"
     fi
     
     # API密钥
-    read -p "API密钥 (留空自动生成): " API_SECRET
+    API_SECRET=$(prompt_input "API密钥 (留空自动生成)")
     if [[ -z "$API_SECRET" ]]; then
         API_SECRET=$(openssl rand -base64 32 | tr -d '=' | tr '+/' '-_')
         echo "  自动生成API密钥"
     fi
     
     # Agent密钥
-    read -p "Agent密钥 (留空自动生成): " AGENT_KEY
+    AGENT_KEY=$(prompt_input "Agent密钥 (留空自动生成)")
     if [[ -z "$AGENT_KEY" ]]; then
         AGENT_KEY=$(openssl rand -base64 32 | tr -d '=' | tr '+/' '-_')
         echo "  自动生成Agent密钥"
@@ -300,18 +359,23 @@ collect_deployment_info() {
     
     # IPInfo Token (可选)
     echo ""
-    read -p "IPInfo Token (可选，提升ASN查询精度): " IPINFO_TOKEN
+    IPINFO_TOKEN=$(prompt_input "IPInfo Token (可选，提升ASN查询精度)")
     
     echo ""
     log_info "部署配置信息:"
     echo "  - 域名: $DOMAIN"
     echo "  - SSL邮箱: $SSL_EMAIL"
     echo "  - 应用目录: $APP_DIR"
+    echo "  - HTTP端口: $HTTP_PORT"
+    echo "  - HTTPS端口: $HTTPS_PORT"
+    echo "  - 前端端口: $FRONTEND_PORT"
+    echo "  - 后端端口: $BACKEND_PORT"
+    echo "  - 数据库端口: $DB_PORT"
+    echo "  - Redis端口: $REDIS_PORT"
     echo "  - IPInfo Token: ${IPINFO_TOKEN:-"未设置"}"
     echo ""
     
-    read -p "确认配置信息正确？ (y/n): " confirm
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    if ! prompt_yes_no "确认配置信息正确" "Y"; then
         log_info "请重新运行脚本"
         exit 0
     fi
@@ -331,8 +395,8 @@ install_system_dependencies() {
     # 配置防火墙
     run_as_root ufw --force reset
     run_as_root ufw allow ssh
-    run_as_root ufw allow 80
-    run_as_root ufw allow 443
+    run_as_root ufw allow $HTTP_PORT
+    run_as_root ufw allow $HTTPS_PORT
     run_as_root ufw --force enable
     
     log_success "系统依赖安装完成"
@@ -347,8 +411,15 @@ install_docker() {
         return 0
     fi
     
-    # 卸载旧版本
+    # 卸载旧版本和清理旧源
     run_as_root apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+    
+    # 清理所有可能的Docker源文件
+    run_as_root rm -f /etc/apt/sources.list.d/docker.list
+    run_as_root rm -f /usr/share/keyrings/docker-archive-keyring.gpg
+    run_as_root rm -f /etc/apt/sources.list.d/docker-ce.list
+    
+    log_info "已清理旧的Docker源和密钥"
     
     # 安装依赖
     run_as_root apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
@@ -544,6 +615,14 @@ create_environment_config() {
 NODE_ENV=production
 DOMAIN=$DOMAIN
 
+# 端口配置
+HTTP_PORT=$HTTP_PORT
+HTTPS_PORT=$HTTPS_PORT
+FRONTEND_PORT=$FRONTEND_PORT
+BACKEND_PORT=$BACKEND_PORT
+DB_PORT=$DB_PORT
+REDIS_PORT=$REDIS_PORT
+
 # 前端配置
 VITE_API_BASE_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
 
@@ -551,17 +630,18 @@ VITE_API_BASE_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN
 POSTGRES_USER=ssalgten
 POSTGRES_PASSWORD=$DB_PASSWORD
 POSTGRES_DB=ssalgten
+DB_PASSWORD=$DB_PASSWORD
 EOF
     
     # 创建后端环境配置
     cat > backend/.env << EOF
 # 生产环境标识
 NODE_ENV=production
-PORT=3001
+PORT=$BACKEND_PORT
 HOST=0.0.0.0
 
 # 数据库配置
-DATABASE_URL="postgresql://ssalgten:$DB_PASSWORD@postgres:5432/ssalgten?schema=public"
+DATABASE_URL="postgresql://ssalgten:$DB_PASSWORD@postgres:$DB_PORT/ssalgten?schema=public"
 
 # JWT安全配置
 JWT_SECRET=$JWT_SECRET
@@ -626,15 +706,15 @@ create_nginx_config() {
         run_as_root tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTPS模式)
 server {
-    listen 80;
+    listen $HTTP_PORT;
     server_name $DOMAIN www.$DOMAIN;
     
     # 重定向到HTTPS
-    return 301 https://\$server_name\$request_uri;
+    return 301 https://\$server_name:$HTTPS_PORT\$request_uri;
 }
 
 server {
-    listen 443 ssl http2;
+    listen $HTTPS_PORT ssl http2;
     server_name $DOMAIN www.$DOMAIN;
     
     # SSL配置 (将由Certbot自动配置)
@@ -647,7 +727,7 @@ server {
     
     # 前端静态文件
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:$FRONTEND_PORT;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -655,7 +735,7 @@ server {
         
         # 静态资源缓存
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
-            proxy_pass http://localhost:3000;
+            proxy_pass http://localhost:$FRONTEND_PORT;
             proxy_set_header Host \$host;
             proxy_cache_valid 200 1d;
             add_header Cache-Control "public, max-age=86400";
@@ -664,7 +744,7 @@ server {
     
     # API代理
     location /api {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:$BACKEND_PORT;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -694,7 +774,7 @@ EOF
         run_as_root tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTP模式)
 server {
-    listen 80;
+    listen $HTTP_PORT;
     server_name $DOMAIN;
     
     # 基础安全头
@@ -704,7 +784,7 @@ server {
     
     # 前端静态文件
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:$FRONTEND_PORT;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -712,7 +792,7 @@ server {
         
         # 静态资源缓存
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
-            proxy_pass http://localhost:3000;
+            proxy_pass http://localhost:$FRONTEND_PORT;
             proxy_set_header Host \$host;
             proxy_cache_valid 200 1d;
             add_header Cache-Control "public, max-age=86400";
@@ -721,7 +801,7 @@ server {
     
     # API代理
     location /api {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:$BACKEND_PORT;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -1105,8 +1185,8 @@ main() {
         echo "- 建议创建专用用户： useradd -m -s /bin/bash ssalgten"
         echo "- 然后切换用户运行： su - ssalgten"
         echo ""
-        read -p "继续使用root用户？ (yes/no): " confirm_root
-        if [[ "$confirm_root" != "yes" ]]; then
+        confirm_root=$(prompt_yes_no "继续使用root用户" "Y")
+        if [[ "$confirm_root" != "y" ]]; then
             log_info "已取消部署，请创建专用用户后重试"
             echo ""
             echo "创建用户命令："

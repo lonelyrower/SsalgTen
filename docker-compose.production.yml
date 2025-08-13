@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     networks:
       - ssalgten-network
     healthcheck:
@@ -34,7 +34,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: ${BACKEND_PORT:-3001}
       HOST: 0.0.0.0
       
       # Database Configuration
@@ -61,11 +61,11 @@ services:
     volumes:
       - backend_logs:/app/logs
     ports:
-      - "3001:3001"
+      - "${BACKEND_PORT:-3001}:${BACKEND_PORT:-3001}"
     networks:
       - ssalgten-network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:' + (process.env.PORT || '3001') + '/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -87,7 +87,7 @@ services:
       VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
       VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
     ports:
-      - "3000:80"  # Nginx will proxy to this container on port 3000
+      - "${FRONTEND_PORT:-3000}:80"  # Nginx will proxy to this container on port
     networks:
       - ssalgten-network
     healthcheck:
