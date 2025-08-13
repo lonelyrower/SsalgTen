@@ -392,11 +392,21 @@ collect_deployment_info() {
 cleanup_docker_sources() {
     log_info "彻底清理Docker源残留配置..."
     
+    # 显示清理前的状态
+    echo "=== 清理前的Docker源状态 ==="
+    echo "Docker相关源文件:"
+    run_as_root find /etc/apt -name "*docker*" -type f 2>/dev/null || echo "无Docker相关文件"
+    echo "包含docker.com的源:"
+    run_as_root find /etc/apt -name "*.list" -exec grep -H "docker\.com" {} \; 2>/dev/null || echo "无docker.com条目"
+    echo "=========================="
+    
     # 停止可能运行的apt进程
+    log_info "停止APT进程..."
     run_as_root pkill -f apt || true
-    sleep 2
+    sleep 3
     
     # 删除所有Docker相关源文件
+    log_info "删除Docker源文件..."
     run_as_root rm -f /etc/apt/sources.list.d/docker*.list
     run_as_root rm -f /etc/apt/sources.list.d/*docker*.list
     run_as_root rm -f /usr/share/keyrings/docker*.gpg
@@ -405,19 +415,31 @@ cleanup_docker_sources() {
     # 从主源文件中删除docker.com条目
     if run_as_root grep -q "docker\.com" /etc/apt/sources.list 2>/dev/null; then
         log_info "从主源文件中移除Docker条目..."
+        run_as_root cp /etc/apt/sources.list /etc/apt/sources.list.backup
         run_as_root sed -i '/docker\.com/d' /etc/apt/sources.list
+        echo "已从sources.list中移除Docker条目"
     fi
     
     # 检查并清理sources.list.d目录中的docker.com条目
     if run_as_root find /etc/apt/sources.list.d/ -name "*.list" -exec grep -l "docker\.com" {} \; 2>/dev/null | grep -q .; then
         log_info "从sources.list.d目录中移除Docker条目..."
         run_as_root find /etc/apt/sources.list.d/ -name "*.list" -exec sed -i '/docker\.com/d' {} \;
+        echo "已从sources.list.d中移除Docker条目"
     fi
     
     # 彻底清理APT缓存
+    log_info "清理APT缓存..."
     run_as_root apt clean
     run_as_root apt autoclean
     run_as_root rm -rf /var/lib/apt/lists/*
+    
+    # 显示清理后的状态
+    echo "=== 清理后的Docker源状态 ==="
+    echo "Docker相关源文件:"
+    run_as_root find /etc/apt -name "*docker*" -type f 2>/dev/null || echo "无Docker相关文件"
+    echo "包含docker.com的源:"
+    run_as_root find /etc/apt -name "*.list" -exec grep -H "docker\.com" {} \; 2>/dev/null || echo "无docker.com条目"
+    echo "=========================="
     
     log_success "Docker源清理完成"
 }
