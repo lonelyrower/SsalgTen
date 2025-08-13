@@ -437,14 +437,33 @@ install_docker() {
     
     log_info "系统检测结果: OS=$os_id, Codename=$os_codename"
     
-    # 清理可能存在的旧Docker源配置
+    # 全面清理所有可能的Docker源配置
+    log_info "清理旧的Docker源配置..."
     run_as_root rm -f /etc/apt/sources.list.d/docker.list
+    run_as_root rm -f /etc/apt/sources.list.d/docker-ce.list  
+    run_as_root rm -f /etc/apt/sources.list.d/docker*.list
     run_as_root rm -f /usr/share/keyrings/docker-archive-keyring.gpg
+    run_as_root rm -f /usr/share/keyrings/docker*.gpg
+    
+    # 检查是否还有其他Docker相关的源
+    echo "检查现有的Docker相关源配置..."
+    if run_as_root grep -r "docker.com" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
+        log_warning "发现其他Docker源配置，正在清理..."
+        run_as_root sed -i '/docker\.com/d' /etc/apt/sources.list
+        run_as_root find /etc/apt/sources.list.d/ -name "*.list" -exec sed -i '/docker\.com/d' {} \;
+    else
+        log_info "未发现其他Docker源配置"
+    fi
     
     if [[ "$os_id" == "debian" ]]; then
         log_info "检测到Debian系统，使用Debian Docker源"
         curl -fsSL https://download.docker.com/linux/debian/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $os_codename stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+        
+        # 创建正确的Debian源配置
+        docker_repo="deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $os_codename stable"
+        echo "$docker_repo" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+        
+        log_info "已添加Debian Docker源: $docker_repo"
     elif [[ "$os_id" == "ubuntu" ]]; then
         log_info "检测到Ubuntu系统，使用Ubuntu Docker源"
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -470,7 +489,18 @@ install_docker() {
         return 0
     fi
     
-    # 清理APT缓存并安装Docker
+    # 验证源配置是否正确
+    log_info "验证Docker源配置..."
+    if [[ -f /etc/apt/sources.list.d/docker.list ]]; then
+        echo "当前Docker源配置内容:"
+        cat /etc/apt/sources.list.d/docker.list
+    else
+        log_error "Docker源配置文件不存在!"
+        exit 1
+    fi
+    
+    # 清理APT缓存并更新
+    log_info "清理APT缓存并更新源..."
     run_as_root apt clean
     run_as_root apt update
     
