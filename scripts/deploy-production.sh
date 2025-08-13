@@ -681,7 +681,14 @@ build_and_start_services() {
     
     # 运行数据库初始化 (非交互式)
     log_info "初始化数据库..."
-    docker-compose -f $compose_file run --rm backend npm run db:push
+    
+    # 运行数据库迁移
+    log_info "运行数据库迁移..."
+    docker-compose -f $compose_file run --rm backend npx prisma migrate deploy
+    
+    # 运行数据库种子脚本创建管理员用户
+    log_info "创建管理员用户和初始数据..."
+    docker-compose -f $compose_file run --rm backend npm run db:seed
     
     # 启动所有服务
     docker-compose -f $compose_file up -d
@@ -768,8 +775,25 @@ case "$1" in
     update)
         echo "更新服务..."
         git pull
+        
+        # 停止服务
+        docker-compose -f docker-compose.production.yml down
+        
+        # 重新构建
         docker-compose -f docker-compose.production.yml build --no-cache
+        
+        # 启动数据库
+        docker-compose -f docker-compose.production.yml up -d postgres
+        echo "等待数据库启动..."
+        sleep 10
+        
+        # 运行数据库迁移
+        echo "运行数据库迁移..."
+        docker-compose -f docker-compose.production.yml run --rm backend npx prisma migrate deploy
+        
+        # 启动所有服务
         docker-compose -f docker-compose.production.yml up -d
+        echo "更新完成"
         ;;
     backup)
         echo "备份数据库..."
@@ -840,6 +864,11 @@ SsalgTen 部署信息
 域名: $DOMAIN
 应用目录: $APP_DIR
 
+默认登录信息:
+- 用户名: admin
+- 密码: admin123
+- ⚠️ 首次登录后请立即修改密码！
+
 安全信息:
 - 数据库密码: $DB_PASSWORD
 - JWT密钥: $JWT_SECRET
@@ -903,6 +932,11 @@ show_deployment_result() {
     echo "  在其他VPS上运行: ./scripts/install-agent.sh"
     echo "  主服务器地址: $protocol://$DOMAIN"
     echo "  Agent密钥: $AGENT_KEY"
+    echo ""
+    echo "🔑 默认登录信息:"
+    echo "  用户名: admin"
+    echo "  密码: admin123"
+    echo "  ⚠️  首次登录后请立即修改密码！"
     echo ""
     echo "📋 重要信息:"
     echo "  - 部署信息已保存到: $APP_DIR/DEPLOYMENT_INFO.txt"
