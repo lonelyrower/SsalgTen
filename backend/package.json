@@ -11,7 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx src/utils/seed.ts",
+    "db:seed": "node dist/utils/seed.js",
     "db:update-asn": "tsx src/scripts/update-asn.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",

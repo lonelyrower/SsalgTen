@@ -63,10 +63,10 @@ prompt_yes_no() {
     local response
     
     if [[ "$default" == "y" || "$default" == "Y" ]]; then
-        read -p "$prompt [Y/n] (回车默认选择 Y): " response
+        read -p "$prompt [Y/N] (回车默认选择 Y): " response
         response="${response:-y}"
     else
-        read -p "$prompt [y/N] (回车默认选择 N): " response
+        read -p "$prompt [Y/N] (回车默认选择 N): " response
         response="${response:-n}"
     fi
     
