@@ -72,6 +72,7 @@ router.get('/stats', nodeController.getNodeStats.bind(nodeController));
 router.post('/agent/register', nodeController.registerAgent.bind(nodeController));
 router.post('/agent/:agentId/heartbeat', nodeController.heartbeat.bind(nodeController));
 router.post('/agent/:agentId/diagnostic', nodeController.reportDiagnostic.bind(nodeController));
+router.get('/agent/install-script', nodeController.getInstallScript.bind(nodeController));
 
 // 访问者IP信息路由（公开访问）
 router.get('/visitor/info', visitorController.getVisitorInfo.bind(visitorController));

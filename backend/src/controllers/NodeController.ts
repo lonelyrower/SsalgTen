@@ -3,6 +3,8 @@ import { nodeService, CreateNodeInput, UpdateNodeInput } from '../services/NodeS
 import { ApiResponse } from '../types';
 import { NodeStatus, DiagnosticType } from '@prisma/client';
 import { logger } from '../utils/logger';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class NodeController {
 
@@ -340,6 +342,55 @@ export class NodeController {
       const response: ApiResponse = {
         success: false,
         error: 'Failed to record diagnostic result'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // 获取Agent安装脚本
+  async getInstallScript(req: Request, res: Response): Promise<void> {
+    try {
+      const scriptPath = path.join(__dirname, '../../..', 'scripts', 'install-agent.sh');
+      
+      // 检查文件是否存在
+      if (!fs.existsSync(scriptPath)) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Install script not found'
+        };
+        res.status(404).json(response);
+        return;
+      }
+
+      // 读取脚本内容
+      const scriptContent = fs.readFileSync(scriptPath, 'utf8');
+      
+      // 获取服务器信息以便自定义脚本
+      const serverUrl = `${req.protocol}://${req.get('host')}`;
+      
+      // 可以在这里对脚本进行一些自定义替换
+      let customizedScript = scriptContent;
+      
+      // 替换脚本中的默认服务器地址（如果有的话）
+      customizedScript = customizedScript.replace(
+        /MASTER_URL=.*/g, 
+        `MASTER_URL="${serverUrl}"`
+      );
+
+      // 设置响应头为文件下载
+      res.setHeader('Content-Type', 'application/x-sh');
+      res.setHeader('Content-Disposition', 'attachment; filename="install-agent.sh"');
+      res.setHeader('Cache-Control', 'no-cache');
+      
+      // 发送脚本内容
+      res.send(customizedScript);
+      
+      logger.info(`Agent install script downloaded from ${req.ip}`);
+    } catch (error) {
+      logger.error('Get install script error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to get install script'
       };
       res.status(500).json(response);
     }

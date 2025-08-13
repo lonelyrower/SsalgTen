@@ -18,7 +18,11 @@ import {
   Shield,
   Bell,
   Globe,
-  Zap
+  Zap,
+  Download,
+  Server,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -43,6 +47,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
   const [changedConfigs, setChangedConfigs] = useState<Map<string, string>>(new Map());
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     loadConfigs();
@@ -243,6 +248,67 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     }
   };
 
+  // 下载Agent安装脚本
+  const handleDownloadScript = async () => {
+    try {
+      setDownloading(true);
+      setError('');
+      
+      const response = await fetch('/api/agent/install-script', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/x-sh',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('下载失败');
+      }
+
+      // 获取文件内容
+      const scriptContent = await response.text();
+      
+      // 创建下载链接
+      const blob = new Blob([scriptContent], { type: 'application/x-sh' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'install-agent.sh';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess('安装脚本下载成功');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('下载安装脚本失败');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // 复制安装命令到剪贴板
+  const handleCopyInstallCommand = async () => {
+    const command = `curl -fsSL ${window.location.origin}/api/agent/install-script -o install-agent.sh && chmod +x install-agent.sh && ./install-agent.sh`;
+    
+    try {
+      await navigator.clipboard.writeText(command);
+      setSuccess('安装命令已复制到剪贴板');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      // 降级处理
+      const textArea = document.createElement('textarea');
+      textArea.value = command;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setSuccess('安装命令已复制到剪贴板');
+      setTimeout(() => setSuccess(''), 3000);
+    }
+  };
+
   const toggleGroup = (category: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(category)) {
@@ -339,6 +405,78 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
             )}
           </div>
         </div>
+
+        {/* Agent管理区域 */}
+        <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-blue-500 shadow-sm mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                <Server className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Agent 探针管理
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  下载并部署网络监控探针到您的VPS服务器
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={handleDownloadScript}
+                    disabled={downloading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
+                    size="sm"
+                  >
+                    {downloading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>下载中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        <span>下载安装脚本</span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleCopyInstallCommand}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    <span>复制安装命令</span>
+                  </Button>
+                  <Button
+                    onClick={() => window.open('https://github.com/lonelyrower/SsalgTen#agent-deployment', '_blank')}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-2 text-gray-600 dark:text-gray-400"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>部署文档</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 安装说明 */}
+          <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">快速部署步骤：</h4>
+            <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
+              <li>登录到您的VPS服务器</li>
+              <li>下载并运行安装脚本：
+                <code className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">
+                  curl -fsSL {window.location.origin}/api/agent/install-script | bash
+                </code>
+              </li>
+              <li>按照提示输入必要的配置信息</li>
+              <li>安装完成后，Agent将自动注册并开始监控</li>
+            </ol>
+          </div>
+        </Card>
 
         {/* 搜索和过滤器 */}
         <Card className="p-4 bg-white dark:bg-gray-800 shadow-sm">

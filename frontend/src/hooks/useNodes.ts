@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '@/services/api';
+import { compareNodes, compareStats } from '@/utils/deepCompare';
 import type { NodeData, NodeStats } from '@/services/api';
 
 interface UseNodesResult {
@@ -18,10 +19,20 @@ export const useNodes = (): UseNodesResult => {
   const [stats, setStats] = useState<NodeStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchTime = useRef<number>(0);
+  const lastNodesData = useRef<NodeData[]>([]);
+  const lastStatsData = useRef<NodeStats | null>(null);
 
-  // 获取节点数据
-  const fetchNodes = useCallback(async () => {
+  // 获取节点数据（优化版本 - 避免不必要的重新渲染）
+  const fetchNodes = useCallback(async (forceUpdate = false) => {
     try {
+      // 限制请求频率，避免过度请求
+      const now = Date.now();
+      if (!forceUpdate && now - lastFetchTime.current < 5000) {
+        return; // 5秒内不重复请求
+      }
+      lastFetchTime.current = now;
+
       setLoading(true);
       setError(null);
 
@@ -36,13 +47,22 @@ export const useNodes = (): UseNodesResult => {
           ...node,
           status: node.status.toLowerCase() as 'online' | 'offline' | 'unknown' | 'maintenance'
         }));
-        setNodes(transformedNodes);
+
+        // 只有数据真正变化时才更新状态
+        if (!compareNodes(lastNodesData.current, transformedNodes)) {
+          lastNodesData.current = transformedNodes;
+          setNodes(transformedNodes);
+        }
       } else {
         setError(nodesResponse.error || 'Failed to fetch nodes');
       }
 
       if (statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data);
+        // 只有统计数据真正变化时才更新状态
+        if (!compareStats(lastStatsData.current, statsResponse.data)) {
+          lastStatsData.current = statsResponse.data;
+          setStats(statsResponse.data);
+        }
       } else {
         console.warn('Failed to fetch stats:', statsResponse.error);
       }
@@ -59,7 +79,7 @@ export const useNodes = (): UseNodesResult => {
       const response = await apiService.createNode(nodeData);
       
       if (response.success && response.data) {
-        await fetchNodes(); // 重新获取数据
+        await fetchNodes(true); // 强制更新数据
         return true;
       } else {
         setError(response.error || 'Failed to create node');
@@ -77,7 +97,7 @@ export const useNodes = (): UseNodesResult => {
       const response = await apiService.updateNode(id, nodeData);
       
       if (response.success && response.data) {
-        await fetchNodes(); // 重新获取数据
+        await fetchNodes(true); // 强制更新数据
         return true;
       } else {
         setError(response.error || 'Failed to update node');
@@ -95,7 +115,7 @@ export const useNodes = (): UseNodesResult => {
       const response = await apiService.deleteNode(id);
       
       if (response.success) {
-        await fetchNodes(); // 重新获取数据
+        await fetchNodes(true); // 强制更新数据
         return true;
       } else {
         setError(response.error || 'Failed to delete node');
@@ -112,11 +132,11 @@ export const useNodes = (): UseNodesResult => {
     fetchNodes();
   }, [fetchNodes]);
 
-  // 定期刷新数据 (每30秒)
+  // 定期刷新数据 (每60秒，降低频率避免闪烁)
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchNodes();
-    }, 30000);
+      fetchNodes(false); // 不强制更新，让优化逻辑处理
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [fetchNodes]);
@@ -126,7 +146,7 @@ export const useNodes = (): UseNodesResult => {
     stats,
     loading,
     error,
-    refetch: fetchNodes,
+    refetch: () => fetchNodes(true),
     createNode,
     updateNode,
     deleteNode
