@@ -44,7 +44,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
       } else {
         setError(response.error || 'Failed to load users');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load users');
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
       } else {
         setError(response.error || 'Failed to delete user');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete user');
     }
   };

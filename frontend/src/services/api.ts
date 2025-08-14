@@ -63,10 +63,14 @@ export interface NodeData {
   city: string;
   latitude: number;
   longitude: number;
-  status: 'ONLINE' | 'OFFLINE' | 'UNKNOWN' | 'MAINTENANCE';
+  status: 'online' | 'offline' | 'warning' | 'unknown' | 'maintenance';
   provider: string;
   ipv4?: string;
   ipv6?: string;
+  description?: string;
+  apiKey?: string;
+  port?: number;
+  enabled?: boolean;
   // ASN信息
   asnNumber?: string;
   asnName?: string;
@@ -276,23 +280,23 @@ class ApiService {
   }
 
   async createNode(nodeData: Omit<NodeData, 'id' | 'agentId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<NodeData>> {
-    return this.request<NodeData>('/nodes', {
+    return this.request<NodeData>('/admin/nodes', {
       method: 'POST',
       body: JSON.stringify(nodeData),
-    });
+    }, true);
   }
 
   async updateNode(id: string, nodeData: Partial<NodeData>): Promise<ApiResponse<NodeData>> {
-    return this.request<NodeData>(`/nodes/${id}`, {
+    return this.request<NodeData>(`/admin/nodes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(nodeData),
-    });
+    }, true);
   }
 
   async deleteNode(id: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/nodes/${id}`, {
+    return this.request<void>(`/admin/nodes/${id}`, {
       method: 'DELETE',
-    });
+    }, true);
   }
 
   // 统计信息 API

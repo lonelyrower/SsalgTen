@@ -2,7 +2,13 @@
   "name": "ssalgten",
   "version": "0.1.0",
   "description": "Multi-node network diagnostic aggregation system like looking.house",
-  "keywords": ["network", "diagnostic", "looking-glass", "vps", "monitoring"],
+  "keywords": [
+    "network",
+    "diagnostic",
+    "looking-glass",
+    "vps",
+    "monitoring"
+  ],
   "homepage": "https://github.com/lonelyrower/SsalgTen",
   "repository": {
     "type": "git",
@@ -37,5 +43,9 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "socket.io-client": "^4.8.1"
   }
 }

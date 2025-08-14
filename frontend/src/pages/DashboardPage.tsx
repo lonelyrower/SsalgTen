@@ -5,7 +5,7 @@ import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, Settings, BarChart3, Loader2 } from 'lucide-react';
+import { Activity, Users, Server, Settings, BarChart3, Loader2 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 // Lazy load heavy components
@@ -13,10 +13,11 @@ const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 const AnalyticsPanel = lazy(() => import('@/components/analytics/AnalyticsPanel').then(module => ({ default: module.AnalyticsPanel })));
 const UserManagement = lazy(() => import('@/components/admin/UserManagement').then(module => ({ default: module.UserManagement })));
+const NodeManagement = lazy(() => import('@/components/admin/NodeManagement').then(module => ({ default: module.NodeManagement })));
 const SystemSettings = lazy(() => import('@/components/admin/SystemSettings').then(module => ({ default: module.SystemSettings })));
 
 interface DashboardPageProps {
-  view?: 'map' | 'users' | 'settings' | 'analytics';
+  view?: 'map' | 'users' | 'nodes' | 'settings' | 'analytics';
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) => {
@@ -139,6 +140,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
                   </Button>
                   
                   <Button
+                    variant={activeView === 'nodes' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveView('nodes')}
+                    className="flex items-center space-x-2"
+                  >
+                    <Server className="h-4 w-4" />
+                    <span>节点管理</span>
+                  </Button>
+                  
+                  <Button
                     variant={activeView === 'settings' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setActiveView('settings')}
@@ -258,6 +269,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
             </div>
           }>
             <UserManagement />
+          </Suspense>
+        )}
+
+        {activeView === 'nodes' && hasRole('ADMIN') && (
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+            </div>
+          }>
+            <NodeManagement />
           </Suspense>
         )}
 
