@@ -13,7 +13,13 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:looking.house)",
       "Bash(node test-asn.js)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(taskkill:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(git push:*)",
+      "Bash(rm:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

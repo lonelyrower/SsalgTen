@@ -135,6 +135,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   // 按类别分组配置
   const groupedConfigs: ConfigGroup[] = React.useMemo(() => {
+    // 确保 configs 是数组
+    if (!Array.isArray(configs)) {
+      return [];
+    }
+
     const groups: { [key: string]: SystemConfig[] } = {};
     
     configs.forEach(config => {

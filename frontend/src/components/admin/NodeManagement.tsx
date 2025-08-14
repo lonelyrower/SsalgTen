@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService, type NodeData } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { NodeModal } from './NodeModal';
+import { AgentDeployModal } from './AgentDeployModal';
 import { 
   Server, 
   Search, 
@@ -30,8 +30,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingNode, setEditingNode] = useState<NodeData | null>(null);
+  const [showDeployModal, setShowDeployModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
@@ -166,11 +165,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               <span>导出</span>
             </Button>
             <Button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowDeployModal(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2 flex-1 sm:flex-none justify-center"
             >
               <Plus className="h-4 w-4" />
-              <span>添加节点</span>
+              <span>部署探针</span>
             </Button>
           </div>
         </div>
@@ -247,7 +246,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingNode(node)}
+                    disabled
                     className="text-gray-600 hover:text-blue-600"
                   >
                     <Edit2 className="h-4 w-4" />
@@ -322,26 +321,24 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             </p>
             {(!searchTerm && filterStatus === 'all') && (
               <Button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => setShowDeployModal(true)}
                 className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                添加第一个节点
+                部署第一个探针
               </Button>
             )}
           </div>
         </Card>
       )}
 
-      {/* 节点创建/编辑模态框 */}
-      <NodeModal
-        isOpen={showCreateModal || !!editingNode}
+      {/* Agent部署模态框 */}
+      <AgentDeployModal
+        isOpen={showDeployModal}
         onClose={() => {
-          setShowCreateModal(false);
-          setEditingNode(null);
+          setShowDeployModal(false);
         }}
-        node={editingNode}
-        onSaved={() => {
+        onDeployed={() => {
           loadNodes();
           setError('');
         }}

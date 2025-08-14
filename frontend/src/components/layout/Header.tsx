@@ -41,17 +41,21 @@ export const Header = () => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 sticky top-0 z-30">
+    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-800/50 px-4 py-3 sticky top-0 z-30 shadow-sm">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Logo */}
-        <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center space-x-2">
-          <Globe className="h-8 w-8 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            SsalgTen
-          </h1>
-          <span className="text-sm text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-            v0.1.0
-          </span>
+        <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center space-x-3 group">
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+            <Globe className="h-6 w-6 text-white" />
+          </div>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              SsalgTen
+            </h1>
+            <span className="text-xs font-medium text-gray-500 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 px-2 py-1 rounded-full shadow-sm">
+              v0.1.0
+            </span>
+          </div>
         </Link>
 
         {/* Navigation - 根据登录状态显示不同导航 */}

@@ -55,28 +55,41 @@ export const StatsCards = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => (
-        <Card key={index} className="p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              {stat.icon}
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {stat.title}
-              </span>
-            </div>
-            <Badge variant={stat.badgeVariant as any} className="text-xs">
-              {stat.badge}
-            </Badge>
+        <Card key={index} className="relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg">
+          {/* 背景装饰 */}
+          <div className="absolute top-0 right-0 w-24 h-24 opacity-10 transform translate-x-6 -translate-y-6">
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-500"></div>
           </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {stat.value}
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20">
+                  {stat.icon}
+                </div>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {stat.title}
+                </span>
+              </div>
+              <Badge variant={stat.badgeVariant as any} className="text-xs font-medium shadow-sm">
+                {stat.badge}
+              </Badge>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              {stat.subtitle}
+            
+            <div className="space-y-2">
+              <div className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+                {stat.value}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                {stat.subtitle}
+              </div>
             </div>
           </div>
+          
+          {/* 底部装饰线 */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-60"></div>
         </Card>
       ))}
     </div>
