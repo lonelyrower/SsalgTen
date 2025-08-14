@@ -77,6 +77,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
+        VITE_APP_NAME: "SsalgTen Network Monitor"
+        VITE_APP_VERSION: "1.0.0"
+        VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
     container_name: ssalgten-frontend
     restart: unless-stopped
     depends_on:
@@ -96,6 +101,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
 
 networks:
   ssalgten-network:

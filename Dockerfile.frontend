@@ -10,7 +10,7 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code and configuration
 COPY frontend/src ./src/
 COPY frontend/public ./public/
 COPY frontend/index.html ./
@@ -18,6 +18,19 @@ COPY frontend/vite.config.ts ./
 COPY frontend/tsconfig*.json ./
 COPY frontend/tailwind.config.js ./
 COPY frontend/postcss.config.js ./
+COPY frontend/.env* ./
+
+# Build arguments for environment variables
+ARG VITE_API_URL
+ARG VITE_APP_NAME="SsalgTen Network Monitor"
+ARG VITE_APP_VERSION="1.0.0"
+ARG VITE_ENABLE_DEBUG="false"
+
+# Set environment variables for build
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_APP_NAME=${VITE_APP_NAME}
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
+ENV VITE_ENABLE_DEBUG=${VITE_ENABLE_DEBUG}
 
 # Build the application
 RUN npm run build
