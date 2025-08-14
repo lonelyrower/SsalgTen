@@ -884,7 +884,7 @@ JWT_EXPIRES_IN=7d
 
 # API安全配置
 API_KEY_SECRET=$API_SECRET
-CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
+CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"; else echo "http://$DOMAIN,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"; fi)
 FRONTEND_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
 
 # 日志配置
@@ -1178,7 +1178,7 @@ check_build_resources() {
     
     if [[ $warnings -gt 0 ]]; then
         echo ""
-        read -p "检测到资源不足，是否继续构建？建议先运行修复脚本 [y/N]: " continue_build
+        read -p "检测到资源不足，是否继续构建？建议先运行修复脚本 [Y/N]: " continue_build
         if [[ "$continue_build" != "y" && "$continue_build" != "Y" ]]; then
             log_info "构建已取消，请先解决资源问题"
             log_info "运行修复脚本: bash scripts/fix-docker-build.sh"
@@ -1210,7 +1210,7 @@ build_and_start_services() {
         echo "3. 检查系统资源是否足够"
         echo "4. 分别构建服务: bash scripts/fix-docker-build.sh --separate-build"
         echo ""
-        read -p "是否自动运行修复脚本？[Y/n]: " auto_fix
+        read -p "是否自动运行修复脚本？[Y/N]: " auto_fix
         if [[ "$auto_fix" != "n" && "$auto_fix" != "N" ]]; then
             if [[ -f "scripts/fix-docker-build.sh" ]]; then
                 log_info "运行Docker构建修复脚本..."

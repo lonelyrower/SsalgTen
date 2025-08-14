@@ -46,7 +46,7 @@ services:
       
       # API Security
       API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       
       # Agent Configuration

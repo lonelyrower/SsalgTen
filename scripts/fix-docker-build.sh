@@ -154,7 +154,7 @@ main() {
         # 内存不足时创建swap
         total_mem=$(free -m | awk 'NR==2{printf "%.0f", $2}')
         if [[ $total_mem -lt 1000 ]]; then
-            read -p "是否创建swap文件增加虚拟内存？[Y/n]: " create_swap_choice
+            read -p "是否创建swap文件增加虚拟内存？[Y/N]: " create_swap_choice
             if [[ "$create_swap_choice" != "n" && "$create_swap_choice" != "N" ]]; then
                 create_swap
             fi
