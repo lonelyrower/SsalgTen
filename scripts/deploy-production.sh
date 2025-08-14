@@ -694,8 +694,28 @@ install_docker() {
         run_as_root usermod -aG docker $USER
     fi
     
-    # 启动Docker服务
-    run_as_root systemctl start docker
+    # 启动Docker服务（带错误处理）
+    log_info "启动Docker服务..."
+    if ! run_as_root systemctl start docker; then
+        log_warning "Docker服务启动失败，尝试修复..."
+        
+        # 重置Docker systemd状态
+        run_as_root systemctl daemon-reload
+        run_as_root systemctl reset-failed docker 2>/dev/null || true
+        run_as_root systemctl reset-failed docker.socket 2>/dev/null || true
+        
+        # 清理可能的冲突进程
+        run_as_root pkill -f docker 2>/dev/null || true
+        sleep 2
+        
+        # 再次尝试启动
+        if ! run_as_root systemctl start docker; then
+            log_error "Docker服务启动失败！请检查系统日志: journalctl -xe"
+            log_info "建议先运行卸载脚本清理残留配置，然后重新安装"
+            exit 1
+        fi
+    fi
+    
     run_as_root systemctl enable docker
     
     log_success "Docker安装完成"
@@ -839,7 +859,7 @@ DB_PORT=$DB_PORT
 REDIS_PORT=$REDIS_PORT
 
 # 前端配置
-VITE_API_BASE_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+VITE_API_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
 
 # 数据库配置
 POSTGRES_USER=ssalgten
@@ -865,6 +885,7 @@ JWT_EXPIRES_IN=7d
 # API安全配置
 API_KEY_SECRET=$API_SECRET
 CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
+FRONTEND_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
 
 # 日志配置
 LOG_LEVEL=info
@@ -881,7 +902,7 @@ EOF
     # 创建前端环境配置
     cat > frontend/.env << EOF
 # API配置 - 使用正确的环境变量名
-VITE_API_BASE_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+VITE_API_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
 VITE_APP_NAME=SsalgTen Network Monitor
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_DEBUG=false

@@ -107,14 +107,85 @@ c9856da - feat: integrate comprehensive Docker source cleanup into deployment sc
 - ✅ 按回车默认行为现在很明确
 - 🔄 Docker源问题仍需继续解决
 
+### 5. Socket.IO连接问题诊断与修复 ⭐
+**时间**: 晚上
+**问题**: 用户反馈登录后页面一直显示"Connecting to real-time server..."，无法看到实时数据和Agent探针安装功能
+
+#### 问题诊断过程
+1. **本地环境复现**:
+   - 启动本地后端开发服务器 (port 3001)
+   - 启动本地前端开发服务器 (port 3000)
+   - 复现Socket.IO连接失败问题
+
+2. **发现的关键问题**:
+
+**问题一**: Socket.IO认证失败
+```typescript
+// 文件: backend/src/sockets/socketAuth.ts:27
+// 错误：JWT token字段不匹配
+(socket as AuthenticatedSocket).user = {
+  id: decoded.id,  // 错误：JWT中实际使用userId
+  username: decoded.username,
+  role: decoded.role
+};
+
+// 修复：
+id: decoded.userId,  // 正确：匹配AuthController中的JWT payload
+```
+
+**问题二**: 前端环境变量配置错误
+```typescript
+// 文件: frontend/src/services/socketService.ts:43
+// 错误：使用不存在的环境变量
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+// 修复：使用正确的环境变量
+const apiBaseUrl = import.meta.env.VITE_API_URL;
+```
+
+**问题三**: 端口配置不一致
+```env
+# frontend/.env 错误配置
+VITE_API_URL=http://localhost:3002/api
+
+# 应该是
+VITE_API_URL=http://localhost:3001/api
+```
+
+#### 修复实施
+- 修正JWT token认证逻辑
+- 统一前端环境变量命名
+- 添加Socket.IO认证调试日志
+- 本地测试验证修复效果
+
+#### 代码提交
+```bash
+git commit 100f310: "fix: resolve Socket.IO connection issues"
+- Fix JWT token field error in socketAuth.ts (decoded.id -> decoded.userId)
+- Fix environment variable name in socketService.ts (VITE_API_BASE_URL -> VITE_API_URL)  
+- Add Socket.IO authentication debug logging
+```
+
+**修复状态**: ✅ 已完成并推送到GitHub
+
 ## 明日计划
-1. 深入调查Docker源残留的根本原因
-2. 考虑使用Docker官方安装脚本作为备用方案
-3. 测试完整的部署流程
-4. 优化错误处理和用户提示
+1. 等待用户在生产环境验证Socket.IO修复效果
+2. 继续调查Docker源残留问题（如仍有用户反馈）
+3. 完善系统安装和配置文档
 
 ## 学习收获
-1. APT源管理比预期复杂，需要考虑多个配置文件位置
-2. 用户体验细节很重要，一致的提示格式能显著改善使用体验
-3. 生产环境和开发环境的差异需要仔细处理（如TypeScript vs JavaScript）
-4. 调试信息对于解决复杂问题至关重要
+1. **前后端配置一致性至关重要**: 环境变量命名和端口配置必须保持一致
+2. **JWT认证调试技巧**: 通过添加详细日志快速定位认证失败原因
+3. **本地复现的价值**: 通过本地环境可以更高效地调试和验证修复
+4. **WebSocket连接问题的排查方法**: 从认证、配置、网络连接多个层面逐步排查
+5. **用户体验细节很重要**: 一致的提示格式和明确的默认行为能显著改善使用体验
+
+## 当日工作总结
+今天主要解决了两大类问题：
+1. **部署体验优化**: 统一提示格式、修复数据库配置、改进用户交互
+2. **核心功能修复**: 解决Socket.IO连接问题，这是影响用户正常使用的关键问题
+
+特别是Socket.IO问题的解决，直接影响到系统的实时功能和用户核心体验，修复后用户应该能够：
+- ✅ 正常看到实时节点状态更新
+- ✅ 使用Agent探针安装功能
+- ✅ 不再看到"Connecting to real-time server..."持续显示

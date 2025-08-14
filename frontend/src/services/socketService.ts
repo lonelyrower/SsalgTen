@@ -59,7 +59,7 @@ class SocketServiceImpl implements SocketService {
 
     this.socket.on('connect', () => {
       this.connected = true;
-      console.log('Socket.IO 连接成功');
+      console.log('Socket.IO 连接成功', { url: serverUrl });
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -70,6 +70,8 @@ class SocketServiceImpl implements SocketService {
     this.socket.on('connect_error', (error) => {
       this.connected = false;
       console.error('Socket.IO 连接错误:', error);
+      console.log('连接URL:', serverUrl);
+      console.log('Token长度:', token?.length || 0);
     });
 
     // 重新连接时重新订阅

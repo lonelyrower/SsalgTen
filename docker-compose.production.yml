@@ -47,6 +47,7 @@ services:
       # API Security
       API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       
       # Agent Configuration
       DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
@@ -83,7 +84,7 @@ services:
         condition: service_healthy
     environment:
       # Frontend Environment Variables
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001/api}
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
       VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
       VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
     ports:

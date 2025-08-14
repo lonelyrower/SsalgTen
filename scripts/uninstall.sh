@@ -212,9 +212,28 @@ reset_firewall() {
     log_success "防火墙规则配置完成"
 }
 
-# 清理Docker源配置
-cleanup_docker_sources() {
-    log_info "清理Docker源配置..."
+# 清理Docker配置和用户组
+cleanup_docker_config() {
+    log_info "清理Docker配置和用户组..."
+    
+    # 停止Docker服务
+    if systemctl is-active --quiet docker; then
+        log_info "停止Docker服务..."
+        $SUDO systemctl stop docker 2>/dev/null || true
+        $SUDO systemctl stop docker.socket 2>/dev/null || true
+    fi
+    
+    # 从docker组移除ssalgten用户
+    if id "ssalgten" &>/dev/null; then
+        log_info "从docker组移除ssalgten用户..."
+        $SUDO gpasswd -d ssalgten docker 2>/dev/null || true
+    fi
+    
+    # 清理Docker systemd状态
+    log_info "重置Docker systemd状态..."
+    $SUDO systemctl daemon-reload 2>/dev/null || true
+    $SUDO systemctl reset-failed docker 2>/dev/null || true
+    $SUDO systemctl reset-failed docker.socket 2>/dev/null || true
     
     # 删除Docker APT源
     $SUDO rm -f /etc/apt/sources.list.d/docker*.list 2>/dev/null || true
@@ -225,7 +244,14 @@ cleanup_docker_sources() {
         $SUDO sed -i '/docker\.com/d' /etc/apt/sources.list
     fi
     
-    log_success "Docker源配置清理完成"
+    # 清理Docker配置目录中可能的残留配置
+    $SUDO rm -rf /etc/docker/daemon.json.bak* 2>/dev/null || true
+    
+    # 清理APT缓存
+    $SUDO apt clean 2>/dev/null || true
+    $SUDO rm -rf /var/lib/apt/lists/*docker* 2>/dev/null || true
+    
+    log_success "Docker配置和用户组清理完成"
 }
 
 # 询问是否要深度清理
@@ -256,8 +282,23 @@ deep_cleanup() {
     read -p "是否完全卸载Docker？这会影响其他Docker项目 [Y/N] (回车默认选择 N): " remove_docker < /dev/tty
     if [[ "$remove_docker" =~ ^[Yy]$ ]]; then
         log_info "卸载Docker..."
+        # 停止所有Docker服务
+        $SUDO systemctl stop docker docker.socket containerd 2>/dev/null || true
+        # 禁用服务
+        $SUDO systemctl disable docker docker.socket containerd 2>/dev/null || true
+        # 卸载包
         $SUDO apt remove -y docker-ce docker-ce-cli containerd.io docker-compose-plugin 2>/dev/null || true
         $SUDO apt autoremove -y 2>/dev/null || true
+        # 清理配置和数据
+        $SUDO rm -rf /var/lib/docker 2>/dev/null || true
+        $SUDO rm -rf /var/lib/containerd 2>/dev/null || true
+        $SUDO rm -rf /etc/docker 2>/dev/null || true
+    else
+        # 不卸载Docker，但重启服务以清理状态
+        if command -v docker >/dev/null 2>&1; then
+            log_info "重启Docker服务以清理状态..."
+            $SUDO systemctl restart docker 2>/dev/null || true
+        fi
     fi
     
     # 询问是否清理依赖包
@@ -348,7 +389,7 @@ main() {
     cleanup_nginx_config
     cleanup_ssl_certificates
     reset_firewall
-    cleanup_docker_sources
+    cleanup_docker_config
     
     ask_deep_cleanup
     verify_uninstall
