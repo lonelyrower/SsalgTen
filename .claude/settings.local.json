@@ -19,7 +19,9 @@
       "Bash(grep:*)",
       "Bash(git push:*)",
       "Bash(rm:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npx vite:*)",
+      "Bash(npm start)"
     ],
     "deny": []
   }
