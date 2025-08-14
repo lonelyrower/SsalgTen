@@ -1100,6 +1100,49 @@ install_ssl_certificate() {
     fi
 }
 
+# 检查构建资源
+check_build_resources() {
+    log_info "检查构建所需资源..."
+    
+    # 检查内存
+    local total_mem=$(free -m | awk 'NR==2{printf "%.0f", $2}')
+    local available_mem=$(free -m | awk 'NR==2{printf "%.0f", $7}')
+    
+    # 检查磁盘空间
+    local disk_usage=$(df -h / | awk 'NR==2{print $5}' | sed 's/%//')
+    local disk_available=$(df -h / | awk 'NR==2{print $4}')
+    
+    echo "系统资源状态:"
+    echo "  内存: ${available_mem}MB 可用 / ${total_mem}MB 总计"
+    echo "  磁盘: ${disk_available} 可用 (${disk_usage}% 已使用)"
+    
+    # 资源警告
+    local warnings=0
+    if [[ $total_mem -lt 1000 ]]; then
+        log_warning "内存不足 (${total_mem}MB < 1000MB)，构建可能失败"
+        echo "  建议: 创建swap文件或升级VPS配置"
+        warnings=$((warnings + 1))
+    fi
+    
+    if [[ $disk_usage -gt 85 ]]; then
+        log_warning "磁盘空间不足 (${disk_usage}% > 85%)，构建可能失败"
+        echo "  建议: 清理Docker缓存或扩展存储"
+        warnings=$((warnings + 1))
+    fi
+    
+    if [[ $warnings -gt 0 ]]; then
+        echo ""
+        read -p "检测到资源不足，是否继续构建？建议先运行修复脚本 [y/N]: " continue_build
+        if [[ "$continue_build" != "y" && "$continue_build" != "Y" ]]; then
+            log_info "构建已取消，请先解决资源问题"
+            log_info "运行修复脚本: bash scripts/fix-docker-build.sh"
+            exit 1
+        fi
+    else
+        log_success "资源检查通过"
+    fi
+}
+
 # 构建和启动服务
 build_and_start_services() {
     log_info "构建和启动服务..."
@@ -1107,8 +1150,33 @@ build_and_start_services() {
     # 使用生产专用docker-compose文件
     local compose_file="docker-compose.production.yml"
     
-    # 构建Docker镜像
-    docker-compose -f $compose_file build --no-cache
+    # 检查系统资源
+    check_build_resources
+    
+    # 构建Docker镜像（带错误处理）
+    log_info "开始构建Docker镜像..."
+    if ! docker-compose -f $compose_file build --no-cache; then
+        log_error "Docker构建失败！"
+        echo ""
+        log_info "可能的解决方案："
+        echo "1. 运行修复脚本: bash scripts/fix-docker-build.sh"
+        echo "2. 手动清理Docker缓存: docker system prune -af"
+        echo "3. 检查系统资源是否足够"
+        echo "4. 分别构建服务: bash scripts/fix-docker-build.sh --separate-build"
+        echo ""
+        read -p "是否自动运行修复脚本？[Y/n]: " auto_fix
+        if [[ "$auto_fix" != "n" && "$auto_fix" != "N" ]]; then
+            if [[ -f "scripts/fix-docker-build.sh" ]]; then
+                log_info "运行Docker构建修复脚本..."
+                bash scripts/fix-docker-build.sh --separate-build
+            else
+                log_error "修复脚本不存在，请手动处理"
+                exit 1
+            fi
+        else
+            exit 1
+        fi
+    fi
     
     # 启动数据库
     docker-compose -f $compose_file up -d postgres
