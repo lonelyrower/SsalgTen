@@ -7,13 +7,15 @@ interface StatsCardsProps {
   onlineNodes?: number;
   totalCountries?: number;
   totalProviders?: number;
+  totalTests?: number;
 }
 
 export const StatsCards = ({ 
   totalNodes = 0, 
   onlineNodes = 0, 
   totalCountries = 0, 
-  totalProviders = 0 
+  totalProviders = 0,
+  totalTests = 0
 }: StatsCardsProps) => {
   const uptime = totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : '0';
 
@@ -44,11 +46,11 @@ export const StatsCards = ({
     },
     {
       title: 'Network Tests',
-      value: '1.2k',
-      subtitle: 'This month',
+      value: totalTests > 0 ? totalTests.toLocaleString() : '0',
+      subtitle: totalTests > 0 ? 'Total performed' : 'No tests yet',
       icon: <MapPin className="h-5 w-5 text-orange-500" />,
-      badge: 'Active',
-      badgeVariant: 'default' as const
+      badge: totalTests > 0 ? 'Active' : 'Pending',
+      badgeVariant: totalTests > 0 ? 'default' : 'outline' as const
     }
   ];
 
