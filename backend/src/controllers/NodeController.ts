@@ -347,45 +347,44 @@ export class NodeController {
     }
   }
 
-  // 获取Agent安装脚本
+  // 获取Agent安装脚本 - 重定向到GitHub
   async getInstallScript(req: Request, res: Response): Promise<void> {
     try {
-      const scriptPath = path.join(__dirname, '../../..', 'scripts', 'install-agent.sh');
-      
-      // 检查文件是否存在
-      if (!fs.existsSync(scriptPath)) {
-        const response: ApiResponse = {
-          success: false,
-          error: 'Install script not found'
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      // 读取脚本内容
-      const scriptContent = fs.readFileSync(scriptPath, 'utf8');
-      
-      // 获取服务器信息以便自定义脚本
+      // 获取服务器信息
       const serverUrl = `${req.protocol}://${req.get('host')}`;
+      const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
       
-      // 可以在这里对脚本进行一些自定义替换
-      let customizedScript = scriptContent;
-      
-      // 替换脚本中的默认服务器地址（如果有的话）
-      customizedScript = customizedScript.replace(
-        /MASTER_URL=.*/g, 
-        `MASTER_URL="${serverUrl}"`
-      );
+      // 生成带参数的安装命令脚本
+      const installScript = `#!/bin/bash
+# SsalgTen Agent 自动安装脚本
+# 生成时间: ${new Date().toISOString()}
+# 主服务器: ${serverUrl}
 
-      // 设置响应头为文件下载
+set -e
+
+echo "🚀 正在从GitHub获取最新安装脚本..."
+echo "📡 主服务器: ${serverUrl}"
+echo ""
+
+# 下载并执行安装脚本，传递服务器参数
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
+  --master-url "${serverUrl}" \\
+  --api-key "${apiKey}" \\
+  --auto-config
+
+echo ""
+echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
+`;
+      
+      // 设置响应头
       res.setHeader('Content-Type', 'application/x-sh');
       res.setHeader('Content-Disposition', 'attachment; filename="install-agent.sh"');
       res.setHeader('Cache-Control', 'no-cache');
       
       // 发送脚本内容
-      res.send(customizedScript);
+      res.send(installScript);
       
-      logger.info(`Agent install script downloaded from ${req.ip}`);
+      logger.info(`Agent install script generated for server ${serverUrl} from ${req.ip}`);
     } catch (error) {
       logger.error('Get install script error:', error);
       const response: ApiResponse = {

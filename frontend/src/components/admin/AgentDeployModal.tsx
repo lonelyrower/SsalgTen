@@ -29,8 +29,8 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
   const [step, setStep] = useState(1);
   const [copySuccess, setCopySuccess] = useState('');
 
-  const installCommand = `curl -fsSL ${window.location.origin}/api/agent/install-script -o install-agent.sh && chmod +x install-agent.sh && ./install-agent.sh`;
   const oneLineInstall = `curl -fsSL ${window.location.origin}/api/agent/install-script | bash`;
+  const githubDirectInstall = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --master-url "${window.location.origin}" --auto-config`;
 
   const handleDownloadScript = async () => {
     try {
@@ -281,20 +281,25 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
                 </p>
               </div>
 
-              {/* 一键安装命令 */}
-              <div className="space-y-4">
+              {/* 推荐安装命令 */}
+              <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      一键安装命令（推荐）
-                    </label>
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        智能一键安装（推荐）
+                      </label>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        预配置
+                      </span>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleCopyCommand(oneLineInstall, 'oneline')}
+                      onClick={() => handleCopyCommand(oneLineInstall, 'smart')}
                       className="flex items-center space-x-1"
                     >
-                      {copySuccess === 'oneline' ? (
+                      {copySuccess === 'smart' ? (
                         <>
                           <CheckCircle className="h-3 w-3 text-green-600" />
                           <span className="text-green-600">已复制</span>
@@ -307,28 +312,31 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
                       )}
                     </Button>
                   </div>
-                  <div className="bg-gray-900 dark:bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                  <div className="bg-gradient-to-r from-gray-900 to-blue-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto border border-blue-500/30">
                     {oneLineInstall}
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    ✨ 自动配置主服务器地址和API密钥，无需手动输入
+                  </p>
                 </div>
 
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                  或
-                </div>
-
-                {/* 分步安装命令 */}
-                <div>
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      分步安装命令
-                    </label>
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        GitHub直接安装
+                      </label>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        最新版本
+                      </span>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleCopyCommand(installCommand, 'stepby')}
+                      onClick={() => handleCopyCommand(githubDirectInstall, 'github')}
                       className="flex items-center space-x-1"
                     >
-                      {copySuccess === 'stepby' ? (
+                      {copySuccess === 'github' ? (
                         <>
                           <CheckCircle className="h-3 w-3 text-green-600" />
                           <span className="text-green-600">已复制</span>
@@ -342,8 +350,11 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
                     </Button>
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
-                    {installCommand}
+                    {githubDirectInstall}
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    🚀 直接从GitHub获取最新脚本，自动更新和版本检查
+                  </p>
                 </div>
               </div>
 

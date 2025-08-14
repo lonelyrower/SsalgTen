@@ -137,59 +137,123 @@ check_system() {
     fi
 }
 
+# 解析命令行参数
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --master-url)
+                MASTER_URL="$2"
+                shift 2
+                ;;
+            --api-key)
+                AGENT_API_KEY="$2"
+                shift 2
+                ;;
+            --auto-config)
+                AUTO_CONFIG=true
+                shift
+                ;;
+            --node-name)
+                NODE_NAME="$2"
+                shift 2
+                ;;
+            --node-country)
+                NODE_COUNTRY="$2"
+                shift 2
+                ;;
+            --node-city)
+                NODE_CITY="$2"
+                shift 2
+                ;;
+            --node-provider)
+                NODE_PROVIDER="$2"
+                shift 2
+                ;;
+            --agent-port)
+                AGENT_PORT="$2"
+                shift 2
+                ;;
+            *)
+                log_warning "未知参数: $1"
+                shift
+                ;;
+        esac
+    done
+}
+
 # 收集节点信息
 collect_node_info() {
     log_info "收集节点信息..."
     
-    echo ""
-    echo "请提供以下信息来配置您的监控节点："
-    echo ""
-    
-    # 主服务器地址
-    while true; do
-        read -p "主服务器地址 (如: https://your-domain.com): " MASTER_URL
-        if [[ -n "$MASTER_URL" && "$MASTER_URL" =~ ^https?:// ]]; then
-            break
-        else
-            log_error "请输入有效的URL地址"
+    # 如果参数已通过命令行提供，则跳过交互式输入
+    if [[ "$AUTO_CONFIG" == "true" && -n "$MASTER_URL" && -n "$AGENT_API_KEY" ]]; then
+        log_info "使用预配置参数..."
+        
+        # 设置默认值
+        NODE_NAME=${NODE_NAME:-"Agent-$(hostname)-$(date +%s)"}
+        NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
+        NODE_CITY=${NODE_CITY:-"Unknown"}
+        NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
+        AGENT_PORT=${AGENT_PORT:-"3002"}
+        NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
+        NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
+        
+        log_success "已使用自动配置模式"
+    else
+        echo ""
+        echo "请提供以下信息来配置您的监控节点："
+        echo ""
+        
+        # 主服务器地址
+        if [[ -z "$MASTER_URL" ]]; then
+            while true; do
+                read -p "主服务器地址 (如: https://your-domain.com): " MASTER_URL
+                if [[ -n "$MASTER_URL" && "$MASTER_URL" =~ ^https?:// ]]; then
+                    break
+                else
+                    log_error "请输入有效的URL地址"
+                fi
+            done
         fi
-    done
-    
-    # API密钥
-    while true; do
-        read -p "Agent API密钥: " AGENT_API_KEY
-        if [[ -n "$AGENT_API_KEY" && ${#AGENT_API_KEY} -ge 16 ]]; then
-            break
-        else
-            log_error "API密钥长度至少16个字符"
+        
+        # API密钥
+        if [[ -z "$AGENT_API_KEY" ]]; then
+            while true; do
+                read -p "Agent API密钥: " AGENT_API_KEY
+                if [[ -n "$AGENT_API_KEY" && ${#AGENT_API_KEY} -ge 16 ]]; then
+                    break
+                else
+                    log_error "API密钥长度至少16个字符"
+                fi
+            done
         fi
-    done
     
-    # 节点名称
-    read -p "节点名称 (如: Tokyo-VPS-01): " NODE_NAME
-    NODE_NAME=${NODE_NAME:-"Agent-$(hostname)"}
-    
-    # 地理位置信息
-    read -p "国家/地区 (如: Japan): " NODE_COUNTRY
-    NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
-    
-    read -p "城市 (如: Tokyo): " NODE_CITY
-    NODE_CITY=${NODE_CITY:-"Unknown"}
-    
-    read -p "服务商 (如: Vultr, DigitalOcean): " NODE_PROVIDER
-    NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
-    
-    # 坐标（可选）
-    echo ""
-    echo "GPS坐标 (可选，用于地图显示):"
-    read -p "纬度 (如: 35.6762): " NODE_LATITUDE
-    read -p "经度 (如: 139.6503): " NODE_LONGITUDE
-    NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
-    NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
-    
-    # 端口设置
-    read -p "Agent端口 (默认3002): " AGENT_PORT
-    AGENT_PORT=${AGENT_PORT:-"3002"}
+        # 节点名称
+        read -p "节点名称 (如: Tokyo-VPS-01): " NODE_NAME
+        NODE_NAME=${NODE_NAME:-"Agent-$(hostname)"}
+        
+        # 地理位置信息
+        read -p "国家/地区 (如: Japan): " NODE_COUNTRY
+        NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
+        
+        read -p "城市 (如: Tokyo): " NODE_CITY
+        NODE_CITY=${NODE_CITY:-"Unknown"}
+        
+        read -p "服务商 (如: Vultr, DigitalOcean): " NODE_PROVIDER
+        NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
+        
+        # 坐标（可选）
+        echo ""
+        echo "GPS坐标 (可选，用于地图显示):"
+        read -p "纬度 (如: 35.6762): " NODE_LATITUDE
+        read -p "经度 (如: 139.6503): " NODE_LONGITUDE
+        NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
+        NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
+        
+        # 端口设置
+        read -p "Agent端口 (默认3002): " AGENT_PORT
+        AGENT_PORT=${AGENT_PORT:-"3002"}
+    fi
     
     # 生成唯一Agent ID
     AGENT_ID="agent_$(hostname)_$(date +%s)_$(shuf -i 1000-9999 -n 1)"
@@ -625,19 +689,25 @@ EOF
 
 # 主安装流程
 main() {
-    # 处理命令行参数
+    # 处理特殊命令行参数
     case "${1:-}" in
         --update)
             log_info "强制更新脚本..."
             update_script
+            return
             ;;
         --no-update-check)
             log_info "跳过更新检查"
             show_welcome
+            # 解析剩余参数
+            shift
+            parse_arguments "$@"
             ;;
         *)
             show_welcome
             check_script_update
+            # 解析所有参数
+            parse_arguments "$@"
             ;;
     esac
     
