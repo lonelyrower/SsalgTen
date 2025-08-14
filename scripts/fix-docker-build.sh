@@ -80,16 +80,38 @@ create_swap() {
         return 0
     fi
     
-    # 创建2GB swap文件
-    sudo fallocate -l 2G /swapfile
+    # 根据系统内存创建合适的swap文件
+    local mem_total=$(free -m | awk 'NR==2{printf "%.0f", $2}')
+    local swap_size="1G"
+    
+    if [[ $mem_total -lt 512 ]]; then
+        swap_size="2G"
+        log_info "检测到极低内存，创建2GB swap文件"
+    elif [[ $mem_total -lt 1024 ]]; then
+        swap_size="1G" 
+        log_info "检测到低内存，创建1GB swap文件"
+    else
+        swap_size="512M"
+        log_info "创建512MB swap文件"
+    fi
+    
+    # 尝试使用fallocate，失败时使用dd
+    if ! sudo fallocate -l $swap_size /swapfile 2>/dev/null; then
+        log_warning "fallocate失败，使用dd命令创建swap文件..."
+        local size_mb=$(echo $swap_size | sed 's/G/*1024/g; s/M//g' | bc 2>/dev/null || echo 1024)
+        sudo dd if=/dev/zero of=/swapfile bs=1M count=$size_mb status=progress
+    fi
+    
     sudo chmod 600 /swapfile
     sudo mkswap /swapfile
     sudo swapon /swapfile
     
     # 永久启用
-    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    if ! grep -q '/swapfile' /etc/fstab 2>/dev/null; then
+        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    fi
     
-    log_success "Swap文件创建完成 (2GB)"
+    log_success "Swap文件创建完成 ($swap_size)"
 }
 
 # 清理Docker缓存

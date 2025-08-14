@@ -726,13 +726,30 @@ install_nginx() {
     log_info "安装Nginx..."
     
     run_as_root apt install -y nginx
-    run_as_root systemctl start nginx
-    run_as_root systemctl enable nginx
     
-    # 删除默认站点
+    # 检查nginx配置是否正确
+    if ! run_as_root nginx -t >/dev/null 2>&1; then
+        log_warning "Nginx配置检查失败，尝试修复..."
+        # 恢复默认配置
+        run_as_root apt install --reinstall -y nginx-common
+    fi
+    
+    # 停止nginx（以防正在运行）
+    run_as_root systemctl stop nginx 2>/dev/null || true
+    
+    # 删除默认站点（在启动前删除）
     run_as_root rm -f /etc/nginx/sites-enabled/default
     
-    log_success "Nginx安装完成"
+    # 确保nginx可以启动
+    if run_as_root nginx -t; then
+        run_as_root systemctl start nginx
+        run_as_root systemctl enable nginx
+        log_success "Nginx安装和启动完成"
+    else
+        log_error "Nginx配置错误，无法启动"
+        log_info "尝试运行: sudo nginx -t 查看详细错误"
+        exit 1
+    fi
 }
 
 # 创建应用目录
@@ -1183,6 +1200,20 @@ check_build_resources() {
             log_info "构建已取消，请先解决资源问题"
             log_info "运行修复脚本: bash scripts/fix-docker-build.sh"
             exit 1
+        else
+            log_warning "继续构建，但将启用资源优化模式"
+            # 设置优化模式标志
+            export RESOURCE_CONSTRAINED=true
+            # 自动运行资源优化
+            log_info "自动启用资源优化..."
+            if [[ $total_mem -lt 1000 ]]; then
+                log_info "创建临时swap文件..."
+                run_as_root fallocate -l 1G /tmp/swapfile 2>/dev/null || run_as_root dd if=/dev/zero of=/tmp/swapfile bs=1M count=1024
+                run_as_root chmod 600 /tmp/swapfile
+                run_as_root mkswap /tmp/swapfile
+                run_as_root swapon /tmp/swapfile
+                log_success "临时swap文件已创建"
+            fi
         fi
     else
         log_success "资源检查通过"
@@ -1199,9 +1230,33 @@ build_and_start_services() {
     # 检查系统资源
     check_build_resources
     
-    # 构建Docker镜像（带错误处理）
+    # 构建Docker镜像（带错误处理和资源优化）
     log_info "开始构建Docker镜像..."
-    if ! docker-compose -f $compose_file build --no-cache; then
+    
+    # 根据资源情况选择构建策略
+    if [[ "${RESOURCE_CONSTRAINED:-false}" == "true" ]]; then
+        log_info "使用资源优化构建模式..."
+        # 清理Docker缓存
+        docker system prune -f >/dev/null 2>&1 || true
+        
+        # 分别构建服务以减少内存压力
+        log_info "分别构建后端服务..."
+        if ! timeout 1800 docker-compose -f $compose_file build backend; then
+            log_error "后端构建失败或超时"
+            exit 1
+        fi
+        
+        # 清理中间缓存
+        docker system prune -f >/dev/null 2>&1 || true
+        
+        log_info "分别构建前端服务..."
+        if ! timeout 1800 docker-compose -f $compose_file build frontend; then
+            log_error "前端构建失败或超时"
+            exit 1
+        fi
+        
+        log_success "资源优化构建完成"
+    elif ! timeout 1200 docker-compose -f $compose_file build --no-cache; then
         log_error "Docker构建失败！"
         echo ""
         log_info "可能的解决方案："
@@ -1618,8 +1673,30 @@ main() {
     log_success "🎉 SsalgTen部署完成！"
 }
 
-# 错误处理
-trap 'log_error "部署过程中发生错误"; exit 1' ERR
+# 清理临时资源
+cleanup_temp_resources() {
+    log_info "清理临时资源..."
+    
+    # 清理临时swap文件
+    if [[ -f /tmp/swapfile ]]; then
+        run_as_root swapoff /tmp/swapfile 2>/dev/null || true
+        run_as_root rm -f /tmp/swapfile
+        log_info "临时swap文件已清理"
+    fi
+}
+
+# 错误处理和清理
+cleanup_on_exit() {
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        log_error "部署过程中发生错误 (退出码: $exit_code)"
+    fi
+    cleanup_temp_resources
+    exit $exit_code
+}
+
+# 设置错误处理和退出清理
+trap cleanup_on_exit ERR EXIT
 
 # 运行主函数
 main "$@"
