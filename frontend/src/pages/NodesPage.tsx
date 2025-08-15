@@ -11,12 +11,12 @@ const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const NodesPage: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { hasRole } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
-  const { nodes, stats, lastUpdate, connected } = useRealTime();
+  const { nodes, stats, connected } = useRealTime();
 
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);

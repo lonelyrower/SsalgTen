@@ -18,7 +18,7 @@ interface DiagnosticRecord {
 }
 
 export const DiagnosticsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [records, setRecords] = useState<DiagnosticRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

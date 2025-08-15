@@ -5,7 +5,7 @@ import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, Server, Settings, BarChart3, Loader2 } from 'lucide-react';
+import { Activity, Users, Settings, BarChart3, Loader2 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 // Lazy load heavy components
