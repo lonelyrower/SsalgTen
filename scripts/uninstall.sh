@@ -251,6 +251,17 @@ cleanup_docker_config() {
     $SUDO apt clean 2>/dev/null || true
     $SUDO rm -rf /var/lib/apt/lists/*docker* 2>/dev/null || true
     
+    # 清理可能的端口占用和进程
+    log_info "清理端口占用..."
+    $SUDO pkill -f "docker" 2>/dev/null || true
+    $SUDO pkill -f "nginx.*ssalgten" 2>/dev/null || true
+    $SUDO pkill -f "node.*ssalgten" 2>/dev/null || true
+    sleep 2
+    
+    # 清理可能残留的网络配置
+    $SUDO iptables -t nat -F 2>/dev/null || true
+    $SUDO iptables -t mangle -F 2>/dev/null || true
+    
     log_success "Docker配置和用户组清理完成"
 }
 

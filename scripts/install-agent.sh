@@ -2,6 +2,18 @@
 
 # SsalgTen Agent 一键安装脚本
 # 用于在新VPS上快速部署代理节点
+#
+# 使用方法:
+#   curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash
+#   
+# 常用参数:
+#   --master-url URL         主服务器地址
+#   --api-key KEY           API密钥
+#   --auto-config           自动配置模式（跳过交互）
+#   --force-root            允许root用户运行（跳过安全提醒）
+#   --node-name NAME        节点名称
+#   --node-country COUNTRY  国家
+#   --node-city CITY        城市
 
 set -e
 
@@ -151,6 +163,10 @@ parse_arguments() {
                 ;;
             --auto-config)
                 AUTO_CONFIG=true
+                shift
+                ;;
+            --force-root)
+                FORCE_ROOT=true
                 shift
                 ;;
             --node-name)
@@ -713,22 +729,39 @@ main() {
     
     # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
-        log_warning "⚠️ 检测到root用户运行"
-        echo ""
-        echo -e "${YELLOW}安全提醒：${NC}"
-        echo "- 使用root用户运行Agent存在安全风险"
-        echo "- 建议创建专用用户： useradd -m -s /bin/bash agentuser"
-        echo "- 然后切换用户运行： su - agentuser"
-        echo ""
-        read -p "继续使用root用户？ (yes/no): " confirm_root
-        if [[ "$confirm_root" != "yes" ]]; then
-            log_info "已取消安装，请创建专用用户后重试"
-            exit 0
+        # 如果用户指定了--force-root或--auto-config，跳过提醒
+        if [[ "${FORCE_ROOT:-false}" == "true" || "${AUTO_CONFIG:-false}" == "true" ]]; then
+            log_info "使用root用户运行（已通过参数确认）"
+            export RUNNING_AS_ROOT=true
+        else
+            log_warning "⚠️ 检测到root用户运行"
+            echo ""
+            echo -e "${YELLOW}安全提醒：${NC}"
+            echo "- 使用root用户运行Agent存在安全风险"
+            echo "- 建议创建专用用户： useradd -m -s /bin/bash agentuser"
+            echo "- 然后切换用户运行： su - agentuser"
+            echo ""
+            echo -e "${CYAN}快速选项：${NC}"
+            echo "- 回车继续使用root用户"
+            echo "- 输入 'n' 取消安装"
+            echo ""
+            read -p "继续使用root用户？ [Y/n]: " confirm_root
+            confirm_root="${confirm_root:-y}"
+            if [[ "$confirm_root" =~ ^[Nn] ]]; then
+                log_info "已取消安装"
+                echo ""
+                echo -e "${GREEN}推荐操作步骤：${NC}"
+                echo "1. useradd -m -s /bin/bash agentuser"
+                echo "2. usermod -aG sudo agentuser"
+                echo "3. su - agentuser"
+                echo "4. 重新运行安装脚本"
+                exit 0
+            fi
+            
+            # 使用root用户时的特殊处理
+            export RUNNING_AS_ROOT=true
+            log_info "继续使用root用户部署Agent"
         fi
-        
-        # 使用root用户时的特殊处理
-        export RUNNING_AS_ROOT=true
-        log_warning "继续使用root用户部署Agent"
     else
         # 检查sudo权限
         if ! sudo -v >/dev/null 2>&1; then
