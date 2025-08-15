@@ -134,7 +134,7 @@ main() {
     # 1. 系统要求检查
     log_info "========== 系统要求检查 =========="
     check_requirement "Docker" "docker --version" "true"
-    check_requirement "Docker Compose" "docker-compose --version" "true"
+    check_requirement "Docker Compose" "docker_compose --version" "true"
     check_requirement "Git" "git --version" "true"
     check_requirement "Curl" "curl --version" "true"
     check_requirement "jq" "jq --version" "false"
@@ -148,7 +148,7 @@ main() {
     check_file_exists "backend/.env" "true"
     check_file_exists "frontend/.env" "true"
     check_file_exists "agent/.env" "true"
-    check_file_exists "docker-compose.yml" "true"
+    check_file_exists "docker_compose.yml" "true"
     check_file_exists "backend/prisma/schema.prisma" "true"
     
     echo ""
@@ -279,7 +279,7 @@ main() {
             log_success "✅ 环境验证完全通过！可以开始部署。"
             echo ""
             echo "建议的下一步："
-            echo "1. 运行 docker-compose up -d"
+            echo "1. 运行 docker_compose up -d"
             echo "2. 执行数据库迁移"
             echo "3. 运行生产测试脚本"
         else

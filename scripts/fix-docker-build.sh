@@ -11,6 +11,19 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Docker Compose 兼容性函数
+docker_compose() {
+    if command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+    elif docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+    else
+        log_error "未找到 docker-compose 或 docker compose 命令"
+        log_info "请安装 Docker Compose 或确保 Docker 版本支持 compose 插件"
+        exit 1
+    fi
+}
+
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -153,14 +166,14 @@ build_services_separately() {
     
     # 只构建后端
     log_info "构建后端服务..."
-    docker-compose -f docker-compose.production.yml build backend
+    docker_compose -f docker_compose.production.yml build backend
     
     # 清理中间缓存
     docker system prune -f
     
     # 只构建前端
     log_info "构建前端服务..."
-    docker-compose -f docker-compose.production.yml build frontend
+    docker_compose -f docker_compose.production.yml build frontend
     
     log_success "分别构建完成"
 }
@@ -194,7 +207,7 @@ main() {
     echo ""
     echo "方法1 - 正常构建："
     echo "  cd /opt/ssalgten"
-    echo "  docker-compose -f docker-compose.production.yml up --build -d"
+    echo "  docker_compose -f docker_compose.production.yml up --build -d"
     echo ""
     echo "方法2 - 分别构建（内存不足时）："
     echo "  bash /opt/ssalgten/scripts/fix-docker-build.sh --separate-build"

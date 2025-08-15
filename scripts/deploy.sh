@@ -84,7 +84,7 @@ build_images() {
     cd "$PROJECT_ROOT"
     
     # Build all images
-    docker-compose build --no-cache
+    docker_compose build --no-cache
     
     log_success "Docker images built successfully"
 }
@@ -97,7 +97,7 @@ start_services() {
     
     # Start database first
     log_info "Starting database..."
-    docker-compose up -d database redis
+    docker_compose up -d database redis
     
     # Wait for database to be ready
     log_info "Waiting for database to be ready..."
@@ -105,7 +105,7 @@ start_services() {
     
     # Start backend
     log_info "Starting backend..."
-    docker-compose up -d backend
+    docker_compose up -d backend
     
     # Wait for backend to be ready
     log_info "Waiting for backend to be ready..."
@@ -113,11 +113,11 @@ start_services() {
     
     # Start frontend
     log_info "Starting frontend..."
-    docker-compose up -d frontend
+    docker_compose up -d frontend
     
     # Start agents
     log_info "Starting agents..."
-    docker-compose up -d agent-nyc
+    docker_compose up -d agent-nyc
     
     log_success "All services started successfully"
 }
@@ -129,10 +129,10 @@ check_health() {
     cd "$PROJECT_ROOT"
     
     # Check all services
-    if docker-compose ps | grep -q "Up (healthy)"; then
+    if docker_compose ps | grep -q "Up (healthy)"; then
         log_success "Services are healthy"
     else
-        log_warning "Some services may not be healthy. Check with: docker-compose ps"
+        log_warning "Some services may not be healthy. Check with: docker_compose ps"
     fi
 }
 
@@ -140,7 +140,7 @@ check_health() {
 show_status() {
     log_info "Service status:"
     cd "$PROJECT_ROOT"
-    docker-compose ps
+    docker_compose ps
     
     echo ""
     log_info "Service URLs:"
@@ -155,7 +155,7 @@ stop_services() {
     log_info "Stopping SsalgTen services..."
     
     cd "$PROJECT_ROOT"
-    docker-compose down
+    docker_compose down
     
     log_success "Services stopped"
 }
@@ -169,7 +169,7 @@ cleanup() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log_info "Cleaning up..."
         cd "$PROJECT_ROOT"
-        docker-compose down -v --remove-orphans
+        docker_compose down -v --remove-orphans
         docker system prune -f
         log_success "Cleanup completed"
     else
@@ -184,11 +184,11 @@ update_services() {
     cd "$PROJECT_ROOT"
     
     # Pull latest images and rebuild
-    docker-compose pull
-    docker-compose build --no-cache
+    docker_compose pull
+    docker_compose build --no-cache
     
     # Restart services
-    docker-compose up -d --force-recreate
+    docker_compose up -d --force-recreate
     
     log_success "Services updated and restarted"
 }
@@ -201,10 +201,10 @@ show_logs() {
     
     if [ -n "$service" ]; then
         log_info "Showing logs for $service..."
-        docker-compose logs -f "$service"
+        docker_compose logs -f "$service"
     else
         log_info "Showing logs for all services..."
-        docker-compose logs -f
+        docker_compose logs -f
     fi
 }
 

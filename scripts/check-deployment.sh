@@ -26,7 +26,7 @@ check_files() {
     log_info "Checking required files..."
     
     local files=(
-        "docker-compose.yml"
+        "docker_compose.yml"
         "Dockerfile.backend"
         "Dockerfile.frontend" 
         "Dockerfile.agent"
@@ -74,7 +74,7 @@ check_docker() {
     fi
     
     local docker_version=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
-    local compose_version=$(docker-compose --version | cut -d' ' -f3 | cut -d',' -f1)
+    local compose_version=$(docker_compose --version | cut -d' ' -f3 | cut -d',' -f1)
     
     log_success "Docker version: $docker_version"
     log_success "Docker Compose version: $compose_version"
@@ -86,7 +86,7 @@ check_environment() {
     log_info "Checking environment configuration..."
     
     if [ ! -f "$PROJECT_ROOT/.env" ]; then
-        log_warning "No .env file found. Will use default values from docker-compose.yml"
+        log_warning "No .env file found. Will use default values from docker_compose.yml"
         log_info "Consider copying .env.example to .env and customizing values"
         return 0
     fi
@@ -125,7 +125,7 @@ check_compose_config() {
     
     cd "$PROJECT_ROOT"
     
-    if ! docker-compose config -q; then
+    if ! docker_compose config -q; then
         log_error "Docker Compose configuration is invalid"
         return 1
     fi
@@ -220,7 +220,7 @@ generate_summary() {
     echo "To deploy, run:"
     echo "  ./scripts/deploy.sh deploy"
     echo "  or"
-    echo "  docker-compose up -d"
+    echo "  docker_compose up -d"
 }
 
 # Main execution

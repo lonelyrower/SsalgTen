@@ -108,7 +108,7 @@ check_docker_containers() {
         return 1
     fi
     
-    local containers=$(docker-compose ps -q 2>/dev/null || echo "")
+    local containers=$(docker_compose ps -q 2>/dev/null || echo "")
     
     if [[ -z "$containers" ]]; then
         log_warning "没有找到运行中的容器"
@@ -161,7 +161,7 @@ check_database_connection() {
         PASSED_CHECKS=$((PASSED_CHECKS + 1))
     else
         # 如果API检查失败，尝试直接连接数据库
-        if docker-compose exec -T postgres pg_isready -U ssalgten >/dev/null 2>&1; then
+        if docker_compose exec -T postgres pg_isready -U ssalgten >/dev/null 2>&1; then
             log_success "数据库连接正常（直接连接）"
             PASSED_CHECKS=$((PASSED_CHECKS + 1))
         else

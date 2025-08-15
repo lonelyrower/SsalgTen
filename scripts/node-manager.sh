@@ -199,7 +199,7 @@ check_node_status() {
     
     # 检查Agent服务
     local agent_status=$(ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -p "$port" "$user@$ip" \
-        "cd /opt/ssalgten-agent && docker-compose ps -q | xargs docker inspect --format='{{.State.Status}}' 2>/dev/null || echo 'not_running'")
+        "cd /opt/ssalgten-agent && docker_compose ps -q | xargs docker inspect --format='{{.State.Status}}' 2>/dev/null || echo 'not_running'")
     
     if [[ "$agent_status" == "running" ]]; then
         # 检查健康状态
@@ -323,7 +323,7 @@ restart_node_agent() {
     log_info "重启节点 $node_name Agent..."
     
     if ssh -o ConnectTimeout=15 -o StrictHostKeyChecking=no -p "$port" "$user@$ip" \
-        "cd /opt/ssalgten-agent && docker-compose restart"; then
+        "cd /opt/ssalgten-agent && docker_compose restart"; then
         log_success "节点 $node_name Agent重启成功"
         sleep 5
         check_node_status "$node_name" "true"
@@ -350,7 +350,7 @@ view_node_logs() {
     echo ""
     
     ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -p "$port" "$user@$ip" \
-        "cd /opt/ssalgten-agent && docker-compose logs --tail=$lines -t"
+        "cd /opt/ssalgten-agent && docker_compose logs --tail=$lines -t"
 }
 
 # 批量操作

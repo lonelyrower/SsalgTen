@@ -12,6 +12,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Docker Compose 兼容性函数
+docker_compose() {
+    if command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+    elif docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+    else
+        echo -e "${RED}[ERROR]${NC} 未找到 docker-compose 或 docker compose 命令"
+        return 1
+    fi
+}
+
 # 日志函数
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -84,9 +96,9 @@ cleanup_docker_services() {
         cd /opt/ssalgten
         
         # 停止服务
-        if [[ -f "docker-compose.production.yml" ]]; then
+        if [[ -f "docker_compose.production.yml" ]]; then
             log_info "停止SsalgTen服务..."
-            docker-compose -f docker-compose.production.yml down --remove-orphans 2>/dev/null || true
+            docker_compose -f docker_compose.production.yml down --remove-orphans 2>/dev/null || true
         fi
     fi
     

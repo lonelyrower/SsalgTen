@@ -35,6 +35,19 @@ run_as_root() {
     fi
 }
 
+# Docker Compose 兼容性函数
+docker_compose() {
+    if command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+    elif docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+    else
+        log_error "未找到 docker-compose 或 docker compose 命令"
+        log_info "请安装 Docker Compose 或确保 Docker 版本支持 compose 插件"
+        exit 1
+    fi
+}
+
 # 改进的输入函数 - 支持默认值和回车确认
 prompt_input() {
     local prompt="$1"
@@ -1224,7 +1237,7 @@ check_build_resources() {
 build_and_start_services() {
     log_info "构建和启动服务..."
     
-    # 使用生产专用docker-compose文件
+    # 使用生产专用docker_compose文件
     local compose_file="docker-compose.production.yml"
     
     # 检查系统资源
@@ -1241,7 +1254,7 @@ build_and_start_services() {
         
         # 分别构建服务以减少内存压力
         log_info "分别构建后端服务..."
-        if ! timeout 1800 docker-compose -f $compose_file build backend; then
+        if ! timeout 1800 docker_compose -f $compose_file build backend; then
             log_error "后端构建失败或超时"
             exit 1
         fi
@@ -1250,13 +1263,13 @@ build_and_start_services() {
         docker system prune -f >/dev/null 2>&1 || true
         
         log_info "分别构建前端服务..."
-        if ! timeout 1800 docker-compose -f $compose_file build frontend; then
+        if ! timeout 1800 docker_compose -f $compose_file build frontend; then
             log_error "前端构建失败或超时"
             exit 1
         fi
         
         log_success "资源优化构建完成"
-    elif ! timeout 1200 docker-compose -f $compose_file build --no-cache; then
+    elif ! timeout 1200 docker_compose -f $compose_file build --no-cache; then
         log_error "Docker构建失败！"
         echo ""
         log_info "可能的解决方案："
@@ -1280,14 +1293,14 @@ build_and_start_services() {
     fi
     
     # 启动数据库
-    docker-compose -f $compose_file up -d postgres
+    docker_compose -f $compose_file up -d postgres
     log_info "等待数据库启动..."
     
     # 等待数据库健康检查通过
     local max_attempts=30
     local attempt=0
     while [ $attempt -lt $max_attempts ]; do
-        if docker-compose -f $compose_file exec postgres pg_isready -U ssalgten -d ssalgten > /dev/null 2>&1; then
+        if docker_compose -f $compose_file exec postgres pg_isready -U ssalgten -d ssalgten > /dev/null 2>&1; then
             log_success "数据库已启动完成"
             break
         fi
@@ -1312,14 +1325,14 @@ build_and_start_services() {
     
     # 运行数据库迁移
     log_info "运行数据库迁移..."
-    docker-compose -f $compose_file run --rm backend npx prisma migrate deploy
+    docker_compose -f $compose_file run --rm backend npx prisma migrate deploy
     
     # 运行数据库种子脚本创建管理员用户
     log_info "创建管理员用户和初始数据..."
-    docker-compose -f $compose_file run --rm backend npm run db:seed
+    docker_compose -f $compose_file run --rm backend npm run db:seed
     
     # 启动所有服务
-    docker-compose -f $compose_file up -d
+    docker_compose -f $compose_file up -d
     
     log_info "等待服务启动..."
     sleep 30
@@ -1338,7 +1351,7 @@ verify_deployment() {
         log_info "验证尝试 $attempt/$max_attempts..."
         
         # 检查容器状态
-        if ! docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
+        if ! docker_compose -f docker-compose.production.yml ps | grep -q "Up"; then
             log_warning "容器未全部启动，等待10秒..."
             sleep 10
             attempt=$((attempt + 1))
@@ -1382,50 +1395,50 @@ create_management_scripts() {
 case "$1" in
     start)
         echo "启动SsalgTen服务..."
-        docker-compose -f docker-compose.production.yml up -d
+        docker_compose -f docker-compose.production.yml up -d
         ;;
     stop)
         echo "停止SsalgTen服务..."
-        docker-compose -f docker-compose.production.yml down
+        docker_compose -f docker-compose.production.yml down
         ;;
     restart)
         echo "重启SsalgTen服务..."
-        docker-compose -f docker-compose.production.yml restart
+        docker_compose -f docker-compose.production.yml restart
         ;;
     status)
         echo "查看服务状态..."
-        docker-compose -f docker-compose.production.yml ps
+        docker_compose -f docker-compose.production.yml ps
         ;;
     logs)
         echo "查看服务日志..."
-        docker-compose -f docker-compose.production.yml logs -f ${2:-""}
+        docker_compose -f docker-compose.production.yml logs -f ${2:-""}
         ;;
     update)
         echo "更新服务..."
         git pull
         
         # 停止服务
-        docker-compose -f docker-compose.production.yml down
+        docker_compose -f docker-compose.production.yml down
         
         # 重新构建
-        docker-compose -f docker-compose.production.yml build --no-cache
+        docker_compose -f docker-compose.production.yml build --no-cache
         
         # 启动数据库
-        docker-compose -f docker-compose.production.yml up -d postgres
+        docker_compose -f docker-compose.production.yml up -d postgres
         echo "等待数据库启动..."
         sleep 10
         
         # 运行数据库迁移
         echo "运行数据库迁移..."
-        docker-compose -f docker-compose.production.yml run --rm backend npx prisma migrate deploy
+        docker_compose -f docker-compose.production.yml run --rm backend npx prisma migrate deploy
         
         # 启动所有服务
-        docker-compose -f docker-compose.production.yml up -d
+        docker_compose -f docker-compose.production.yml up -d
         echo "更新完成"
         ;;
     backup)
         echo "备份数据库..."
-        docker-compose -f docker-compose.production.yml exec postgres pg_dump -U ssalgten ssalgten > backup_$(date +%Y%m%d_%H%M%S).sql
+        docker_compose -f docker-compose.production.yml exec postgres pg_dump -U ssalgten ssalgten > backup_$(date +%Y%m%d_%H%M%S).sql
         echo "备份完成"
         ;;
     *)
@@ -1447,7 +1460,7 @@ echo "==============================="
 
 # 容器状态
 echo "容器状态:"
-docker-compose -f docker-compose.production.yml ps
+docker_compose -f docker-compose.production.yml ps
 
 echo ""
 

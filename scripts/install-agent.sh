@@ -25,6 +25,19 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# Docker Compose 兼容性函数
+docker_compose() {
+    if command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+    elif docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+    else
+        log_error "未找到 docker-compose 或 docker compose 命令"
+        log_info "请安装 Docker Compose 或确保 Docker 版本支持 compose 插件"
+        exit 1
+    fi
+}
+
 # 版本信息
 SCRIPT_VERSION="1.1.0"
 SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh"
@@ -337,7 +350,7 @@ install_docker_compose() {
     log_info "检查Docker Compose安装状态..."
     
     if command -v docker-compose >/dev/null 2>&1; then
-        log_success "Docker Compose已安装: $(docker-compose --version)"
+        log_success "Docker Compose已安装: $(docker_compose --version)"
         return 0
     fi
     
@@ -391,11 +404,11 @@ download_agent_code() {
     log_success "Agent代码下载完成"
 }
 
-# 创建Agent专用的docker-compose文件
+# 创建Agent专用的docker_compose文件
 create_docker_compose() {
     log_info "创建Docker Compose配置..."
     
-    cat > docker-compose.yml << EOF
+    cat > docker_compose.yml << EOF
 version: '3.8'
 
 services:
@@ -571,10 +584,10 @@ start_agent_service() {
     log_info "启动Agent服务..."
     
     # 构建镜像
-    docker-compose build
+    docker_compose build
     
     # 启动服务
-    docker-compose up -d
+    docker_compose up -d
     
     # 等待服务启动
     sleep 10
@@ -587,11 +600,11 @@ verify_installation() {
     log_info "验证安装..."
     
     # 检查容器状态
-    if docker-compose ps | grep -q "Up"; then
+    if docker_compose ps | grep -q "Up"; then
         log_success "Docker容器运行正常"
     else
         log_error "Docker容器启动失败"
-        docker-compose logs
+        docker_compose logs
         return 1
     fi
     
@@ -626,10 +639,10 @@ show_installation_result() {
     echo "  - 主服务器: $MASTER_URL"
     echo ""
     echo "🔧 管理命令:"
-    echo "  - 查看状态: cd $APP_DIR && docker-compose ps"
-    echo "  - 查看日志: cd $APP_DIR && docker-compose logs -f"
-    echo "  - 重启服务: cd $APP_DIR && docker-compose restart"
-    echo "  - 停止服务: cd $APP_DIR && docker-compose down"
+    echo "  - 查看状态: cd $APP_DIR && docker_compose ps"
+    echo "  - 查看日志: cd $APP_DIR && docker_compose logs -f"
+    echo "  - 重启服务: cd $APP_DIR && docker_compose restart"
+    echo "  - 停止服务: cd $APP_DIR && docker_compose down"
     echo "  - 系统服务: sudo systemctl status ssalgten-agent"
     echo ""
     echo "🌐 访问地址:"
@@ -653,7 +666,7 @@ show_installation_result() {
     echo -e "${YELLOW}⚠️ 下一步:${NC}"
     echo "1. 检查防火墙是否开放端口 $AGENT_PORT"
     echo "2. 在主服务器控制台查看节点是否上线"
-    echo "3. 如有问题，查看日志: docker-compose logs -f"
+    echo "3. 如有问题，查看日志: docker_compose logs -f"
     echo ""
 }
 
@@ -669,28 +682,28 @@ create_management_script() {
 case "$1" in
     start)
         echo "启动Agent服务..."
-        docker-compose up -d
+        docker_compose up -d
         ;;
     stop)
         echo "停止Agent服务..."
-        docker-compose down
+        docker_compose down
         ;;
     restart)
         echo "重启Agent服务..."
-        docker-compose restart
+        docker_compose restart
         ;;
     status)
         echo "查看服务状态..."
-        docker-compose ps
+        docker_compose ps
         ;;
     logs)
         echo "查看服务日志..."
-        docker-compose logs -f
+        docker_compose logs -f
         ;;
     update)
         echo "更新Agent..."
-        docker-compose pull
-        docker-compose up -d --build
+        docker_compose pull
+        docker_compose up -d --build
         ;;
     *)
         echo "用法: $0 {start|stop|restart|status|logs|update}"
