@@ -229,7 +229,7 @@ export class NodeController {
   // Agent注册端点
   async registerAgent(req: Request, res: Response): Promise<void> {
     try {
-      const { agentId, systemInfo } = req.body;
+      const { agentId, nodeInfo, systemInfo } = req.body;
       
       if (!agentId) {
         const response: ApiResponse = {
@@ -240,24 +240,60 @@ export class NodeController {
         return;
       }
 
-      // 查找节点
-      const node = await nodeService.getNodeByAgentId(agentId);
+      // 查找现有节点
+      let node = await nodeService.getNodeByAgentId(agentId);
+      
       if (!node) {
-        const response: ApiResponse = {
-          success: false,
-          error: 'Agent not registered. Please contact administrator.'
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      // 更新系统信息
-      if (systemInfo) {
-        await nodeService.updateNode(node.id, {
-          osType: systemInfo.platform,
-          osVersion: systemInfo.version,
-          status: NodeStatus.ONLINE
-        });
+        // 如果节点不存在且提供了节点信息，自动创建新节点
+        if (nodeInfo) {
+          logger.info(`Creating new node for agent: ${agentId}`);
+          
+          node = await nodeService.createNode({
+            agentId,
+            name: nodeInfo.name || `Node-${agentId.substring(0, 8)}`,
+            country: nodeInfo.country || 'Unknown',
+            city: nodeInfo.city || 'Unknown',
+            latitude: nodeInfo.latitude || 0,
+            longitude: nodeInfo.longitude || 0,
+            provider: nodeInfo.provider || 'Unknown',
+            osType: systemInfo?.platform || 'Unknown',
+            osVersion: systemInfo?.version || 'Unknown',
+            status: NodeStatus.ONLINE
+          });
+          
+          logger.info(`New node created: ${node.name} (${node.id})`);
+        } else {
+          const response: ApiResponse = {
+            success: false,
+            error: 'Agent not registered and insufficient information to auto-register. Please contact administrator.'
+          };
+          res.status(404).json(response);
+          return;
+        }
+      } else {
+        // 更新现有节点的系统信息
+        if (systemInfo) {
+          await nodeService.updateNode(node.id, {
+            osType: systemInfo.platform,
+            osVersion: systemInfo.version,
+            status: NodeStatus.ONLINE,
+            lastSeen: new Date()
+          });
+        }
+        
+        // 如果提供了新的节点信息，也更新位置信息
+        if (nodeInfo) {
+          await nodeService.updateNode(node.id, {
+            name: nodeInfo.name || node.name,
+            country: nodeInfo.country || node.country,
+            city: nodeInfo.city || node.city,
+            latitude: nodeInfo.latitude || node.latitude,
+            longitude: nodeInfo.longitude || node.longitude,
+            provider: nodeInfo.provider || node.provider
+          });
+        }
+        
+        logger.info(`Existing node updated: ${node.name} (${node.id})`);
       }
 
       const response: ApiResponse = {

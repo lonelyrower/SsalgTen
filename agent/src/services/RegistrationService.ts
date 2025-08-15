@@ -39,6 +39,14 @@ export class RegistrationService {
       const systemInfo = await getSystemInfo();
       const registrationData = {
         agentId: config.id,
+        nodeInfo: {
+          name: config.name,
+          country: config.location.country,
+          city: config.location.city,
+          latitude: config.location.latitude,
+          longitude: config.location.longitude,
+          provider: config.provider
+        },
         systemInfo: {
           platform: systemInfo.platform,
           version: systemInfo.version,

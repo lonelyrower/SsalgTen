@@ -5,6 +5,7 @@ import { ipInfoService } from './IPInfoService';
 import crypto from 'crypto';
 
 export interface CreateNodeInput {
+  agentId?: string; // 允许指定agentId，用于Agent自动注册
   name: string;
   country: string;
   city: string;
@@ -19,6 +20,7 @@ export interface CreateNodeInput {
   description?: string;
   osType?: string;
   osVersion?: string;
+  status?: NodeStatus; // 允许指定初始状态
   // ASN信息（可选，如果不提供将自动查询）
   asnNumber?: string;
   asnName?: string;
@@ -68,8 +70,8 @@ export class NodeService {
   // 创建新节点
   async createNode(input: CreateNodeInput): Promise<Node> {
     try {
-      // 生成唯一的agentId和apiKey
-      const agentId = crypto.randomUUID();
+      // 使用提供的agentId或生成新的
+      const agentId = input.agentId || crypto.randomUUID();
       const apiKey = crypto.randomBytes(32).toString('hex');
 
       // 如果提供了IP地址但没有ASN信息，自动查询ASN
@@ -108,7 +110,7 @@ export class NodeService {
           ...asnInfo,
           agentId,
           apiKey,
-          status: NodeStatus.UNKNOWN
+          status: input.status || NodeStatus.UNKNOWN
         }
       });
 
