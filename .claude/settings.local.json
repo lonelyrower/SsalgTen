@@ -21,7 +21,13 @@
       "Bash(rm:*)",
       "Bash(find:*)",
       "Bash(npx vite:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(bash scripts/install-agent.sh:*)",
+      "Bash(timeout:*)",
+      "Bash(bash:*)",
+      "Bash(cat:*)",
+      "Bash(NODE_ENV=development npm start)",
+      "Bash(powershell:*)"
     ],
     "deny": []
   }
