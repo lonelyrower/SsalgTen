@@ -10,6 +10,8 @@ import './App.css';
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })));
 const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
+const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
+const DiagnosticsPage = lazy(() => import('@/pages/DiagnosticsPage').then(module => ({ default: module.DiagnosticsPage })));
 
 function App() {
   return (
@@ -47,7 +49,7 @@ function App() {
             path="/nodes"
             element={
               <ProtectedRoute requiredRole="OPERATOR">
-                <DashboardPage view="map" />
+                <NodesPage />
               </ProtectedRoute>
             }
           />
@@ -56,7 +58,7 @@ function App() {
             path="/diagnostics"
             element={
               <ProtectedRoute requiredRole="VIEWER">
-                <DashboardPage view="analytics" />
+                <DiagnosticsPage />
               </ProtectedRoute>
             }
           />

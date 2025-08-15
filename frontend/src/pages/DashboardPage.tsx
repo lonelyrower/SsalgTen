@@ -13,14 +13,13 @@ const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 const AnalyticsPanel = lazy(() => import('@/components/analytics/AnalyticsPanel').then(module => ({ default: module.AnalyticsPanel })));
 const UserManagement = lazy(() => import('@/components/admin/UserManagement').then(module => ({ default: module.UserManagement })));
-const NodeManagement = lazy(() => import('@/components/admin/NodeManagement').then(module => ({ default: module.NodeManagement })));
 const SystemSettings = lazy(() => import('@/components/admin/SystemSettings').then(module => ({ default: module.SystemSettings })));
 
 interface DashboardPageProps {
-  view?: 'map' | 'users' | 'nodes' | 'settings' | 'analytics';
+  view?: 'overview' | 'users' | 'settings' | 'analytics';
 }
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) => {
+export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' }) => {
   const { user, hasRole } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -118,13 +117,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
           <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <div className="flex flex-wrap gap-3">
               <Button
-                variant={activeView === 'map' ? 'default' : 'outline'}
+                variant={activeView === 'overview' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setActiveView('map')}
+                onClick={() => setActiveView('overview')}
                 className="flex items-center space-x-2"
               >
                 <Activity className="h-4 w-4" />
-                <span>网络监控</span>
+                <span>监控概览</span>
               </Button>
               
               {hasRole('ADMIN') && (
@@ -137,16 +136,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
                   >
                     <Users className="h-4 w-4" />
                     <span>用户管理</span>
-                  </Button>
-                  
-                  <Button
-                    variant={activeView === 'nodes' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActiveView('nodes')}
-                    className="flex items-center space-x-2"
-                  >
-                    <Server className="h-4 w-4" />
-                    <span>节点管理</span>
                   </Button>
                   
                   <Button
@@ -175,7 +164,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
         )}
 
         {/* 根据选择的视图显示不同内容 */}
-        {activeView === 'map' && (
+        {activeView === 'overview' && (
           <>
             {/* 增强统计卡片 */}
             <EnhancedStats 
@@ -272,15 +261,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'map' }) =>
           </Suspense>
         )}
 
-        {activeView === 'nodes' && hasRole('ADMIN') && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
-          }>
-            <NodeManagement />
-          </Suspense>
-        )}
 
         {activeView === 'settings' && hasRole('ADMIN') && (
           <Suspense fallback={
