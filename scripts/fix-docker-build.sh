@@ -166,14 +166,14 @@ build_services_separately() {
     
     # 只构建后端
     log_info "构建后端服务..."
-    docker_compose -f docker_compose.production.yml build backend
+    docker_compose -f docker-compose.production.yml build backend
     
     # 清理中间缓存
     docker system prune -f
     
     # 只构建前端
     log_info "构建前端服务..."
-    docker_compose -f docker_compose.production.yml build frontend
+    docker_compose -f docker-compose.production.yml build frontend
     
     log_success "分别构建完成"
 }
@@ -207,7 +207,7 @@ main() {
     echo ""
     echo "方法1 - 正常构建："
     echo "  cd /opt/ssalgten"
-    echo "  docker_compose -f docker_compose.production.yml up --build -d"
+    echo "  docker-compose -f docker-compose.production.yml up --build -d"
     echo ""
     echo "方法2 - 分别构建（内存不足时）："
     echo "  bash /opt/ssalgten/scripts/fix-docker-build.sh --separate-build"

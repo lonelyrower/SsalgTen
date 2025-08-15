@@ -96,9 +96,9 @@ cleanup_docker_services() {
         cd /opt/ssalgten
         
         # 停止服务
-        if [[ -f "docker_compose.production.yml" ]]; then
+        if [[ -f "docker-compose.production.yml" ]]; then
             log_info "停止SsalgTen服务..."
-            docker_compose -f docker_compose.production.yml down --remove-orphans 2>/dev/null || true
+            docker_compose -f docker-compose.production.yml down --remove-orphans 2>/dev/null || true
         fi
     fi
     
