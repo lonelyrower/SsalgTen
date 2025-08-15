@@ -214,21 +214,19 @@ parse_arguments() {
 collect_node_info() {
     log_info "收集节点信息..."
     
-    # 如果参数已通过命令行提供，则跳过交互式输入
-    if [[ "$AUTO_CONFIG" == "true" && -n "$MASTER_URL" && -n "$AGENT_API_KEY" ]]; then
-        log_info "使用预配置参数..."
+    # 检查必需参数
+    if [[ -z "$MASTER_URL" || -z "$AGENT_API_KEY" ]]; then
+        if [[ "$AUTO_CONFIG" == "true" ]]; then
+            log_error "自动配置模式需要提供 --master-url 和 --api-key 参数"
+            echo ""
+            echo "使用方法:"
+            echo "  curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\"
+            echo "    --auto-config \\"
+            echo "    --master-url https://your-domain.com \\"
+            echo "    --api-key your-api-key"
+            exit 1
+        fi
         
-        # 设置默认值
-        NODE_NAME=${NODE_NAME:-"Agent-$(hostname)-$(date +%s)"}
-        NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
-        NODE_CITY=${NODE_CITY:-"Unknown"}
-        NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
-        AGENT_PORT=${AGENT_PORT:-"3002"}
-        NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
-        NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
-        
-        log_success "已使用自动配置模式"
-    else
         echo ""
         echo "请提供以下信息来配置您的监控节点："
         echo ""
@@ -256,7 +254,23 @@ collect_node_info() {
                 fi
             done
         fi
+    fi
     
+    # 设置默认值（适用于自动配置和交互式配置）
+    if [[ "$AUTO_CONFIG" == "true" ]]; then
+        log_info "使用自动配置模式..."
+        
+        # 设置默认值
+        NODE_NAME=${NODE_NAME:-"Agent-$(hostname)-$(date +%s)"}
+        NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
+        NODE_CITY=${NODE_CITY:-"Unknown"}
+        NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
+        AGENT_PORT=${AGENT_PORT:-"3002"}
+        NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
+        NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
+        
+        log_success "已使用自动配置模式"
+    else
         # 节点名称
         read -p "节点名称 (如: Tokyo-VPS-01): " NODE_NAME
         NODE_NAME=${NODE_NAME:-"Agent-$(hostname)"}
@@ -394,8 +408,8 @@ download_agent_code() {
     # 复制Agent相关文件
     cp -r agent/* $APP_DIR/
     
-    # 复制必要的配置文件
-    cp docker-compose.agent.yml $APP_DIR/docker-compose.yml
+    # 复制 Dockerfile (简化版本，因为文件已经在正确位置)
+    # cp Dockerfile.agent $APP_DIR/Dockerfile  # 我们将创建一个简化的Dockerfile
     
     # 清理临时目录
     rm -rf $TEMP_DIR
@@ -408,12 +422,14 @@ download_agent_code() {
 create_docker_compose() {
     log_info "创建Docker Compose配置..."
     
-    cat > docker_compose.yml << EOF
+    cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
   agent:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ssalgten-agent
     restart: unless-stopped
     ports:
@@ -438,10 +454,11 @@ services:
     networks:
       - agent-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${AGENT_PORT}/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${AGENT_PORT}/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
 networks:
   agent-network:
@@ -490,43 +507,65 @@ EOF
     log_success "环境配置文件创建完成"
 }
 
-# 创建Dockerfile
+# 创建Dockerfile（适用于Agent）
 create_dockerfile() {
-    log_info "创建Dockerfile..."
+    log_info "创建Agent Dockerfile..."
     
     cat > Dockerfile << 'EOF'
+# SsalgTen Agent Dockerfile
 FROM node:18-alpine
 
-# 安装系统依赖
-RUN apk add --no-cache curl wget procps
+# Install system dependencies for network tools
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    iputils \
+    traceroute \
+    mtr \
+    bind-tools \
+    iperf3 \
+    python3 \
+    py3-pip
 
-# 创建应用目录
+# Install speedtest-cli using --break-system-packages (safe in container)
+RUN pip3 install --break-system-packages speedtest-cli
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S -u 1001 ssalgten
+
+# Set working directory
 WORKDIR /app
 
-# 复制package.json文件
+# Copy package files and install dependencies
 COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
 
-# 安装依赖
-RUN npm ci --only=production
-
-# 复制应用代码
+# Copy source code and build
 COPY . .
+RUN npm run build
 
-# 创建日志目录
-RUN mkdir -p logs
+# Create necessary directories
+RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs
 
-# 暴露端口
+# Switch to app user
+USER ssalgten
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3002) + '/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Expose port
 EXPOSE 3002
 
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3002/health || exit 1
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 
-# 启动应用
+# Start the application
 CMD ["npm", "start"]
 EOF
 
-    log_success "Dockerfile创建完成"
+    log_success "Agent Dockerfile创建完成"
 }
 
 # 创建系统服务
@@ -608,19 +647,44 @@ verify_installation() {
         return 1
     fi
     
-    # 检查健康状态
-    sleep 5
-    if curl -f http://localhost:$AGENT_PORT/health >/dev/null 2>&1; then
-        log_success "Agent健康检查通过"
-    else
-        log_warning "Agent健康检查失败，请检查日志"
-    fi
+    # 等待服务启动
+    log_info "等待Agent服务启动..."
+    local max_attempts=30
+    local attempt=0
+    
+    while [ $attempt -lt $max_attempts ]; do
+        if curl -f http://localhost:$AGENT_PORT/health >/dev/null 2>&1; then
+            log_success "Agent健康检查通过"
+            break
+        fi
+        attempt=$((attempt + 1))
+        sleep 2
+        
+        if [ $attempt -eq $max_attempts ]; then
+            log_warning "Agent健康检查超时，请检查日志"
+            docker_compose logs agent
+        fi
+    done
     
     # 检查主服务器连接
-    if curl -f $MASTER_URL/api/health >/dev/null 2>&1; then
+    log_info "测试主服务器连接..."
+    if curl -f "$MASTER_URL/api/health" >/dev/null 2>&1; then
         log_success "主服务器连接正常"
     else
-        log_warning "无法连接到主服务器，请检查网络和配置"
+        log_warning "无法连接到主服务器: $MASTER_URL"
+        log_warning "请确保:"
+        echo "  1. 主服务器正在运行"
+        echo "  2. 网络连接正常"
+        echo "  3. 防火墙设置正确"
+        echo "  4. URL地址正确"
+    fi
+    
+    # 检查Agent信息
+    log_info "获取Agent信息..."
+    if agent_info=$(curl -s http://localhost:$AGENT_PORT/info); then
+        echo "$agent_info" | jq . 2>/dev/null || echo "$agent_info"
+    else
+        log_warning "无法获取Agent信息"
     fi
 }
 
