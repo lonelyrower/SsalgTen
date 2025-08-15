@@ -249,6 +249,84 @@ parse_arguments() {
     done
 }
 
+# 自动获取地理位置信息
+get_geo_info() {
+    log_info "自动获取地理位置信息..."
+    
+    # 尝试多个地理位置API服务
+    local geo_info=""
+    local public_ip=""
+    
+    # 首先获取公网IP
+    public_ip=$(curl -s --max-time 10 http://ipinfo.io/ip 2>/dev/null || curl -s --max-time 10 http://icanhazip.com 2>/dev/null || echo "")
+    
+    if [[ -n "$public_ip" ]]; then
+        log_info "检测到公网IP: $public_ip"
+        
+        # 尝试ipinfo.io API
+        log_info "从ipinfo.io获取地理位置信息..."
+        geo_info=$(curl -s --max-time 15 "http://ipinfo.io/$public_ip/json" 2>/dev/null)
+        
+        if [[ -n "$geo_info" && "$geo_info" != *"error"* ]]; then
+            # 解析JSON响应 (使用基础shell命令，避免依赖jq)
+            AUTO_DETECTED_COUNTRY=$(echo "$geo_info" | grep '"country"' | cut -d'"' -f4 2>/dev/null | head -1)
+            AUTO_DETECTED_CITY=$(echo "$geo_info" | grep '"city"' | cut -d'"' -f4 2>/dev/null | head -1)
+            AUTO_DETECTED_PROVIDER=$(echo "$geo_info" | grep '"org"' | cut -d'"' -f4 2>/dev/null | head -1)
+            AUTO_DETECTED_COORDS=$(echo "$geo_info" | grep '"loc"' | cut -d'"' -f4 2>/dev/null | head -1)
+            
+            # 解析坐标 (格式: "latitude,longitude")
+            if [[ -n "$AUTO_DETECTED_COORDS" && "$AUTO_DETECTED_COORDS" =~ ^[0-9.-]+,[0-9.-]+$ ]]; then
+                AUTO_DETECTED_LATITUDE=$(echo "$AUTO_DETECTED_COORDS" | cut -d',' -f1)
+                AUTO_DETECTED_LONGITUDE=$(echo "$AUTO_DETECTED_COORDS" | cut -d',' -f2)
+            fi
+            
+            log_success "地理位置信息获取成功"
+        else
+            log_warning "ipinfo.io API调用失败，尝试备用方案..."
+            
+            # 备用方案：使用ip-api.com
+            geo_info=$(curl -s --max-time 15 "http://ip-api.com/json/$public_ip" 2>/dev/null)
+            
+            if [[ -n "$geo_info" && "$geo_info" != *"fail"* ]]; then
+                AUTO_DETECTED_COUNTRY=$(echo "$geo_info" | grep '"country"' | cut -d'"' -f4 2>/dev/null | head -1)
+                AUTO_DETECTED_CITY=$(echo "$geo_info" | grep '"city"' | cut -d'"' -f4 2>/dev/null | head -1)
+                AUTO_DETECTED_PROVIDER=$(echo "$geo_info" | grep '"isp"' | cut -d'"' -f4 2>/dev/null | head -1)
+                AUTO_DETECTED_LATITUDE=$(echo "$geo_info" | grep '"lat"' | cut -d':' -f2 | cut -d',' -f1 | tr -d ' ' 2>/dev/null)
+                AUTO_DETECTED_LONGITUDE=$(echo "$geo_info" | grep '"lon"' | cut -d':' -f2 | cut -d',' -f1 | tr -d ' ' 2>/dev/null)
+                
+                log_success "备用地理位置信息获取成功"
+            else
+                log_warning "所有地理位置API调用失败"
+            fi
+        fi
+    else
+        log_warning "无法获取公网IP地址"
+    fi
+    
+    # 清理和验证数据
+    AUTO_DETECTED_COUNTRY=${AUTO_DETECTED_COUNTRY// /}
+    AUTO_DETECTED_CITY=${AUTO_DETECTED_CITY// /}
+    
+    # 移除提供商名称中的多余信息
+    if [[ -n "$AUTO_DETECTED_PROVIDER" ]]; then
+        # 移除常见的后缀和前缀
+        AUTO_DETECTED_PROVIDER=$(echo "$AUTO_DETECTED_PROVIDER" | sed 's/ LLC.*//g' | sed 's/ Inc.*//g' | sed 's/ Ltd.*//g' | sed 's/AS[0-9]* //g')
+    fi
+    
+    # 设置默认值以防获取失败
+    AUTO_DETECTED_COUNTRY=${AUTO_DETECTED_COUNTRY:-"Unknown"}
+    AUTO_DETECTED_CITY=${AUTO_DETECTED_CITY:-"Unknown"}  
+    AUTO_DETECTED_PROVIDER=${AUTO_DETECTED_PROVIDER:-"Unknown"}
+    AUTO_DETECTED_LATITUDE=${AUTO_DETECTED_LATITUDE:-"0.0"}
+    AUTO_DETECTED_LONGITUDE=${AUTO_DETECTED_LONGITUDE:-"0.0"}
+    
+    if [[ "$AUTO_DETECTED_COUNTRY" != "Unknown" ]]; then
+        log_success "自动检测结果: $AUTO_DETECTED_CITY, $AUTO_DETECTED_COUNTRY ($AUTO_DETECTED_PROVIDER)"
+    else
+        log_warning "无法自动检测地理位置，将使用默认值"
+    fi
+}
+
 # 收集节点信息
 collect_node_info() {
     log_info "收集节点信息..."
@@ -288,14 +366,17 @@ collect_node_info() {
     if [[ "$AUTO_CONFIG" == "true" ]]; then
         log_info "使用自动配置模式..."
         
-        # 设置默认值
+        # 自动获取地理位置信息
+        get_geo_info
+        
+        # 设置节点信息（优先使用手动指定的参数，其次使用自动检测的信息）
         NODE_NAME=${NODE_NAME:-"Agent-$(hostname)-$(date +%s)"}
-        NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
-        NODE_CITY=${NODE_CITY:-"Unknown"}
-        NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
+        NODE_COUNTRY=${NODE_COUNTRY:-"$AUTO_DETECTED_COUNTRY"}
+        NODE_CITY=${NODE_CITY:-"$AUTO_DETECTED_CITY"}
+        NODE_PROVIDER=${NODE_PROVIDER:-"$AUTO_DETECTED_PROVIDER"}
+        NODE_LATITUDE=${NODE_LATITUDE:-"$AUTO_DETECTED_LATITUDE"}
+        NODE_LONGITUDE=${NODE_LONGITUDE:-"$AUTO_DETECTED_LONGITUDE"}
         AGENT_PORT=${AGENT_PORT:-"3002"}
-        NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
-        NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
         
         log_success "已使用自动配置模式"
     else
