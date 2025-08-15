@@ -249,23 +249,100 @@ export class NodeService {
     memoryUsage?: number;
     diskUsage?: number;
     connectivity?: any;
+    // 扩展的系统信息
+    systemInfo?: {
+      cpu?: any;
+      memory?: any;
+      disk?: any;
+      network?: any[];
+      processes?: any;
+      virtualization?: any;
+      services?: any;
+      loadAverage?: number[];
+    };
   }): Promise<void> {
     try {
       // 首先更新节点状态
       await this.updateNodeStatus(agentId, NodeStatus.ONLINE);
 
+      // 准备心跳日志数据
+      const logData: any = {
+        node: {
+          connect: { agentId }
+        },
+        status: heartbeatData.status,
+        uptime: heartbeatData.uptime,
+        cpuUsage: heartbeatData.cpuUsage,
+        memoryUsage: heartbeatData.memoryUsage,
+        diskUsage: heartbeatData.diskUsage,
+        connectivity: heartbeatData.connectivity,
+        timestamp: new Date()
+      };
+
+      // 如果包含详细系统信息，添加到日志数据中
+      if (heartbeatData.systemInfo) {
+        const sysInfo = heartbeatData.systemInfo;
+        
+        // 存储详细信息为JSON
+        if (sysInfo.cpu) {
+          logData.cpuInfo = sysInfo.cpu;
+          // 更新兼容性字段
+          if (!logData.cpuUsage && sysInfo.cpu.usage) {
+            logData.cpuUsage = sysInfo.cpu.usage;
+          }
+        }
+        
+        if (sysInfo.memory) {
+          logData.memoryInfo = sysInfo.memory;
+          // 更新兼容性字段
+          if (!logData.memoryUsage && sysInfo.memory.usage) {
+            logData.memoryUsage = sysInfo.memory.usage;
+          }
+        }
+        
+        if (sysInfo.disk) {
+          logData.diskInfo = sysInfo.disk;
+          // 更新兼容性字段
+          if (!logData.diskUsage && sysInfo.disk.usage) {
+            logData.diskUsage = sysInfo.disk.usage;
+          }
+        }
+        
+        if (sysInfo.network && Array.isArray(sysInfo.network)) {
+          logData.networkInfo = sysInfo.network;
+        }
+        
+        if (sysInfo.processes) {
+          logData.processInfo = sysInfo.processes;
+        }
+        
+        if (sysInfo.virtualization) {
+          logData.virtualization = sysInfo.virtualization;
+        }
+        
+        if (sysInfo.services) {
+          logData.services = sysInfo.services;
+        }
+        
+        if (sysInfo.loadAverage && Array.isArray(sysInfo.loadAverage)) {
+          logData.loadAverage = sysInfo.loadAverage;
+        }
+      }
+
       // 记录心跳日志
       await prisma.heartbeatLog.create({
-        data: {
-          node: {
-            connect: { agentId }
-          },
-          ...heartbeatData,
-          timestamp: new Date()
-        }
+        data: logData
       });
 
-      logger.debug(`Heartbeat recorded for agent: ${agentId}`);
+      logger.debug(`Enhanced heartbeat recorded for agent: ${agentId}`, {
+        hasCpuInfo: !!logData.cpuInfo,
+        hasMemoryInfo: !!logData.memoryInfo,
+        hasDiskInfo: !!logData.diskInfo,
+        hasNetworkInfo: !!logData.networkInfo,
+        hasProcessInfo: !!logData.processInfo,
+        hasVirtualization: !!logData.virtualization,
+        hasServices: !!logData.services
+      });
     } catch (error) {
       logger.error(`Failed to record heartbeat for ${agentId}:`, error);
       throw new Error('Failed to record heartbeat');

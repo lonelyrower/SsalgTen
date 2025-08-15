@@ -163,7 +163,18 @@ export class RegistrationService {
         cpuUsage: systemInfo.cpuUsage,
         memoryUsage: systemInfo.memoryUsage,
         diskUsage: systemInfo.diskUsage,
-        connectivity: await this.getConnectivityStatus()
+        connectivity: await this.getConnectivityStatus(),
+        // 添加详细系统信息
+        systemInfo: {
+          cpu: systemInfo.cpu,
+          memory: systemInfo.memory,
+          disk: systemInfo.disk,
+          network: systemInfo.network,
+          processes: systemInfo.processes,
+          virtualization: systemInfo.virtualization,
+          services: systemInfo.services,
+          loadAverage: systemInfo.loadAverage
+        }
       };
 
       const masterUrl = config.masterUrl.replace(/\/$/, '');

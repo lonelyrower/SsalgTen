@@ -98,18 +98,32 @@ model HeartbeatLog {
   status    String   // healthy, degraded, unhealthy
   uptime    Float?   // 运行时间（秒）
   
-  // 系统指标
+  // 基础系统指标（保持兼容性）
   cpuUsage  Float?   // CPU使用率
   memoryUsage Float? // 内存使用率
   diskUsage Float?   // 磁盘使用率
   
-  // 网络状态
+  // 详细系统信息（JSON格式）
+  cpuInfo     Json?    // 详细CPU信息：型号、核数、频率、温度等
+  memoryInfo  Json?    // 详细内存信息：类型、速度、可用内存等
+  diskInfo    Json?    // 详细磁盘信息：类型、型号、健康状态、温度等
+  networkInfo Json?    // 网络流量统计：接收/发送字节数、包数、速度等
+  processInfo Json?    // 进程信息：总数、运行数、睡眠数等
+  
+  // 系统环境信息
+  virtualization Json? // 虚拟化信息：类型、提供商等
+  services    Json?    // 系统服务状态：docker、nginx等
+  loadAverage Json?    // 负载平均值数组
+  
+  // 网络连接状态（保持兼容性）
   connectivity Json?  // 网络连接测试结果
   
   // 时间戳
   timestamp DateTime @default(now())
   
   @@map("heartbeat_logs")
+  @@index([nodeId])
+  @@index([timestamp])
 }
 
 // 管理员用户
