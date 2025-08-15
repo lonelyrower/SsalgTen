@@ -1254,7 +1254,7 @@ build_and_start_services() {
         
         # 分别构建服务以减少内存压力
         log_info "分别构建后端服务..."
-        if ! timeout 1800 docker_compose -f $compose_file build backend; then
+        if ! timeout 1800 bash -c "$(declare -f docker_compose); docker_compose -f $compose_file build backend"; then
             log_error "后端构建失败或超时"
             exit 1
         fi
@@ -1263,13 +1263,13 @@ build_and_start_services() {
         docker system prune -f >/dev/null 2>&1 || true
         
         log_info "分别构建前端服务..."
-        if ! timeout 1800 docker_compose -f $compose_file build frontend; then
+        if ! timeout 1800 bash -c "$(declare -f docker_compose); docker_compose -f $compose_file build frontend"; then
             log_error "前端构建失败或超时"
             exit 1
         fi
         
         log_success "资源优化构建完成"
-    elif ! timeout 1200 docker_compose -f $compose_file build --no-cache; then
+    elif ! timeout 1200 bash -c "$(declare -f docker_compose); docker_compose -f $compose_file build --no-cache"; then
         log_error "Docker构建失败！"
         echo ""
         log_info "可能的解决方案："
