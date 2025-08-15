@@ -122,6 +122,10 @@ show_welcome() {
     echo "功能: 自动部署SsalgTen监控代理节点"
     echo "更新: 支持自动版本检查和更新"
     echo ""
+    echo -e "${YELLOW}使用方法:${NC}"
+    echo "  交互式安装: curl -fsSL ... | bash"
+    echo "  自动化安装: curl -fsSL ... | bash -s -- --auto-config --master-url URL --api-key KEY"
+    echo ""
 }
 
 # 检查系统要求
@@ -162,10 +166,45 @@ check_system() {
     fi
 }
 
+# 显示帮助信息
+show_help() {
+    echo "SsalgTen Agent 安装脚本"
+    echo ""
+    echo "使用方法:"
+    echo "  交互式安装:"
+    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash"
+    echo ""
+    echo "  自动化安装:"
+    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\"
+    echo "      --auto-config \\"
+    echo "      --master-url https://your-domain.com \\"
+    echo "      --api-key your-api-key \\"
+    echo "      [可选参数...]"
+    echo ""
+    echo "必需参数 (自动配置模式):"
+    echo "  --master-url URL     主服务器地址"
+    echo "  --api-key KEY        API密钥"
+    echo ""
+    echo "可选参数:"
+    echo "  --auto-config        启用自动配置模式"
+    echo "  --force-root         允许root用户运行"
+    echo "  --node-name NAME     节点名称"
+    echo "  --node-country NAME  国家"
+    echo "  --node-city NAME     城市"
+    echo "  --node-provider NAME 服务商"
+    echo "  --agent-port PORT    Agent端口 (默认3002)"
+    echo "  --help               显示此帮助信息"
+    echo ""
+}
+
 # 解析命令行参数
 parse_arguments() {
     while [[ $# -gt 0 ]]; do
         case $1 in
+            --help|-h)
+                show_help
+                exit 0
+                ;;
             --master-url)
                 MASTER_URL="$2"
                 shift 2
@@ -203,7 +242,7 @@ parse_arguments() {
                 shift 2
                 ;;
             *)
-                log_warning "未知参数: $1"
+                log_warning "未知参数: $1 (使用 --help 查看帮助)"
                 shift
                 ;;
         esac
@@ -214,19 +253,8 @@ parse_arguments() {
 collect_node_info() {
     log_info "收集节点信息..."
     
-    # 检查必需参数
+    # 总是需要收集必需的参数（master-url 和 api-key）
     if [[ -z "$MASTER_URL" || -z "$AGENT_API_KEY" ]]; then
-        if [[ "$AUTO_CONFIG" == "true" ]]; then
-            log_error "自动配置模式需要提供 --master-url 和 --api-key 参数"
-            echo ""
-            echo "使用方法:"
-            echo "  curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\"
-            echo "    --auto-config \\"
-            echo "    --master-url https://your-domain.com \\"
-            echo "    --api-key your-api-key"
-            exit 1
-        fi
-        
         echo ""
         echo "请提供以下信息来配置您的监控节点："
         echo ""
