@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, RefreshCw, Activity, Loader2 } from 'lucide-react';
+import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
+import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 // Lazy load components
@@ -14,6 +15,7 @@ export const NodesPage: React.FC = () => {
   const { hasRole } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [showServerDetails, setShowServerDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
   const { nodes, stats, connected } = useRealTime();
@@ -21,6 +23,7 @@ export const NodesPage: React.FC = () => {
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);
     setShowDiagnostics(false);
+    setShowServerDetails(false);
   };
 
   const handleDiagnosticsClose = () => {
@@ -290,85 +293,78 @@ export const NodesPage: React.FC = () => {
 
         {/* 选中节点详情 */}
         {selectedNode && (
-          <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                节点详情: {selectedNode.name}
-              </h3>
-              <Button
-                onClick={() => setShowDiagnostics(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                运行诊断
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">基本信息</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">状态:</span>
-                    <span className={selectedNode.status === 'online' ? 'text-green-600' : 'text-red-600'}>
-                      {selectedNode.status.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">位置:</span>
-                    <span className="text-gray-900 dark:text-white">{selectedNode.city}, {selectedNode.country}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">服务商:</span>
-                    <span className="text-gray-900 dark:text-white">{selectedNode.provider}</span>
-                  </div>
+          <div className="mt-6 space-y-6">
+            {/* 快速操作面板 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {selectedNode.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedNode.city}, {selectedNode.country} • {selectedNode.provider}
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowServerDetails(!showServerDetails)}
+                    className="flex items-center space-x-2"
+                  >
+                    {showServerDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <span>详细信息</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setShowDiagnostics(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    运行诊断
+                  </Button>
                 </div>
               </div>
               
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">网络信息</h4>
-                <div className="space-y-2 text-sm">
-                  {selectedNode.ipv4 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">IPv4:</span>
-                      <span className="text-gray-900 dark:text-white font-mono">{selectedNode.ipv4}</span>
-                    </div>
-                  )}
-                  {selectedNode.ipv6 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">IPv6:</span>
-                      <span className="text-gray-900 dark:text-white font-mono text-xs">{selectedNode.ipv6}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">坐标:</span>
-                    <span className="text-gray-900 dark:text-white">{selectedNode.latitude}, {selectedNode.longitude}</span>
-                  </div>
+              {/* 基本状态信息 */}
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">状态:</span>
+                  <span className={`ml-2 font-medium ${selectedNode.status === 'online' ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedNode.status.toUpperCase()}
+                  </span>
                 </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">运行状态</h4>
-                <div className="space-y-2 text-sm">
-                  {selectedNode.lastSeen && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">最后在线:</span>
-                      <span className="text-gray-900 dark:text-white">
-                        {new Date(selectedNode.lastSeen).toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                  {selectedNode.createdAt && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">创建时间:</span>
-                      <span className="text-gray-900 dark:text-white">
-                        {new Date(selectedNode.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
+                {selectedNode.ipv4 && (
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">IPv4:</span>
+                    <span className="ml-2 font-mono text-xs">{selectedNode.ipv4}</span>
+                  </div>
+                )}
+                {selectedNode.lastSeen && (
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">最后在线:</span>
+                    <span className="ml-2">{new Date(selectedNode.lastSeen).toLocaleString()}</span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">系统:</span>
+                  <span className="ml-2">{selectedNode.osType || 'Unknown'}</span>
                 </div>
               </div>
             </div>
+            
+            {/* 详细服务器信息面板 */}
+            {showServerDetails && (
+              <div className="transition-all duration-300 ease-in-out">
+                <ServerDetailsPanel 
+                  node={selectedNode}
+                  heartbeatData={{
+                    // 这里我们需要从API获取最新的心跳数据
+                    // 暂时使用空数据，实际应该从后端API获取
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
 
