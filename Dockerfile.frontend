@@ -54,19 +54,13 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 COPY docker/generate-config.sh /docker-entrypoint.d/40-generate-config.sh
 RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
 
-# Create a custom entrypoint that ensures config generation
-COPY docker/custom-entrypoint.sh /custom-entrypoint.sh  
-RUN chmod +x /custom-entrypoint.sh
-
 # Health check - use IPv4 explicitly to avoid connection issues
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:80/health || exit 1
 
 # Expose port
 EXPOSE 80
 
-# Use custom entrypoint to ensure config generation
-ENTRYPOINT ["dumb-init", "--", "/custom-entrypoint.sh"]
-
-# Start nginx
+# Use standard nginx entrypoint with config generation
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["nginx", "-g", "daemon off;"]

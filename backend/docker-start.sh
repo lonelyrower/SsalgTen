@@ -17,7 +17,7 @@ DB_WAIT_TIMEOUT=${DB_WAIT_TIMEOUT:-90}
 if [ -n "${DATABASE_URL}" ]; then
   echo "[startup] Waiting for database (Prisma probe, timeout=${DB_WAIT_TIMEOUT}s)..."
   ATTEMPT=0
-  until node -e "const {PrismaClient}=require('@prisma/client');(async()=>{try{const p=new PrismaClient();await p.$queryRawUnsafe('SELECT 1');await p.$disconnect();process.exit(0);}catch(e){console.error('DB wait attempt error:',e.message);process.exit(1);}})();"; do
+  until node -e "const {PrismaClient}=require('@prisma/client');(async()=>{try{const p=new PrismaClient();await p.\$queryRawUnsafe('SELECT 1');await p.\$disconnect();process.exit(0);}catch(e){console.error('DB wait attempt error:',e.message);process.exit(1);}})();"; do
     ATTEMPT=$((ATTEMPT+1))
     if [ ${ATTEMPT} -ge ${DB_WAIT_TIMEOUT} ]; then
       echo "[startup][error] Database not reachable after ${DB_WAIT_TIMEOUT}s" >&2
@@ -53,7 +53,7 @@ if [ "${DISABLE_DB_SEED}" = "true" ]; then
 else
   # Only run seed if User table empty (no admin) to keep idempotent
   if [ -n "${DATABASE_URL}" ]; then
-  ADMIN_COUNT=$(node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.user.count().then(c=>{console.log(c);}).catch(e=>{console.error('Count error', e.message);console.log('0');}).finally(()=>p.$disconnect());")
+  ADMIN_COUNT=$(node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.user.count().then(c=>{console.log(c);}).catch(e=>{console.error('Count error', e.message);console.log('0');}).finally(()=>p.\$disconnect());")
     if [ "${ADMIN_COUNT}" = "0" ]; then
       echo "[startup] Seeding admin user & settings..."
       node dist/utils/seed.js || echo "[startup][warn] seed script failed"
