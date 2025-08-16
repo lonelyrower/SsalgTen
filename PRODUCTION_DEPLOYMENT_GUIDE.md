@@ -141,20 +141,29 @@ NODE_LONGITUDE=0.0
 PORT=3002
 ```
 
-### Phase 4: 数据库迁移
+### Phase 4: 数据库迁移 / 种子（自动化）
 
-#### 4.1 生产数据库设置
+从当前版本起 (backend docker-start.sh)，后端容器启动时会自动：
+
+1. 执行 `prisma migrate deploy`（如果存在迁移目录）
+2. 检测用户表是否为空；若无管理员则运行 `dist/utils/seed.js` 创建 `admin / admin123` 与系统默认配置
+
+无需手动进入容器执行迁移。首次启动只需直接 `docker compose up -d`（或脚本方式）。
+
+可选开关（通过环境变量：在 backend 服务 environment 中或 docker run -e）：
+
+```
+DISABLE_DB_MIGRATE=true   # 禁止自动执行 migrate deploy
+DISABLE_DB_SEED=true      # 禁止自动初始化种子数据
+```
+
+手动模式（若显式关闭自动化时）：
+
 ```bash
-# 启动PostgreSQL容器
-docker-compose up -d postgres
-
-# 等待数据库就绪
+docker compose up -d postgres
 sleep 10
-
-# 运行数据库迁移
-cd backend
-npm run db:migrate
-npm run db:seed  # 可选：初始化数据
+docker compose run --rm backend npx prisma migrate deploy
+docker compose run --rm backend node dist/utils/seed.js
 ```
 
 ## 🔧 部署脚本

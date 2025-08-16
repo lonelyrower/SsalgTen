@@ -49,6 +49,10 @@ RUN chown -R ssalgten:nodejs /app/node_modules
 # Copy environment file template
 COPY backend/.env.docker ./.env
 
+# Copy startup script for running migrations & seeding before app start
+COPY backend/docker-start.sh /app/docker-start.sh
+RUN chmod +x /app/docker-start.sh && chown ssalgten:nodejs /app/docker-start.sh
+
 # Create necessary directories
 RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs
 RUN mkdir -p /app/data && chown ssalgten:nodejs /app/data
@@ -66,5 +70,5 @@ EXPOSE 3001
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["npm", "start"]
+# Start script (runs migrations, seed, then launches server)
+CMD ["/app/docker-start.sh"]
