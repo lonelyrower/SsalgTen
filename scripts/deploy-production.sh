@@ -1314,6 +1314,95 @@ build_and_start_services() {
         exit 1
     fi
     
+        # ==== 新增：数据库密码一致性检测与修复 ====
+        log_info "检测数据库密码是否与当前配置一致..."
+        # 使用当前期望密码尝试连接
+        if docker_compose -f $compose_file exec -T postgres bash -c "PGPASSWORD=\"$DB_PASSWORD\" psql -U ssalgten -d ssalgten -c 'SELECT 1;'" > /dev/null 2>&1; then
+                log_success "数据库凭据匹配 .env 配置"
+        else
+                # 尝试使用常见默认密码
+                if docker_compose -f $compose_file exec -T postgres bash -c "PGPASSWORD=ssalgten_password psql -U ssalgten -d ssalgten -c 'SELECT 1;'" > /dev/null 2>&1; then
+                        log_warning "检测到数据库实际密码与当前 .env 中 DB_PASSWORD 不一致 (容器仍使用旧密码)"
+                        echo ""
+                        echo "请选择处理方式："
+                        echo "  1) 将数据库用户密码修改为当前新的 DB_PASSWORD (保留数据)"
+                        echo "  2) 删除数据库卷并使用新密码重新初始化 (会清空数据)"
+                        echo "  3) 使用旧密码继续，更新 .env 为旧密码 (不修改数据库)"
+                        echo "  0) 取消部署"
+                        echo ""
+                        read -p "请输入选项 [1/2/3/0] (默认1): " fix_choice
+                        fix_choice=${fix_choice:-1}
+                        case "$fix_choice" in
+                            1)
+                                log_info "应用 ALTER USER 将数据库密码同步为新值..."
+                                if docker_compose -f $compose_file exec -T postgres bash -c "PGPASSWORD=ssalgten_password psql -U ssalgten -d ssalgten -c \"ALTER USER ssalgten WITH PASSWORD '$DB_PASSWORD';\""; then
+                                    log_success "数据库密码已更新"
+                                else
+                                    log_error "数据库密码更新失败，终止部署"
+                                    exit 1
+                                fi
+                                ;;
+                            2)
+                                log_warning "即将删除数据卷 ssalgten-postgres-data 并重新初始化 (不可恢复)"
+                                confirm_drop=$(prompt_yes_no "确认删除数据卷" "N")
+                                if [[ "$confirm_drop" != "y" ]]; then
+                                    log_info "已取消删除，终止部署以避免不一致"
+                                    exit 1
+                                fi
+                                log_info "停止并移除容器..."
+                                docker_compose -f $compose_file down
+                                log_info "删除数据卷..."
+                                docker volume rm ssalgten-postgres-data || true
+                                log_info "使用新密码重新启动数据库..."
+                                docker_compose -f $compose_file up -d postgres
+                                # 重新等待健康
+                                attempt=0
+                                while [ $attempt -lt $max_attempts ]; do
+                                    if docker_compose -f $compose_file exec postgres pg_isready -U ssalgten -d ssalgten > /dev/null 2>&1; then
+                                        log_success "数据库已重新初始化"
+                                        break
+                                    fi
+                                    attempt=$((attempt + 1))
+                                    echo "等待数据库重新初始化... ($attempt/$max_attempts)"
+                                    sleep 2
+                                done
+                                if [ $attempt -eq $max_attempts ]; then
+                                    log_error "数据库重新初始化超时"
+                                    exit 1
+                                fi
+                                ;;
+                            3)
+                                log_info "使用旧密码继续部署，将回写 .env 中的 DB_PASSWORD 为旧值"
+                                # 回写 .env (顶层) 与 backend/.env (如果已生成)
+                                if grep -q '^DB_PASSWORD=' .env; then
+                                    sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=ssalgten_password/" .env
+                                fi
+                                if [[ -f backend/.env ]] && grep -q '^POSTGRES_PASSWORD=' backend/.env; then
+                                    sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ssalgten_password/" backend/.env
+                                fi
+                                export DB_PASSWORD="ssalgten_password"
+                                ;;
+                            0)
+                                log_info "用户取消部署"
+                                exit 1
+                                ;;
+                            *)
+                                log_warning "无效选项，默认执行 1) 更新数据库密码"
+                                if docker_compose -f $compose_file exec -T postgres bash -c "PGPASSWORD=ssalgten_password psql -U ssalgten -d ssalgten -c \"ALTER USER ssalgten WITH PASSWORD '$DB_PASSWORD';\""; then
+                                    log_success "数据库密码已更新"
+                                else
+                                    log_error "数据库密码更新失败，终止部署"
+                                    exit 1
+                                fi
+                                ;;
+                        esac
+                else
+                        log_error "无法使用当前密码或默认密码连接数据库，请手动检查"
+                        log_info "可尝试: docker compose -f $compose_file exec postgres bash"
+                        exit 1
+                fi
+        fi
+
     # 运行数据库初始化 (非交互式)
     log_info "初始化数据库..."
     
