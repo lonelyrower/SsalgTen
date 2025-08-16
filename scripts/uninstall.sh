@@ -12,8 +12,16 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Docker Compose 兼容性函数
+# 环境 / 选项
+APP_DIR="/opt/ssalgten"
+DRY_RUN=${DRY_RUN:-false}  # 设置 DRY_RUN=true 可仅查看将执行的操作
+
+# Docker Compose 兼容性函数（支持 dry-run 输出）
 docker_compose() {
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "[DRY_RUN] docker compose $*"
+        return 0
+    fi
     if command -v docker-compose >/dev/null 2>&1; then
         docker-compose "$@"
     elif docker compose version >/dev/null 2>&1; then
@@ -90,50 +98,70 @@ show_warning() {
 # 停止并删除Docker服务
 cleanup_docker_services() {
     log_info "清理Docker服务..."
-    
+
+    if ! command -v docker >/dev/null 2>&1; then
+        log_warning "未安装Docker，跳过Docker资源清理"
+        return 0
+    fi
+
     # 进入项目目录（如果存在）
-    if [[ -d "/opt/ssalgten" ]]; then
-        cd /opt/ssalgten
-        
-        # 停止服务
+    if [[ -d "$APP_DIR" ]]; then
+        cd "$APP_DIR"
         if [[ -f "docker-compose.production.yml" ]]; then
-            log_info "停止SsalgTen服务..."
+            log_info "停止 SsalgTen 服务 (docker-compose.production.yml)..."
             docker_compose -f docker-compose.production.yml down --remove-orphans 2>/dev/null || true
         fi
     fi
-    
-    # 强制停止和删除所有ssalgten相关容器
-    log_info "删除所有SsalgTen容器..."
-    docker ps -a --format "table {{.Names}}" | grep ssalgten | xargs -r docker rm -f 2>/dev/null || true
-    
-    # 删除所有ssalgten相关镜像
-    log_info "删除所有SsalgTen镜像..."
-    docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" | grep ssalgten | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
-    
-    # 删除所有ssalgten相关卷
-    log_info "删除所有SsalgTen数据卷..."
-    docker volume ls --format "table {{.Name}}" | grep ssalgten | xargs -r docker volume rm -f 2>/dev/null || true
-    
-    # 删除ssalgten网络
-    log_info "删除SsalgTen网络..."
-    docker network ls --format "table {{.Name}}" | grep ssalgten | xargs -r docker network rm 2>/dev/null || true
-    
+
+    # 获取资源列表（精确匹配前缀，避免误删）
+    containers=$(docker ps -a --format '{{.Names}}' | grep -E '^ssalgten' || true)
+    images=$(docker images --format '{{.Repository}} {{.ID}}' | awk '/^ssalgten/ {print $2}' || true)
+    volumes=$(docker volume ls --format '{{.Name}}' | grep -E '^ssalgten' || true)
+    networks=$(docker network ls --format '{{.Name}}' | grep -E '^ssalgten' || true)
+
+    # 删除容器
+    if [[ -n "$containers" ]]; then
+        log_info "删除容器: $(echo $containers | tr '\n' ' ')"
+        if [[ "$DRY_RUN" != "true" ]]; then echo "$containers" | xargs -r docker rm -f 2>/dev/null || true; fi
+    else
+        log_info "无 SsalgTen 容器"
+    fi
+
+    # 删除镜像
+    if [[ -n "$images" ]]; then
+        log_info "删除镜像: $(echo $images | tr '\n' ' ')"
+        if [[ "$DRY_RUN" != "true" ]]; then echo "$images" | xargs -r docker rmi -f 2>/dev/null || true; fi
+    else
+        log_info "无 SsalgTen 镜像"
+    fi
+
+    # 删除卷
+    if [[ -n "$volumes" ]]; then
+        log_info "删除数据卷: $(echo $volumes | tr '\n' ' ')"
+        if [[ "$DRY_RUN" != "true" ]]; then echo "$volumes" | xargs -r docker volume rm -f 2>/dev/null || true; fi
+    else
+        log_info "无 SsalgTen 数据卷"
+    fi
+
+    # 删除网络
+    if [[ -n "$networks" ]]; then
+        log_info "删除网络: $(echo $networks | tr '\n' ' ')"
+        if [[ "$DRY_RUN" != "true" ]]; then echo "$networks" | xargs -r docker network rm 2>/dev/null || true; fi
+    else
+        log_info "无 SsalgTen 网络"
+    fi
+
     log_success "Docker服务清理完成"
 }
 
 # 清理项目文件
 cleanup_project_files() {
     log_info "清理项目文件..."
-    
-    # 删除项目目录
-    if [[ -d "/opt/ssalgten" ]]; then
-        log_info "删除项目目录 /opt/ssalgten..."
-        $SUDO rm -rf /opt/ssalgten
+    if [[ -d "$APP_DIR" ]]; then
+        log_info "删除项目目录 $APP_DIR ..."
+        if [[ "$DRY_RUN" != "true" ]]; then $SUDO rm -rf "$APP_DIR"; fi
     fi
-    
-    # 删除可能的备份目录
-    $SUDO rm -rf /opt/ssalgten.bak* 2>/dev/null || true
-    
+    if [[ "$DRY_RUN" != "true" ]]; then $SUDO rm -rf ${APP_DIR}.bak* 2>/dev/null || true; fi
     log_success "项目文件清理完成"
 }
 
@@ -160,68 +188,74 @@ cleanup_nginx_config() {
 # 清理SSL证书
 cleanup_ssl_certificates() {
     log_info "清理SSL证书..."
-    
-    # 检查是否有Let's Encrypt证书
-    if [[ -d "/etc/letsencrypt" ]]; then
-        # 列出可能的SsalgTen相关证书
-        cert_dirs=$(find /etc/letsencrypt/live -type d -name "*ssalgten*" 2>/dev/null || true)
-        
-        if [[ -n "$cert_dirs" ]]; then
-            log_info "发现SSL证书，尝试撤销..."
-            echo "$cert_dirs" | while read cert_dir; do
-                domain=$(basename "$cert_dir")
-                log_info "撤销证书: $domain"
-                $SUDO certbot delete --cert-name "$domain" --non-interactive 2>/dev/null || true
-            done
-        fi
+    if [[ ! -d "/etc/letsencrypt" ]]; then
+        log_info "未检测到 /etc/letsencrypt 目录，跳过"
+        return 0
     fi
-    
+    # 尝试从历史 Nginx 配置中解析域名
+    domains=""
+    if [[ -f "/etc/nginx/sites-available/ssalgten" ]]; then
+        domains=$(grep -E 'server_name' /etc/nginx/sites-available/ssalgten 2>/dev/null | sed 's/.*server_name//' | sed 's/;//' | tr -s ' ' | tr ' ' '\n' | grep -v '^$' | grep -v '^_' | grep -v 'server_name' | sed 's/^www.//' | sort -u)
+    fi
+    # 回退：匹配包含 ssalgten 的 live 目录
+    if [[ -z "$domains" ]]; then
+        domains=$(find /etc/letsencrypt/live -maxdepth 1 -mindepth 1 -type d -name '*ssalgten*' -exec basename {} \; 2>/dev/null || true)
+    fi
+    if [[ -z "$domains" ]]; then
+        log_info "未发现需删除的证书"
+    else
+        echo "$domains" | while read d; do
+            [[ -z "$d" ]] && continue
+            log_info "删除证书: $d"
+            if [[ "$DRY_RUN" != "true" ]]; then $SUDO certbot delete --cert-name "$d" --non-interactive 2>/dev/null || true; fi
+        done
+    fi
     log_success "SSL证书清理完成"
 }
 
 # 重置防火墙规则
 reset_firewall() {
-    log_info "配置防火墙规则..."
-    
-    if command -v ufw >/dev/null 2>&1; then
-        # 询问用户是否要完全重置防火墙
+        log_info "配置防火墙规则..."
+        if ! command -v ufw >/dev/null 2>&1; then
+                log_info "未检测到 UFW，跳过"
+                return 0
+        fi
         echo ""
         log_warning "防火墙配置选项："
-        echo "1. 仅删除SsalgTen相关端口规则 (保留其他服务端口)"
-        echo "2. 完全重置防火墙规则 (会删除所有自定义规则)"
+        echo "1. 仅删除SsalgTen相关端口规则 (推荐)"
+        echo "2. 完全重置防火墙规则 (危险)"
+        echo "0. 不做任何更改"
         echo ""
-        
-        read -p "选择防火墙配置方式 [1/2] (回车默认选择 1): " fw_choice < /dev/tty
+        read -p "选择 [1/2/0] (默认1): " fw_choice < /dev/tty
         fw_choice=${fw_choice:-1}
-        
-        if [[ "$fw_choice" == "2" ]]; then
-            log_info "完全重置UFW防火墙规则..."
-            $SUDO ufw --force reset
-            $SUDO ufw default deny incoming
-            $SUDO ufw default allow outgoing
-            $SUDO ufw allow ssh
-            $SUDO ufw --force enable
-            log_info "防火墙已重置为默认状态（仅允许SSH）"
-        else
-            log_info "仅清理SsalgTen相关端口规则..."
-            
-            # 删除常见的SsalgTen端口
-            $SUDO ufw delete allow 80 2>/dev/null || true
-            $SUDO ufw delete allow 443 2>/dev/null || true
-            $SUDO ufw delete allow 3000 2>/dev/null || true
-            $SUDO ufw delete allow 3001 2>/dev/null || true
-            $SUDO ufw delete allow 5432 2>/dev/null || true
-            
-            # 显示当前规则
-            echo ""
+        case "$fw_choice" in
+            2)
+                log_warning "执行完全重置..."
+                if [[ "$DRY_RUN" != "true" ]]; then
+                    $SUDO ufw --force reset
+                    $SUDO ufw default deny incoming
+                    $SUDO ufw default allow outgoing
+                    $SUDO ufw allow ssh
+                    $SUDO ufw --force enable
+                fi
+                ;;
+            0)
+                log_info "跳过防火墙修改"
+                log_success "防火墙规则配置完成"
+                return 0
+                ;;
+            *)
+                log_info "仅清理相关端口规则..."
+                for p in 80 443 3000 3001 5432; do
+                    if [[ "$DRY_RUN" != "true" ]]; then $SUDO ufw delete allow $p 2>/dev/null || true; fi
+                done
+                ;;
+        esac
+        if [[ "$DRY_RUN" != "true" ]]; then
             log_info "当前防火墙规则："
-            $SUDO ufw status numbered
-            echo ""
-            log_info "已删除SsalgTen相关端口，保留其他服务端口"
+            $SUDO ufw status numbered || true
         fi
-    fi
-    
-    log_success "防火墙规则配置完成"
+        log_success "防火墙规则配置完成"
 }
 
 # 清理Docker配置和用户组
@@ -263,16 +297,25 @@ cleanup_docker_config() {
     $SUDO apt clean 2>/dev/null || true
     $SUDO rm -rf /var/lib/apt/lists/*docker* 2>/dev/null || true
     
-    # 清理可能的端口占用和进程
-    log_info "清理端口占用..."
-    $SUDO pkill -f "docker" 2>/dev/null || true
-    $SUDO pkill -f "nginx.*ssalgten" 2>/dev/null || true
-    $SUDO pkill -f "node.*ssalgten" 2>/dev/null || true
-    sleep 2
-    
-    # 清理可能残留的网络配置
-    $SUDO iptables -t nat -F 2>/dev/null || true
-    $SUDO iptables -t mangle -F 2>/dev/null || true
+    # 清理可能的端口占用和进程（避免误杀，精确匹配）
+    log_info "清理相关进程..."
+    if pgrep -f "ssalgten" >/dev/null 2>&1; then
+        $SUDO pkill -f "ssalgten" 2>/dev/null || true
+    fi
+    sleep 1
+
+    # 可选清理 iptables (默认跳过)
+    if [[ "$ASKED_IPTABLES" != "true" ]]; then
+        read -p "是否刷新 NAT/MANGLE iptables 规则以清理残留? [y/N]: " flush_iptable < /dev/tty || true
+        if [[ "$flush_iptable" =~ ^[Yy]$ ]]; then
+            log_warning "刷新 NAT / MANGLE 表..."
+            $SUDO iptables -t nat -F 2>/dev/null || true
+            $SUDO iptables -t mangle -F 2>/dev/null || true
+        else
+            log_info "跳过 iptables 刷新"
+        fi
+        export ASKED_IPTABLES=true
+    fi
     
     log_success "Docker配置和用户组清理完成"
 }
