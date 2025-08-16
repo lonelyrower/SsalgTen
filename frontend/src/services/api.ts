@@ -67,6 +67,8 @@ export interface NodeData {
   provider: string;
   ipv4?: string;
   ipv6?: string;
+  osType?: string;
+  osVersion?: string;
   description?: string;
   apiKey?: string;
   port?: number;
@@ -314,6 +316,11 @@ class ApiService {
     const endpoint = `/nodes/${nodeId}/diagnostics${query ? `?${query}` : ''}`;
     
     return this.request<DiagnosticRecord[]>(endpoint);
+  }
+
+  // 获取节点详细心跳数据 API
+  async getNodeHeartbeatData(nodeId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/nodes/${nodeId}/heartbeat`);
   }
 
   // Agent 诊断请求 API (直接调用Agent)

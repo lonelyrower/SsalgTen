@@ -3,6 +3,7 @@ import { Node, NodeStatus, DiagnosticType, Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { ipInfoService } from './IPInfoService';
 import crypto from 'crypto';
+import { RecordHeartbeatInput, HeartbeatDetail } from '../types/heartbeat';
 
 export interface CreateNodeInput {
   agentId?: string; // 允许指定agentId，用于Agent自动注册
@@ -45,6 +46,7 @@ export interface UpdateNodeInput {
   osType?: string;
   osVersion?: string;
   status?: NodeStatus;
+  lastSeen?: Date;
   // ASN信息
   asnNumber?: string;
   asnName?: string;
@@ -242,31 +244,13 @@ export class NodeService {
   }
 
   // 记录心跳
-  async recordHeartbeat(agentId: string, heartbeatData: {
-    status: string;
-    uptime?: number;
-    cpuUsage?: number;
-    memoryUsage?: number;
-    diskUsage?: number;
-    connectivity?: any;
-    // 扩展的系统信息
-    systemInfo?: {
-      cpu?: any;
-      memory?: any;
-      disk?: any;
-      network?: any[];
-      processes?: any;
-      virtualization?: any;
-      services?: any;
-      loadAverage?: number[];
-    };
-  }): Promise<void> {
+  async recordHeartbeat(agentId: string, heartbeatData: RecordHeartbeatInput): Promise<void> {
     try {
       // 首先更新节点状态
       await this.updateNodeStatus(agentId, NodeStatus.ONLINE);
 
       // 准备心跳日志数据
-      const logData: any = {
+  const logData: any = {
         node: {
           connect: { agentId }
         },
@@ -457,6 +441,44 @@ export class NodeService {
     } catch (error) {
       logger.error(`Failed to fetch diagnostics for node ${nodeId}:`, error);
       throw new Error('Failed to fetch node diagnostics');
+    }
+  }
+
+  // 获取节点最新的详细心跳数据
+  async getLatestHeartbeatData(nodeId: string): Promise<HeartbeatDetail | null> {
+    try {
+      const heartbeat = await prisma.heartbeatLog.findFirst({
+        where: { nodeId },
+        orderBy: { timestamp: 'desc' }
+      });
+
+      if (!heartbeat) {
+        return null;
+      }
+
+      // 返回格式化的心跳数据
+      const hb: any = heartbeat as any;
+      const detail: HeartbeatDetail = {
+        timestamp: hb.timestamp,
+        status: hb.status,
+        uptime: hb.uptime,
+        cpuUsage: hb.cpuUsage,
+        memoryUsage: hb.memoryUsage,
+        diskUsage: hb.diskUsage,
+        connectivity: hb.connectivity,
+        cpuInfo: hb.cpuInfo || null,
+        memoryInfo: hb.memoryInfo || null,
+        diskInfo: hb.diskInfo || null,
+        networkInfo: hb.networkInfo || null,
+        processInfo: hb.processInfo || null,
+        virtualization: hb.virtualization || null,
+        services: hb.services || null,
+        loadAverage: hb.loadAverage || null
+      };
+      return detail;
+    } catch (error) {
+      logger.error(`Failed to fetch latest heartbeat data for node ${nodeId}:`, error);
+      throw new Error('Failed to fetch heartbeat data');
     }
   }
 

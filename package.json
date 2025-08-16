@@ -34,7 +34,8 @@
     "lint:backend": "cd backend && npm run lint",
     "type-check": "npm run type-check:frontend && npm run type-check:backend",
     "type-check:frontend": "cd frontend && npm run type-check",
-    "type-check:backend": "cd backend && npm run type-check"
+  "type-check:backend": "cd backend && npm run type-check",
+  "smoke:test": "node scripts/smoke-test.mjs"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

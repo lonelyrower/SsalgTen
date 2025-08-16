@@ -18,6 +18,7 @@ export interface HeartbeatData {
   memoryUsage?: number;
   diskUsage?: number;
   connectivity?: any;
+  systemInfo?: any;
 }
 
 export class RegistrationService {

@@ -65,6 +65,9 @@ router.delete('/nodes/:id', nodeController.deleteNode.bind(nodeController));
 // 节点诊断路由
 router.get('/nodes/:id/diagnostics', nodeController.getNodeDiagnostics.bind(nodeController));
 
+// 节点心跳数据路由
+router.get('/nodes/:id/heartbeat', nodeController.getNodeHeartbeatData.bind(nodeController));
+
 // 统计信息路由
 router.get('/stats', nodeController.getNodeStats.bind(nodeController));
 

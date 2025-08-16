@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { NodeData } from '@/services/api';
+import { apiService } from '@/services/api';
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
@@ -18,6 +19,8 @@ export const NodesPage: React.FC = () => {
   const [showServerDetails, setShowServerDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
+  const [heartbeatData, setHeartbeatData] = useState<any | null>(null);
+  const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const { nodes, stats, connected } = useRealTime();
 
   const handleNodeClick = (node: NodeData) => {
@@ -34,6 +37,33 @@ export const NodesPage: React.FC = () => {
     // 触发数据刷新
     window.location.reload();
   };
+
+  // 获取节点详细心跳数据
+  const fetchHeartbeatData = async (nodeId: string) => {
+    try {
+      setLoadingHeartbeat(true);
+      const response = await apiService.getNodeHeartbeatData(nodeId);
+      if (response.success && response.data) {
+        setHeartbeatData(response.data);
+      } else {
+        setHeartbeatData(null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch heartbeat data:', error);
+      setHeartbeatData(null);
+    } finally {
+      setLoadingHeartbeat(false);
+    }
+  };
+
+  // 当选中节点时获取心跳数据
+  useEffect(() => {
+    if (selectedNode) {
+      fetchHeartbeatData(selectedNode.id);
+    } else {
+      setHeartbeatData(null);
+    }
+  }, [selectedNode]);
 
   // 过滤节点
   const filteredNodes = nodes.filter(node => {
@@ -356,13 +386,17 @@ export const NodesPage: React.FC = () => {
             {/* 详细服务器信息面板 */}
             {showServerDetails && (
               <div className="transition-all duration-300 ease-in-out">
-                <ServerDetailsPanel 
-                  node={selectedNode}
-                  heartbeatData={{
-                    // 这里我们需要从API获取最新的心跳数据
-                    // 暂时使用空数据，实际应该从后端API获取
-                  }}
-                />
+                {loadingHeartbeat ? (
+                  <div className="flex items-center justify-center h-32 bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+                    <span className="ml-2 text-gray-600 dark:text-gray-400">加载详细信息中...</span>
+                  </div>
+                ) : (
+                  <ServerDetailsPanel 
+                    node={selectedNode}
+                    heartbeatData={heartbeatData}
+                  />
+                )}
               </div>
             )}
           </div>

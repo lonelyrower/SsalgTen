@@ -226,6 +226,37 @@ export class NodeController {
     }
   }
 
+  // 获取节点详细心跳数据
+  async getNodeHeartbeatData(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const heartbeatData = await nodeService.getLatestHeartbeatData(id);
+      
+      if (!heartbeatData) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'No heartbeat data found for this node'
+        };
+        res.status(404).json(response);
+        return;
+      }
+      
+      const response: ApiResponse = {
+        success: true,
+        data: heartbeatData
+      };
+      
+      res.json(response);
+    } catch (error) {
+      logger.error('Get node heartbeat data error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to fetch node heartbeat data'
+      };
+      res.status(500).json(response);
+    }
+  }
+
   // Agent注册端点
   async registerAgent(req: Request, res: Response): Promise<void> {
     try {
