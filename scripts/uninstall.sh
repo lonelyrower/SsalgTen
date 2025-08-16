@@ -306,7 +306,7 @@ cleanup_docker_config() {
 
     # 可选清理 iptables (默认跳过)
     if [[ "$ASKED_IPTABLES" != "true" ]]; then
-        read -p "是否刷新 NAT/MANGLE iptables 规则以清理残留? [y/N]: " flush_iptable < /dev/tty || true
+    read -p "是否刷新 NAT/MANGLE iptables 规则以清理残留? [Y/N]: " flush_iptable < /dev/tty || true
         if [[ "$flush_iptable" =~ ^[Yy]$ ]]; then
             log_warning "刷新 NAT / MANGLE 表..."
             $SUDO iptables -t nat -F 2>/dev/null || true
