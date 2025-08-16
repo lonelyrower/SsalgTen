@@ -12,12 +12,12 @@ else
 fi
 START_TIME=$(date +%s)
 
-# Wait for Postgres TCP readiness (defensive even with depends_on)
-DB_WAIT_TIMEOUT=${DB_WAIT_TIMEOUT:-60}
+# Wait for Postgres readiness using Prisma (avoid extra 'pg' dependency)
+DB_WAIT_TIMEOUT=${DB_WAIT_TIMEOUT:-90}
 if [ -n "${DATABASE_URL}" ]; then
-  echo "[startup] Waiting for database to accept connections (timeout=${DB_WAIT_TIMEOUT}s)..."
+  echo "[startup] Waiting for database (Prisma probe, timeout=${DB_WAIT_TIMEOUT}s)..."
   ATTEMPT=0
-  until node -e "const {Client}=require('pg');(async()=>{try{const u=process.env.DATABASE_URL;const c=new Client({connectionString:u});await c.connect();await c.query('SELECT 1');await c.end();}catch(e){console.error('DB wait attempt error:', e.message);process.exit(1)}})();" 2>/dev/null; do
+  until node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.$queryRaw\`SELECT 1\`.then(()=>{process.exit(0)}).catch(e=>{console.error('DB wait attempt error:',e.message);process.exit(1)}).finally(()=>p.$disconnect());"; do
     ATTEMPT=$((ATTEMPT+1))
     if [ ${ATTEMPT} -ge ${DB_WAIT_TIMEOUT} ]; then
       echo "[startup][error] Database not reachable after ${DB_WAIT_TIMEOUT}s" >&2
