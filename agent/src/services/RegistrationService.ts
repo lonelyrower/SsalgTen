@@ -58,7 +58,7 @@ export class RegistrationService {
 
       const masterUrl = config.masterUrl.replace(/\/$/, ''); // 移除尾部斜杠
       const response = await axios.post(
-        `${masterUrl}/api/agent/register`,
+        `${masterUrl}/api/agents/register`,
         registrationData,
         {
           timeout: 10000,
@@ -180,7 +180,7 @@ export class RegistrationService {
 
       const masterUrl = config.masterUrl.replace(/\/$/, '');
       const response = await axios.post(
-        `${masterUrl}/api/agent/${config.id}/heartbeat`,
+        `${masterUrl}/api/agents/${config.id}/heartbeat`,
         heartbeatData,
         {
           timeout: 5000,

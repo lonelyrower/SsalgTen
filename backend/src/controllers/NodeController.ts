@@ -461,6 +461,42 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       res.status(500).json(response);
     }
   }
+
+  // 获取Agent安装命令数据（JSON格式）
+  async getInstallCommand(req: Request, res: Response): Promise<void> {
+    try {
+      // 获取服务器信息
+      const serverUrl = `${req.protocol}://${req.get('host')}`;
+      const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
+      
+      // 生成快速安装命令
+      const quickCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --auto-config --force-root --master-url "${serverUrl}" --api-key "${apiKey}"`;
+      
+      // 生成交互式安装命令
+      const interactiveCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash`;
+      
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          masterUrl: serverUrl,
+          apiKey: apiKey,
+          quickCommand: quickCommand,
+          command: interactiveCommand
+        }
+      };
+      
+      res.json(response);
+      
+      logger.info(`Agent install command generated for server ${serverUrl} from ${req.ip}`);
+    } catch (error) {
+      logger.error('Get install command error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to get install command'
+      };
+      res.status(500).json(response);
+    }
+  }
 }
 
 export const nodeController = new NodeController();

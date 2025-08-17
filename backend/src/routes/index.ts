@@ -72,10 +72,11 @@ router.get('/nodes/:id/heartbeat', nodeController.getNodeHeartbeatData.bind(node
 router.get('/stats', nodeController.getNodeStats.bind(nodeController));
 
 // Agent相关路由
-router.post('/agent/register', nodeController.registerAgent.bind(nodeController));
-router.post('/agent/:agentId/heartbeat', nodeController.heartbeat.bind(nodeController));
-router.post('/agent/:agentId/diagnostic', nodeController.reportDiagnostic.bind(nodeController));
-router.get('/agent/install-script', nodeController.getInstallScript.bind(nodeController));
+router.post('/agents/register', nodeController.registerAgent.bind(nodeController));
+router.post('/agents/:agentId/heartbeat', nodeController.heartbeat.bind(nodeController));
+router.post('/agents/:agentId/diagnostic', nodeController.reportDiagnostic.bind(nodeController));
+router.get('/agents/install-script', nodeController.getInstallScript.bind(nodeController));
+router.get('/agents/install-command', nodeController.getInstallCommand.bind(nodeController));
 
 // 访问者IP信息路由（公开访问）
 router.get('/visitor/info', visitorController.getVisitorInfo.bind(visitorController));

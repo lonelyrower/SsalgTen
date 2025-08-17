@@ -27,7 +27,13 @@
       "Bash(bash:*)",
       "Bash(cat:*)",
       "Bash(NODE_ENV=development npm start)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker system prune:*)",
+      "Bash(docker network inspect:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker inspect:*)"
     ],
     "deny": []
   }

@@ -5,7 +5,7 @@ import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, Settings, BarChart3, Loader2 } from 'lucide-react';
+import { Activity, Users, Settings, BarChart3, Loader2, Download } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 // Lazy load heavy components
@@ -14,9 +14,10 @@ const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolki
 const AnalyticsPanel = lazy(() => import('@/components/analytics/AnalyticsPanel').then(module => ({ default: module.AnalyticsPanel })));
 const UserManagement = lazy(() => import('@/components/admin/UserManagement').then(module => ({ default: module.UserManagement })));
 const SystemSettings = lazy(() => import('@/components/admin/SystemSettings').then(module => ({ default: module.SystemSettings })));
+const AgentInstaller = lazy(() => import('@/components/agent/AgentInstaller').then(module => ({ default: module.AgentInstaller })));
 
 interface DashboardPageProps {
-  view?: 'overview' | 'users' | 'settings' | 'analytics';
+  view?: 'overview' | 'users' | 'settings' | 'analytics' | 'agents';
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' }) => {
@@ -159,6 +160,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' 
                 <BarChart3 className="h-4 w-4" />
                 <span>数据分析</span>
               </Button>
+              
+              <Button
+                variant={activeView === 'agents' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveView('agents')}
+                className="flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Agent安装</span>
+              </Button>
             </div>
           </div>
         )}
@@ -279,6 +290,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' 
             </div>
           }>
             <AnalyticsPanel />
+          </Suspense>
+        )}
+
+        {activeView === 'agents' && (
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+            </div>
+          }>
+            <AgentInstaller />
           </Suspense>
         )}
 

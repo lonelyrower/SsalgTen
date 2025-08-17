@@ -259,7 +259,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       setDownloading(true);
       setError('');
       
-      const response = await fetch('/api/agent/install-script', {
+      const response = await fetch('/api/agents/install-script', {
         method: 'GET',
         headers: {
           'Accept': 'application/x-sh',
@@ -295,7 +295,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   // 复制安装命令到剪贴板
   const handleCopyInstallCommand = async () => {
-    const command = `curl -fsSL ${window.location.origin}/api/agent/install-script -o install-agent.sh && chmod +x install-agent.sh && ./install-agent.sh`;
+    const command = `curl -fsSL ${window.location.origin}/api/agents/install-script -o install-agent.sh && chmod +x install-agent.sh && ./install-agent.sh`;
     
     try {
       await navigator.clipboard.writeText(command);
@@ -474,7 +474,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
               <li>登录到您的VPS服务器</li>
               <li>下载并运行安装脚本：
                 <code className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">
-                  curl -fsSL {window.location.origin}/api/agent/install-script | bash
+                  curl -fsSL {window.location.origin}/api/agents/install-script | bash
                 </code>
               </li>
               <li>按照提示输入必要的配置信息</li>

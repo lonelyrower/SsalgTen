@@ -29,12 +29,12 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
   const [step, setStep] = useState(1);
   const [copySuccess, setCopySuccess] = useState('');
 
-  const oneLineInstall = `curl -fsSL ${window.location.origin}/api/agent/install-script | bash`;
+  const oneLineInstall = `curl -fsSL ${window.location.origin}/api/agents/install-script | bash`;
   const githubDirectInstall = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --master-url "${window.location.origin}" --auto-config`;
 
   const handleDownloadScript = async () => {
     try {
-      const response = await fetch('/api/agent/install-script', {
+      const response = await fetch('/api/agents/install-script', {
         method: 'GET',
         headers: {
           'Accept': 'application/x-sh',
