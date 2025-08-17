@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, Download, Terminal, Globe, Key, Server } from 'lucide-react';
-import { apiService } from '@/services/api';
 
 interface InstallCommandData {
   masterUrl: string;
