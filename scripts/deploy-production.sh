@@ -161,19 +161,28 @@ check_script_update() {
 update_script() {
     log_info "下载最新脚本..."
     
-    # 备份当前脚本
-    cp "$0" "$0.backup.$(date +%Y%m%d_%H%M%S)"
-    
-    # 下载新脚本
-    if curl -fsSL "$SCRIPT_URL" -o "$0.new"; then
-        chmod +x "$0.new"
-        mv "$0.new" "$0"
-        log_success "脚本更新完成！重新启动..."
+    # 检查是否是通过管道执行（curl | bash）
+    if [[ "$0" == "bash" || "$0" == "/bin/bash" || "$0" == "/usr/bin/bash" ]]; then
+        log_info "检测到管道执行模式，直接重新下载并运行最新脚本..."
         echo ""
-        exec "$0" "$@"
+        log_success "正在重新下载并执行最新版本..."
+        exec bash -c "curl -fsSL '$SCRIPT_URL' | bash"
     else
-        log_error "脚本更新失败"
-        exit 1
+        # 正常文件执行模式
+        # 备份当前脚本
+        cp "$0" "$0.backup.$(date +%Y%m%d_%H%M%S)"
+        
+        # 下载新脚本
+        if curl -fsSL "$SCRIPT_URL" -o "$0.new"; then
+            chmod +x "$0.new"
+            mv "$0.new" "$0"
+            log_success "脚本更新完成！重新启动..."
+            echo ""
+            exec "$0" "$@"
+        else
+            log_error "脚本更新失败"
+            exit 1
+        fi
     fi
 }
 
