@@ -510,6 +510,12 @@ collect_deployment_info() {
 
 # 彻底清理Docker源残留配置
 cleanup_docker_sources() {
+    # 只在APT系统上清理Docker源
+    if ! command -v apt >/dev/null 2>&1; then
+        log_info "非APT系统，跳过Docker源清理"
+        return 0
+    fi
+    
     log_info "彻底清理Docker源残留配置..."
     
     # 显示清理前的状态
@@ -547,11 +553,19 @@ cleanup_docker_sources() {
         echo "已从sources.list.d中移除Docker条目"
     fi
     
-    # 彻底清理APT缓存
-    log_info "清理APT缓存..."
-    run_as_root apt clean
-    run_as_root apt autoclean
-    run_as_root rm -rf /var/lib/apt/lists/*
+    # 彻底清理包管理器缓存
+    log_info "清理包管理器缓存..."
+    if command -v apt >/dev/null 2>&1; then
+        run_as_root apt clean
+        run_as_root apt autoclean
+        run_as_root rm -rf /var/lib/apt/lists/*
+    elif command -v yum >/dev/null 2>&1; then
+        run_as_root yum clean all
+    elif command -v dnf >/dev/null 2>&1; then
+        run_as_root dnf clean all
+    else
+        log_warning "未知的包管理器，跳过缓存清理"
+    fi
     
     # 显示清理后的状态
     echo "=== 清理后的Docker源状态 ==="
@@ -568,22 +582,68 @@ cleanup_docker_sources() {
 install_system_dependencies() {
     log_info "安装系统依赖..."
     
-    # 先彻底清理Docker源
-    cleanup_docker_sources
-    
-    # 更新系统
-    run_as_root apt update
-    run_as_root apt upgrade -y
-    
-    # 安装基础工具
-    run_as_root apt install -y curl wget git vim ufw htop unzip jq
-    
-    # 配置防火墙
-    run_as_root ufw --force reset
-    run_as_root ufw allow ssh
-    run_as_root ufw allow $HTTP_PORT
-    run_as_root ufw allow $HTTPS_PORT
-    run_as_root ufw --force enable
+    # 检测包管理器
+    if command -v apt >/dev/null 2>&1; then
+        log_info "检测到APT包管理器 (Debian/Ubuntu)"
+        
+        # 先彻底清理Docker源
+        cleanup_docker_sources
+        
+        # 更新系统
+        run_as_root apt update
+        run_as_root apt upgrade -y
+        
+        # 安装基础工具
+        run_as_root apt install -y curl wget git vim ufw htop unzip jq
+        
+        # 配置防火墙
+        run_as_root ufw --force reset
+        run_as_root ufw allow ssh
+        run_as_root ufw allow $HTTP_PORT
+        run_as_root ufw allow $HTTPS_PORT
+        run_as_root ufw --force enable
+        
+    elif command -v yum >/dev/null 2>&1; then
+        log_info "检测到YUM包管理器 (CentOS/RHEL 7)"
+        
+        # 更新系统
+        run_as_root yum update -y
+        
+        # 安装EPEL源
+        run_as_root yum install -y epel-release
+        
+        # 安装基础工具
+        run_as_root yum install -y curl wget git vim htop unzip jq firewalld
+        
+        # 配置防火墙
+        run_as_root systemctl enable firewalld
+        run_as_root systemctl start firewalld
+        run_as_root firewall-cmd --add-service=ssh --permanent
+        run_as_root firewall-cmd --add-port=$HTTP_PORT/tcp --permanent
+        run_as_root firewall-cmd --add-port=$HTTPS_PORT/tcp --permanent
+        run_as_root firewall-cmd --reload
+        
+    elif command -v dnf >/dev/null 2>&1; then
+        log_info "检测到DNF包管理器 (CentOS/RHEL 8+/Fedora)"
+        
+        # 更新系统
+        run_as_root dnf update -y
+        
+        # 安装基础工具
+        run_as_root dnf install -y curl wget git vim htop unzip jq firewalld
+        
+        # 配置防火墙
+        run_as_root systemctl enable firewalld
+        run_as_root systemctl start firewalld
+        run_as_root firewall-cmd --add-service=ssh --permanent
+        run_as_root firewall-cmd --add-port=$HTTP_PORT/tcp --permanent
+        run_as_root firewall-cmd --add-port=$HTTPS_PORT/tcp --permanent
+        run_as_root firewall-cmd --reload
+        
+    else
+        log_error "不支持的操作系统，未找到 apt/yum/dnf 包管理器"
+        exit 1
+    fi
     
     log_success "系统依赖安装完成"
 }
@@ -738,20 +798,32 @@ install_docker() {
 install_nginx() {
     log_info "安装Nginx..."
     
-    run_as_root apt install -y nginx
-    
-    # 检查nginx配置是否正确
-    if ! run_as_root nginx -t >/dev/null 2>&1; then
-        log_warning "Nginx配置检查失败，尝试修复..."
-        # 恢复默认配置
-        run_as_root apt install --reinstall -y nginx-common
+    if command -v apt >/dev/null 2>&1; then
+        run_as_root apt install -y nginx
+        
+        # 检查nginx配置是否正确
+        if ! run_as_root nginx -t >/dev/null 2>&1; then
+            log_warning "Nginx配置检查失败，尝试修复..."
+            # 恢复默认配置
+            run_as_root apt install --reinstall -y nginx-common
+        fi
+        
+        # 删除默认站点（在启动前删除）
+        run_as_root rm -f /etc/nginx/sites-enabled/default
+        
+    elif command -v yum >/dev/null 2>&1; then
+        run_as_root yum install -y nginx
+        
+    elif command -v dnf >/dev/null 2>&1; then
+        run_as_root dnf install -y nginx
+        
+    else
+        log_error "无法安装Nginx，未找到支持的包管理器"
+        exit 1
     fi
     
     # 停止nginx（以防正在运行）
     run_as_root systemctl stop nginx 2>/dev/null || true
-    
-    # 删除默认站点（在启动前删除）
-    run_as_root rm -f /etc/nginx/sites-enabled/default
     
     # 确保nginx可以启动
     if run_as_root nginx -t; then
@@ -1162,7 +1234,16 @@ install_ssl_certificate() {
         log_info "安装SSL证书..."
         
         # 安装Certbot
-        run_as_root apt install -y certbot python3-certbot-nginx
+        if command -v apt >/dev/null 2>&1; then
+            run_as_root apt install -y certbot python3-certbot-nginx
+        elif command -v yum >/dev/null 2>&1; then
+            run_as_root yum install -y certbot python3-certbot-nginx
+        elif command -v dnf >/dev/null 2>&1; then
+            run_as_root dnf install -y certbot python3-certbot-nginx
+        else
+            log_error "无法安装Certbot，未找到支持的包管理器"
+            exit 1
+        fi
         
         # 获取SSL证书
         run_as_root certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
