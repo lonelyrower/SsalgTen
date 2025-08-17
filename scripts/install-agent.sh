@@ -420,11 +420,62 @@ collect_node_info() {
     echo "  - 端口: $AGENT_PORT"
     echo ""
     
-    read -p "确认配置信息正确？ (y/n): " confirm
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-        log_info "请重新运行脚本"
-        exit 0
+    if [[ "$AUTO_CONFIG" != "true" ]]; then
+        read -p "确认配置信息正确？ (y/n): " confirm
+        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+            log_info "请重新运行脚本"
+            exit 0
+        fi
+    else
+        log_success "自动配置模式，配置信息已确认"
     fi
+}
+
+# 检测包管理器并安装依赖
+install_system_dependencies() {
+    log_info "安装系统依赖..."
+    
+    # 检测操作系统
+    if [[ ! -f /etc/os-release ]]; then
+        log_error "不支持的操作系统"
+        exit 1
+    fi
+    
+    source /etc/os-release
+    
+    if command -v apt >/dev/null 2>&1; then
+        log_info "检测到APT包管理器 (Debian/Ubuntu)"
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            apt update
+            apt install -y curl wget git gnupg lsb-release
+        else
+            sudo apt update
+            sudo apt install -y curl wget git gnupg lsb-release
+        fi
+    elif command -v yum >/dev/null 2>&1; then
+        log_info "检测到YUM包管理器 (CentOS/RHEL 7)"
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            yum update -y
+            yum install -y curl wget git
+        else
+            sudo yum update -y
+            sudo yum install -y curl wget git
+        fi
+    elif command -v dnf >/dev/null 2>&1; then
+        log_info "检测到DNF包管理器 (CentOS/RHEL 8+/Fedora)"
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            dnf update -y
+            dnf install -y curl wget git
+        else
+            sudo dnf update -y
+            sudo dnf install -y curl wget git
+        fi
+    else
+        log_error "不支持的操作系统，未找到 apt/yum/dnf 包管理器"
+        exit 1
+    fi
+    
+    log_success "系统依赖安装完成"
 }
 
 # 安装Docker
@@ -433,37 +484,44 @@ install_docker() {
     
     if command -v docker >/dev/null 2>&1; then
         log_success "Docker已安装: $(docker --version)"
+        # 确保Docker服务运行
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            systemctl start docker
+            systemctl enable docker
+        else
+            sudo systemctl start docker
+            sudo systemctl enable docker
+        fi
         return 0
     fi
     
     log_info "安装Docker..."
     
-    # 安装依赖
-    case "$ID" in
-        ubuntu|debian)
-            sudo apt-get update
-            sudo apt-get install -y curl wget gnupg lsb-release
-            ;;
-        centos|rhel|fedora)
-            sudo yum install -y curl wget
-            ;;
-        *)
-            log_error "不支持的操作系统: $ID"
-            exit 1
-            ;;
-    esac
-    
     # 使用官方安装脚本
     curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        sh get-docker.sh
+    else
+        sudo sh get-docker.sh
+    fi
     rm get-docker.sh
     
-    # 添加当前用户到docker组
-    sudo usermod -aG docker $USER
+    # 添加当前用户到docker组（非root用户）
+    if [[ "$RUNNING_AS_ROOT" != "true" ]]; then
+        sudo usermod -aG docker $USER
+        log_info "已将用户 $USER 添加到docker组，重新登录后生效"
+        # 临时切换到docker组
+        newgrp docker || true
+    fi
     
     # 启动Docker服务
-    sudo systemctl start docker
-    sudo systemctl enable docker
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        systemctl start docker
+        systemctl enable docker
+    else
+        sudo systemctl start docker
+        sudo systemctl enable docker
+    fi
     
     log_success "Docker安装完成"
 }
@@ -494,10 +552,17 @@ create_app_directory() {
     log_info "创建应用目录..."
     
     APP_DIR="/opt/ssalgten-agent"
-    sudo mkdir -p $APP_DIR
-    sudo chown $USER:$USER $APP_DIR
-    cd $APP_DIR
     
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        mkdir -p $APP_DIR
+        # root用户创建目录后设置合适权限
+        chmod 755 $APP_DIR
+    else
+        sudo mkdir -p $APP_DIR
+        sudo chown $USER:$USER $APP_DIR
+    fi
+    
+    cd $APP_DIR
     log_success "应用目录创建: $APP_DIR"
 }
 
@@ -510,15 +575,72 @@ download_agent_code() {
     rm -rf $TEMP_DIR
     mkdir -p $TEMP_DIR
     
-    # 下载主项目
-    cd $TEMP_DIR
-    git clone https://github.com/lonelyrower/SsalgTen.git .
+    # 尝试多种下载方式
+    local download_success=false
+    local methods=(
+        "git clone https://github.com/lonelyrower/SsalgTen.git ."
+        "git clone https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git ."
+        "git clone https://hub.fastgit.xyz/lonelyrower/SsalgTen.git ."
+    )
     
-    # 复制Agent相关文件
+    cd $TEMP_DIR
+    
+    # 尝试Git克隆
+    for method in "${methods[@]}"; do
+        log_info "尝试: $method"
+        if eval "$method" 2>/dev/null; then
+            download_success=true
+            log_success "Git克隆成功"
+            break
+        else
+            log_warning "Git克隆失败，尝试下一种方法..."
+        fi
+    done
+    
+    # 如果Git克隆都失败，使用wget下载ZIP包
+    if [[ "$download_success" == false ]]; then
+        log_warning "Git克隆失败，使用wget下载ZIP包..."
+        
+        local zip_urls=(
+            "https://github.com/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+            "https://github.com.cnpmjs.org/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+        )
+        
+        for zip_url in "${zip_urls[@]}"; do
+            log_info "尝试下载: $zip_url"
+            if wget -q "$zip_url" -O main.zip 2>/dev/null; then
+                if unzip -q main.zip 2>/dev/null; then
+                    mv SsalgTen-main/* . 2>/dev/null
+                    mv SsalgTen-main/.* . 2>/dev/null || true
+                    rmdir SsalgTen-main 2>/dev/null
+                    rm -f main.zip
+                    download_success=true
+                    log_success "ZIP包下载成功"
+                    break
+                fi
+            fi
+        done
+    fi
+    
+    if [[ "$download_success" == false ]]; then
+        log_error "所有下载方法都失败了"
+        exit 1
+    fi
+    
+    # 检查agent目录是否存在
+    if [[ ! -d "agent" ]]; then
+        log_error "下载的代码中未找到agent目录"
+        exit 1
+    fi
+    
+    # 复制Agent相关文件到应用目录
     cp -r agent/* $APP_DIR/
     
-    # 复制 Dockerfile (简化版本，因为文件已经在正确位置)
-    # cp Dockerfile.agent $APP_DIR/Dockerfile  # 我们将创建一个简化的Dockerfile
+    # 确保package.json存在
+    if [[ ! -f "$APP_DIR/package.json" ]]; then
+        log_error "Agent目录中缺少package.json文件"
+        exit 1
+    fi
     
     # 清理临时目录
     rm -rf $TEMP_DIR
@@ -960,6 +1082,7 @@ main() {
     
     check_system
     collect_node_info
+    install_system_dependencies
     install_docker
     install_docker_compose
     create_app_directory
