@@ -663,6 +663,27 @@ install_docker() {
     
     if command -v docker >/dev/null 2>&1; then
         log_success "Docker已安装: $(docker --version)"
+        
+        # 确保Docker服务正在运行
+        log_info "检查Docker服务状态..."
+        if ! systemctl is-active --quiet docker; then
+            log_info "启动Docker服务..."
+            run_as_root systemctl start docker
+            run_as_root systemctl enable docker
+            
+            # 等待Docker服务启动
+            sleep 3
+            
+            if systemctl is-active --quiet docker; then
+                log_success "Docker服务启动完成"
+            else
+                log_error "Docker服务启动失败"
+                exit 1
+            fi
+        else
+            log_success "Docker服务正在运行"
+        fi
+        
         return 0
     fi
     
