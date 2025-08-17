@@ -1075,9 +1075,25 @@ EOF
 create_nginx_config() {
     log_info "创建Nginx配置..."
     
+    # 检测Nginx配置目录结构
+    if [[ -d "/etc/nginx/sites-available" ]]; then
+        # Debian/Ubuntu 结构
+        NGINX_CONFIG_FILE="/etc/nginx/sites-available/ssalgten"
+        NGINX_ENABLE_CMD="run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/"
+        log_info "使用Debian/Ubuntu Nginx配置结构"
+    else
+        # CentOS/RHEL 结构
+        NGINX_CONFIG_FILE="/etc/nginx/conf.d/ssalgten.conf"
+        NGINX_ENABLE_CMD="# 配置已自动启用"
+        log_info "使用CentOS/RHEL Nginx配置结构"
+        
+        # 确保conf.d目录存在
+        run_as_root mkdir -p /etc/nginx/conf.d
+    fi
+    
     if [[ "$ENABLE_SSL" == "true" ]]; then
         # HTTPS模式配置
-        run_as_root tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
+        run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTPS模式)
 server {
     listen $HTTP_PORT;
@@ -1168,7 +1184,7 @@ server {
 EOF
     else
         # HTTP模式配置
-        run_as_root tee /etc/nginx/sites-available/ssalgten > /dev/null << EOF
+        run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTP模式)
 server {
     listen $HTTP_PORT;
@@ -1248,8 +1264,15 @@ server {
 EOF
     fi
     
-    # 启用站点
-    run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/
+    # 启用站点（根据系统类型）
+    if [[ -d "/etc/nginx/sites-available" ]]; then
+        # Debian/Ubuntu: 创建符号链接
+        run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/
+        log_info "已启用Nginx站点配置"
+    else
+        # CentOS/RHEL: 配置文件直接放在conf.d中，无需额外操作
+        log_info "Nginx配置已放置在 conf.d 目录中"
+    fi
     
     # 测试配置
     run_as_root nginx -t
@@ -1273,8 +1296,11 @@ install_ssl_certificate() {
         if command -v apt >/dev/null 2>&1; then
             run_as_root apt install -y certbot python3-certbot-nginx
         elif command -v yum >/dev/null 2>&1; then
-            run_as_root yum install -y certbot python3-certbot-nginx
+            # CentOS 7 需要EPEL源
+            run_as_root yum install -y epel-release
+            run_as_root yum install -y certbot python2-certbot-nginx || run_as_root yum install -y certbot python3-certbot-nginx
         elif command -v dnf >/dev/null 2>&1; then
+            # CentOS 8+/Fedora
             run_as_root dnf install -y certbot python3-certbot-nginx
         else
             log_error "无法安装Certbot，未找到支持的包管理器"
