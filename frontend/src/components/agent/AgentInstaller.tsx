@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, Download, Terminal, Globe, Key, Server } from 'lucide-react';
-import { apiRequest } from '@/services/api';
+import { apiService } from '@/services/api';
 
 interface InstallCommandData {
   masterUrl: string;
@@ -22,8 +22,16 @@ export const AgentInstaller: React.FC = () => {
   const fetchInstallCommand = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest<InstallCommandData>('/api/agents/install-command');
-      setInstallData(data);
+      const response = await fetch('/api/agents/install-command');
+      if (!response.ok) {
+        throw new Error('Failed to fetch install command');
+      }
+      const result = await response.json();
+      if (result.success) {
+        setInstallData(result.data);
+      } else {
+        throw new Error(result.error || 'Failed to fetch install command');
+      }
     } catch (error) {
       console.error('Failed to fetch install command:', error);
     } finally {
