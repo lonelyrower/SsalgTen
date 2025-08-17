@@ -657,58 +657,120 @@ install_docker() {
         return 0
     fi
     
-    # 卸载旧版本和清理旧源
-    run_as_root apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
-    
-    # 清理所有可能的Docker源文件
-    run_as_root rm -f /etc/apt/sources.list.d/docker.list
-    run_as_root rm -f /usr/share/keyrings/docker-archive-keyring.gpg
-    run_as_root rm -f /etc/apt/sources.list.d/docker-ce.list
-    
-    log_info "已清理旧的Docker源和密钥"
-    
-    # 安装依赖
-    run_as_root apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
-    
-    # 检测操作系统并添加相应的Docker GPG密钥和仓库
-    local os_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-    local os_codename=$(lsb_release -cs)
-    
-    log_info "系统检测结果: OS=$os_id, Codename=$os_codename"
-    
-    # 再次确保Docker源完全清理（双重保险）
-    log_info "最终验证Docker源清理状态..."
-    
-    # 检查是否还有残留的Docker源
-    if run_as_root find /etc/apt -name "*.list" -exec grep -l "docker\.com" {} \; 2>/dev/null | grep -q .; then
-        log_warning "发现残留的Docker源，进行最终清理..."
-        cleanup_docker_sources
-        # 强制重新更新
+    # 检测包管理器并使用相应的方式安装Docker
+    if command -v apt >/dev/null 2>&1; then
+        log_info "使用APT包管理器安装Docker"
+        
+        # 卸载旧版本和清理旧源
+        run_as_root apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+        
+        # 清理所有可能的Docker源文件
+        run_as_root rm -f /etc/apt/sources.list.d/docker.list
+        run_as_root rm -f /usr/share/keyrings/docker-archive-keyring.gpg
+        run_as_root rm -f /etc/apt/sources.list.d/docker-ce.list
+        
+        log_info "已清理旧的Docker源和密钥"
+        
+        # 安装依赖
+        run_as_root apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        
+        # 检测操作系统并添加相应的Docker GPG密钥和仓库
+        local os_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+        local os_codename=$(lsb_release -cs)
+        
+        log_info "系统检测结果: OS=$os_id, Codename=$os_codename"
+        
+        # 再次确保Docker源完全清理（双重保险）
+        log_info "最终验证Docker源清理状态..."
+        
+        # 检查是否还有残留的Docker源
+        if run_as_root find /etc/apt -name "*.list" -exec grep -l "docker\.com" {} \; 2>/dev/null | grep -q .; then
+            log_warning "发现残留的Docker源，进行最终清理..."
+            cleanup_docker_sources
+            # 强制重新更新
+            run_as_root apt update
+        else
+            log_info "Docker源清理验证通过"
+        fi
+        
+        if [[ "$os_id" == "debian" ]]; then
+            log_info "检测到Debian系统，使用Debian Docker源"
+            curl -fsSL https://download.docker.com/linux/debian/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            
+            # 创建正确的Debian源配置
+            docker_repo="deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $os_codename stable"
+            echo "$docker_repo" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            log_info "已添加Debian Docker源: $docker_repo"
+        elif [[ "$os_id" == "ubuntu" ]]; then
+            log_info "检测到Ubuntu系统，使用Ubuntu Docker源"
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $os_codename stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+        fi
+        
+        # 验证源配置是否正确
+        log_info "验证Docker源配置..."
+        if [[ -f /etc/apt/sources.list.d/docker.list ]]; then
+            echo "当前Docker源配置内容:"
+            cat /etc/apt/sources.list.d/docker.list
+        else
+            log_error "Docker源配置文件不存在!"
+            exit 1
+        fi
+        
+        # 最终验证和更新
+        log_info "最终验证Docker源配置并更新..."
+        
+        # 显示所有Docker相关的源（用于调试）
+        echo "=== 当前所有包含docker的源配置 ==="
+        run_as_root find /etc/apt -name "*.list" -exec grep -H "docker" {} \; 2>/dev/null || echo "无Docker源配置"
+        echo "=================================="
+        
+        # 清理APT缓存并强制更新
+        run_as_root apt clean
+        run_as_root rm -rf /var/lib/apt/lists/*
         run_as_root apt update
-    else
-        log_info "Docker源清理验证通过"
-    fi
-    
-    if [[ "$os_id" == "debian" ]]; then
-        log_info "检测到Debian系统，使用Debian Docker源"
-        curl -fsSL https://download.docker.com/linux/debian/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
         
-        # 创建正确的Debian源配置
-        docker_repo="deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $os_codename stable"
-        echo "$docker_repo" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+        log_info "安装Docker软件包..."
+        run_as_root apt install -y docker-ce docker-ce-cli containerd.io
         
-        log_info "已添加Debian Docker源: $docker_repo"
-    elif [[ "$os_id" == "ubuntu" ]]; then
-        log_info "检测到Ubuntu系统，使用Ubuntu Docker源"
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $os_codename stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+    elif command -v yum >/dev/null 2>&1; then
+        log_info "使用YUM包管理器安装Docker"
+        
+        # 卸载旧版本
+        run_as_root yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
+        
+        # 安装依赖
+        run_as_root yum install -y yum-utils device-mapper-persistent-data lvm2
+        
+        # 添加Docker仓库
+        run_as_root yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        
+        # 安装Docker
+        run_as_root yum install -y docker-ce docker-ce-cli containerd.io
+        
+    elif command -v dnf >/dev/null 2>&1; then
+        log_info "使用DNF包管理器安装Docker"
+        
+        # 卸载旧版本
+        run_as_root dnf remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
+        
+        # 安装依赖
+        run_as_root dnf install -y dnf-plugins-core
+        
+        # 添加Docker仓库
+        run_as_root dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        
+        # 安装Docker
+        run_as_root dnf install -y docker-ce docker-ce-cli containerd.io
+        
     else
-        log_warning "未知操作系统，尝试使用官方安装脚本"
+        log_warning "未知包管理器，使用官方安装脚本"
         curl -fsSL https://get.docker.com -o get-docker.sh
         run_as_root sh get-docker.sh
         rm get-docker.sh
         
-        # 如果使用官方脚本，跳过后面的apt安装步骤
+        # 如果使用官方脚本，跳过后面的安装步骤
         if command -v docker >/dev/null 2>&1; then
             log_success "Docker安装完成: $(docker --version)"
         else
@@ -722,32 +784,6 @@ install_docker() {
         run_as_root chmod +x /usr/local/bin/docker-compose
         return 0
     fi
-    
-    # 验证源配置是否正确
-    log_info "验证Docker源配置..."
-    if [[ -f /etc/apt/sources.list.d/docker.list ]]; then
-        echo "当前Docker源配置内容:"
-        cat /etc/apt/sources.list.d/docker.list
-    else
-        log_error "Docker源配置文件不存在!"
-        exit 1
-    fi
-    
-    # 最终验证和更新
-    log_info "最终验证Docker源配置并更新..."
-    
-    # 显示所有Docker相关的源（用于调试）
-    echo "=== 当前所有包含docker的源配置 ==="
-    run_as_root find /etc/apt -name "*.list" -exec grep -H "docker" {} \; 2>/dev/null || echo "无Docker源配置"
-    echo "=================================="
-    
-    # 清理APT缓存并强制更新
-    run_as_root apt clean
-    run_as_root rm -rf /var/lib/apt/lists/*
-    run_as_root apt update
-    
-    log_info "安装Docker软件包..."
-    run_as_root apt install -y docker-ce docker-ce-cli containerd.io
     
     # 安装Docker Compose
     COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
