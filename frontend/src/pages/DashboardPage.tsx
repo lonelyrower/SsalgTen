@@ -168,7 +168,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' 
                 className="flex items-center space-x-2"
               >
                 <Download className="h-4 w-4" />
-                <span>Agent安装</span>
+                <span>节点部署</span>
               </Button>
             </div>
           </div>

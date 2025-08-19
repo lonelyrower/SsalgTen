@@ -125,6 +125,7 @@ show_welcome() {
     echo -e "${YELLOW}使用方法:${NC}"
     echo "  交互式安装: curl -fsSL ... | bash"
     echo "  自动化安装: curl -fsSL ... | bash -s -- --auto-config --master-url URL --api-key KEY"
+    echo "  卸载Agent: curl -fsSL ... | bash -s -- --uninstall"
     echo ""
 }
 
@@ -181,6 +182,9 @@ show_help() {
     echo "      --api-key your-api-key \\"
     echo "      [可选参数...]"
     echo ""
+    echo "  卸载Agent:"
+    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall"
+    echo ""
     echo "必需参数 (自动配置模式):"
     echo "  --master-url URL     主服务器地址"
     echo "  --api-key KEY        API密钥"
@@ -193,6 +197,7 @@ show_help() {
     echo "  --node-city NAME     城市"
     echo "  --node-provider NAME 服务商"
     echo "  --agent-port PORT    Agent端口 (默认3002)"
+    echo "  --uninstall          卸载Agent"
     echo "  --help               显示此帮助信息"
     echo ""
 }
@@ -204,6 +209,10 @@ parse_arguments() {
             --help|-h)
                 show_help
                 exit 0
+                ;;
+            --uninstall)
+                UNINSTALL_MODE=true
+                shift
                 ;;
             --master-url)
                 MASTER_URL="$2"
@@ -768,13 +777,16 @@ RUN adduser -S -u 1001 ssalgten
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files and install ALL dependencies (including dev dependencies for build)
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copy source code and build
 COPY . .
 RUN npm run build
+
+# Remove dev dependencies after build to reduce image size
+RUN npm prune --production
 
 # Create necessary directories
 RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs
@@ -1011,9 +1023,205 @@ EOF
     log_success "管理脚本创建完成: $APP_DIR/manage-agent.sh"
 }
 
+# 卸载Agent
+uninstall_agent() {
+    clear
+    echo -e "${CYAN}"
+    echo "========================================"
+    echo "    SsalgTen Agent 卸载程序"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+    
+    log_warning "⚠️ 准备卸载SsalgTen Agent"
+    echo ""
+    echo "此操作将删除："
+    echo "  - Agent Docker容器和镜像"
+    echo "  - 应用目录：/opt/ssalgten-agent"
+    echo "  - 系统服务：ssalgten-agent.service"
+    echo "  - 相关配置文件"
+    echo ""
+    
+    # 确认卸载
+    read -p "是否确认卸载？这个操作不可逆！[y/N]: " confirm_uninstall
+    if [[ "$confirm_uninstall" != "y" && "$confirm_uninstall" != "Y" ]]; then
+        log_info "已取消卸载"
+        exit 0
+    fi
+    
+    log_info "开始卸载SsalgTen Agent..."
+    
+    # 设置应用目录
+    APP_DIR="/opt/ssalgten-agent"
+    
+    # 检查是否以root运行
+    if [[ $EUID -eq 0 ]]; then
+        export RUNNING_AS_ROOT=true
+        log_info "使用root用户进行卸载"
+    else
+        # 检查sudo权限
+        if ! sudo -v >/dev/null 2>&1; then
+            log_error "需要sudo权限来卸载系统组件"
+            exit 1
+        fi
+    fi
+    
+    # 1. 停止和删除系统服务
+    log_info "停止系统服务..."
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        systemctl stop ssalgten-agent.service 2>/dev/null || true
+        systemctl disable ssalgten-agent.service 2>/dev/null || true
+        rm -f /etc/systemd/system/ssalgten-agent.service
+        systemctl daemon-reload
+    else
+        sudo systemctl stop ssalgten-agent.service 2>/dev/null || true
+        sudo systemctl disable ssalgten-agent.service 2>/dev/null || true
+        sudo rm -f /etc/systemd/system/ssalgten-agent.service
+        sudo systemctl daemon-reload
+    fi
+    log_success "系统服务已停止并删除"
+    
+    # 2. 停止和删除Docker容器
+    log_info "停止Docker容器..."
+    if [[ -d "$APP_DIR" ]]; then
+        cd "$APP_DIR"
+        
+        # 使用Docker Compose停止服务
+        if [[ -f "docker-compose.yml" ]]; then
+            docker_compose down --remove-orphans --volumes 2>/dev/null || true
+            log_success "Docker服务已停止"
+        fi
+        
+        # 删除相关的Docker镜像
+        log_info "删除Docker镜像..."
+        docker rmi ssalgten-agent_agent 2>/dev/null || true
+        docker rmi $(docker images | grep ssalgten | awk '{print $3}') 2>/dev/null || true
+        log_success "Docker镜像已删除"
+    fi
+    
+    # 3. 删除应用目录
+    log_info "删除应用目录..."
+    if [[ -d "$APP_DIR" ]]; then
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            rm -rf "$APP_DIR"
+        else
+            sudo rm -rf "$APP_DIR"
+        fi
+        log_success "应用目录已删除: $APP_DIR"
+    else
+        log_info "应用目录不存在，跳过删除"
+    fi
+    
+    # 4. 清理Docker资源
+    log_info "清理Docker资源..."
+    docker system prune -f 2>/dev/null || true
+    log_success "Docker资源清理完成"
+    
+    # 5. 删除防火墙规则
+    log_info "清理防火墙规则..."
+    if command -v ufw >/dev/null 2>&1; then
+        # 尝试删除常见端口的规则
+        for port in 3002 3001 3003; do
+            sudo ufw --force delete allow $port/tcp 2>/dev/null || true
+        done
+        log_success "UFW防火墙规则已清理"
+    elif command -v firewall-cmd >/dev/null 2>&1; then
+        # 尝试删除常见端口的规则  
+        for port in 3002 3001 3003; do
+            sudo firewall-cmd --permanent --remove-port=$port/tcp 2>/dev/null || true
+        done
+        sudo firewall-cmd --reload 2>/dev/null || true
+        log_success "Firewalld防火墙规则已清理"
+    else
+        log_info "未检测到防火墙管理工具，请手动检查防火墙规则"
+    fi
+    
+    # 6. 提供卸载Docker的选项（可选）
+    echo ""
+    read -p "是否同时卸载Docker？(不推荐，可能影响其他应用) [y/N]: " uninstall_docker
+    if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
+        log_info "卸载Docker..."
+        
+        # 停止Docker服务
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            systemctl stop docker 2>/dev/null || true
+            systemctl disable docker 2>/dev/null || true
+        else
+            sudo systemctl stop docker 2>/dev/null || true
+            sudo systemctl disable docker 2>/dev/null || true
+        fi
+        
+        # 根据包管理器卸载Docker
+        if command -v apt >/dev/null 2>&1; then
+            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+                apt remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                apt autoremove -y
+            else
+                sudo apt remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                sudo apt autoremove -y
+            fi
+        elif command -v yum >/dev/null 2>&1; then
+            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+                yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            else
+                sudo yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            fi
+        elif command -v dnf >/dev/null 2>&1; then
+            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+                dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            else
+                sudo dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            fi
+        fi
+        
+        # 删除Docker数据目录
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            rm -rf /var/lib/docker
+            rm -rf /var/lib/containerd
+        else
+            sudo rm -rf /var/lib/docker
+            sudo rm -rf /var/lib/containerd
+        fi
+        
+        log_success "Docker已卸载"
+    else
+        log_info "保留Docker环境"
+    fi
+    
+    # 显示卸载完成信息
+    echo ""
+    echo -e "${GREEN}================================${NC}"
+    echo -e "${GREEN}  🗑️ Agent卸载完成！${NC}"
+    echo -e "${GREEN}================================${NC}"
+    echo ""
+    log_success "SsalgTen Agent已完全卸载"
+    echo ""
+    echo "已删除的组件："
+    echo "  ✓ Docker容器和镜像"
+    echo "  ✓ 应用目录 /opt/ssalgten-agent"
+    echo "  ✓ 系统服务 ssalgten-agent.service"
+    echo "  ✓ 防火墙规则"
+    echo "  ✓ 相关配置文件"
+    if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
+        echo "  ✓ Docker环境"
+    fi
+    echo ""
+    echo "如需重新安装，请重新运行安装脚本。"
+    echo ""
+}
+
 # 主安装流程
 main() {
     # 处理特殊命令行参数
+    # 解析所有参数
+    parse_arguments "$@"
+    
+    # 检查是否是卸载模式
+    if [[ "${UNINSTALL_MODE:-false}" == "true" ]]; then
+        uninstall_agent
+        return
+    fi
+    
     case "${1:-}" in
         --update)
             log_info "强制更新脚本..."
@@ -1023,15 +1231,10 @@ main() {
         --no-update-check)
             log_info "跳过更新检查"
             show_welcome
-            # 解析剩余参数
-            shift
-            parse_arguments "$@"
             ;;
         *)
             show_welcome
             check_script_update
-            # 解析所有参数
-            parse_arguments "$@"
             ;;
     esac
     

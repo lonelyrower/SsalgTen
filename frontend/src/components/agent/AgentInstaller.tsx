@@ -40,11 +40,29 @@ export const AgentInstaller: React.FC = () => {
 
   const copyToClipboard = async (text: string, type: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      // 尝试使用现代的 Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // 降级到传统的 execCommand 方法
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      
       setCopied(type);
-      setTimeout(() => setCopied(null), 2000);
+      setTimeout(() => setCopied(null), 3000);
     } catch (error) {
       console.error('Failed to copy:', error);
+      // 显示错误提示
+      alert('复制失败，请手动选择并复制命令');
     }
   };
 
@@ -78,10 +96,10 @@ export const AgentInstaller: React.FC = () => {
           <Download className="h-8 w-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Agent节点安装
+              节点安装部署
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              使用下面的命令在新服务器上快速部署监控Agent
+              使用下面的命令在新服务器上快速部署监控节点
             </p>
           </div>
         </div>
@@ -117,7 +135,7 @@ export const AgentInstaller: React.FC = () => {
         </div>
         
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          在目标服务器上以root用户执行以下命令，自动完成Agent安装和配置：
+          在目标服务器上以root用户执行以下命令，自动完成节点安装和配置：
         </p>
 
         <div className="relative">
@@ -127,13 +145,24 @@ export const AgentInstaller: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            className="absolute top-2 right-2 bg-gray-800 border-gray-600 hover:bg-gray-700"
+            className={`absolute top-2 right-2 transition-all duration-200 ${
+              copied === 'quick' 
+                ? 'bg-green-600 border-green-500 hover:bg-green-700 text-white' 
+                : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
+            }`}
             onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
+            title={copied === 'quick' ? '已复制！' : '复制命令'}
           >
             {copied === 'quick' ? (
-              <Check className="h-4 w-4 text-green-500" />
+              <>
+                <Check className="h-4 w-4 text-white mr-1" />
+                <span className="text-xs">已复制</span>
+              </>
             ) : (
-              <Copy className="h-4 w-4" />
+              <>
+                <Copy className="h-4 w-4 mr-1" />
+                <span className="text-xs">复制</span>
+              </>
             )}
           </Button>
         </div>
@@ -141,7 +170,7 @@ export const AgentInstaller: React.FC = () => {
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">安装完成后：</h4>
           <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-            <li>• Agent将自动注册到当前主服务器</li>
+            <li>• 节点将自动注册到当前主服务器</li>
             <li>• 自动检测服务器地理位置和网络信息</li>
             <li>• 配置为系统服务，开机自启动</li>
             <li>• 几分钟后即可在监控界面看到新节点</li>
@@ -169,13 +198,24 @@ export const AgentInstaller: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            className="absolute top-2 right-2 bg-gray-800 border-gray-600 hover:bg-gray-700"
+            className={`absolute top-2 right-2 transition-all duration-200 ${
+              copied === 'interactive' 
+                ? 'bg-green-600 border-green-500 hover:bg-green-700 text-white' 
+                : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
+            }`}
             onClick={() => copyToClipboard(installData.command, 'interactive')}
+            title={copied === 'interactive' ? '已复制！' : '复制命令'}
           >
             {copied === 'interactive' ? (
-              <Check className="h-4 w-4 text-green-500" />
+              <>
+                <Check className="h-4 w-4 text-white mr-1" />
+                <span className="text-xs">已复制</span>
+              </>
             ) : (
-              <Copy className="h-4 w-4" />
+              <>
+                <Copy className="h-4 w-4 mr-1" />
+                <span className="text-xs">复制</span>
+              </>
             )}
           </Button>
         </div>
@@ -222,7 +262,7 @@ export const AgentInstaller: React.FC = () => {
           <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">安装过程会自动：</h4>
           <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
             <li>• 检测并安装Docker环境</li>
-            <li>• 下载Agent程序代码</li>
+            <li>• 下载监控程序代码</li>
             <li>• 配置网络监控工具</li>
             <li>• 设置防火墙规则</li>
             <li>• 创建系统服务</li>
@@ -250,8 +290,8 @@ export const AgentInstaller: React.FC = () => {
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-2">如果节点未显示：</h3>
             <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-              <li>• 等待1-2分钟让Agent完成注册</li>
-              <li>• 检查Agent服务状态：<code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">docker ps</code></li>
+              <li>• 等待1-2分钟让节点完成注册</li>
+              <li>• 检查节点服务状态：<code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">docker ps</code></li>
               <li>• 验证API密钥是否正确</li>
               <li>• 确认主服务器地址可以访问</li>
             </ul>
