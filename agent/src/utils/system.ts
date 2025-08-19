@@ -1,7 +1,7 @@
 import os from 'os';
 import fs from 'fs';
 import { promisify } from 'util';
-import { SystemInfo, CPUInfo, MemoryInfo, DiskInfo, NetworkStats, ProcessInfo } from '@/types';
+import { SystemInfo, CPUInfo, MemoryInfo, DiskInfo, NetworkStats, ProcessInfo } from '../types';
 
 const exec = promisify(require('child_process').exec);
 const readFile = promisify(fs.readFile);

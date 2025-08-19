@@ -1,4 +1,4 @@
-import { serverConfig } from '@/config';
+import { serverConfig } from '../config';
 
 export enum LogLevel {
   DEBUG = 0,

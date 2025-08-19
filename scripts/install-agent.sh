@@ -663,8 +663,6 @@ create_docker_compose() {
     log_info "创建Docker Compose配置..."
     
     cat > docker-compose.yml << EOF
-version: '3.8'
-
 services:
   agent:
     build:

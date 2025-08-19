@@ -469,6 +469,20 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       const serverUrl = `${req.protocol}://${req.get('host')}`;
       const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
       
+      // 检查是否使用了不安全的默认API密钥
+      const unsafeKeys = [
+        'default-agent-api-key',
+        'default-agent-key-change-this',
+        'default-agent-key-change-this-immediately',
+        'change-this-api-key'
+      ];
+      
+      const isUnsafeKey = unsafeKeys.includes(apiKey);
+      
+      if (isUnsafeKey) {
+        logger.warn(`Unsafe default API key detected: ${apiKey}. Please change DEFAULT_AGENT_API_KEY in your environment configuration.`);
+      }
+      
       // 生成快速安装命令
       const quickCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --auto-config --force-root --master-url "${serverUrl}" --api-key "${apiKey}"`;
       
@@ -481,7 +495,11 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
           masterUrl: serverUrl,
           apiKey: apiKey,
           quickCommand: quickCommand,
-          command: interactiveCommand
+          command: interactiveCommand,
+          security: {
+            isUnsafeApiKey: isUnsafeKey,
+            warning: isUnsafeKey ? 'WARNING: You are using an unsafe default API key. Please change DEFAULT_AGENT_API_KEY in your environment configuration for production use.' : undefined
+          }
         }
       };
       
