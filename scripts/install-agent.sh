@@ -72,14 +72,14 @@ check_script_update() {
         echo ""
         echo -e "${YELLOW}建议更新到最新版本以获得最佳体验${NC}"
         echo ""
-        read -p "是否立即更新脚本？ (y/n): " update_choice
+        update_choice=$(read_from_tty "是否立即更新脚本？ (y/n): ")
         if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
             update_script
             return 0
         else
             log_warning "继续使用当前版本，可能遇到已知问题"
             echo ""
-            read -p "确认继续？ (y/n): " confirm_continue
+            confirm_continue=$(read_from_tty "确认继续？ (y/n): ")
             if [[ "$confirm_continue" != "y" && "$confirm_continue" != "Y" ]]; then
                 log_info "已取消安装"
                 exit 0
@@ -349,7 +349,7 @@ collect_node_info() {
         # 主服务器地址
         if [[ -z "$MASTER_URL" ]]; then
             while true; do
-                read -p "主服务器地址 (如: https://your-domain.com): " MASTER_URL
+                MASTER_URL=$(read_from_tty "主服务器地址 (如: https://your-domain.com): ")
                 if [[ -n "$MASTER_URL" && "$MASTER_URL" =~ ^https?:// ]]; then
                     break
                 else
@@ -361,7 +361,7 @@ collect_node_info() {
         # API密钥
         if [[ -z "$AGENT_API_KEY" ]]; then
             while true; do
-                read -p "Agent API密钥: " AGENT_API_KEY
+                AGENT_API_KEY=$(read_from_tty "Agent API密钥: ")
                 if [[ -n "$AGENT_API_KEY" && ${#AGENT_API_KEY} -ge 16 ]]; then
                     break
                 else
@@ -390,29 +390,29 @@ collect_node_info() {
         log_success "已使用自动配置模式"
     else
         # 节点名称
-        read -p "节点名称 (如: Tokyo-VPS-01): " NODE_NAME
+        NODE_NAME=$(read_from_tty "节点名称 (如: Tokyo-VPS-01): ")
         NODE_NAME=${NODE_NAME:-"Agent-$(hostname)"}
         
         # 地理位置信息
-        read -p "国家/地区 (如: Japan): " NODE_COUNTRY
+        NODE_COUNTRY=$(read_from_tty "国家/地区 (如: Japan): ")
         NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
         
-        read -p "城市 (如: Tokyo): " NODE_CITY
+        NODE_CITY=$(read_from_tty "城市 (如: Tokyo): ")
         NODE_CITY=${NODE_CITY:-"Unknown"}
         
-        read -p "服务商 (如: Vultr, DigitalOcean): " NODE_PROVIDER
+        NODE_PROVIDER=$(read_from_tty "服务商 (如: Vultr, DigitalOcean): ")
         NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
         
         # 坐标（可选）
         echo ""
         echo "GPS坐标 (可选，用于地图显示):"
-        read -p "纬度 (如: 35.6762): " NODE_LATITUDE
-        read -p "经度 (如: 139.6503): " NODE_LONGITUDE
+        NODE_LATITUDE=$(read_from_tty "纬度 (如: 35.6762): ")
+        NODE_LONGITUDE=$(read_from_tty "经度 (如: 139.6503): ")
         NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
         NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
         
         # 端口设置
-        read -p "Agent端口 (默认3002): " AGENT_PORT
+        AGENT_PORT=$(read_from_tty "Agent端口 (默认3002): ")
         AGENT_PORT=${AGENT_PORT:-"3002"}
     fi
     
@@ -430,7 +430,7 @@ collect_node_info() {
     echo ""
     
     if [[ "$AUTO_CONFIG" != "true" ]]; then
-        read -p "确认配置信息正确？ (y/n): " confirm
+        confirm=$(read_from_tty "确认配置信息正确？ (y/n): ")
         if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
             log_info "请重新运行脚本"
             exit 0
@@ -1041,7 +1041,7 @@ uninstall_agent() {
     echo ""
     
     # 确认卸载
-    read -p "是否确认卸载？这个操作不可逆！[y/N]: " confirm_uninstall
+    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[y/N]: ")
     if [[ "$confirm_uninstall" != "y" && "$confirm_uninstall" != "Y" ]]; then
         log_info "已取消卸载"
         exit 0
@@ -1136,7 +1136,7 @@ uninstall_agent() {
     
     # 6. 提供卸载Docker的选项（可选）
     echo ""
-    read -p "是否同时卸载Docker？(不推荐，可能影响其他应用) [y/N]: " uninstall_docker
+    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [y/N]: ")
     if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
         log_info "卸载Docker..."
         
@@ -1225,6 +1225,24 @@ show_main_menu() {
     echo ""
 }
 
+# 从终端读取输入（解决管道输入问题）
+read_from_tty() {
+    local prompt="$1"
+    local response=""
+    
+    # 尝试从 /dev/tty 读取（直接从终端读取）
+    if [[ -r /dev/tty ]]; then
+        echo -n "$prompt" > /dev/tty
+        read response < /dev/tty
+    else
+        # 如果无法访问 /dev/tty，使用标准输入
+        echo -n "$prompt"
+        read response
+    fi
+    
+    echo "$response"
+}
+
 # 主安装流程
 main() {
     # 处理特殊命令行参数
@@ -1258,7 +1276,7 @@ main() {
                 show_main_menu
                 
                 while true; do
-                    read -p "请输入选项 [1-3]: " choice
+                    choice=$(read_from_tty "请输入选项 [1-3]: ")
                     case $choice in
                         1)
                             log_info "开始安装监控节点..."
@@ -1304,7 +1322,7 @@ main() {
             echo "- 回车继续使用root用户"
             echo "- 输入 'n' 取消安装"
             echo ""
-            read -p "继续使用root用户？ [Y/n]: " confirm_root
+            confirm_root=$(read_from_tty "继续使用root用户？ [Y/n]: ")
             confirm_root="${confirm_root:-y}"
             if [[ "$confirm_root" =~ ^[Nn] ]]; then
                 log_info "已取消安装"
