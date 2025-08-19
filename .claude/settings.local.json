@@ -33,7 +33,8 @@
       "Bash(docker system prune:*)",
       "Bash(docker network inspect:*)",
       "Bash(docker ps:*)",
-      "Bash(docker inspect:*)"
+      "Bash(docker inspect:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "additionalDirectories": [
