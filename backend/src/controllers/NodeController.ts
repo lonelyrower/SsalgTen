@@ -563,10 +563,10 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
         logger.warn(`API密钥安全检查失败: ${securityCheck.warnings.join(', ')}`);
       }
       
-      // 生成快速安装命令
+      // 生成快速安装命令（自动配置）
       const quickCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --auto-config --force-root --master-url "${serverUrl}" --api-key "${apiKey}"`;
       
-      // 生成交互式安装命令
+      // 生成交互式安装命令（显示菜单：1.安装 2.卸载 3.退出）
       const interactiveCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash`;
       
       const response: ApiResponse = {

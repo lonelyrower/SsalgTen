@@ -298,7 +298,7 @@ export const AgentInstaller: React.FC = () => {
         </div>
         
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          如果需要自定义节点信息，可以使用交互式安装模式：
+          使用交互式安装，显示菜单选择安装/卸载/退出选项：
         </p>
 
         <div className="relative">
@@ -333,9 +333,10 @@ export const AgentInstaller: React.FC = () => {
         <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
           <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">交互式安装特点：</h4>
           <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+            <li>• 显示操作菜单：1.安装节点 2.卸载节点 3.退出</li>
             <li>• 可以自定义节点名称、位置等信息</li>
             <li>• 手动确认配置参数</li>
-            <li>• 适合需要精确控制节点信息的场景</li>
+            <li>• 支持安装和卸载功能</li>
           </ul>
         </div>
       </div>

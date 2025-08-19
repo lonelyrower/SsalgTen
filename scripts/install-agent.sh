@@ -1208,6 +1208,23 @@ uninstall_agent() {
     echo ""
 }
 
+# 显示主菜单
+show_main_menu() {
+    clear
+    echo -e "${CYAN}"
+    echo "========================================"
+    echo "    SsalgTen Agent 管理工具"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+    echo "请选择要执行的操作："
+    echo ""
+    echo -e "${GREEN}1.${NC} 安装监控节点"
+    echo -e "${RED}2.${NC} 卸载监控节点"
+    echo -e "${YELLOW}3.${NC} 退出"
+    echo ""
+}
+
 # 主安装流程
 main() {
     # 处理特殊命令行参数
@@ -1231,8 +1248,41 @@ main() {
             show_welcome
             ;;
         *)
-            show_welcome
-            check_script_update
+            # 检查是否有命令行参数（自动配置模式）
+            if [[ -n "${MASTER_URL:-}" || -n "${AGENT_API_KEY:-}" || "${AUTO_CONFIG:-false}" == "true" ]]; then
+                # 有参数时直接执行相应操作
+                show_welcome
+                check_script_update
+            else
+                # 无参数时显示交互式菜单
+                show_main_menu
+                
+                while true; do
+                    read -p "请输入选项 [1-3]: " choice
+                    case $choice in
+                        1)
+                            log_info "开始安装监控节点..."
+                            show_welcome
+                            check_script_update
+                            break
+                            ;;
+                        2)
+                            log_info "开始卸载监控节点..."
+                            uninstall_agent
+                            return
+                            ;;
+                        3)
+                            log_info "退出程序"
+                            echo -e "${GREEN}感谢使用 SsalgTen Agent 管理工具！${NC}"
+                            exit 0
+                            ;;
+                        *)
+                            echo -e "${RED}无效选项，请输入 1、2 或 3${NC}"
+                            continue
+                            ;;
+                    esac
+                done
+            fi
             ;;
     esac
     
