@@ -72,14 +72,14 @@ check_script_update() {
         echo ""
         echo -e "${YELLOW}建议更新到最新版本以获得最佳体验${NC}"
         echo ""
-        update_choice=$(read_from_tty "是否立即更新脚本？ (y/n): ")
+        update_choice=$(read_from_tty "是否立即更新脚本？ [Y/N]: ")
         if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
             update_script
             return 0
         else
             log_warning "继续使用当前版本，可能遇到已知问题"
             echo ""
-            confirm_continue=$(read_from_tty "确认继续？ (y/n): ")
+            confirm_continue=$(read_from_tty "确认继续？ [Y/N]: ")
             if [[ "$confirm_continue" != "y" && "$confirm_continue" != "Y" ]]; then
                 log_info "已取消安装"
                 exit 0
@@ -430,7 +430,7 @@ collect_node_info() {
     echo ""
     
     if [[ "$AUTO_CONFIG" != "true" ]]; then
-        confirm=$(read_from_tty "确认配置信息正确？ (y/n): ")
+    confirm=$(read_from_tty "确认配置信息正确？ [Y/N]: ")
         if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
             log_info "请重新运行脚本"
             exit 0
@@ -1041,7 +1041,7 @@ uninstall_agent() {
     echo ""
     
     # 确认卸载
-    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[y/N]: ")
+    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[Y/N]: ")
     if [[ "$confirm_uninstall" != "y" && "$confirm_uninstall" != "Y" ]]; then
         log_info "已取消卸载"
         exit 0
@@ -1136,7 +1136,7 @@ uninstall_agent() {
     
     # 6. 提供卸载Docker的选项（可选）
     echo ""
-    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [y/N]: ")
+    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [Y/N]: ")
     if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
         log_info "卸载Docker..."
         
@@ -1221,7 +1221,7 @@ show_main_menu() {
     echo ""
     echo -e "${GREEN}1.${NC} 安装监控节点"
     echo -e "${RED}2.${NC} 卸载监控节点"
-    echo -e "${YELLOW}3.${NC} 退出"
+    echo -e "${YELLOW}0.${NC} 退出"
     echo ""
 }
 
@@ -1276,7 +1276,7 @@ main() {
                 show_main_menu
                 
                 while true; do
-                    choice=$(read_from_tty "请输入选项 [1-3]: ")
+                    choice=$(read_from_tty "请输入选项 [0-2]: ")
                     case $choice in
                         1)
                             log_info "开始安装监控节点..."
@@ -1289,13 +1289,13 @@ main() {
                             uninstall_agent
                             return
                             ;;
-                        3)
+                        0)
                             log_info "退出程序"
                             echo -e "${GREEN}感谢使用 SsalgTen Agent 管理工具！${NC}"
                             exit 0
                             ;;
                         *)
-                            echo -e "${RED}无效选项，请输入 1、2 或 3${NC}"
+                            echo -e "${RED}无效选项，请输入 1、2 或 0${NC}"
                             continue
                             ;;
                     esac
@@ -1322,7 +1322,7 @@ main() {
             echo "- 回车继续使用root用户"
             echo "- 输入 'n' 取消安装"
             echo ""
-            confirm_root=$(read_from_tty "继续使用root用户？ [Y/n]: ")
+            confirm_root=$(read_from_tty "继续使用root用户？ [Y/N]: ")
             confirm_root="${confirm_root:-y}"
             if [[ "$confirm_root" =~ ^[Nn] ]]; then
                 log_info "已取消安装"
