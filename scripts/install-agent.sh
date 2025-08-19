@@ -1092,8 +1092,13 @@ uninstall_agent() {
         
         # 删除相关的Docker镜像
         log_info "删除Docker镜像..."
-        docker rmi ssalgten-agent_agent 2>/dev/null || true
-        docker rmi $(docker images | grep ssalgten | awk '{print $3}') 2>/dev/null || true
+        # 精确匹配本项目相关镜像 (带标签) 避免误删
+        IMAGE_IDS=$(docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | awk '/ssalgten-agent|ssalgten-backend|ssalgten-frontend/ {print $2}' | sort -u)
+        if [[ -n "$IMAGE_IDS" ]]; then
+            for img in $IMAGE_IDS; do
+                docker rmi "$img" 2>/dev/null || true
+            done
+        fi
         log_success "Docker镜像已删除"
     fi
     

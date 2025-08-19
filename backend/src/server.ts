@@ -6,6 +6,7 @@ import { initSystemConfig } from './utils/initSystemConfig';
 import { setupSocketHandlers } from './sockets/socketHandlers';
 import { apiKeyService } from './services/ApiKeyService';
 import { APP_VERSION } from './utils/version';
+import { startSchedulers } from './utils/scheduler';
 
 // 强制要求安全的 JWT_SECRET
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'default-secret') {
@@ -71,6 +72,9 @@ const server = httpServer.listen(PORT, async () => {
   } catch (error) {
     logger.error('❌ Failed to initialize API key system:', error);
   }
+
+  // 启动定时清理任务
+  startSchedulers();
 });
 
 // 优雅关闭处理
