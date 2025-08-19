@@ -51,6 +51,7 @@ const server = httpServer.listen(PORT, async () => {
   try {
     const systemApiKey = await apiKeyService.initializeSystemApiKey();
     const securityCheck = await apiKeyService.checkApiKeySecurity();
+  await apiKeyService.purgeExpiredPreviousKey();
     
     logger.info('🔑 API key system initialized');
     

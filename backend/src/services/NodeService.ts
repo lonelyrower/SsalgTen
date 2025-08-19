@@ -68,6 +68,8 @@ export interface NodeWithStats extends Node {
 }
 
 export class NodeService {
+  private heartbeatLogCounter: Record<string, number> = {};
+  private heartbeatLogInterval = 5; // 每5次详细记录一次
   
   // 创建新节点
   async createNode(input: CreateNodeInput): Promise<Node> {
@@ -316,7 +318,10 @@ export class NodeService {
         data: logData
       });
 
-      logger.debug(`Enhanced heartbeat recorded for agent: ${agentId}`, {
+      // 心跳日志降噪：仅每 N 次输出一次详细字段
+      this.heartbeatLogCounter[agentId] = (this.heartbeatLogCounter[agentId] || 0) + 1;
+      const detailed = this.heartbeatLogCounter[agentId] % this.heartbeatLogInterval === 0;
+      const logPayload = {
         hasCpuInfo: !!logData.cpuInfo,
         hasMemoryInfo: !!logData.memoryInfo,
         hasDiskInfo: !!logData.diskInfo,
@@ -324,7 +329,10 @@ export class NodeService {
         hasProcessInfo: !!logData.processInfo,
         hasVirtualization: !!logData.virtualization,
         hasServices: !!logData.services
-      });
+      };
+      if (detailed) {
+        logger.debug(`Enhanced heartbeat recorded for agent: ${agentId}`, logPayload);
+      }
     } catch (error) {
       logger.error(`Failed to record heartbeat for ${agentId}:`, error);
       throw new Error('Failed to record heartbeat');

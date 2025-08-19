@@ -13,6 +13,8 @@ export interface ApiKeyInfo {
 }
 
 export class ApiKeyService {
+  // 旧密钥宽限期（小时）
+  private previousKeyGraceHours = parseInt(process.env.PREVIOUS_API_KEY_GRACE_HOURS || '24');
   // 生成安全的API密钥
   private generateSecureApiKey(): string {
     // 生成32字节的随机数据并转换为hex
@@ -135,21 +137,30 @@ export class ApiKeyService {
 
     try {
       const systemKey = await this.getSystemApiKey();
-  logger.debug(`[ApiKeyService] 已获取系统密钥（隐藏）`);
-      
-      // 检查是否匹配系统密钥
-      const matches = key === systemKey;
-  logger.debug(`[ApiKeyService] 密钥匹配结果: ${matches}`);
-      
+      let matches = key === systemKey;
+
+      // 如果不匹配当前密钥，检查是否匹配仍在宽限期的旧密钥
+      if (!matches) {
+        const previousKeyRecord = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } });
+        const previousKeyExpires = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } });
+        if (previousKeyRecord && previousKeyExpires) {
+          const expiresAt = new Date(previousKeyExpires.value);
+            if (new Date() < expiresAt && key === previousKeyRecord.value) {
+              matches = true; // 旧密钥仍然有效
+              logger.debug('[ApiKeyService] 使用处于宽限期的旧API密钥');
+            }
+        }
+      }
+
+      logger.debug(`[ApiKeyService] 密钥匹配结果: ${matches}`);
+
       if (matches) {
-  logger.debug(`[ApiKeyService] API密钥验证成功，更新使用统计`);
-        // 更新使用统计
+        logger.debug(`[ApiKeyService] API密钥验证成功，更新使用统计`);
         await this.updateApiKeyUsage(key);
         return true;
       }
 
-  logger.debug(`[ApiKeyService] API密钥不匹配`);
-      // TODO: 在未来可以支持多个API密钥
+      logger.debug(`[ApiKeyService] API密钥不匹配`);
       return false;
     } catch (error) {
       logger.error('[ApiKeyService] 验证API密钥时出错:', error);
@@ -227,35 +238,58 @@ export class ApiKeyService {
   async regenerateSystemApiKey(): Promise<string> {
     try {
       const newKey = this.generateSecureApiKey();
-      
+      const now = new Date();
+      const expires = new Date(now.getTime() + this.previousKeyGraceHours * 3600 * 1000);
+
+      // 读取旧密钥
+      const current = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY' } });
+
+      // 保存旧密钥及过期时间（如果存在旧密钥）
+      if (current) {
+        await prisma.setting.upsert({
+          where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' },
+          update: { value: current.value, description: '上一版本系统API密钥（宽限期内仍然有效）' },
+          create: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS', value: current.value, category: 'security', description: '上一版本系统API密钥（宽限期内仍然有效）' }
+        });
+        await prisma.setting.upsert({
+          where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' },
+          update: { value: expires.toISOString(), description: '旧API密钥过期时间' },
+          create: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES', value: expires.toISOString(), category: 'security', description: '旧API密钥过期时间' }
+        });
+      }
+
+      // 写入新密钥
       await prisma.setting.upsert({
         where: { key: 'SYSTEM_AGENT_API_KEY' },
-        update: { 
-          value: newKey,
-          description: `系统默认Agent API密钥 - 重新生成于 ${new Date().toISOString()}`
-        },
-        create: {
-          key: 'SYSTEM_AGENT_API_KEY',
-          value: newKey,
-          category: 'security',
-          description: `系统默认Agent API密钥 - 生成于 ${new Date().toISOString()}`
-        }
+        update: { value: newKey, description: `系统默认Agent API密钥 - 重新生成于 ${now.toISOString()}` },
+        create: { key: 'SYSTEM_AGENT_API_KEY', value: newKey, category: 'security', description: `系统默认Agent API密钥 - 生成于 ${now.toISOString()}` }
       });
 
       // 重置使用统计
       await prisma.setting.deleteMany({
-        where: {
-          key: {
-            in: ['SYSTEM_AGENT_API_KEY_LAST_USED', 'SYSTEM_AGENT_API_KEY_USAGE_COUNT']
-          }
-        }
+        where: { key: { in: ['SYSTEM_AGENT_API_KEY_LAST_USED', 'SYSTEM_AGENT_API_KEY_USAGE_COUNT'] } }
       });
 
-      logger.info('系统API密钥已重新生成');
+      logger.info(`系统API密钥已重新生成，旧密钥宽限期 ${this.previousKeyGraceHours} 小时`);
       return newKey;
     } catch (error) {
       logger.error('重新生成系统API密钥失败:', error);
       throw new Error('重新生成系统API密钥失败');
+    }
+  }
+
+  // 清理过期旧密钥
+  async purgeExpiredPreviousKey(): Promise<void> {
+    try {
+      const previousExpires = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } });
+      if (!previousExpires) return;
+      const expiresAt = new Date(previousExpires.value);
+      if (new Date() > expiresAt) {
+        await prisma.setting.deleteMany({ where: { key: { in: ['SYSTEM_AGENT_API_KEY_PREVIOUS', 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES'] } } });
+        logger.info('已清理过期旧API密钥');
+      }
+    } catch (error) {
+      logger.warn('清理旧API密钥失败:', error);
     }
   }
 
