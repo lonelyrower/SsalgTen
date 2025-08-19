@@ -209,17 +209,19 @@ export class ApiKeyService {
   // 获取API密钥信息
   async getApiKeyInfo(): Promise<ApiKeyInfo> {
     try {
-      const [keyRecord, lastUsedRecord, usageCountRecord] = await Promise.all([
+      const [keyRecord, lastUsedRecord, usageCountRecord, previousKeyRecord, previousKeyExpires] = await Promise.all([
         prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY' } }),
         prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_LAST_USED' } }),
-        prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_USAGE_COUNT' } })
+        prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_USAGE_COUNT' } }),
+        prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } }),
+        prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } })
       ]);
 
       const key = keyRecord?.value || await this.getSystemApiKey();
       const lastUsed = lastUsedRecord?.value ? new Date(lastUsedRecord.value) : undefined;
       const usageCount = usageCountRecord?.value ? parseInt(usageCountRecord.value) || 0 : 0;
 
-      return {
+      const info: ApiKeyInfo = {
         id: 'system-default',
         key: key,
         description: keyRecord?.description || '系统默认API密钥',
@@ -228,6 +230,12 @@ export class ApiKeyService {
         lastUsed: lastUsed,
         usageCount: usageCount
       };
+      // 附加旧密钥宽限信息（不包含旧密钥的实际值）
+      if (previousKeyExpires) {
+        (info as any).previousKeyGraceUntil = previousKeyExpires.value;
+        (info as any).hasPreviousKey = !!previousKeyRecord;
+      }
+      return info;
     } catch (error) {
       logger.error('获取API密钥信息失败:', error);
       throw new Error('获取API密钥信息失败');
