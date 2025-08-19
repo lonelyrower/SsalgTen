@@ -6,6 +6,12 @@ import { initSystemConfig } from './utils/initSystemConfig';
 import { setupSocketHandlers } from './sockets/socketHandlers';
 import { apiKeyService } from './services/ApiKeyService';
 
+// 强制要求安全的 JWT_SECRET
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'default-secret') {
+  logger.error('JWT_SECRET 未设置或使用不安全的默认值，请设置一个足够复杂的随机密钥 (env JWT_SECRET)');
+  process.exit(1);
+}
+
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || 'localhost';
 

@@ -12,6 +12,12 @@ dotenv.config();
 
 const app = express();
 
+// 启动前安全检查：禁止使用默认API Key
+if (!process.env.AGENT_API_KEY || process.env.AGENT_API_KEY === 'default-api-key') {
+  logger.error('AGENT_API_KEY 未设置或仍为默认值，请设置一个安全的随机密钥后再启动 (env AGENT_API_KEY)');
+  process.exit(1);
+}
+
 // 中间件配置
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));

@@ -266,14 +266,14 @@ export class NodeController {
       const bodyApiKey = req.body.apiKey;
       const apiKey = headerApiKey || bodyApiKey;
       
-      logger.info(`[NodeController] Agent注册请求 - AgentId: ${agentId}`);
-      logger.info(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 8) + '...' + headerApiKey.slice(-4) : 'null'}`);
-      logger.info(`[NodeController] Body API Key: ${bodyApiKey ? bodyApiKey.substring(0, 8) + '...' + bodyApiKey.slice(-4) : 'null'}`);
-      logger.info(`[NodeController] Final API Key: ${apiKey ? apiKey.substring(0, 8) + '...' + apiKey.slice(-4) : 'null'}`);
+  logger.info(`[NodeController] Agent注册请求 - AgentId: ${agentId}`);
+  logger.debug(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 4) + '...' : 'null'}`);
+  logger.debug(`[NodeController] Body API Key: ${bodyApiKey ? bodyApiKey.substring(0, 4) + '...' : 'null'}`);
+  logger.debug(`[NodeController] Final API Key: ${apiKey ? apiKey.substring(0, 4) + '...' : 'null'}`);
       
       // 验证API密钥
       if (!apiKey) {
-        logger.info(`[NodeController] API密钥缺失`);
+    logger.debug(`[NodeController] API密钥缺失`);
         const response: ApiResponse = {
           success: false,
           error: 'API key is required'
@@ -282,9 +282,9 @@ export class NodeController {
         return;
       }
 
-      logger.info(`[NodeController] 开始验证API密钥`);
+  logger.debug(`[NodeController] 开始验证API密钥`);
       const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
-      logger.info(`[NodeController] API密钥验证结果: ${isValidApiKey}`);
+  logger.debug(`[NodeController] API密钥验证结果: ${isValidApiKey}`);
       
       if (!isValidApiKey) {
         logger.info(`[NodeController] API密钥验证失败，返回401`);
@@ -391,13 +391,13 @@ export class NodeController {
       const bodyApiKey = req.body.apiKey;
       const apiKey = headerApiKey || bodyApiKey;
       
-      logger.info(`[NodeController] Agent心跳请求 - AgentId: ${agentId}`);
-      logger.info(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 8) + '...' + headerApiKey.slice(-4) : 'null'}`);
-      logger.info(`[NodeController] Body API Key: ${bodyApiKey ? bodyApiKey.substring(0, 8) + '...' + bodyApiKey.slice(-4) : 'null'}`);
+  logger.info(`[NodeController] Agent心跳请求 - AgentId: ${agentId}`);
+  logger.debug(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 4) + '...' : 'null'}`);
+  logger.debug(`[NodeController] Body API Key: ${bodyApiKey ? bodyApiKey.substring(0, 4) + '...' : 'null'}`);
       
       // 验证API密钥
       if (!apiKey) {
-        logger.info(`[NodeController] 心跳API密钥缺失`);
+  logger.debug(`[NodeController] 心跳API密钥缺失`);
         const response: ApiResponse = {
           success: false,
           error: 'API key is required'
@@ -406,9 +406,9 @@ export class NodeController {
         return;
       }
 
-      logger.info(`[NodeController] 开始验证心跳API密钥`);
+  logger.debug(`[NodeController] 开始验证心跳API密钥`);
       const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
-      logger.info(`[NodeController] 心跳API密钥验证结果: ${isValidApiKey}`);
+  logger.debug(`[NodeController] 心跳API密钥验证结果: ${isValidApiKey}`);
       
       if (!isValidApiKey) {
         logger.info(`[NodeController] 心跳API密钥验证失败，返回401`);

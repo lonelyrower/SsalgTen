@@ -126,29 +126,29 @@ export class ApiKeyService {
 
   // 验证API密钥
   async validateApiKey(key: string): Promise<boolean> {
-    logger.info(`[ApiKeyService] 开始验证API密钥: ${key ? key.substring(0, 8) + '...' + key.slice(-4) : 'null/undefined'}`);
+  logger.debug(`[ApiKeyService] 开始验证API密钥: ${key ? key.substring(0, 4) + '...' : 'null/undefined'}`);
     
     if (!key || !this.isValidApiKeyFormat(key)) {
-      logger.info(`[ApiKeyService] API密钥格式无效: key=${key ? 'exists' : 'null'}, format_valid=${key ? this.isValidApiKeyFormat(key) : false}`);
+  logger.debug(`[ApiKeyService] API密钥格式无效`);
       return false;
     }
 
     try {
       const systemKey = await this.getSystemApiKey();
-      logger.info(`[ApiKeyService] 系统密钥: ${systemKey ? systemKey.substring(0, 8) + '...' + systemKey.slice(-4) : 'null'}`);
+  logger.debug(`[ApiKeyService] 已获取系统密钥（隐藏）`);
       
       // 检查是否匹配系统密钥
       const matches = key === systemKey;
-      logger.info(`[ApiKeyService] 密钥匹配结果: ${matches}`);
+  logger.debug(`[ApiKeyService] 密钥匹配结果: ${matches}`);
       
       if (matches) {
-        logger.info(`[ApiKeyService] API密钥验证成功，更新使用统计`);
+  logger.debug(`[ApiKeyService] API密钥验证成功，更新使用统计`);
         // 更新使用统计
         await this.updateApiKeyUsage(key);
         return true;
       }
 
-      logger.info(`[ApiKeyService] API密钥不匹配`);
+  logger.debug(`[ApiKeyService] API密钥不匹配`);
       // TODO: 在未来可以支持多个API密钥
       return false;
     } catch (error) {

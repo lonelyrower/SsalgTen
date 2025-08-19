@@ -47,21 +47,41 @@ export class NetworkService {
   
   // 验证目标地址是否安全
   private validateTarget(target: string): boolean {
-    // 检查是否在阻止列表中
+    // 基础格式白名单 (IPv4 / 域名) 防止命令注入；不允许空格、分号、&、| 等
+    const ipv4Regex = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+    const domainRegex = /^(?=.{1,253}$)(?!-)(?:[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}$/;
+    if (!ipv4Regex.test(target) && !domainRegex.test(target)) {
+      return false;
+    }
+
+    // 拦截危险字符
+    if (/[;|&`$<>\\]/.test(target)) {
+      return false;
+    }
+
+    // 检查阻止列表（支持前缀匹配）
     for (const blocked of securityConfig.blockedTargets) {
-      if (target.includes(blocked) || target === blocked) {
+      if (!blocked) continue;
+      if (blocked.endsWith('*')) {
+        const prefix = blocked.slice(0, -1);
+        if (target.startsWith(prefix)) return false;
+      } else if (target === blocked) {
         return false;
       }
     }
 
-    // 检查是否在允许列表中
-    if (securityConfig.allowedTargets.includes('*')) {
-      return true;
+    // 允许列表逻辑
+    if (securityConfig.allowedTargets.includes('*')) return true;
+    for (const allowed of securityConfig.allowedTargets) {
+      if (!allowed) continue;
+      if (allowed.endsWith('*')) {
+        const prefix = allowed.slice(0, -1);
+        if (target.startsWith(prefix)) return true;
+      } else if (target === allowed) {
+        return true;
+      }
     }
-
-    return securityConfig.allowedTargets.some(allowed => 
-      target.includes(allowed) || target === allowed
-    );
+    return false;
   }
 
   // Ping 诊断 - 使用系统命令
