@@ -6,6 +6,7 @@ import { corsMiddleware } from './middleware/cors';
 import { logger } from './utils/logger';
 import router from './routes';
 import { ApiResponse } from './types';
+import { APP_VERSION } from './utils/version';
 
 // 加载环境变量
 dotenv.config();
@@ -44,7 +45,7 @@ app.get('/', (req: Request, res: Response) => {
     message: 'Welcome to SsalgTen API',
     data: {
       name: 'SsalgTen API Server',
-      version: '0.1.0',
+  version: APP_VERSION,
       description: 'Multi-node network diagnostic aggregation system',
       documentation: '/api/info',
       health: '/api/health'

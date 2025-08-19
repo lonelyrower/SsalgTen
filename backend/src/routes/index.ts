@@ -6,6 +6,7 @@ import { adminController } from '../controllers/AdminController';
 import { systemConfigController } from '../controllers/SystemConfigController';
 import { visitorController } from '../controllers/VisitorController';
 import { authenticateToken, requireAdmin, optionalAuth } from '../middleware/auth';
+import { APP_VERSION } from '../utils/version';
 
 const router = Router();
 
@@ -16,7 +17,7 @@ router.get('/health', (req: Request, res: Response) => {
     message: 'SsalgTen API is running',
     data: {
       timestamp: new Date().toISOString(),
-      version: '0.1.0',
+  version: APP_VERSION,
       environment: process.env.NODE_ENV || 'development',
       uptime: process.uptime()
     }
@@ -30,7 +31,7 @@ router.get('/info', (req: Request, res: Response) => {
     success: true,
     data: {
       name: 'SsalgTen API',
-      version: '0.1.0',
+  version: APP_VERSION,
       description: 'Multi-node network diagnostic aggregation system',
       author: 'SsalgTen Team',
       repository: 'https://github.com/lonelyrower/SsalgTen',

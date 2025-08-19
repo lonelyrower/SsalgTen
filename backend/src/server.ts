@@ -5,6 +5,7 @@ import { logger } from './utils/logger';
 import { initSystemConfig } from './utils/initSystemConfig';
 import { setupSocketHandlers } from './sockets/socketHandlers';
 import { apiKeyService } from './services/ApiKeyService';
+import { APP_VERSION } from './utils/version';
 
 // 强制要求安全的 JWT_SECRET
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'default-secret') {
@@ -32,7 +33,7 @@ setupSocketHandlers(io);
 app.set('io', io);
 
 const server = httpServer.listen(PORT, async () => {
-  logger.info(`🚀 SsalgTen API Server is running on http://${HOST}:${PORT}`);
+  logger.info(`🚀 SsalgTen API Server v${APP_VERSION} is running on http://${HOST}:${PORT}`);
   logger.info(`🌐 Socket.IO server is ready for real-time connections`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔍 Health check: http://${HOST}:${PORT}/api/health`);
