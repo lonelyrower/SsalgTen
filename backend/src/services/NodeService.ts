@@ -246,14 +246,12 @@ export class NodeService {
   // 记录心跳
   async recordHeartbeat(agentId: string, heartbeatData: RecordHeartbeatInput): Promise<void> {
     try {
-      // 首先更新节点状态
-      await this.updateNodeStatus(agentId, NodeStatus.ONLINE);
+      // 首先更新节点状态并获取节点信息
+      const node = await this.updateNodeStatus(agentId, NodeStatus.ONLINE);
 
       // 准备心跳日志数据
   const logData: any = {
-        node: {
-          connect: { agentId }
-        },
+        nodeId: node.id,
         status: heartbeatData.status,
         uptime: heartbeatData.uptime,
         cpuUsage: heartbeatData.cpuUsage,
