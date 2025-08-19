@@ -121,4 +121,8 @@ router.get('/admin/visitors/stats', authenticateToken, requireAdmin, visitorCont
 router.get('/admin/visitors/cache', authenticateToken, requireAdmin, visitorController.getCacheStats.bind(visitorController));
 router.post('/admin/visitors/cache/clear', authenticateToken, requireAdmin, visitorController.clearCache.bind(visitorController));
 
+// API密钥管理（管理员专用）
+router.get('/admin/api-key/info', authenticateToken, requireAdmin, nodeController.getApiKeyInfo.bind(nodeController));
+router.post('/admin/api-key/regenerate', authenticateToken, requireAdmin, nodeController.regenerateApiKey.bind(nodeController));
+
 export default router;

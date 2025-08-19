@@ -215,6 +215,34 @@ export interface VisitorStats {
   }>;
 }
 
+// API密钥管理接口
+export interface ApiKeyInfo {
+  id: string;
+  key: string;
+  description: string;
+  isDefault: boolean;
+  createdAt: string;
+  lastUsed?: string;
+  usageCount: number;
+  security: {
+    isSecure: boolean;
+    warnings: string[];
+    recommendations: string[];
+  };
+}
+
+export interface InstallCommandData {
+  masterUrl: string;
+  apiKey: string;
+  quickCommand: string;
+  command: string;
+  security: {
+    isSecure: boolean;
+    warnings: string[];
+    recommendations: string[];
+  };
+}
+
 class ApiService {
   
   // 通用请求方法
@@ -522,6 +550,22 @@ class ApiService {
     return this.request<void>('/admin/visitors/cache/clear', {
       method: 'POST'
     }, true);
+  }
+
+  // API密钥管理 API（管理员专用）
+  async getApiKeyInfo(): Promise<ApiResponse<ApiKeyInfo>> {
+    return this.request<ApiKeyInfo>('/admin/api-key/info', {}, true);
+  }
+
+  async regenerateApiKey(): Promise<ApiResponse<{ newApiKey: string }>> {
+    return this.request<{ newApiKey: string }>('/admin/api-key/regenerate', {
+      method: 'POST'
+    }, true);
+  }
+
+  // 获取Agent安装命令（公开接口）
+  async getInstallCommand(): Promise<ApiResponse<InstallCommandData>> {
+    return this.request<InstallCommandData>('/agents/install-command');
   }
 }
 

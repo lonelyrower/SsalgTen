@@ -4,6 +4,7 @@ import app from './app';
 import { logger } from './utils/logger';
 import { initSystemConfig } from './utils/initSystemConfig';
 import { setupSocketHandlers } from './sockets/socketHandlers';
+import { apiKeyService } from './services/ApiKeyService';
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || 'localhost';
@@ -38,6 +39,29 @@ const server = httpServer.listen(PORT, async () => {
     logger.info('✅ System configuration initialized');
   } catch (error) {
     logger.error('❌ Failed to initialize system configuration:', error);
+  }
+
+  // 初始化API密钥系统
+  try {
+    const systemApiKey = await apiKeyService.initializeSystemApiKey();
+    const securityCheck = await apiKeyService.checkApiKeySecurity();
+    
+    logger.info('🔑 API key system initialized');
+    
+    if (!securityCheck.isSecure) {
+      logger.warn('⚠️ API密钥安全检查警告:');
+      securityCheck.warnings.forEach(warning => {
+        logger.warn(`  - ${warning}`);
+      });
+      logger.warn('建议操作:');
+      securityCheck.recommendations.forEach(rec => {
+        logger.warn(`  - ${rec}`);
+      });
+    } else {
+      logger.info('✅ API key security check passed');
+    }
+  } catch (error) {
+    logger.error('❌ Failed to initialize API key system:', error);
   }
 });
 

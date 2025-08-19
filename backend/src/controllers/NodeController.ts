@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { nodeService, CreateNodeInput, UpdateNodeInput } from '../services/NodeService';
+import { apiKeyService } from '../services/ApiKeyService';
 import { ApiResponse } from '../types';
 import { NodeStatus, DiagnosticType } from '@prisma/client';
 import { logger } from '../utils/logger';
@@ -261,6 +262,27 @@ export class NodeController {
   async registerAgent(req: Request, res: Response): Promise<void> {
     try {
       const { agentId, nodeInfo, systemInfo } = req.body;
+      const apiKey = req.headers['x-api-key'] as string || req.body.apiKey;
+      
+      // 验证API密钥
+      if (!apiKey) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'API key is required'
+        };
+        res.status(401).json(response);
+        return;
+      }
+
+      const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
+      if (!isValidApiKey) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Invalid API key'
+        };
+        res.status(401).json(response);
+        return;
+      }
       
       if (!agentId) {
         const response: ApiResponse = {
@@ -353,6 +375,27 @@ export class NodeController {
     try {
       const { agentId } = req.params;
       const heartbeatData = req.body;
+      const apiKey = req.headers['x-api-key'] as string || req.body.apiKey;
+      
+      // 验证API密钥
+      if (!apiKey) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'API key is required'
+        };
+        res.status(401).json(response);
+        return;
+      }
+
+      const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
+      if (!isValidApiKey) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Invalid API key'
+        };
+        res.status(401).json(response);
+        return;
+      }
       
       if (!agentId) {
         const response: ApiResponse = {
@@ -386,6 +429,27 @@ export class NodeController {
     try {
       const { agentId } = req.params;
       const diagnosticData = req.body;
+      const apiKey = req.headers['x-api-key'] as string || req.body.apiKey;
+      
+      // 验证API密钥
+      if (!apiKey) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'API key is required'
+        };
+        res.status(401).json(response);
+        return;
+      }
+
+      const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
+      if (!isValidApiKey) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Invalid API key'
+        };
+        res.status(401).json(response);
+        return;
+      }
       
       if (!agentId) {
         const response: ApiResponse = {
@@ -467,20 +531,13 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
     try {
       // 获取服务器信息
       const serverUrl = `${req.protocol}://${req.get('host')}`;
-      const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
+      const apiKey = await apiKeyService.getSystemApiKey();
       
-      // 检查是否使用了不安全的默认API密钥
-      const unsafeKeys = [
-        'default-agent-api-key',
-        'default-agent-key-change-this',
-        'default-agent-key-change-this-immediately',
-        'change-this-api-key'
-      ];
+      // 检查API密钥安全性
+      const securityCheck = await apiKeyService.checkApiKeySecurity();
       
-      const isUnsafeKey = unsafeKeys.includes(apiKey);
-      
-      if (isUnsafeKey) {
-        logger.warn(`Unsafe default API key detected: ${apiKey}. Please change DEFAULT_AGENT_API_KEY in your environment configuration.`);
+      if (!securityCheck.isSecure) {
+        logger.warn(`API密钥安全检查失败: ${securityCheck.warnings.join(', ')}`);
       }
       
       // 生成快速安装命令
@@ -497,8 +554,9 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
           quickCommand: quickCommand,
           command: interactiveCommand,
           security: {
-            isUnsafeApiKey: isUnsafeKey,
-            warning: isUnsafeKey ? 'WARNING: You are using an unsafe default API key. Please change DEFAULT_AGENT_API_KEY in your environment configuration for production use.' : undefined
+            isSecure: securityCheck.isSecure,
+            warnings: securityCheck.warnings,
+            recommendations: securityCheck.recommendations
           }
         }
       };
@@ -511,6 +569,57 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       const response: ApiResponse = {
         success: false,
         error: 'Failed to get install command'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // 获取API密钥信息（管理员接口）
+  async getApiKeyInfo(req: Request, res: Response): Promise<void> {
+    try {
+      const apiKeyInfo = await apiKeyService.getApiKeyInfo();
+      const securityCheck = await apiKeyService.checkApiKeySecurity();
+      
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          ...apiKeyInfo,
+          security: securityCheck
+        }
+      };
+      
+      res.json(response);
+    } catch (error) {
+      logger.error('Get API key info error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to get API key info'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // 重新生成API密钥（管理员接口）
+  async regenerateApiKey(req: Request, res: Response): Promise<void> {
+    try {
+      const newApiKey = await apiKeyService.regenerateSystemApiKey();
+      
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          newApiKey: newApiKey
+        },
+        message: 'API密钥重新生成成功，请更新所有Agent配置'
+      };
+      
+      res.json(response);
+      
+      logger.info(`API key regenerated by admin from ${req.ip}`);
+    } catch (error) {
+      logger.error('Regenerate API key error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to regenerate API key'
       };
       res.status(500).json(response);
     }

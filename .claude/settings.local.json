@@ -35,6 +35,9 @@
       "Bash(docker ps:*)",
       "Bash(docker inspect:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "D:\\d\\Projects"
+    ]
   }
 }
