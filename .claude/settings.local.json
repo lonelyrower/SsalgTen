@@ -34,7 +34,8 @@
       "Bash(docker network inspect:*)",
       "Bash(docker ps:*)",
       "Bash(docker inspect:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm outdated)"
     ],
     "deny": [],
     "additionalDirectories": [
