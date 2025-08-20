@@ -64,7 +64,9 @@ export class RegistrationService {
           timeout: 10000,
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': `SsalgTen-Agent/${config.id}`
+            'User-Agent': `SsalgTen-Agent/${config.id}`,
+            // Backend expects API key via header or body
+            'x-api-key': config.apiKey,
           }
         }
       );
@@ -186,7 +188,9 @@ export class RegistrationService {
           timeout: 5000,
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': `SsalgTen-Agent/${config.id}`
+            'User-Agent': `SsalgTen-Agent/${config.id}`,
+            // Include API key to authorize heartbeat
+            'x-api-key': config.apiKey,
           }
         }
       );

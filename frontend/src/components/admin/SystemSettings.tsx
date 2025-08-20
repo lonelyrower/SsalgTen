@@ -18,11 +18,7 @@ import {
   Shield,
   Bell,
   Globe,
-  Zap,
-  Download,
-  Server,
-  Copy,
-  ExternalLink
+  Zap
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -47,7 +43,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
   const [changedConfigs, setChangedConfigs] = useState<Map<string, string>>(new Map());
-  const [downloading, setDownloading] = useState(false);
+  // const [downloading, setDownloading] = useState(false);
+  // 修改密码表单状态
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     loadConfigs();
@@ -253,64 +253,38 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     }
   };
 
-  // 下载Agent安装脚本
-  const handleDownloadScript = async () => {
-    try {
-      setDownloading(true);
-      setError('');
-      
-      const response = await fetch('/api/agents/install-script', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/x-sh',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('下载失败');
-      }
-
-      // 获取文件内容
-      const scriptContent = await response.text();
-      
-      // 创建下载链接
-      const blob = new Blob([scriptContent], { type: 'application/x-sh' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'install-agent.sh';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      setSuccess('安装脚本下载成功');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('下载安装脚本失败');
-    } finally {
-      setDownloading(false);
+  // 保存修改密码
+  const handleChangePassword = async () => {
+    setError('');
+    setSuccess('');
+    if (!currentPassword || !newPassword) {
+      setError('请输入当前密码和新密码');
+      return;
     }
-  };
-
-  // 复制安装命令到剪贴板
-  const handleCopyInstallCommand = async () => {
-    const command = `curl -fsSL ${window.location.origin}/api/agents/install-script -o install-agent.sh && chmod +x install-agent.sh && ./install-agent.sh`;
-    
+    if (newPassword.length < 6) {
+      setError('新密码长度至少6位');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('两次输入的新密码不一致');
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(command);
-      setSuccess('安装命令已复制到剪贴板');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      // 降级处理
-      const textArea = document.createElement('textarea');
-      textArea.value = command;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setSuccess('安装命令已复制到剪贴板');
-      setTimeout(() => setSuccess(''), 3000);
+      setSaving(true);
+      const resp = await apiService.changePassword(currentPassword, newPassword);
+      if (resp.success) {
+        setSuccess('密码修改成功');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(resp.error || '密码修改失败');
+      }
+    } catch (_) {
+      setError('密码修改失败');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -411,75 +385,45 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
           </div>
         </div>
 
-        {/* Agent管理区域 */}
-        <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-blue-500 shadow-sm mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                <Server className="h-6 w-6 text-blue-600 dark:text-blue-300" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                  Agent 探针管理
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  下载并部署网络监控探针到您的VPS服务器
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    onClick={handleDownloadScript}
-                    disabled={downloading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
-                    size="sm"
-                  >
-                    {downloading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>下载中...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4" />
-                        <span>下载安装脚本</span>
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleCopyInstallCommand}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center space-x-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                    <span>复制安装命令</span>
-                  </Button>
-                  <Button
-                    onClick={() => window.open('https://github.com/lonelyrower/SsalgTen#agent-deployment', '_blank')}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center space-x-2 text-gray-600 dark:text-gray-400"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>部署文档</span>
-                  </Button>
-                </div>
-              </div>
+        {/* 修改密码 */}
+        <Card className="p-6 bg-white dark:bg-gray-800 shadow-sm mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">账户安全 - 修改密码</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">当前密码</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="请输入当前密码"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">新密码</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="至少6位"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">确认新密码</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="再次输入新密码"
+              />
             </div>
           </div>
-          
-          {/* 安装说明 */}
-          <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">快速部署步骤：</h4>
-            <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
-              <li>登录到您的VPS服务器</li>
-              <li>下载并运行安装脚本：
-                <code className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">
-                  curl -fsSL {window.location.origin}/api/agents/install-script | bash
-                </code>
-              </li>
-              <li>按照提示输入必要的配置信息</li>
-              <li>安装完成后，Agent将自动注册并开始监控</li>
-            </ol>
+          <div className="mt-4">
+            <Button onClick={handleChangePassword} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {saving ? '保存中...' : '保存密码'}
+            </Button>
           </div>
         </Card>
 

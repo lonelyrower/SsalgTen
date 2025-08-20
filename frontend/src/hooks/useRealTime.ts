@@ -30,13 +30,17 @@ export function useRealTime() {
   // 节点状态更新处理（带深度比较优化）
   const handleNodesStatusUpdate = useCallback((data: any) => {
     if (data.nodes && data.stats) {
+      // 规范化节点状态为小写，避免前后端大小写不一致
+      const normalizedNodes = (data.nodes as NodeData[]).map(n => ({
+        ...n,
+        status: typeof n.status === 'string' ? (n.status as string).toLowerCase() as any : n.status
+      }));
+
       setRealtimeData(prev => {
-        // 只有数据真正发生变化时才更新
-        const nodesChanged = !compareNodes(prev.nodes, data.nodes);
+        const nodesChanged = !compareNodes(prev.nodes, normalizedNodes);
         const statsChanged = !compareStats(prev.stats, data.stats);
-        
+
         if (!nodesChanged && !statsChanged) {
-          // 只更新时间戳，不触发组件重新渲染
           return {
             ...prev,
             lastUpdate: data.timestamp || new Date().toISOString()
@@ -45,7 +49,7 @@ export function useRealTime() {
 
         return {
           ...prev,
-          nodes: data.nodes,
+          nodes: normalizedNodes,
           stats: data.stats,
           lastUpdate: data.timestamp || new Date().toISOString()
         };
@@ -60,7 +64,9 @@ export function useRealTime() {
         const targetNode = prev.nodes.find(node => node.id === data.nodeId);
         
         // 检查节点状态是否真正发生变化
-        if (targetNode && targetNode.status === data.status.status) {
+        const incomingStatus = typeof data.status === 'string' ? data.status : data.status.status;
+        const normalizedStatus = typeof incomingStatus === 'string' ? incomingStatus.toLowerCase() : incomingStatus;
+        if (targetNode && targetNode.status === normalizedStatus) {
           return {
             ...prev,
             lastUpdate: data.timestamp || new Date().toISOString()
@@ -72,7 +78,7 @@ export function useRealTime() {
           ...prev,
           nodes: prev.nodes.map(node => 
             node.id === data.nodeId 
-              ? { ...node, ...data.status }
+              ? { ...node, ...(typeof data.status === 'object' ? data.status : {}), status: normalizedStatus }
               : node
           ),
           lastUpdate: data.timestamp || new Date().toISOString()
@@ -84,7 +90,10 @@ export function useRealTime() {
   // 实时节点数据响应处理
   const handleRealtimeNodes = useCallback((data: any) => {
     if (data.success && data.data) {
-      const nodes = data.data;
+      const nodes = (data.data as NodeData[]).map(n => ({
+        ...n,
+        status: typeof n.status === 'string' ? (n.status as string).toLowerCase() as any : n.status
+      }));
       const stats = calculateStats(nodes);
       setRealtimeData(prev => ({
         ...prev,

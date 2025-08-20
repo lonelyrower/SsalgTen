@@ -451,10 +451,11 @@ class ApiService {
     }, true);
   }
 
-  async changePassword(oldPassword: string, newPassword: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({ oldPassword, newPassword }),
+  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<void>> {
+    // Backend expects PUT /auth/password with { currentPassword, newPassword }
+    return this.request<void>('/auth/password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
     }, true);
   }
 
