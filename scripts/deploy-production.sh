@@ -1381,6 +1381,18 @@ EOF'
 
         # 进行一次续期演练（不真正申请）以验证环境
         run_as_root certbot renew --dry-run || true
+
+        # 输出健康检查与观测指引
+        echo ""
+        log_info "证书续期健康检查（可选）:"
+        echo "  • 查看定时器状态: systemctl status certbot.timer"
+        echo "  • 查看最近日志:  journalctl -u certbot.timer -n 50 --no-pager"
+        echo "  • 列出下一次执行: systemctl list-timers --all | grep certbot || true"
+        echo "  • 手动演练续期:   certbot renew --dry-run"
+        echo ""
+        # 简要输出当前状态便于确认
+        run_as_root systemctl list-timers --all | grep certbot || true
+        run_as_root journalctl -u certbot.timer -n 5 --no-pager || true
         
         log_success "SSL证书安装完成"
     else
