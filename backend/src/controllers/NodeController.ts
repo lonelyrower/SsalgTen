@@ -4,6 +4,8 @@ import { apiKeyService } from '../services/ApiKeyService';
 import { ApiResponse } from '../types';
 import { NodeStatus, DiagnosticType } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { eventService } from '../services/EventService';
+import { ipInfoService } from '../services/IPInfoService';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -258,6 +260,27 @@ export class NodeController {
     }
   }
 
+  // 获取节点事件列表
+  async getNodeEvents(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const events = await (await import('../services/EventService')).eventService.getEvents(id, limit);
+      const response: ApiResponse = {
+        success: true,
+        data: events,
+      };
+      res.json(response);
+    } catch (error) {
+      logger.error('Get node events error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to fetch node events'
+      };
+      res.status(500).json(response);
+    }
+  }
+
   // Agent注册端点
   async registerAgent(req: Request, res: Response): Promise<void> {
     try {
@@ -321,6 +344,8 @@ export class NodeController {
             latitude: nodeInfo.latitude || 0,
             longitude: nodeInfo.longitude || 0,
             provider: nodeInfo.provider || 'Unknown',
+            ipv4: nodeInfo.ipv4,
+            ipv6: nodeInfo.ipv6,
             osType: systemInfo?.platform || 'Unknown',
             osVersion: systemInfo?.version || 'Unknown',
             status: NodeStatus.ONLINE
@@ -354,8 +379,28 @@ export class NodeController {
             city: nodeInfo.city || node.city,
             latitude: nodeInfo.latitude || node.latitude,
             longitude: nodeInfo.longitude || node.longitude,
-            provider: nodeInfo.provider || node.provider
+            provider: nodeInfo.provider || node.provider,
+            ipv4: nodeInfo.ipv4 || node.ipv4,
+            ipv6: nodeInfo.ipv6 || node.ipv6
           });
+          // 如包含新的公网IP，尝试更新ASN信息
+          try {
+            const targetIP = nodeInfo.ipv4 || nodeInfo.ipv6;
+            if (targetIP) {
+              const ipInfo = await ipInfoService.getIPInfo(targetIP);
+              if (ipInfo && ipInfo.asn) {
+                await nodeService.updateNode(node.id, {
+                  asnNumber: ipInfo.asn.asn,
+                  asnName: ipInfo.asn.name,
+                  asnOrg: ipInfo.asn.org,
+                  asnRoute: ipInfo.asn.route,
+                  asnType: ipInfo.asn.type,
+                });
+              }
+            }
+          } catch (asnErr) {
+            logger.debug('更新节点ASN信息失败（注册阶段可忽略）:', asnErr);
+          }
         }
         
         logger.info(`Existing node updated: ${node.name} (${node.id})`);
@@ -427,6 +472,47 @@ export class NodeController {
         };
         res.status(400).json(response);
         return;
+      }
+
+      // 如果上报了公网IP，尝试更新节点记录（变更检测）
+      try {
+        if (heartbeatData?.nodeIPs && (heartbeatData.nodeIPs.ipv4 || heartbeatData.nodeIPs.ipv6)) {
+          const node = await nodeService.getNodeByAgentId(agentId);
+          if (node) {
+            const updates: any = {};
+            if (heartbeatData.nodeIPs.ipv4 && heartbeatData.nodeIPs.ipv4 !== node.ipv4) {
+              updates.ipv4 = heartbeatData.nodeIPs.ipv4;
+            }
+            if (heartbeatData.nodeIPs.ipv6 && heartbeatData.nodeIPs.ipv6 !== node.ipv6) {
+              updates.ipv6 = heartbeatData.nodeIPs.ipv6;
+            }
+            if (Object.keys(updates).length > 0) {
+              await nodeService.updateNode(node.id, updates);
+              logger.info(`Node ${node.name} (${node.id}) IP updated`, updates);
+              await eventService.createEvent(node.id, 'IP_CHANGED', '节点公网IP已更新', { previous: { ipv4: node.ipv4, ipv6: node.ipv6 }, current: updates });
+              // 同步刷新ASN信息
+              const targetIP = updates.ipv4 || updates.ipv6;
+              if (targetIP) {
+                try {
+                  const ipInfo = await ipInfoService.getIPInfo(targetIP);
+                  if (ipInfo && ipInfo.asn) {
+                    await nodeService.updateNode(node.id, {
+                      asnNumber: ipInfo.asn.asn,
+                      asnName: ipInfo.asn.name,
+                      asnOrg: ipInfo.asn.org,
+                      asnRoute: ipInfo.asn.route,
+                      asnType: ipInfo.asn.type,
+                    });
+                  }
+                } catch (e) {
+                  logger.debug('刷新ASN信息失败（心跳阶段可忽略）:', e);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        logger.debug('Optional node IP update during heartbeat failed:', e);
       }
 
       await nodeService.recordHeartbeat(agentId, heartbeatData);

@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { ipInfoService } from './IPInfoService';
 import crypto from 'crypto';
 import { RecordHeartbeatInput, HeartbeatDetail } from '../types/heartbeat';
+import { eventService } from './EventService';
 
 export interface CreateNodeInput {
   agentId?: string; // 允许指定agentId，用于Agent自动注册
@@ -226,6 +227,8 @@ export class NodeService {
   // 更新节点状态
   async updateNodeStatus(agentId: string, status: NodeStatus): Promise<Node> {
     try {
+      // 读取旧状态
+      const old = await prisma.node.findUnique({ where: { agentId } });
       const node = await prisma.node.update({
         where: { agentId },
         data: {
@@ -235,6 +238,10 @@ export class NodeService {
       });
 
       logger.debug(`Node status updated: ${node.name} -> ${status}`);
+      // 记录状态变更事件
+      if (old && old.status !== status) {
+        await eventService.createEvent(node.id, 'STATUS_CHANGED', `${old.status} -> ${status}`, { from: old.status, to: status });
+      }
       return node;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
@@ -453,33 +460,58 @@ export class NodeService {
   // 获取节点最新的详细心跳数据
   async getLatestHeartbeatData(nodeId: string): Promise<HeartbeatDetail | null> {
     try {
-      const heartbeat = await prisma.heartbeatLog.findFirst({
+      const heartbeats = await prisma.heartbeatLog.findMany({
         where: { nodeId },
-        orderBy: { timestamp: 'desc' }
+        orderBy: { timestamp: 'desc' },
+        take: 2
       });
 
-      if (!heartbeat) {
+      if (heartbeats.length === 0) {
         return null;
       }
 
-      // 返回格式化的心跳数据
-      const hb: any = heartbeat as any;
+      const latest: any = heartbeats[0] as any;
+      const previous: any | undefined = heartbeats[1] as any | undefined;
+
+      // 复制 networkInfo 并基于上一次心跳计算速率（bps）
+      let networkInfo = latest.networkInfo || null;
+      if (networkInfo && previous?.networkInfo && previous?.timestamp) {
+        try {
+          const prevMap = new Map<string, any>();
+          for (const n of (previous.networkInfo as any[])) {
+            if (n && n.interface) prevMap.set(n.interface, n);
+          }
+          const dt = Math.max(1, (latest.timestamp.getTime() - new Date(previous.timestamp).getTime()) / 1000); // seconds
+          networkInfo = (latest.networkInfo as any[]).map((n: any) => {
+            const prev = prevMap.get(n.interface);
+            if (prev && typeof n.bytesReceived === 'number' && typeof n.bytesSent === 'number' && typeof prev.bytesReceived === 'number' && typeof prev.bytesSent === 'number') {
+              const rx = n.bytesReceived - prev.bytesReceived;
+              const tx = n.bytesSent - prev.bytesSent;
+              const rxBps = rx >= 0 ? Math.round((rx * 8) / dt) : undefined;
+              const txBps = tx >= 0 ? Math.round((tx * 8) / dt) : undefined;
+              return { ...n, rxBps, txBps };
+            }
+            return n;
+          });
+        } catch {}
+      }
+
       const detail: HeartbeatDetail = {
-        timestamp: hb.timestamp,
-        status: hb.status,
-        uptime: hb.uptime,
-        cpuUsage: hb.cpuUsage,
-        memoryUsage: hb.memoryUsage,
-        diskUsage: hb.diskUsage,
-        connectivity: hb.connectivity,
-        cpuInfo: hb.cpuInfo || null,
-        memoryInfo: hb.memoryInfo || null,
-        diskInfo: hb.diskInfo || null,
-        networkInfo: hb.networkInfo || null,
-        processInfo: hb.processInfo || null,
-        virtualization: hb.virtualization || null,
-        services: hb.services || null,
-        loadAverage: hb.loadAverage || null
+        timestamp: latest.timestamp,
+        status: latest.status,
+        uptime: latest.uptime,
+        cpuUsage: latest.cpuUsage,
+        memoryUsage: latest.memoryUsage,
+        diskUsage: latest.diskUsage,
+        connectivity: latest.connectivity,
+        cpuInfo: latest.cpuInfo || null,
+        memoryInfo: latest.memoryInfo || null,
+        diskInfo: latest.diskInfo || null,
+        networkInfo: networkInfo,
+        processInfo: latest.processInfo || null,
+        virtualization: latest.virtualization || null,
+        services: latest.services || null,
+        loadAverage: latest.loadAverage || null
       };
       return detail;
     } catch (error) {
@@ -576,12 +608,14 @@ export class NodeService {
     totalNodes: number;
     onlineNodes: number;
     offlineNodes: number;
+    unknownNodes: number;
     totalCountries: number;
     totalProviders: number;
   } {
     const totalNodes = nodes.length;
     const onlineNodes = nodes.filter(node => node.status === NodeStatus.ONLINE).length;
-    const offlineNodes = totalNodes - onlineNodes;
+    const unknownNodes = nodes.filter(node => node.status === NodeStatus.UNKNOWN).length;
+    const offlineNodes = Math.max(0, totalNodes - onlineNodes - unknownNodes);
     const countries = new Set(nodes.map(node => node.country));
     const providers = new Set(nodes.map(node => node.provider));
 
@@ -589,6 +623,7 @@ export class NodeService {
       totalNodes,
       onlineNodes,
       offlineNodes,
+      unknownNodes,
       totalCountries: countries.size,
       totalProviders: providers.size
     };

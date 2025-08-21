@@ -351,6 +351,12 @@ class ApiService {
     return this.request<any>(`/nodes/${nodeId}/heartbeat`);
   }
 
+  // 获取节点事件列表
+  async getNodeEvents(nodeId: string, limit: number = 100): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: any; timestamp: string }>>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request(`/nodes/${nodeId}/events${query}`);
+  }
+
   // Agent 诊断请求 API (直接调用Agent)
   async callAgentDiagnostic(agentUrl: string, type: string, target?: string): Promise<any> {
     const endpoint = target ? `${type}/${target}` : type;

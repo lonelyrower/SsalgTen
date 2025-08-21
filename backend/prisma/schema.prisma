@@ -126,6 +126,20 @@ model HeartbeatLog {
   @@index([timestamp])
 }
 
+// 事件日志（节点IP变更、状态变更等）
+model EventLog {
+  id        String   @id @default(cuid())
+  nodeId    String
+  node      Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  type      String   // 事件类型：IP_CHANGED、STATUS_CHANGED 等
+  message   String?
+  details   Json?
+  timestamp DateTime @default(now())
+
+  @@map("event_logs")
+  @@index([nodeId, timestamp])
+}
+
 // 管理员用户
 model User {
   id        String   @id @default(cuid())

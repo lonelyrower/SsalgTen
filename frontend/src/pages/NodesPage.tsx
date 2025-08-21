@@ -2,10 +2,12 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
+import { useConnectivityDiagnostics } from '@/hooks/useConnectivityDiagnostics';
+import { ConnectivityDiagnostics } from '@/components/nodes/ConnectivityDiagnostics';
 import { Button } from '@/components/ui/button';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
-import type { NodeData } from '@/services/api';
+import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
 
 // Lazy load components
@@ -20,8 +22,12 @@ export const NodesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
   const [heartbeatData, setHeartbeatData] = useState<any | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventFilter, setEventFilter] = useState<'all' | string>('all');
+  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo | null>(null);
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
-  const { nodes, stats, connected } = useRealTime();
+  const { nodes, stats, connected, refreshData } = useRealTime();
+  const diagnostics = useConnectivityDiagnostics(connected);
 
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);
@@ -34,8 +40,7 @@ export const NodesPage: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    // 触发数据刷新
-    window.location.reload();
+    refreshData();
   };
 
   // 获取节点详细心跳数据
@@ -56,14 +61,92 @@ export const NodesPage: React.FC = () => {
     }
   };
 
+  // 获取访问者信息（仅获取一次）
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiService.getVisitorInfo();
+        if (res.success && res.data) {
+          setVisitorInfo(res.data as VisitorInfo);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  // 获取节点事件
+  const fetchNodeEvents = async (nodeId: string) => {
+    try {
+      const res = await apiService.getNodeEvents(nodeId, 50);
+      if (res.success && Array.isArray(res.data)) {
+        setEvents(res.data);
+      } else {
+        setEvents([]);
+      }
+    } catch {
+      setEvents([]);
+    }
+  };
+
+  // 事件类型映射为中文标签
+  const eventTypeLabel = (type: string) => {
+    const map: Record<string, string> = {
+      IP_CHANGED: 'IP 变更',
+      STATUS_CHANGED: '状态变更',
+    };
+    return map[type] || type;
+  };
+
+  // 事件友好渲染
+  const renderEventMessage = (ev: any) => {
+    try {
+      if (ev.type === 'IP_CHANGED') {
+        const prev = ev.details?.previous || {};
+        const curr = ev.details?.current || {};
+        const parts: string[] = [];
+        if (prev.ipv4 || curr.ipv4) {
+          parts.push(`IPv4: ${prev.ipv4 || '-'} → ${curr.ipv4 || '-'}`);
+        }
+        if (prev.ipv6 || curr.ipv6) {
+          parts.push(`IPv6: ${prev.ipv6 || '-'} → ${curr.ipv6 || '-'}`);
+        }
+        return parts.join('；');
+      }
+      if (ev.type === 'STATUS_CHANGED') {
+        const from = ev.details?.from || 'UNKNOWN';
+        const to = ev.details?.to || 'UNKNOWN';
+        return `状态：${from} → ${to}`;
+      }
+      return ev.message || JSON.stringify(ev.details || {});
+    } catch {
+      return ev.message || '';
+    }
+  };
+
+  const filteredEvents = events.filter(ev => eventFilter === 'all' ? true : ev.type === eventFilter);
+  const eventTypes = Array.from(new Set(events.map(ev => ev.type)));
+
   // 当选中节点时获取心跳数据
   useEffect(() => {
     if (selectedNode) {
       fetchHeartbeatData(selectedNode.id);
+      fetchNodeEvents(selectedNode.id);
     } else {
       setHeartbeatData(null);
+      setEvents([]);
     }
   }, [selectedNode]);
+
+  // 面板展开时，定时刷新心跳数据以驱动速率曲线
+  useEffect(() => {
+    if (selectedNode && showServerDetails) {
+      const id = selectedNode.id;
+      const timer = setInterval(() => {
+        fetchHeartbeatData(id);
+        fetchNodeEvents(id);
+      }, 15000);
+      return () => clearInterval(timer);
+    }
+  }, [selectedNode, showServerDetails]);
 
   // 过滤节点
   const filteredNodes = nodes.filter(node => {
@@ -80,10 +163,22 @@ export const NodesPage: React.FC = () => {
 
   // 如果显示诊断界面且有选中节点
   if (showDiagnostics && selectedNode) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* 连接性自检横幅 */}
+        <ConnectivityDiagnostics
+          checking={diagnostics.checking}
+          apiReachable={diagnostics.apiReachable}
+          socketConnected={diagnostics.socketConnected}
+          authOk={diagnostics.authOk}
+          nodesCount={diagnostics.nodesCount}
+          lastCheckedAt={diagnostics.lastCheckedAt}
+          issues={diagnostics.issues}
+          onRefresh={diagnostics.refresh}
+          isAdmin={hasRole('ADMIN')}
+        />
           <Suspense fallback={
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
@@ -117,16 +212,10 @@ export const NodesPage: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-3">
-              {/* 连接状态 */}
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                connected 
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
-                  : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-              }`}>
+              {/* 连接状态简述（保留） */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${connected ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
                 <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} ${connected ? 'animate-pulse' : ''}`}></div>
-                <span className="text-sm font-medium">
-                  {connected ? '实时连接' : '连接断开'}
-                </span>
+                <span className="text-sm font-medium">{connected ? '实时连接' : '连接断开'}</span>
               </div>
               
               {hasRole('ADMIN') && (
@@ -395,8 +484,47 @@ export const NodesPage: React.FC = () => {
                   <ServerDetailsPanel 
                     node={selectedNode}
                     heartbeatData={heartbeatData}
+                    visitorInfo={visitorInfo || undefined}
                   />
                 )}
+                {/* 事件列表 */}
+                <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-md font-semibold text-gray-900 dark:text-white">事件</h4>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">筛选</span>
+                      <select
+                        value={eventFilter}
+                        onChange={(e) => setEventFilter(e.target.value)}
+                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      >
+                        <option value="all">全部</option>
+                        {eventTypes.map(t => (
+                          <option key={t} value={t}>{eventTypeLabel(t)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {filteredEvents.length === 0 ? (
+                    <p className="text-sm text-gray-500">暂无事件</p>
+                  ) : (
+                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {filteredEvents.map((ev) => (
+                        <li key={ev.id} className="py-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">
+                              <span className={`px-2 py-0.5 rounded text-xs mr-2 ${ev.type === 'STATUS_CHANGED' ? 'bg-blue-100 text-blue-800' : ev.type === 'IP_CHANGED' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                                {eventTypeLabel(ev.type)}
+                              </span>
+                              {renderEventMessage(ev)}
+                            </span>
+                            <span className="text-gray-500">{new Date(ev.timestamp).toLocaleString()}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
           </div>

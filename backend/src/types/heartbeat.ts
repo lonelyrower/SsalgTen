@@ -43,6 +43,9 @@ export interface NetworkInterfaceDetail {
   packetsSent?: number;
   speed?: number;
   duplex?: string;
+  // Computed rates based on previous heartbeat (bps)
+  rxBps?: number;
+  txBps?: number;
   [key: string]: any;
 }
 

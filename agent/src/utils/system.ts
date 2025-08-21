@@ -1,6 +1,7 @@
 import os from 'os';
 import fs from 'fs';
 import { promisify } from 'util';
+import axios from 'axios';
 import { SystemInfo, CPUInfo, MemoryInfo, DiskInfo, NetworkStats, ProcessInfo } from '../types';
 
 const exec = promisify(require('child_process').exec);
@@ -524,4 +525,37 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     virtualization,
     services,
   };
+};
+
+// 获取公网 IP（IPv4/IPv6）
+export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> => {
+  const result: { ipv4?: string; ipv6?: string } = {};
+  const timeout = 2000;
+
+  try {
+    // 优先 json 接口
+    const v4 = await axios.get('https://api.ipify.org?format=json', { timeout });
+    if (v4?.data?.ip) result.ipv4 = v4.data.ip;
+  } catch {}
+  if (!result.ipv4) {
+    try {
+      const v4alt = await axios.get('https://ipv4.icanhazip.com', { timeout });
+      const ip = (v4alt?.data || '').toString().trim();
+      if (ip) result.ipv4 = ip;
+    } catch {}
+  }
+
+  try {
+    const v6 = await axios.get('https://api64.ipify.org?format=json', { timeout });
+    if (v6?.data?.ip) result.ipv6 = v6.data.ip;
+  } catch {}
+  if (!result.ipv6) {
+    try {
+      const v6alt = await axios.get('https://ipv6.icanhazip.com', { timeout });
+      const ip = (v6alt?.data || '').toString().trim();
+      if (ip) result.ipv6 = ip;
+    } catch {}
+  }
+
+  return result;
 };

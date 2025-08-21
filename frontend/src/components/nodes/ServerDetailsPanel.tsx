@@ -100,6 +100,16 @@ interface ServerDetailsPanelProps {
     ipv6?: string;
   };
   heartbeatData?: HeartbeatData;
+  visitorInfo?: {
+    ip: string;
+    asn?: {
+      asn: string;
+      name: string;
+      org: string;
+      route: string;
+      type: string;
+    }
+  };
   className?: string;
 }
 
@@ -149,8 +159,44 @@ const getHealthBadge = (health?: string, value?: number, threshold?: number) => 
 export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = ({ 
   node, 
   heartbeatData,
+  visitorInfo,
   className 
 }) => {
+  const [rxSeries, setRxSeries] = React.useState<number[]>([]);
+  const [txSeries, setTxSeries] = React.useState<number[]>([]);
+
+  // 聚合所有网卡速率，形成总吞吐量曲线（保留最近20个样本）
+  React.useEffect(() => {
+    if (heartbeatData?.networkInfo && heartbeatData.networkInfo.length > 0) {
+      const totalRx = heartbeatData.networkInfo.reduce((acc: number, n: any) => acc + (typeof n.rxBps === 'number' ? n.rxBps : 0), 0);
+      const totalTx = heartbeatData.networkInfo.reduce((acc: number, n: any) => acc + (typeof n.txBps === 'number' ? n.txBps : 0), 0);
+      setRxSeries(prev => {
+        const next = [...prev, totalRx];
+        return next.slice(Math.max(0, next.length - 20));
+      });
+      setTxSeries(prev => {
+        const next = [...prev, totalTx];
+        return next.slice(Math.max(0, next.length - 20));
+      });
+    }
+  }, [heartbeatData?.networkInfo]);
+
+  const Sparkline: React.FC<{ data: number[]; color: string }> = ({ data, color }) => {
+    if (!data || data.length === 0) return null;
+    const width = 160;
+    const height = 36;
+    const max = Math.max(...data, 1);
+    const points = data.map((v, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - (v / max) * height;
+      return `${x},${y}`;
+    }).join(' ');
+    return (
+      <svg width={width} height={height} className="overflow-visible">
+        <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
+      </svg>
+    );
+  };
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${className}`}>
       {/* 系统概览 */}
@@ -411,6 +457,20 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = ({
           <div className="space-y-3">
             {/* 基础网络信息 */}
             <div className="grid grid-cols-1 gap-2 text-sm">
+              {/* 访问者信息 */}
+              {visitorInfo?.ip && (
+                <div className="mb-2">
+                  <p className="text-gray-600 dark:text-gray-400">访问者 IP</p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium font-mono">{visitorInfo.ip}</p>
+                    {visitorInfo.asn && (
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        ASN: {visitorInfo.asn.asn} · {visitorInfo.asn.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               {node.ipv4 && (
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">IPv4</p>
@@ -423,12 +483,59 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = ({
                   <p className="font-medium font-mono text-xs">{node.ipv6}</p>
                 </div>
               )}
+              {(node as any).asnNumber && (
+                <div className="pt-2 border-t">
+                  <p className="text-sm font-medium mb-1">ASN 信息</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">ASN 号</span>
+                      <p className="font-medium">{(node as any).asnNumber}</p>
+                    </div>
+                    {(node as any).asnName && (
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">名称</span>
+                        <p className="font-medium">{(node as any).asnName}</p>
+                      </div>
+                    )}
+                    {(node as any).asnOrg && (
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">组织</span>
+                        <p className="font-medium">{(node as any).asnOrg}</p>
+                      </div>
+                    )}
+                    {(node as any).asnRoute && (
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">路由</span>
+                        <p className="font-medium font-mono">{(node as any).asnRoute}</p>
+                      </div>
+                    )}
+                    {(node as any).asnType && (
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">类型</span>
+                        <p className="font-medium">{(node as any).asnType}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 网络流量统计 */}
             {heartbeatData?.networkInfo && heartbeatData.networkInfo.length > 0 && (
               <div className="pt-2 border-t">
                 <p className="text-sm font-medium mb-2">流量统计</p>
+                {/* 总吞吐量曲线 */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">总接收/发送速率</div>
+                  <div className="flex items-center space-x-3 text-xs">
+                    <span className="text-green-600">{formatBps(rxSeries[rxSeries.length - 1])} RX</span>
+                    <span className="text-blue-600">{formatBps(txSeries[txSeries.length - 1])} TX</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <Sparkline data={rxSeries} color="#16a34a" />
+                  <Sparkline data={txSeries} color="#2563eb" />
+                </div>
                 <div className="space-y-2">
                   {heartbeatData.networkInfo.map((net, index) => (
                     <div key={index} className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded">
@@ -445,11 +552,17 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = ({
                           <p className="text-gray-600 dark:text-gray-400">接收</p>
                           <p className="font-medium">{formatBytes(net.bytesReceived)}</p>
                           <p className="text-gray-500">{net.packetsReceived.toLocaleString()} 包</p>
+                          {typeof (net as any).rxBps === 'number' && (
+                            <p className="text-gray-500">速率: {formatBps((net as any).rxBps)}</p>
+                          )}
                         </div>
                         <div>
                           <p className="text-gray-600 dark:text-gray-400">发送</p>
                           <p className="font-medium">{formatBytes(net.bytesSent)}</p>
                           <p className="text-gray-500">{net.packetsSent.toLocaleString()} 包</p>
+                          {typeof (net as any).txBps === 'number' && (
+                            <p className="text-gray-500">速率: {formatBps((net as any).txBps)}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -515,4 +628,16 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = ({
       </Card>
     </div>
   );
+};
+
+const formatBps = (bps?: number): string => {
+  if (bps === undefined || bps === null) return '-';
+  const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+  let val = bps;
+  let idx = 0;
+  while (val >= 1000 && idx < units.length - 1) {
+    val = val / 1000;
+    idx++;
+  }
+  return `${val.toFixed(2)} ${units[idx]}`;
 };

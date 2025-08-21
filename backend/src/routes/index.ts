@@ -68,6 +68,7 @@ router.get('/nodes/:id/diagnostics', nodeController.getNodeDiagnostics.bind(node
 
 // 节点心跳数据路由
 router.get('/nodes/:id/heartbeat', nodeController.getNodeHeartbeatData.bind(nodeController));
+router.get('/nodes/:id/events', nodeController.getNodeEvents.bind(nodeController));
 
 // 统计信息路由
 router.get('/stats', nodeController.getNodeStats.bind(nodeController));

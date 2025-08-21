@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { logger } from '../utils/logger';
 import { config } from '../config';
-import { getSystemInfo } from '../utils/system';
+import { getSystemInfo, getPublicIPs } from '../utils/system';
 
 export interface RegistrationResult {
   success: boolean;
@@ -19,6 +19,7 @@ export interface HeartbeatData {
   diskUsage?: number;
   connectivity?: any;
   systemInfo?: any;
+  nodeIPs?: { ipv4?: string; ipv6?: string };
 }
 
 export class RegistrationService {
@@ -38,6 +39,7 @@ export class RegistrationService {
       logger.info('Attempting to register agent with master server...');
       
       const systemInfo = await getSystemInfo();
+      const publicIPs = await getPublicIPs();
       const registrationData = {
         agentId: config.id,
         nodeInfo: {
@@ -46,7 +48,9 @@ export class RegistrationService {
           city: config.location.city,
           latitude: config.location.latitude,
           longitude: config.location.longitude,
-          provider: config.provider
+          provider: config.provider,
+          ipv4: publicIPs.ipv4,
+          ipv6: publicIPs.ipv6,
         },
         systemInfo: {
           platform: systemInfo.platform,
@@ -160,6 +164,7 @@ export class RegistrationService {
 
     try {
       const systemInfo = await getSystemInfo();
+      const publicIPs = await getPublicIPs();
       const heartbeatData: HeartbeatData = {
         status: 'healthy',
         uptime: systemInfo.uptime,
@@ -167,6 +172,8 @@ export class RegistrationService {
         memoryUsage: systemInfo.memoryUsage,
         diskUsage: systemInfo.diskUsage,
         connectivity: await this.getConnectivityStatus(),
+        // 公网IP，便于后端检测变更
+        nodeIPs: publicIPs,
         // 添加详细系统信息
         systemInfo: {
           cpu: systemInfo.cpu,
