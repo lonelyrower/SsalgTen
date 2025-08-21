@@ -52,8 +52,8 @@ services:
       
       # API Security
       API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://${DOMAIN:-localhost}}
+      FRONTEND_URL: ${FRONTEND_URL:-http://${DOMAIN:-localhost}}
       
       # Agent Configuration
       DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
@@ -90,7 +90,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
+        VITE_API_URL: ${VITE_API_URL:-http://${DOMAIN:-localhost}:${BACKEND_PORT:-3001}/api}
         VITE_APP_NAME: "SsalgTen Network Monitor"
         VITE_APP_VERSION: "1.0.0"
         VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
@@ -101,7 +101,7 @@ services:
         condition: service_healthy
     environment:
       # Frontend Environment Variables
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
+      VITE_API_URL: ${VITE_API_URL:-http://${DOMAIN:-localhost}:${BACKEND_PORT:-3001}/api}
       VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
       VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
     ports:
