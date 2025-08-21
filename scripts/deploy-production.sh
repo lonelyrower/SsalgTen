@@ -1026,8 +1026,8 @@ BACKEND_PORT=$BACKEND_PORT
 DB_PORT=$DB_PORT
 REDIS_PORT=$REDIS_PORT
 
-# 前端配置
-VITE_API_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+# 前端配置（使用相对路径，便于IP与域名间切换）
+VITE_API_URL=/api
 
 # 数据库配置
 POSTGRES_USER=ssalgten
@@ -1069,8 +1069,8 @@ EOF
     
     # 创建前端环境配置
     cat > frontend/.env << EOF
-# API配置 - 使用正确的环境变量名
-VITE_API_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN/api"; fi)
+# API配置 - 使用相对路径，交由前置或容器内Nginx反代
+VITE_API_URL=/api
 VITE_APP_NAME=SsalgTen Network Monitor
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_DEBUG=false
@@ -1123,6 +1123,11 @@ create_nginx_config() {
     
     if [[ "$ENABLE_SSL" == "true" ]]; then
         # HTTPS模式配置
+        # 443端口时省略重定向端口
+        REDIR_PORT_SUFFIX=":$HTTPS_PORT"
+        if [[ "$HTTPS_PORT" == "443" ]]; then
+            REDIR_PORT_SUFFIX=""
+        fi
         run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
 # SsalgTen Nginx 配置 (HTTPS模式)
 server {
@@ -1130,7 +1135,7 @@ server {
     server_name $DOMAIN www.$DOMAIN;
     
     # 重定向到HTTPS
-    return 301 https://\$server_name:$HTTPS_PORT\$request_uri;
+    return 301 https://\$server_name$REDIR_PORT_SUFFIX\$request_uri;
 }
 
 server {

@@ -9,8 +9,8 @@ echo "  VITE_API_URL: ${VITE_API_URL:-not set}"
 echo "  VITE_API_BASE_URL: ${VITE_API_BASE_URL:-not set}"
 echo "  VITE_APP_NAME: ${VITE_APP_NAME:-not set}"
 
-# Use VITE_API_URL as primary, fallback to VITE_API_BASE_URL
-API_URL="${VITE_API_URL:-${VITE_API_BASE_URL:-http://localhost:3001/api}}"
+# Use VITE_API_URL as primary, fallback to VITE_API_BASE_URL, then default to relative /api
+API_URL="${VITE_API_URL:-${VITE_API_BASE_URL:-/api}}"
 
 # Ensure the html directory exists
 mkdir -p /usr/share/nginx/html

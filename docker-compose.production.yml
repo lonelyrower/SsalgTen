@@ -90,7 +90,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://${DOMAIN:-localhost}:${BACKEND_PORT:-3001}/api}
+        VITE_API_URL: ${VITE_API_URL:-/api}
         VITE_APP_NAME: "SsalgTen Network Monitor"
         VITE_APP_VERSION: "1.0.0"
         VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
@@ -101,7 +101,7 @@ services:
         condition: service_healthy
     environment:
       # Frontend Environment Variables
-      VITE_API_URL: ${VITE_API_URL:-http://${DOMAIN:-localhost}:${BACKEND_PORT:-3001}/api}
+      VITE_API_URL: ${VITE_API_URL:-/api}
       VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
       VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
     ports:
