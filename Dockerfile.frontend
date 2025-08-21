@@ -62,6 +62,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # Expose port
 EXPOSE 80
 
-# Use standard nginx entrypoint with config generation
-ENTRYPOINT ["dumb-init", "--"]
+# Preserve nginx default entrypoint so /docker-entrypoint.d scripts run
+# Wrap it with dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--", "/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
