@@ -1090,16 +1090,15 @@ uninstall_agent() {
             log_success "Docker服务已停止"
         fi
         
-        # 删除相关的Docker镜像
-        log_info "删除Docker镜像..."
-        # 精确匹配本项目相关镜像 (带标签) 避免误删
-        IMAGE_IDS=$(docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | awk '/ssalgten-agent|ssalgten-backend|ssalgten-frontend/ {print $2}' | sort -u)
+        # 删除相关的Docker镜像（仅限 Agent 镜像，避免误删主服务镜像）
+        log_info "删除Agent相关Docker镜像..."
+        IMAGE_IDS=$(docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | awk '/ssalgten-agent/ {print $2}' | sort -u)
         if [[ -n "$IMAGE_IDS" ]]; then
             for img in $IMAGE_IDS; do
                 docker rmi "$img" 2>/dev/null || true
             done
         fi
-        log_success "Docker镜像已删除"
+        log_success "Agent镜像清理完成"
     fi
     
     # 3. 删除应用目录
@@ -1120,19 +1119,26 @@ uninstall_agent() {
     docker system prune -f 2>/dev/null || true
     log_success "Docker资源清理完成"
     
-    # 5. 删除防火墙规则
+    # 5. 删除防火墙规则（默认仅移除Agent端口，避免影响其他服务）
     log_info "清理防火墙规则..."
     if command -v ufw >/dev/null 2>&1; then
-        # 尝试删除常见端口的规则
-        for port in 3002 3001 3003; do
-            sudo ufw --force delete allow $port/tcp 2>/dev/null || true
-        done
+        sudo ufw --force delete allow 3002/tcp 2>/dev/null || true
+        # 询问是否同时删除其他可能规则
+        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N]: ")
+        if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
+            for port in 3001 3003; do
+                sudo ufw --force delete allow $port/tcp 2>/dev/null || true
+            done
+        fi
         log_success "UFW防火墙规则已清理"
     elif command -v firewall-cmd >/dev/null 2>&1; then
-        # 尝试删除常见端口的规则  
-        for port in 3002 3001 3003; do
-            sudo firewall-cmd --permanent --remove-port=$port/tcp 2>/dev/null || true
-        done
+        sudo firewall-cmd --permanent --remove-port=3002/tcp 2>/dev/null || true
+        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N]: ")
+        if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
+            for port in 3001 3003; do
+                sudo firewall-cmd --permanent --remove-port=$port/tcp 2>/dev/null || true
+            done
+        fi
         sudo firewall-cmd --reload 2>/dev/null || true
         log_success "Firewalld防火墙规则已清理"
     else

@@ -169,11 +169,16 @@ cleanup_project_files() {
 cleanup_nginx_config() {
     log_info "清理Nginx配置..."
     
-    # 删除SsalgTen的Nginx配置
-    if [[ -f "/etc/nginx/sites-enabled/ssalgten" ]]; then
-        log_info "删除Nginx站点配置..."
-        $SUDO rm -f /etc/nginx/sites-enabled/ssalgten
-        $SUDO rm -f /etc/nginx/sites-available/ssalgten
+    # 删除SsalgTen的Nginx配置（Debian/Ubuntu: sites-available/sites-enabled）
+    if [[ -f "/etc/nginx/sites-enabled/ssalgten" || -f "/etc/nginx/sites-available/ssalgten" ]]; then
+        log_info "删除Nginx站点配置 (sites-*)..."
+        $SUDO rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
+        $SUDO rm -f /etc/nginx/sites-available/ssalgten 2>/dev/null || true
+    fi
+    # 删除SsalgTen的Nginx配置（CentOS/RHEL: conf.d）
+    if [[ -f "/etc/nginx/conf.d/ssalgten.conf" ]]; then
+        log_info "删除Nginx站点配置 (conf.d)..."
+        $SUDO rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
     fi
     
     # 重新加载Nginx（如果正在运行）
@@ -194,9 +199,25 @@ cleanup_ssl_certificates() {
     fi
     # 尝试从历史 Nginx 配置中解析域名
     domains=""
-    if [[ -f "/etc/nginx/sites-available/ssalgten" ]]; then
-        domains=$(grep -E 'server_name' /etc/nginx/sites-available/ssalgten 2>/dev/null | sed 's/.*server_name//' | sed 's/;//' | tr -s ' ' | tr ' ' '\n' | grep -v '^$' | grep -v '^_' | grep -v 'server_name' | sed 's/^www.//' | sort -u)
+    for cfg in \
+        /etc/nginx/sites-available/ssalgten \
+        /etc/nginx/conf.d/ssalgten.conf; do
+        if [[ -f "$cfg" ]]; then
+            cfg_domains=$(grep -E 'server_name' "$cfg" 2>/dev/null | sed 's/.*server_name//' | sed 's/;//' | tr -s ' ' | tr ' ' '\n' | grep -v '^$' | grep -v '^_' | grep -v 'server_name' | sed 's/^www.//' | sort -u || true)
+            domains="$domains
+$cfg_domains"
+        fi
+    done
+    domains=$(echo "$domains" | grep -v '^$' | sort -u || true)
+    # 进一步从 .env 中解析 DOMAIN
+    if [[ -f "$APP_DIR/.env" ]]; then
+        env_domain=$(grep -E '^DOMAIN=' "$APP_DIR/.env" | cut -d'=' -f2 | tr -d '"' | tr -d "'" )
+        if [[ -n "$env_domain" ]]; then
+            domains="$domains
+$env_domain"
+        fi
     fi
+    domains=$(echo "$domains" | grep -v '^$' | sort -u || true)
     # 回退：匹配包含 ssalgten 的 live 目录
     if [[ -z "$domains" ]]; then
         domains=$(find /etc/letsencrypt/live -maxdepth 1 -mindepth 1 -type d -name '*ssalgten*' -exec basename {} \; 2>/dev/null || true)
