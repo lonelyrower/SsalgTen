@@ -86,8 +86,8 @@ export async function seedNodes() {
       return;
     }
     
-    // 创建示例节点
-    const createdNodes = [];
+    // 创建示例节点（避免空数组推断为 never[]）
+    const createdNodes: any[] = [];
     
     for (const nodeData of sampleNodes) {
       const agentId = crypto.randomUUID();
