@@ -12,6 +12,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ defau
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
 const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
 const DiagnosticsPage = lazy(() => import('@/pages/DiagnosticsPage').then(module => ({ default: module.DiagnosticsPage })));
+const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
+const UniversePage = lazy(() => import('@/pages/UniversePage').then(module => ({ default: module.UniversePage })));
 
 function App() {
   return (
@@ -59,6 +61,25 @@ function App() {
             element={
               <ProtectedRoute requiredRole="VIEWER">
                 <DiagnosticsPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* 新增炫酷功能路由 */}
+          <Route
+            path="/security"
+            element={
+              <ProtectedRoute requiredRole="VIEWER">
+                <SecurityPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/universe"
+            element={
+              <ProtectedRoute requiredRole="VIEWER">
+                <UniversePage />
               </ProtectedRoute>
             }
           />

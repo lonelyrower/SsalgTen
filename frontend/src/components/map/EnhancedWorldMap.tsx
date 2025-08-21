@@ -310,53 +310,68 @@ export const EnhancedWorldMap = memo(({
   return (
     <div className={`relative ${className}`}>
       {/* 地图控制面板 */}
-      <div className="absolute top-4 right-4 z-[1000] space-y-2">
+      <div className="absolute top-4 right-4 z-[1000] space-y-3">
         {/* 统计信息卡片 */}
         {showStats && (
-          <Card className="p-3 bg-white/95 backdrop-blur-sm shadow-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-sm">节点统计</h4>
+          <div className="glass rounded-lg p-4 border border-white/20 backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-sm text-white/90 flex items-center">
+                <Activity className="h-4 w-4 mr-2 text-blue-400" />
+                节点统计
+              </h4>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowStats(false)}
-                className="h-6 w-6 p-0"
+                className="h-6 w-6 p-0 text-white/60 hover:text-white"
               >
                 ×
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                在线: {stats.online}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="flex items-center glass rounded p-2 border border-white/10">
+                <div className="status-indicator bg-green-400 mr-2"></div>
+                <span className="text-white/90">在线: {stats.online}</span>
               </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                离线: {stats.offline}
+              <div className="flex items-center glass rounded p-2 border border-white/10">
+                <div className="status-indicator bg-red-400 mr-2"></div>
+                <span className="text-white/90">离线: {stats.offline}</span>
               </div>
-              <div className="flex items-center">
-                <TrendingUp className="h-3 w-3 mr-2 text-blue-500" />
-                可用率: {stats.uptime}%
+              <div className="flex items-center glass rounded p-2 border border-white/10">
+                <TrendingUp className="h-3 w-3 mr-2 text-blue-400" />
+                <span className="text-white/90">可用率: {stats.uptime}%</span>
               </div>
-              <div className="flex items-center">
-                <Server className="h-3 w-3 mr-2 text-gray-500" />
-                总计: {stats.total}
+              <div className="flex items-center glass rounded p-2 border border-white/10">
+                <Server className="h-3 w-3 mr-2 text-purple-400" />
+                <span className="text-white/90">总计: {stats.total}</span>
               </div>
             </div>
-          </Card>
+            
+            {/* 实时状态指示 */}
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs text-white/70">
+                <span>实时监控</span>
+                <div className="flex items-center space-x-1">
+                  <div className="status-indicator bg-green-400"></div>
+                  <span>ACTIVE</span>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* 视图控制 */}
-        <Card className="p-2 bg-white/95 backdrop-blur-sm shadow-lg">
-          <div className="flex flex-col space-y-1">
+        <div className="glass rounded-lg p-3 border border-white/20 backdrop-blur-xl">
+          <div className="flex flex-col space-y-2">
+            <div className="text-xs text-white/70 mb-1 font-medium">显示模式</div>
             <Button
               variant={viewMode === 'markers' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('markers')}
-              className="justify-start text-xs"
+              className="justify-start text-xs bg-white/10 hover:bg-white/20 text-white/90"
             >
               <MapPin className="h-3 w-3 mr-2" />
-              标记
+              节点标记
             </Button>
             <Button
               variant={viewMode === 'heatmap' ? 'default' : 'ghost'}
@@ -365,13 +380,26 @@ export const EnhancedWorldMap = memo(({
                 setViewMode('heatmap');
                 setShowStats(true);
               }}
-              className="justify-start text-xs"
+              className="justify-start text-xs bg-white/10 hover:bg-white/20 text-white/90"
             >
               <Zap className="h-3 w-3 mr-2" />
-              热图
+              覆盖热图
             </Button>
           </div>
-        </Card>
+          
+          {/* 快速操作 */}
+          <div className="mt-3 pt-3 border-t border-white/10 space-y-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowStats(!showStats)}
+              className="w-full justify-start text-xs text-white/70 hover:text-white"
+            >
+              <Eye className="h-3 w-3 mr-2" />
+              {showStats ? '隐藏' : '显示'}统计
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* 地图容器 */}

@@ -1,6 +1,6 @@
-import { Card } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Server, Building, MapPin } from 'lucide-react';
+import { Globe, Server, Building, Activity, TrendingUp } from 'lucide-react';
 
 interface StatsCardsProps {
   totalNodes?: number;
@@ -18,79 +18,132 @@ export const StatsCards = ({
   totalTests = 0
 }: StatsCardsProps) => {
   const uptime = totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : '0';
+  const offlineNodes = totalNodes - onlineNodes;
 
   const stats = [
     {
-      title: 'Total Nodes',
+      title: '网络节点',
       value: totalNodes.toString(),
-      subtitle: `${onlineNodes} online`,
-      icon: <Server className="h-5 w-5 text-blue-500" />,
-      badge: `${uptime}% uptime`,
-      badgeVariant: parseFloat(uptime) > 90 ? 'default' : 'destructive'
+      subtitle: `${onlineNodes} 在线 · ${offlineNodes} 离线`,
+      icon: <Server className="h-6 w-6 text-blue-400" />,
+      badge: `${uptime}% 可用率`,
+      badgeVariant: parseFloat(uptime) > 90 ? 'default' : 'destructive',
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-500/10 to-cyan-500/10'
     },
     {
-      title: 'Countries',
+      title: '全球覆盖',
       value: totalCountries.toString(),
-      subtitle: 'Global coverage',
-      icon: <Globe className="h-5 w-5 text-green-500" />,
-      badge: 'Worldwide',
-      badgeVariant: 'secondary' as const
+      subtitle: '个国家和地区',
+      icon: <Globe className="h-6 w-6 text-emerald-400" />,
+      badge: '国际化',
+      badgeVariant: 'secondary' as const,
+      gradient: 'from-emerald-500 to-green-500',
+      bgGradient: 'from-emerald-500/10 to-green-500/10'
     },
     {
-      title: 'Providers',
+      title: '服务提供商',
       value: totalProviders.toString(),
-      subtitle: 'Different hosts',
-      icon: <Building className="h-5 w-5 text-purple-500" />,
-      badge: 'Diverse',
-      badgeVariant: 'outline' as const
+      subtitle: '多样化基础设施',
+      icon: <Building className="h-6 w-6 text-purple-400" />,
+      badge: '多元化',
+      badgeVariant: 'outline' as const,
+      gradient: 'from-purple-500 to-pink-500',
+      bgGradient: 'from-purple-500/10 to-pink-500/10'
     },
     {
-      title: 'Network Tests',
+      title: '网络检测',
       value: totalTests > 0 ? totalTests.toLocaleString() : '0',
-      subtitle: totalTests > 0 ? 'Total performed' : 'No tests yet',
-      icon: <MapPin className="h-5 w-5 text-orange-500" />,
-      badge: totalTests > 0 ? 'Active' : 'Pending',
-      badgeVariant: totalTests > 0 ? 'default' : 'outline' as const
+      subtitle: totalTests > 0 ? '次检测完成' : '待启动检测',
+      icon: <Activity className="h-6 w-6 text-orange-400" />,
+      badge: totalTests > 0 ? '活跃' : '待机',
+      badgeVariant: totalTests > 0 ? 'default' : 'outline' as const,
+      gradient: 'from-orange-500 to-red-500',
+      bgGradient: 'from-orange-500/10 to-red-500/10'
     }
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => (
-        <Card key={index} className="relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg">
-          {/* 背景装饰 */}
-          <div className="absolute top-0 right-0 w-24 h-24 opacity-10 transform translate-x-6 -translate-y-6">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-500"></div>
+        <GlassCard 
+          key={index} 
+          variant="tech" 
+          animated={true} 
+          glow={index === 0 && parseFloat(uptime) > 95}
+          className="p-6 group cursor-pointer"
+        >
+          {/* 科技感背景效果 */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700">
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} rounded-xl`} />
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          </div>
+
+          {/* 动态粒子效果 */}
+          <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <div className="w-1 h-1 bg-white/60 rounded-full absolute -top-2 -right-1 animate-ping" />
           </div>
           
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
+          <div className="relative z-20">
+            {/* 头部 */}
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20">
+                <div className="relative p-3 rounded-xl bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm border border-white/20">
                   {stat.icon}
+                  {/* 图标发光效果 */}
+                  <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
                 </div>
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {stat.title}
-                </span>
+                <div>
+                  <h3 className="text-sm font-semibold text-white/90 mb-1">
+                    {stat.title}
+                  </h3>
+                  <div className="flex items-center space-x-1">
+                    <div className="status-indicator bg-green-400" />
+                    <span className="text-xs text-white/60">ACTIVE</span>
+                  </div>
+                </div>
               </div>
-              <Badge variant={stat.badgeVariant as any} className="text-xs font-medium shadow-sm">
+              
+              <Badge 
+                variant={stat.badgeVariant as any} 
+                className="text-xs font-medium backdrop-blur-sm bg-white/10 border-white/20 text-white/90"
+              >
                 {stat.badge}
               </Badge>
             </div>
             
-            <div className="space-y-2">
-              <div className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+            {/* 数值显示 */}
+            <div className="space-y-3">
+              <div className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent drop-shadow-sm`}>
                 {stat.value}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <div className="text-sm text-white/70 font-medium flex items-center">
+                <TrendingUp className="h-4 w-4 mr-2 text-green-400" />
                 {stat.subtitle}
               </div>
             </div>
+
+            {/* 进度指示器 */}
+            {index === 0 && (
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-xs text-white/60">
+                  <span>可用率</span>
+                  <span>{uptime}%</span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-gradient-to-r ${stat.gradient} transition-all duration-1000 rounded-full`}
+                    style={{ width: `${uptime}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
-          {/* 底部装饰线 */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-60"></div>
-        </Card>
+          {/* 底部数据流效果 */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent data-flow" />
+        </GlassCard>
       ))}
     </div>
   );

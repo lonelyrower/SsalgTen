@@ -3,9 +3,10 @@ import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { WorldMap } from '@/components/map/WorldMap';
 import { NetworkDiagnostics } from '@/components/diagnostics/NetworkDiagnostics';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { useNodes } from '@/hooks/useNodes';
 import { Button } from '@/components/ui/button';
-import { Activity } from 'lucide-react';
+import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 export const HomePage = () => {
@@ -93,121 +94,154 @@ export const HomePage = () => {
         
         {/* 地图区域 */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/10 dark:via-indigo-900/10 dark:to-purple-900/10 rounded-2xl p-6 shadow-lg border border-blue-100 dark:border-blue-800/30">
+          <GlassCard variant="gradient" animated={true} className="p-6">
+            {/* 标题区域 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
-              <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                  全球节点网络
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  实时监控全球网络节点状态和性能
-                </p>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm">
+                    <Globe className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold gradient-text">
+                      全球节点网络
+                    </h2>
+                    <p className="text-white/70 text-sm font-medium flex items-center">
+                      <Activity className="h-4 w-4 mr-2 text-green-400" />
+                      实时监控全球网络节点状态和性能
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-full shadow-sm">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-400 to-green-500 shadow-sm"></div>
-                  <span className="font-medium">在线 ({stats?.onlineNodes || 0})</span>
+              {/* 状态指示器 */}
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
+                  <div className="status-indicator bg-green-400" />
+                  <span className="font-medium text-white/90">在线 {stats?.onlineNodes || 0}</span>
                 </div>
-                <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-full shadow-sm">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-400 to-red-500 shadow-sm"></div>
-                  <span className="font-medium">离线 ({stats?.offlineNodes || 0})</span>
+                <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
+                  <div className="status-indicator bg-red-400" />
+                  <span className="font-medium text-white/90">离线 {stats?.offlineNodes || 0}</span>
                 </div>
-                <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-full shadow-sm">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 shadow-sm"></div>
-                  <span className="font-medium">未知 ({stats?.unknownNodes || 0})</span>
+                <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
+                  <div className="status-indicator bg-gray-400" />
+                  <span className="font-medium text-white/90">未知 {stats?.unknownNodes || 0}</span>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700/50">
+            {/* 地图容器 */}
+            <div className="map-container relative">
               <WorldMap nodes={nodes} onNodeClick={handleNodeClick} />
             </div>
-          </div>
+          </GlassCard>
         </div>
 
         {/* 选中节点信息 */}
         {selectedNode && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 shadow-lg border border-blue-100 dark:border-blue-800/30">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <GlassCard variant="tech" animated={true} glow={true} className="p-6">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-6 lg:space-y-0">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-                      <Activity className="h-6 w-6 text-blue-600" />
+                  {/* 节点头部信息 */}
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="relative">
+                      <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm border border-white/20">
+                        <Activity className="h-8 w-8 text-blue-400" />
+                      </div>
+                      <div className="absolute -top-1 -right-1 status-indicator bg-green-400" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <div className="space-y-1">
+                      <h3 className="text-2xl font-bold gradient-text">
                         {selectedNode.name}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        已选中网络节点
+                      <p className="text-white/70 text-sm font-medium flex items-center">
+                        <Globe className="h-4 w-4 mr-2 text-purple-400" />
+                        已选中网络节点 • 正在监控
                       </p>
                     </div>
                   </div>
                   
+                  {/* 节点详细信息网格 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">位置</div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                    <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                      <div className="text-xs text-white/60 mb-2 font-medium">地理位置</div>
+                      <div className="font-bold text-white/90 text-lg">
                         {selectedNode.city}, {selectedNode.country}
                       </div>
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
-                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">提供商</div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                    <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                      <div className="text-xs text-white/60 mb-2 font-medium">服务提供商</div>
+                      <div className="font-bold text-white/90 text-lg">
                         {selectedNode.provider}
                       </div>
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
-                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">状态</div>
-                      <div className="font-medium">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                    <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                      <div className="text-xs text-white/60 mb-2 font-medium">运行状态</div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           selectedNode.status === 'online' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                            ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
                             : selectedNode.status === 'offline' 
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                            : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
                         }`}>
                           {selectedNode.status.toUpperCase()}
                         </span>
                       </div>
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity animate-pulse" />
                     </div>
                     
                     {selectedNode.ipv4 && (
-                      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">IPv4地址</div>
-                        <div className="font-mono text-sm text-gray-900 dark:text-white">
+                      <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                        <div className="text-xs text-white/60 mb-2 font-medium">IPv4 地址</div>
+                        <div className="font-mono text-sm text-cyan-300 font-bold">
                           {selectedNode.ipv4}
                         </div>
+                        <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                       </div>
                     )}
                     
                     {selectedNode.lastSeen && (
-                      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">最后在线</div>
-                        <div className="font-medium text-sm text-gray-900 dark:text-white">
+                      <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                        <div className="text-xs text-white/60 mb-2 font-medium">最后在线时间</div>
+                        <div className="font-medium text-sm text-white/90">
                           {new Date(selectedNode.lastSeen).toLocaleString('zh-CN')}
                         </div>
+                        <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="lg:ml-6">
+                {/* 操作按钮 */}
+                <div className="lg:ml-8 flex flex-col space-y-3">
                   <Button
                     onClick={() => setShowDiagnostics(true)}
                     size="lg"
-                    className="w-full lg:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="gradient-btn w-full lg:w-auto min-w-[200px] group relative overflow-hidden"
                   >
-                    <Activity className="h-5 w-5 mr-2" />
-                    运行网络诊断
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <Activity className="h-5 w-5 mr-3 relative z-10" />
+                    <span className="relative z-10 font-semibold">运行网络诊断</span>
                   </Button>
+                  
+                  <div className="text-center lg:text-left">
+                    <div className="text-xs text-white/60 font-medium">
+                      点击运行完整网络性能检测
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+              
+              {/* 底部装饰效果 */}
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent data-flow" />
+            </GlassCard>
           </div>
         )}
 
