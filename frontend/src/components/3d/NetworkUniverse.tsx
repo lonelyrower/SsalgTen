@@ -314,24 +314,33 @@ export const NetworkUniverse: React.FC<NetworkUniverseProps> = ({ className = ''
   useEffect(() => {
     if (isPlaying) {
       const animate = () => {
-        setRotation(prev => ({
-          x: prev.x + 0.005,
-          y: prev.y + 0.008,
-          z: prev.z + 0.003
-        }));
-        
-        draw();
-        animationRef.current = requestAnimationFrame(animate);
+        try {
+          setRotation(prev => ({
+            x: prev.x + 0.005,
+            y: prev.y + 0.008,
+            z: prev.z + 0.003
+          }));
+          
+          draw();
+          animationRef.current = requestAnimationFrame(animate);
+        } catch (error) {
+          console.error('Animation error:', error);
+        }
       };
       
       animationRef.current = requestAnimationFrame(animate);
     } else {
-      draw();
+      try {
+        draw();
+      } catch (error) {
+        console.error('Draw error:', error);
+      }
     }
     
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = undefined;
       }
     };
   }, [isPlaying, draw]);

@@ -133,7 +133,11 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
   // 实时数据更新
   useEffect(() => {
     const updateThreats = () => {
-      setThreats(generateThreatData());
+      try {
+        setThreats(generateThreatData());
+      } catch (error) {
+        console.error('Failed to generate threat data:', error);
+      }
     };
     
     // 初始加载
@@ -143,7 +147,9 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
     const interval = isLiveMode ? setInterval(updateThreats, 5000) : null;
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
   }, [isLiveMode]);
 

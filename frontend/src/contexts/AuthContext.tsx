@@ -42,13 +42,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         } catch (error) {
           console.error('Failed to get current user:', error);
-          await apiService.logout();
+          try {
+            await apiService.logout();
+          } catch (logoutError) {
+            console.warn('Failed to logout:', logoutError);
+          }
         }
       }
       setIsLoading(false);
     };
 
-    checkAuth();
+    checkAuth().catch(error => {
+      console.error('Auth check failed:', error);
+      setIsLoading(false);
+    });
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {

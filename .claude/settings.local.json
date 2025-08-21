@@ -35,7 +35,12 @@
       "Bash(docker ps:*)",
       "Bash(docker inspect:*)",
       "Bash(git commit:*)",
-      "Bash(npm outdated)"
+      "Bash(npm outdated)",
+      "Bash(git remote set-url:*)",
+      "Bash(git config:*)",
+      "Bash(npm i:*)",
+      "Bash(sudo npm i -g @anthropic-ai/claude-code)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "additionalDirectories": [
