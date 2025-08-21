@@ -1443,13 +1443,26 @@ check_build_resources() {
             export RESOURCE_CONSTRAINED=true
             # 自动运行资源优化
             log_info "自动启用资源优化..."
-            if [[ $total_mem -lt 1000 ]]; then
-                log_info "创建临时swap文件..."
-                run_as_root fallocate -l 1G /tmp/swapfile 2>/dev/null || run_as_root dd if=/dev/zero of=/tmp/swapfile bs=1M count=1024
+            # 若系统未启用swap则按内存情况创建临时swap
+            local has_swap=$(cat /proc/swaps 2>/dev/null | awk 'NR>1{print $1}' | wc -l)
+            if [[ $has_swap -eq 0 ]]; then
+                # 动态确定swap大小：默认1G，若总内存<1000且可用<800则用2G
+                local swap_size_mb=${SWAP_SIZE_MB:-0}
+                if [[ $swap_size_mb -le 0 ]]; then
+                    if [[ $total_mem -lt 1000 && $available_mem -lt 800 ]]; then
+                        swap_size_mb=2048
+                    else
+                        swap_size_mb=1024
+                    fi
+                fi
+                log_info "创建临时swap文件 (${swap_size_mb}MB)..."
+                run_as_root fallocate -l ${swap_size_mb}M /tmp/swapfile 2>/dev/null || run_as_root dd if=/dev/zero of=/tmp/swapfile bs=1M count=${swap_size_mb}
                 run_as_root chmod 600 /tmp/swapfile
                 run_as_root mkswap /tmp/swapfile
                 run_as_root swapon /tmp/swapfile
                 log_success "临时swap文件已创建"
+            else
+                log_info "检测到系统已启用swap，跳过创建"
             fi
         fi
     else
