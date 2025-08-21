@@ -60,6 +60,7 @@ model Node {
   // 关系
   diagnosticRecords DiagnosticRecord[]
   heartbeatLogs     HeartbeatLog[]
+  eventLogs         EventLog[]
   
   @@map("nodes")
 }
