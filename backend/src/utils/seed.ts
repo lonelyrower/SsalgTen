@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma';
 import { NodeStatus } from '@prisma/client';
 import { logger } from './logger';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 // 示例节点数据
 const sampleNodes = [
@@ -141,7 +142,6 @@ export async function seedAdminUser() {
     }
     
     // 注意：在生产环境中应该使用bcrypt加密密码
-    const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash('admin123', 12);
     
     const adminUser = await prisma.user.create({
