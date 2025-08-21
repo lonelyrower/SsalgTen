@@ -1361,9 +1361,26 @@ install_ssl_certificate() {
         
         # 获取SSL证书
         run_as_root certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
-        
-        # 设置自动续期
-        echo "0 12 * * * /usr/bin/certbot renew --quiet" | run_as_root crontab -
+
+        # 部署续期后自动reload Nginx的hook
+        run_as_root mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+        run_as_root bash -c 'cat > /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh <<EOF
+#!/bin/sh
+systemctl reload nginx || true
+EOF'
+        run_as_root chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+
+        # 设置自动续期：优先使用 systemd timer，无法使用时回退到 cron
+        if command -v systemctl >/dev/null 2>&1; then
+            run_as_root systemctl enable --now certbot.timer || true
+            # 显示定时器状态用于可观测
+            run_as_root systemctl status certbot.timer --no-pager || true
+        else
+            echo "0 3,15 * * * /usr/bin/certbot renew --quiet" | run_as_root crontab -
+        fi
+
+        # 进行一次续期演练（不真正申请）以验证环境
+        run_as_root certbot renew --dry-run || true
         
         log_success "SSL证书安装完成"
     else
