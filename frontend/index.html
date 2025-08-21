@@ -5,8 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SsalgTen Network Monitor</title>
-    <!-- Runtime configuration -->
-    <script src="/config.js"></script>
+    <!-- Runtime configuration loader (avoid bundling at build time) -->
+    <script>
+      (function(){
+        try {
+          var s = document.createElement('script');
+          s.src = '/config.js';
+          s.defer = true;
+          document.head.appendChild(s);
+        } catch(e) { /* ignore */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
