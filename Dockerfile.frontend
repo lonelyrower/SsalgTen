@@ -53,7 +53,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy runtime configuration script and ensure it runs before nginx starts
 COPY docker/generate-config.sh /docker-entrypoint.d/40-generate-config.sh
-RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
+RUN chmod +x /docker-entrypoint.d/40-generate-config.sh \
+ && sed -i 's/\r$//' /docker-entrypoint.d/40-generate-config.sh
 
 # Health check - use IPv4 explicitly to avoid connection issues
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
