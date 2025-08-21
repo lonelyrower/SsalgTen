@@ -237,46 +237,84 @@ $env_domain"
 # 重置防火墙规则
 reset_firewall() {
         log_info "配置防火墙规则..."
-        if ! command -v ufw >/dev/null 2>&1; then
-                log_info "未检测到 UFW，跳过"
-                return 0
+        # 优先处理 UFW，其次 firewalld；都不存在则跳过
+        if command -v ufw >/dev/null 2>&1; then
+            echo ""
+            log_warning "防火墙配置选项 (UFW)："
+            echo "1. 仅删除SsalgTen相关端口规则 (推荐)"
+            echo "2. 完全重置防火墙规则 (危险)"
+            echo "0. 不做任何更改"
+            echo ""
+            read -p "选择 [1/2/0] (默认1): " fw_choice < /dev/tty
+            fw_choice=${fw_choice:-1}
+            case "$fw_choice" in
+                2)
+                    log_warning "执行完全重置 (UFW)..."
+                    if [[ "$DRY_RUN" != "true" ]]; then
+                        $SUDO ufw --force reset
+                        $SUDO ufw default deny incoming
+                        $SUDO ufw default allow outgoing
+                        $SUDO ufw allow ssh
+                        $SUDO ufw --force enable
+                    fi
+                    ;;
+                0)
+                    log_info "跳过防火墙修改"
+                    log_success "防火墙规则配置完成"
+                    return 0
+                    ;;
+                *)
+                    log_info "仅清理相关端口规则..."
+                    for p in 80 443 3000 3001 5432; do
+                        if [[ "$DRY_RUN" != "true" ]]; then $SUDO ufw delete allow $p 2>/dev/null || true; fi
+                    done
+                    ;;
+            esac
+            if [[ "$DRY_RUN" != "true" ]]; then
+                log_info "当前防火墙规则："
+                $SUDO ufw status numbered || true
+            fi
+            log_success "防火墙规则配置完成"
+        elif command -v firewall-cmd >/dev/null 2>&1; then
+            echo ""
+            log_warning "防火墙配置选项 (firewalld)："
+            echo "1. 仅删除SsalgTen相关端口规则 (推荐)"
+            echo "2. 尝试恢复默认策略 (谨慎)"
+            echo "0. 不做任何更改"
+            echo ""
+            read -p "选择 [1/2/0] (默认1): " fw_choice < /dev/tty
+            fw_choice=${fw_choice:-1}
+            case "$fw_choice" in
+                2)
+                    log_warning "执行恢复默认策略 (firewalld)..."
+                    if [[ "$DRY_RUN" != "true" ]]; then
+                        $SUDO firewall-cmd --permanent --remove-service=http 2>/dev/null || true
+                        $SUDO firewall-cmd --permanent --remove-service=https 2>/dev/null || true
+                        for p in 80 443 3000 3001 5432; do
+                            $SUDO firewall-cmd --permanent --remove-port=${p}/tcp 2>/dev/null || true
+                        done
+                        $SUDO firewall-cmd --reload 2>/dev/null || true
+                    fi
+                    ;;
+                0)
+                    log_info "跳过防火墙修改"
+                    log_success "防火墙规则配置完成"
+                    return 0
+                    ;;
+                *)
+                    log_info "仅清理相关端口规则 (firewalld)..."
+                    for p in 80 443 3000 3001 5432; do
+                        if [[ "$DRY_RUN" != "true" ]]; then $SUDO firewall-cmd --permanent --remove-port=${p}/tcp 2>/dev/null || true; fi
+                    done
+                    if [[ "$DRY_RUN" != "true" ]]; then $SUDO firewall-cmd --permanent --remove-service=http 2>/dev/null || true; fi
+                    if [[ "$DRY_RUN" != "true" ]]; then $SUDO firewall-cmd --permanent --remove-service=https 2>/dev/null || true; fi
+                    if [[ "$DRY_RUN" != "true" ]]; then $SUDO firewall-cmd --reload 2>/dev/null || true; fi
+                    ;;
+            esac
+            log_success "防火墙规则配置完成"
+        else
+            log_info "未检测到 UFW 或 firewalld，跳过防火墙操作"
         fi
-        echo ""
-        log_warning "防火墙配置选项："
-        echo "1. 仅删除SsalgTen相关端口规则 (推荐)"
-        echo "2. 完全重置防火墙规则 (危险)"
-        echo "0. 不做任何更改"
-        echo ""
-        read -p "选择 [1/2/0] (默认1): " fw_choice < /dev/tty
-        fw_choice=${fw_choice:-1}
-        case "$fw_choice" in
-            2)
-                log_warning "执行完全重置..."
-                if [[ "$DRY_RUN" != "true" ]]; then
-                    $SUDO ufw --force reset
-                    $SUDO ufw default deny incoming
-                    $SUDO ufw default allow outgoing
-                    $SUDO ufw allow ssh
-                    $SUDO ufw --force enable
-                fi
-                ;;
-            0)
-                log_info "跳过防火墙修改"
-                log_success "防火墙规则配置完成"
-                return 0
-                ;;
-            *)
-                log_info "仅清理相关端口规则..."
-                for p in 80 443 3000 3001 5432; do
-                    if [[ "$DRY_RUN" != "true" ]]; then $SUDO ufw delete allow $p 2>/dev/null || true; fi
-                done
-                ;;
-        esac
-        if [[ "$DRY_RUN" != "true" ]]; then
-            log_info "当前防火墙规则："
-            $SUDO ufw status numbered || true
-        fi
-        log_success "防火墙规则配置完成"
 }
 
 # 清理Docker配置和用户组
