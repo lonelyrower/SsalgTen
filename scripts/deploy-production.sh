@@ -1143,6 +1143,11 @@ server {
     server_name $DOMAIN www.$DOMAIN;
     
     # SSL配置 (将由Certbot自动配置)
+    # 通用优化
+    client_max_body_size 20m;
+    gzip on;
+    gzip_proxied any;
+    gzip_types application/json application/javascript text/css text/plain application/xml+rss application/atom+xml image/svg+xml;
     
     # 安全头
     add_header X-Frame-Options DENY;
@@ -1179,11 +1184,14 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+        # 代理策略
+        proxy_buffering off;
+        proxy_cache off;
         
-        # 超时配置
+        # 超时配置（较长以支持长时间请求/流式输出）
         proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
     }
     
     # Socket.IO专用代理
@@ -1230,6 +1238,12 @@ server {
     add_header X-Content-Type-Options nosniff;
     add_header X-XSS-Protection "1; mode=block";
     
+    # 通用优化
+    client_max_body_size 20m;
+    gzip on;
+    gzip_proxied any;
+    gzip_types application/json application/javascript text/css text/plain application/xml+rss application/atom+xml image/svg+xml;
+    
     # 前端静态文件
     location / {
         proxy_pass http://localhost:$FRONTEND_PORT;
@@ -1259,11 +1273,14 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+        # 代理策略
+        proxy_buffering off;
+        proxy_cache off;
         
-        # 超时配置
+        # 超时配置（较长以支持长时间请求/流式输出）
         proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
     }
     
     # Socket.IO专用代理
