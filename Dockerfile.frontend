@@ -8,8 +8,8 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # Install dependencies
-# 优先使用 npm ci，若锁文件不一致则回退到 npm install
-RUN npm ci || npm install
+# 使用锁文件执行干净安装，确保可复现
+RUN npm ci
 
 # Copy source code and configuration
 COPY frontend/src ./src/

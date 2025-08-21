@@ -9,8 +9,8 @@ COPY backend/package*.json ./
 COPY backend/prisma ./prisma/
 
 # Install dependencies (including dev dependencies for build)
-# 优先使用 npm ci（含 dev 依赖），不一致时回退到 npm install
-RUN npm ci --only=production=false || npm install
+# 使用锁文件安装（含 dev 依赖）以确保构建一致
+RUN npm ci --only=production=false
 
 # Copy source code
 COPY backend/src ./src/
@@ -37,9 +37,8 @@ WORKDIR /app
 
 # Copy package files and install production dependencies
 COPY backend/package*.json ./
-# 使用 --omit=dev 安装生产依赖；若锁文件不一致则回退到 npm install
-RUN npm ci --omit=dev || npm install --omit=dev \
- && npm cache clean --force
+# 使用锁文件安装生产依赖
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder --chown=ssalgten:nodejs /app/dist ./dist
