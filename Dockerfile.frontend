@@ -1,5 +1,5 @@
 # Multi-stage build for SsalgTen Frontend
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -8,7 +8,8 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # Install dependencies
-RUN npm ci
+# 优先使用 npm ci，若锁文件不一致则回退到 npm install
+RUN npm ci || npm install
 
 # Copy source code and configuration
 COPY frontend/src ./src/
