@@ -161,6 +161,9 @@ model User {
   updatedAt DateTime @updatedAt
   lastLogin DateTime?
   
+  // 关系
+  refreshTokens RefreshToken[]
+  
   @@map("users")
 }
 
