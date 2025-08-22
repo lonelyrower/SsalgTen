@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import { networkService } from '../services/NetworkService';
 import { logger } from '../utils/logger';
 import { config } from '../config';
+import { buildSignedHeaders } from '../utils/signing';
 
 export interface DiagnosticResponse {
   success: boolean;
@@ -58,6 +60,16 @@ export class DiagnosticController {
       };
       
       logger.info(`Ping test completed for ${target}: ${result.avg}ms avg`);
+      // 异步上报到主控端（不阻塞响应）
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'PING', target, success: true, result, duration };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 8000 }
+        ).catch(() => {});
+      } catch {}
       res.json(response);
     } catch (error) {
       logger.error(`Ping test failed for ${target}:`, error);
@@ -72,6 +84,16 @@ export class DiagnosticController {
         timestamp: new Date().toISOString()
       };
       
+      // 上报失败结果
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'PING', target, success: false, result: {}, error: response.error };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 8000 }
+        ).catch(() => {});
+      } catch {}
       res.status(500).json(response);
     }
   }
@@ -117,6 +139,15 @@ export class DiagnosticController {
       };
       
       logger.info(`Traceroute test completed for ${target}: ${result.totalHops} hops`);
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'TRACEROUTE', target, success: true, result, duration };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 8000 }
+        ).catch(() => {});
+      } catch {}
       res.json(response);
     } catch (error) {
       logger.error(`Traceroute test failed for ${target}:`, error);
@@ -131,6 +162,15 @@ export class DiagnosticController {
         timestamp: new Date().toISOString()
       };
       
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'TRACEROUTE', target, success: false, result: {}, error: response.error };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 8000 }
+        ).catch(() => {});
+      } catch {}
       res.status(500).json(response);
     }
   }
@@ -176,6 +216,15 @@ export class DiagnosticController {
       };
       
       logger.info(`MTR test completed for ${target}`);
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'MTR', target, success: true, result, duration };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 8000 }
+        ).catch(() => {});
+      } catch {}
       res.json(response);
     } catch (error) {
       logger.error(`MTR test failed for ${target}:`, error);
@@ -190,6 +239,15 @@ export class DiagnosticController {
         timestamp: new Date().toISOString()
       };
       
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'MTR', target, success: false, result: {}, error: response.error };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 8000 }
+        ).catch(() => {});
+      } catch {}
       res.status(500).json(response);
     }
   }
@@ -222,6 +280,15 @@ export class DiagnosticController {
       };
       
       logger.info(`Speedtest completed: ${result.download}Mbps down, ${result.upload}Mbps up`);
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'SPEEDTEST', success: true, result, duration };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 15000 }
+        ).catch(() => {});
+      } catch {}
       res.json(response);
     } catch (error) {
       logger.error('Speedtest failed:', error);
@@ -236,6 +303,15 @@ export class DiagnosticController {
         timestamp: new Date().toISOString()
       };
       
+      try {
+        const masterUrl = config.masterUrl.replace(/\/$/, '');
+        const payload = { type: 'SPEEDTEST', success: false, result: {}, error: response.error };
+        axios.post(
+          `${masterUrl}/api/agents/${config.id}/diagnostic`,
+          payload,
+          { headers: { 'Content-Type': 'application/json', ...buildSignedHeaders(config.apiKey, payload) }, timeout: 15000 }
+        ).catch(() => {});
+      } catch {}
       res.status(500).json(response);
     }
   }

@@ -1,10 +1,21 @@
 // API服务 - 与后端通信的统一接口
 
+// Window configuration interface
+interface WindowConfig {
+  APP_CONFIG?: {
+    API_BASE_URL?: string;
+  };
+}
+
+declare global {
+  interface Window extends WindowConfig {}
+}
+
 // Get API base URL from runtime config or fallback to env var or default
 const getApiBaseUrl = (): string => {
   // Check runtime config first
-  if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_BASE_URL) {
-    return (window as any).APP_CONFIG.API_BASE_URL;
+  if (typeof window !== 'undefined' && window.APP_CONFIG?.API_BASE_URL) {
+    return window.APP_CONFIG.API_BASE_URL;
   }
   // Fallback to build-time env var or default
   return import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
@@ -244,6 +255,7 @@ export interface InstallCommandData {
 }
 
 class ApiService {
+  private refreshPromise: Promise<LoginResponse | null> | null = null;
   
   // 通用请求方法
   private async request<T>(endpoint: string, options: RequestInit = {}, requireAuth: boolean = false): Promise<ApiResponse<T>> {
@@ -403,6 +415,24 @@ class ApiService {
   }
 
   async refreshToken(): Promise<LoginResponse | null> {
+    // 如果已经有刷新请求在进行中，等待其完成
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    // 创建新的刷新请求
+    this.refreshPromise = this.performTokenRefresh();
+
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      // 清除刷新请求引用
+      this.refreshPromise = null;
+    }
+  }
+
+  private async performTokenRefresh(): Promise<LoginResponse | null> {
     const refreshToken = TokenManager.getRefreshToken();
     if (!refreshToken) {
       return null;

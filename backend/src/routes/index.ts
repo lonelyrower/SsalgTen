@@ -6,6 +6,11 @@ import { adminController } from '../controllers/AdminController';
 import { systemConfigController } from '../controllers/SystemConfigController';
 import { visitorController } from '../controllers/VisitorController';
 import { authenticateToken, requireAdmin, optionalAuth } from '../middleware/auth';
+import { loginLimiter, agentLimiter, publicLimiter } from '../middleware/rateLimit';
+import { validateBody } from '../middleware/validate';
+import { AgentRegisterSchema, AgentHeartbeatSchema, AgentDiagnosticSchema } from '../schemas/agent';
+import { LoginSchema, ChangePasswordSchema, RefreshSchema } from '../schemas/auth';
+import { CreateUserSchema, UpdateUserSchema, CreateNodeSchema, UpdateNodeSchema } from '../schemas/admin';
 import { APP_VERSION } from '../utils/version';
 
 const router = Router();
@@ -57,11 +62,12 @@ router.get('/info', (req: Request, res: Response) => {
 });
 
 // 节点管理路由
-router.get('/nodes', nodeController.getAllNodes.bind(nodeController));
-router.get('/nodes/:id', nodeController.getNodeById.bind(nodeController));
-router.post('/nodes', nodeController.createNode.bind(nodeController));
-router.put('/nodes/:id', nodeController.updateNode.bind(nodeController));
-router.delete('/nodes/:id', nodeController.deleteNode.bind(nodeController));
+router.get('/nodes', publicLimiter, nodeController.getAllNodes.bind(nodeController));
+router.get('/nodes/:id', publicLimiter, nodeController.getNodeById.bind(nodeController));
+// 节点写操作仅限管理员
+router.post('/nodes', authenticateToken, requireAdmin, nodeController.createNode.bind(nodeController));
+router.put('/nodes/:id', authenticateToken, requireAdmin, nodeController.updateNode.bind(nodeController));
+router.delete('/nodes/:id', authenticateToken, requireAdmin, nodeController.deleteNode.bind(nodeController));
 
 // 节点诊断路由
 router.get('/nodes/:id/diagnostics', nodeController.getNodeDiagnostics.bind(nodeController));
@@ -71,39 +77,41 @@ router.get('/nodes/:id/heartbeat', nodeController.getNodeHeartbeatData.bind(node
 router.get('/nodes/:id/events', nodeController.getNodeEvents.bind(nodeController));
 
 // 统计信息路由
-router.get('/stats', nodeController.getNodeStats.bind(nodeController));
+router.get('/stats', publicLimiter, nodeController.getNodeStats.bind(nodeController));
 
 // Agent相关路由
-router.post('/agents/register', nodeController.registerAgent.bind(nodeController));
-router.post('/agents/:agentId/heartbeat', nodeController.heartbeat.bind(nodeController));
-router.post('/agents/:agentId/diagnostic', nodeController.reportDiagnostic.bind(nodeController));
-router.get('/agents/install-script', nodeController.getInstallScript.bind(nodeController));
-router.get('/agents/install-command', nodeController.getInstallCommand.bind(nodeController));
+router.post('/agents/register', agentLimiter, validateBody(AgentRegisterSchema), nodeController.registerAgent.bind(nodeController));
+router.post('/agents/:agentId/heartbeat', agentLimiter, validateBody(AgentHeartbeatSchema), nodeController.heartbeat.bind(nodeController));
+router.post('/agents/:agentId/diagnostic', agentLimiter, validateBody(AgentDiagnosticSchema), nodeController.reportDiagnostic.bind(nodeController));
+// 安装脚本/命令仅管理员可获取
+router.get('/agents/install-script', authenticateToken, requireAdmin, nodeController.getInstallScript.bind(nodeController));
+router.get('/agents/install-command', authenticateToken, requireAdmin, nodeController.getInstallCommand.bind(nodeController));
 
 // 访问者IP信息路由（公开访问）
-router.get('/visitor/info', visitorController.getVisitorInfo.bind(visitorController));
-router.get('/visitor/ip/:ip', visitorController.getIPDetails.bind(visitorController));
+router.get('/visitor/info', publicLimiter, visitorController.getVisitorInfo.bind(visitorController));
+router.get('/visitor/ip/:ip', publicLimiter, visitorController.getIPDetails.bind(visitorController));
 
 // 认证相关路由
-router.post('/auth/login', authController.login.bind(authController));
+router.post('/auth/login', loginLimiter, validateBody(LoginSchema), authController.login.bind(authController));
 router.post('/auth/logout', authController.logout.bind(authController));
-router.post('/auth/refresh', authenticateToken, authController.refreshToken.bind(authController));
+// 刷新令牌不需要 access token（使用 refresh token 轮换）
+router.post('/auth/refresh', loginLimiter, validateBody(RefreshSchema), authController.refreshToken.bind(authController));
 
 // 用户相关路由（需要认证）
 router.get('/auth/profile', authenticateToken, authController.getProfile.bind(authController));
-router.put('/auth/password', authenticateToken, authController.changePassword.bind(authController));
+router.put('/auth/password', authenticateToken, validateBody(ChangePasswordSchema), authController.changePassword.bind(authController));
 
 // 管理员相关路由（需要管理员权限）
 // 节点管理
 router.get('/admin/nodes', authenticateToken, requireAdmin, nodeController.getAllNodes.bind(nodeController));
-router.post('/admin/nodes', authenticateToken, requireAdmin, adminController.createNode.bind(adminController));
-router.put('/admin/nodes/:id', authenticateToken, requireAdmin, adminController.updateNode.bind(adminController));
+router.post('/admin/nodes', authenticateToken, requireAdmin, validateBody(CreateNodeSchema), adminController.createNode.bind(adminController));
+router.put('/admin/nodes/:id', authenticateToken, requireAdmin, validateBody(UpdateNodeSchema), adminController.updateNode.bind(adminController));
 router.delete('/admin/nodes/:id', authenticateToken, requireAdmin, adminController.deleteNode.bind(adminController));
 
 // 用户管理
 router.get('/admin/users', authenticateToken, requireAdmin, adminController.getAllUsers.bind(adminController));
-router.post('/admin/users', authenticateToken, requireAdmin, adminController.createUser.bind(adminController));
-router.put('/admin/users/:id', authenticateToken, requireAdmin, adminController.updateUser.bind(adminController));
+router.post('/admin/users', authenticateToken, requireAdmin, validateBody(CreateUserSchema), adminController.createUser.bind(adminController));
+router.put('/admin/users/:id', authenticateToken, requireAdmin, validateBody(UpdateUserSchema), adminController.updateUser.bind(adminController));
 router.delete('/admin/users/:id', authenticateToken, requireAdmin, adminController.deleteUser.bind(adminController));
 
 // 系统统计

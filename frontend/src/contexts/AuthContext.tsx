@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService, type User } from '@/services/api';
+import { useApiNotifications } from '@/hooks/useApiNotifications';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,9 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 初始化API通知系统
+  useApiNotifications();
 
   useEffect(() => {
     // 检查是否已登录

@@ -8,6 +8,7 @@ import { eventService } from '../services/EventService';
 import { ipInfoService } from '../services/IPInfoService';
 import * as fs from 'fs';
 import * as path from 'path';
+import { sanitizeNode, sanitizeNodes } from '../utils/serialize';
 
 export class NodeController {
 
@@ -18,7 +19,7 @@ export class NodeController {
       
       const response: ApiResponse = {
         success: true,
-        data: nodes,
+        data: sanitizeNodes(nodes as any[]),
         message: `Found ${nodes.length} nodes`
       };
       
@@ -50,7 +51,7 @@ export class NodeController {
       
       const response: ApiResponse = {
         success: true,
-        data: node
+        data: sanitizeNode(node)
       };
       
       res.json(response);
@@ -204,7 +205,8 @@ export class NodeController {
       const { type, limit } = req.query;
       
       const diagnosticType = type as DiagnosticType | undefined;
-      const recordLimit = limit ? parseInt(limit as string) : undefined;
+      const parsed = limit ? parseInt(limit as string) : undefined;
+      const recordLimit = Math.max(1, Math.min(parsed || 100, 500));
       
       const diagnostics = await nodeService.getNodeDiagnostics(
         id,
@@ -264,7 +266,8 @@ export class NodeController {
   async getNodeEvents(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const rawLimit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const limit = Math.max(1, Math.min(rawLimit, 500));
       const events = await (await import('../services/EventService')).eventService.getEvents(id, limit);
       const response: ApiResponse = {
         success: true,
@@ -288,6 +291,9 @@ export class NodeController {
       const headerApiKey = req.headers['x-api-key'] as string;
       const bodyApiKey = req.body.apiKey;
       const apiKey = headerApiKey || bodyApiKey;
+      const ts = (req.headers['x-timestamp'] as string) || undefined;
+      const sig = (req.headers['x-signature'] as string) || undefined;
+      const nonce = (req.headers['x-nonce'] as string) || undefined;
       
   logger.info(`[NodeController] Agent注册请求 - AgentId: ${agentId}`);
   logger.debug(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 4) + '...' : 'null'}`);
@@ -307,7 +313,7 @@ export class NodeController {
 
   logger.debug(`[NodeController] 开始验证API密钥`);
       const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
-  logger.debug(`[NodeController] API密钥验证结果: ${isValidApiKey}`);
+      logger.debug(`[NodeController] API密钥验证结果: ${isValidApiKey}`);
       
       if (!isValidApiKey) {
         logger.info(`[NodeController] API密钥验证失败，返回401`);
@@ -317,6 +323,18 @@ export class NodeController {
         };
         res.status(401).json(response);
         return;
+      }
+
+      // 可选：签名校验（通过环境变量强制或自愿）
+      const signCheck = await apiKeyService.validateSignedRequest({ providedApiKey: apiKey, timestamp: ts, signature: sig, nonce, body: req.body });
+      if (!signCheck.ok) {
+        logger.warn(`[NodeController] 签名校验失败: ${signCheck.reason}`);
+        // 若强制要求签名，返回401；否则继续
+        if ((process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true') {
+          const response: ApiResponse = { success: false, error: 'Invalid signature' };
+          res.status(401).json(response);
+          return;
+        }
       }
       
       if (!agentId) {
@@ -435,6 +453,9 @@ export class NodeController {
       const headerApiKey = req.headers['x-api-key'] as string;
       const bodyApiKey = req.body.apiKey;
       const apiKey = headerApiKey || bodyApiKey;
+      const ts = (req.headers['x-timestamp'] as string) || undefined;
+      const sig = (req.headers['x-signature'] as string) || undefined;
+      const nonce = (req.headers['x-nonce'] as string) || undefined;
       
   logger.info(`[NodeController] Agent心跳请求 - AgentId: ${agentId}`);
   logger.debug(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 4) + '...' : 'null'}`);
@@ -514,6 +535,15 @@ export class NodeController {
       } catch (e) {
         logger.debug('Optional node IP update during heartbeat failed:', e);
       }
+      const signCheck = await apiKeyService.validateSignedRequest({ providedApiKey: apiKey, timestamp: ts, signature: sig, nonce, body: req.body });
+      if (!signCheck.ok) {
+        logger.warn(`[NodeController] 心跳签名校验失败: ${signCheck.reason}`);
+        if ((process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true') {
+          const response: ApiResponse = { success: false, error: 'Invalid signature' };
+          res.status(401).json(response);
+          return;
+        }
+      }
 
       await nodeService.recordHeartbeat(agentId, heartbeatData);
       
@@ -539,6 +569,9 @@ export class NodeController {
       const { agentId } = req.params;
       const diagnosticData = req.body;
       const apiKey = req.headers['x-api-key'] as string || req.body.apiKey;
+      const ts = (req.headers['x-timestamp'] as string) || undefined;
+      const sig = (req.headers['x-signature'] as string) || undefined;
+      const nonce = (req.headers['x-nonce'] as string) || undefined;
       
       // 验证API密钥
       if (!apiKey) {
@@ -558,6 +591,16 @@ export class NodeController {
         };
         res.status(401).json(response);
         return;
+      }
+
+      const signCheck = await apiKeyService.validateSignedRequest({ providedApiKey: apiKey, timestamp: ts, signature: sig, nonce, body: req.body });
+      if (!signCheck.ok) {
+        logger.warn(`[NodeController] 诊断签名校验失败: ${signCheck.reason}`);
+        if ((process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true') {
+          const response: ApiResponse = { success: false, error: 'Invalid signature' };
+          res.status(401).json(response);
+          return;
+        }
       }
       
       if (!agentId) {

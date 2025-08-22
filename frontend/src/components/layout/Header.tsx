@@ -55,7 +55,7 @@ export const Header = () => {
       <div className="relative z-10 px-4 py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Logo - 科技感3D效果 */}
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center space-x-4 group">
+          <Link to="/" className="flex items-center space-x-4 group">
             <div className="relative">
               {/* 外层光晕 */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-75 group-hover:opacity-100 blur-sm group-hover:blur transition-all duration-500" />

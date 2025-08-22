@@ -115,6 +115,7 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
               variant="outline"
               onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
               className={copied === 'quick' ? 'text-green-600' : ''}
+              aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
             >
               {copied === 'quick' ? (
                 <>
@@ -238,6 +239,7 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
                 : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
             }`}
             onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
+            aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
             title={copied === 'quick' ? '已复制！' : '复制命令'}
           >
             {copied === 'quick' ? (

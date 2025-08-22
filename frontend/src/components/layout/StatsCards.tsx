@@ -95,19 +95,19 @@ export const StatsCards = ({
                   <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90 mb-1">
                     {stat.title}
                   </h3>
                   <div className="flex items-center space-x-1">
                     <div className="status-indicator bg-green-400" />
-                    <span className="text-xs text-white/60">ACTIVE</span>
+                    <span className="text-xs text-gray-700 dark:text-white/60">ACTIVE</span>
                   </div>
                 </div>
               </div>
               
               <Badge 
                 variant={stat.badgeVariant as any} 
-                className="text-xs font-medium backdrop-blur-sm bg-white/10 border-white/20 text-white/90"
+                className="text-xs font-medium backdrop-blur-sm bg-white/10 border-white/20 text-gray-900 dark:text-white/90"
               >
                 {stat.badge}
               </Badge>
@@ -118,7 +118,7 @@ export const StatsCards = ({
               <div className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent drop-shadow-sm`}>
                 {stat.value}
               </div>
-              <div className="text-sm text-white/70 font-medium flex items-center">
+              <div className="text-sm text-gray-700 dark:text-white/70 font-medium flex items-center">
                 <TrendingUp className="h-4 w-4 mr-2 text-green-400" />
                 {stat.subtitle}
               </div>
@@ -127,7 +127,7 @@ export const StatsCards = ({
             {/* 进度指示器 */}
             {index === 0 && (
               <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-xs text-white/60">
+                <div className="flex justify-between text-xs text-gray-700 dark:text-white/60">
                   <span>可用率</span>
                   <span>{uptime}%</span>
                 </div>

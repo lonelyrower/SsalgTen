@@ -4,6 +4,7 @@ import { ApiResponse } from '../types';
 import { logger } from '../utils/logger';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { refreshTokenService } from '../services/RefreshTokenService';
 
 export interface LoginRequest {
   username: string;
@@ -75,7 +76,7 @@ export class AuthController {
         return;
       }
 
-      // 生成JWT token
+      // 生成JWT access token
       const tokenPayload: AuthTokenPayload = {
         userId: user.id,
         username: user.username,
@@ -87,6 +88,11 @@ export class AuthController {
         process.env.JWT_SECRET || 'default-secret',
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
       );
+
+      // 创建 refresh token
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || (req.socket as any).remoteAddress;
+      const userAgent = req.headers['user-agent'];
+      const { token: refreshToken, expiresAt } = await refreshTokenService.create(user.id, clientIp, userAgent);
 
       // 更新最后登录时间
       await prisma.user.update({
@@ -102,6 +108,7 @@ export class AuthController {
         data: {
           user: userInfo,
           token,
+          refreshToken,
           expiresIn: process.env.JWT_EXPIRES_IN || '7d'
         },
         message: 'Login successful'
@@ -253,54 +260,65 @@ export class AuthController {
     }
   }
 
-  // 登出 (客户端处理，服务端可选择性实现token黑名单)
+  // 登出：可选择性撤销 refresh token
   async logout(req: Request, res: Response): Promise<void> {
-    const response: ApiResponse = {
-      success: true,
-      message: 'Logout successful'
-    };
-
-    res.json(response);
+    try {
+      const { refreshToken } = req.body || {};
+      if (refreshToken) {
+        await refreshTokenService.revoke(refreshToken);
+      }
+      const response: ApiResponse = { success: true, message: 'Logout successful' };
+      res.json(response);
+    } catch (error) {
+      const response: ApiResponse = { success: false, error: 'Logout failed' };
+      res.status(500).json(response);
+    }
   }
 
   // 刷新token
   async refreshToken(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user?.userId;
-      const username = (req as any).user?.username;
-      const role = (req as any).user?.role;
+      const { refreshToken } = req.body || {};
+      if (!refreshToken) {
+        const response: ApiResponse = { success: false, error: 'refreshToken is required' };
+        res.status(400).json(response);
+        return;
+      }
 
-      if (!userId) {
-        const response: ApiResponse = {
-          success: false,
-          error: 'Invalid token'
-        };
+      const verified = await refreshTokenService.verify(refreshToken);
+      if (!verified) {
+        const response: ApiResponse = { success: false, error: 'Invalid refresh token' };
         res.status(401).json(response);
         return;
       }
 
-      // 验证用户仍然存在且活跃
+      // 校验用户仍然有效
       const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { active: true }
+        where: { id: verified.userId },
+        select: { id: true, username: true, role: true, active: true }
       });
-
       if (!user || !user.active) {
-        const response: ApiResponse = {
-          success: false,
-          error: 'User account is not active'
-        };
+        const response: ApiResponse = { success: false, error: 'User account is not active' };
         res.status(401).json(response);
         return;
       }
 
-      // 生成新的token
-      const tokenPayload: AuthTokenPayload = {
-        userId,
-        username,
-        role
-      };
+      // 轮换 refresh token
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || (req.socket as any).remoteAddress;
+      const userAgent = req.headers['user-agent'];
+      const rotated = await refreshTokenService.rotate(refreshToken, clientIp, userAgent);
+      if (!rotated) {
+        const response: ApiResponse = { success: false, error: 'Failed to rotate refresh token' };
+        res.status(500).json(response);
+        return;
+      }
 
+      // 发新 access token
+      const tokenPayload: AuthTokenPayload = {
+        userId: user.id,
+        username: user.username,
+        role: user.role
+      };
       const newToken = jwt.sign(
         tokenPayload,
         process.env.JWT_SECRET || 'default-secret',
@@ -311,18 +329,14 @@ export class AuthController {
         success: true,
         data: {
           token: newToken,
+          refreshToken: rotated.token,
           expiresIn: process.env.JWT_EXPIRES_IN || '7d'
         }
       };
-
       res.json(response);
-
     } catch (error) {
       logger.error('Refresh token error:', error);
-      const response: ApiResponse = {
-        success: false,
-        error: 'Failed to refresh token'
-      };
+      const response: ApiResponse = { success: false, error: 'Failed to refresh token' };
       res.status(500).json(response);
     }
   }

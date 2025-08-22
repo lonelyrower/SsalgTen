@@ -3,6 +3,7 @@ import { config } from '../config';
 import { getSystemInfo } from '../utils/system';
 import { logger } from '../utils/logger';
 import { HeartbeatData } from '../types';
+import { buildSignedHeaders } from '../utils/signing';
 
 export class HeartbeatService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -50,7 +51,7 @@ export class HeartbeatService {
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': config.apiKey
+            ...buildSignedHeaders(config.apiKey, heartbeatData)
           },
           timeout: 10000
         }
@@ -95,7 +96,7 @@ export class HeartbeatService {
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': config.apiKey
+            ...buildSignedHeaders(config.apiKey, registrationData)
           },
           timeout: 15000
         }

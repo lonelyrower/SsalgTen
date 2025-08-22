@@ -2,8 +2,10 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import ErrorBoundary, { PageErrorBoundary } from '@/components/error/ErrorBoundary';
 import './App.css';
 
 // Lazy load pages for better performance
@@ -14,24 +16,37 @@ const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ defau
 const DiagnosticsPage = lazy(() => import('@/pages/DiagnosticsPage').then(module => ({ default: module.DiagnosticsPage })));
 const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
 const UniversePage = lazy(() => import('@/pages/UniversePage').then(module => ({ default: module.UniversePage })));
+const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AuthProvider>
-        <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <NotificationProvider>
+          <Router>
+            <AuthProvider>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
           {/* 公开路由 */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={
+            <PageErrorBoundary>
+              <HomePage />
+            </PageErrorBoundary>
+          } />
+          <Route path="/login" element={
+            <PageErrorBoundary>
+              <LoginPage />
+            </PageErrorBoundary>
+          } />
           
           {/* 需要认证的路由 */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <PageErrorBoundary>
+                  <DashboardPage />
+                </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -41,7 +56,9 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute requiredRole="ADMIN">
-                <DashboardPage view="settings" />
+                <PageErrorBoundary>
+                  <AdminPage />
+                </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -51,7 +68,9 @@ function App() {
             path="/nodes"
             element={
               <ProtectedRoute requiredRole="OPERATOR">
-                <NodesPage />
+                <PageErrorBoundary>
+                  <NodesPage />
+                </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -60,7 +79,9 @@ function App() {
             path="/diagnostics"
             element={
               <ProtectedRoute requiredRole="VIEWER">
-                <DiagnosticsPage />
+                <PageErrorBoundary>
+                  <DiagnosticsPage />
+                </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -70,7 +91,9 @@ function App() {
             path="/security"
             element={
               <ProtectedRoute requiredRole="VIEWER">
-                <SecurityPage />
+                <PageErrorBoundary>
+                  <SecurityPage />
+                </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -79,7 +102,9 @@ function App() {
             path="/universe"
             element={
               <ProtectedRoute requiredRole="VIEWER">
-                <UniversePage />
+                <PageErrorBoundary>
+                  <UniversePage />
+                </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -87,10 +112,12 @@ function App() {
           {/* 默认重定向 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        </Suspense>
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+              </Suspense>
+            </AuthProvider>
+          </Router>
+        </NotificationProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

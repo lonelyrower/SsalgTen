@@ -5,26 +5,18 @@ import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, Settings, BarChart3, Loader2, Download } from 'lucide-react';
+import { Activity, Loader2 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
+import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 
 // Lazy load heavy components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
-const AnalyticsPanel = lazy(() => import('@/components/analytics/AnalyticsPanel').then(module => ({ default: module.AnalyticsPanel })));
-const UserManagement = lazy(() => import('@/components/admin/UserManagement').then(module => ({ default: module.UserManagement })));
-const SystemSettings = lazy(() => import('@/components/admin/SystemSettings').then(module => ({ default: module.SystemSettings })));
-const AgentInstaller = lazy(() => import('@/components/agent/AgentInstaller').then(module => ({ default: module.AgentInstaller })));
 
-interface DashboardPageProps {
-  view?: 'overview' | 'users' | 'settings' | 'analytics' | 'agents';
-}
-
-export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' }) => {
+export const DashboardPage: React.FC = () => {
   const { user, hasRole } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [activeView, setActiveView] = useState(view);
   const { nodes, stats, lastUpdate, connected } = useRealTime();
 
   const handleNodeClick = (node: NodeData) => {
@@ -113,100 +105,40 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' 
           </div>
         </div>
 
-        {/* 管理功能导航 */}
-        {hasRole('OPERATOR') && (
-          <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant={activeView === 'overview' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveView('overview')}
-                className="flex items-center space-x-2"
-              >
-                <Activity className="h-4 w-4" />
-                <span>监控概览</span>
-              </Button>
-              
-              {hasRole('ADMIN') && (
-                <>
-                  <Button
-                    variant={activeView === 'users' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActiveView('users')}
-                    className="flex items-center space-x-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    <span>用户管理</span>
-                  </Button>
-                  
-                  <Button
-                    variant={activeView === 'settings' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActiveView('settings')}
-                    className="flex items-center space-x-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>系统设置</span>
-                  </Button>
-                </>
-              )}
-              
-              <Button
-                variant={activeView === 'analytics' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveView('analytics')}
-                className="flex items-center space-x-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span>数据分析</span>
-              </Button>
-              
-              <Button
-                variant={activeView === 'agents' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveView('agents')}
-                className="flex items-center space-x-2"
-              >
-                <Download className="h-4 w-4" />
-                <span>节点部署</span>
-              </Button>
-            </div>
-          </div>
-        )}
 
-        {/* 根据选择的视图显示不同内容 */}
-        {activeView === 'overview' && (
-          <>
-            {/* 增强统计卡片 */}
-            <EnhancedStats 
-              totalNodes={stats?.totalNodes || 0}
-              onlineNodes={stats?.onlineNodes || 0}
-              totalCountries={stats?.totalCountries || 0}
-              totalProviders={stats?.totalProviders || 0}
-              className="mb-8"
-            />
-            
-            {/* 地图和活动日志布局 */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-              {/* 地图 */}
-              <div className="xl:col-span-2">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      全球节点网络
-                    </h2>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <span>在线 ({stats?.onlineNodes || 0})</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <span>离线 ({(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)})</span>
-                      </div>
+        {/* 监控概览内容 */}
+        <>
+          {/* 增强统计卡片 */}
+          <EnhancedStats 
+            totalNodes={stats?.totalNodes || 0}
+            onlineNodes={stats?.onlineNodes || 0}
+            totalCountries={stats?.totalCountries || 0}
+            totalProviders={stats?.totalProviders || 0}
+            className="mb-8"
+          />
+          
+          {/* 地图和活动日志布局 */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-6">
+            {/* 地图 */}
+            <div className="lg:col-span-2 xl:col-span-2">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    全球节点网络
+                  </h2>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span>在线 ({stats?.onlineNodes || 0})</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span>离线 ({(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)})</span>
                     </div>
                   </div>
-                  
+                </div>
+                
+                <ComponentErrorBoundary componentName="世界地图">
                   <Suspense fallback={
                     <div className="flex items-center justify-center h-64">
                       <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
@@ -220,88 +152,49 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ view = 'overview' 
                       className="mb-4"
                     />
                   </Suspense>
-                </div>
+                </ComponentErrorBoundary>
               </div>
-              
-              {/* 活动日志 */}
-              <div className="xl:col-span-1">
+            </div>
+            
+            {/* 活动日志 */}
+            <div className="lg:col-span-1 xl:col-span-1">
+              <ComponentErrorBoundary componentName="活动日志">
                 <ActivityLog />
+              </ComponentErrorBoundary>
+            </div>
+          </div>
+
+          {/* 选中节点信息 */}
+          {selectedNode && (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-blue-900 dark:text-blue-100">
+                  Selected Node: {selectedNode.name}
+                </h3>
+                <Button
+                  onClick={() => setShowDiagnostics(true)}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Run Diagnostics
+                </Button>
+              </div>
+              <p className="text-sm text-blue-700 dark:text-blue-200 mb-2">
+                {selectedNode.city}, {selectedNode.country} • {selectedNode.provider}
+              </p>
+              <div className="text-xs text-blue-600 dark:text-blue-300 space-y-1">
+                <div>Status: <span className="font-medium">{selectedNode.status.toUpperCase()}</span></div>
+                {selectedNode.ipv4 && <div>IPv4: <span className="font-mono">{selectedNode.ipv4}</span></div>}
+                {selectedNode.lastSeen && (
+                  <div>Last Seen: <span className="font-medium">
+                    {new Date(selectedNode.lastSeen).toLocaleString()}
+                  </span></div>
+                )}
               </div>
             </div>
-
-            {/* 选中节点信息 */}
-            {selectedNode && (
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-blue-900 dark:text-blue-100">
-                    Selected Node: {selectedNode.name}
-                  </h3>
-                  <Button
-                    onClick={() => setShowDiagnostics(true)}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Run Diagnostics
-                  </Button>
-                </div>
-                <p className="text-sm text-blue-700 dark:text-blue-200 mb-2">
-                  {selectedNode.city}, {selectedNode.country} • {selectedNode.provider}
-                </p>
-                <div className="text-xs text-blue-600 dark:text-blue-300 space-y-1">
-                  <div>Status: <span className="font-medium">{selectedNode.status.toUpperCase()}</span></div>
-                  {selectedNode.ipv4 && <div>IPv4: <span className="font-mono">{selectedNode.ipv4}</span></div>}
-                  {selectedNode.lastSeen && (
-                    <div>Last Seen: <span className="font-medium">
-                      {new Date(selectedNode.lastSeen).toLocaleString()}
-                    </span></div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeView === 'users' && hasRole('ADMIN') && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
-          }>
-            <UserManagement />
-          </Suspense>
-        )}
-
-
-        {activeView === 'settings' && hasRole('ADMIN') && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
-          }>
-            <SystemSettings />
-          </Suspense>
-        )}
-
-        {activeView === 'analytics' && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
-          }>
-            <AnalyticsPanel />
-          </Suspense>
-        )}
-
-        {activeView === 'agents' && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
-          }>
-            <AgentInstaller />
-          </Suspense>
-        )}
+          )}
+        </>
 
         {/* 连接状态提示 */}
         {!connected && nodes.length > 0 && (

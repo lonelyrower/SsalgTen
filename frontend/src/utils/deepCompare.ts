@@ -1,5 +1,5 @@
 // 深度比较两个对象是否相等
-export function deepEqual(obj1: any, obj2: any): boolean {
+export function deepEqual(obj1: unknown, obj2: unknown): boolean {
   if (obj1 === obj2) {
     return true;
   }
@@ -20,8 +20,8 @@ export function deepEqual(obj1: any, obj2: any): boolean {
     return false;
   }
 
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
+  const keys1 = Object.keys(obj1 as Record<string, unknown>);
+  const keys2 = Object.keys(obj2 as Record<string, unknown>);
 
   if (keys1.length !== keys2.length) {
     return false;
@@ -32,7 +32,7 @@ export function deepEqual(obj1: any, obj2: any): boolean {
       return false;
     }
 
-    if (!deepEqual(obj1[key], obj2[key])) {
+    if (!deepEqual((obj1 as Record<string, unknown>)[key], (obj2 as Record<string, unknown>)[key])) {
       return false;
     }
   }
@@ -40,8 +40,18 @@ export function deepEqual(obj1: any, obj2: any): boolean {
   return true;
 }
 
+// 节点类型接口（用于比较）
+interface NodeForComparison {
+  id: string;
+  status: string;
+  name: string;
+  country?: string;
+  city?: string;
+  provider?: string;
+}
+
 // 比较两个节点数组是否相等（用于避免不必要的渲染）
-export function compareNodes(nodes1: any[], nodes2: any[]): boolean {
+export function compareNodes(nodes1: NodeForComparison[], nodes2: NodeForComparison[]): boolean {
   if (nodes1.length !== nodes2.length) {
     return false;
   }
@@ -60,8 +70,18 @@ export function compareNodes(nodes1: any[], nodes2: any[]): boolean {
   });
 }
 
+// 统计数据类型接口（用于比较）
+interface StatsForComparison {
+  totalNodes: number;
+  onlineNodes: number;
+  offlineNodes: number;
+  unknownNodes: number;
+  totalCountries: number;
+  totalProviders: number;
+}
+
 // 比较统计数据是否相等
-export function compareStats(stats1: any, stats2: any): boolean {
+export function compareStats(stats1: StatsForComparison | null, stats2: StatsForComparison | null): boolean {
   if (!stats1 || !stats2) {
     return stats1 === stats2;
   }

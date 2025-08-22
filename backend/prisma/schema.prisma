@@ -181,6 +181,24 @@ model Setting {
   @@map("settings")
 }
 
+// 刷新令牌（用于无感续期与强制注销）
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  revoked    Boolean  @default(false)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ip         String?
+  userAgent  String?
+
+  @@map("refresh_tokens")
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 // 访问者信息记录
 model VisitorLog {
   id          String   @id @default(cuid())

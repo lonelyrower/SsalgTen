@@ -106,8 +106,10 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
       newErrors.email = '请输入有效的邮箱地址';
     }
 
-    if (!isEditing || formData.password) {
-      if (!formData.password) {
+    // 密码验证逻辑
+    if (!isEditing) {
+      // 新建用户：密码必填
+      if (!formData.password.trim()) {
         newErrors.password = '密码不能为空';
       } else if (formData.password.length < 6) {
         newErrors.password = '密码至少6个字符';
@@ -115,6 +117,20 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
 
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = '密码确认不匹配';
+      }
+    } else {
+      // 编辑用户：如果输入了密码，则进行验证
+      if (formData.password.trim()) {
+        if (formData.password.length < 6) {
+          newErrors.password = '密码至少6个字符';
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          newErrors.confirmPassword = '密码确认不匹配';
+        }
+      } else if (formData.confirmPassword.trim()) {
+        // 如果只填了确认密码而没填密码
+        newErrors.password = '请输入新密码';
       }
     }
 
@@ -138,7 +154,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
         name: formData.name,
         role: formData.role,
         active: formData.active,
-        ...((!isEditing || formData.password) && { password: formData.password }),
+        ...((!isEditing || formData.password.trim()) && { password: formData.password }),
       };
 
       let response;
@@ -149,6 +165,10 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
       }
 
       if (response.success) {
+        // 显示成功提示
+        if (isEditing && formData.password) {
+          alert('密码修改成功！');
+        }
         onSaved();
         onClose();
       } else {
@@ -302,7 +322,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
           </div>
 
           {/* 确认密码 */}
-          {(!isEditing || formData.password) && (
+          {(!isEditing || formData.password.trim()) && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 确认密码 *

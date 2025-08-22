@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { logger } from '../utils/logger';
 import { authenticateSocket } from './socketAuth';
 import { NodeService, nodeService } from '../services/NodeService';
+import { sanitizeNodes } from '../utils/serialize';
 
 export interface AuthenticatedSocket extends Socket {
   user?: {
@@ -53,9 +54,10 @@ export function setupSocketHandlers(io: Server) {
     socket.on('get_realtime_nodes', async () => {
       try {
         const nodes = await nodeService.getAllNodes();
+        const safeNodes = sanitizeNodes(nodes as any[]);
         socket.emit('realtime_nodes', {
           success: true,
-          data: nodes,
+          data: safeNodes,
           timestamp: new Date().toISOString()
         });
       } catch (error) {
@@ -83,17 +85,18 @@ export function setupSocketHandlers(io: Server) {
   setInterval(async () => {
     try {
       const nodes = await nodeService.getAllNodes();
+      const safeNodes = sanitizeNodes(nodes as any[]);
       const stats = NodeService.calculateStats(nodes);
       
       // 简单比较，只有数据真正变化时才广播
-      const currentData = { nodes, stats };
+      const currentData = { nodes: safeNodes, stats };
       const dataChanged = !lastBroadcastData || 
         JSON.stringify(lastBroadcastData.stats) !== JSON.stringify(stats) ||
-        nodes.length !== lastBroadcastData.nodes.length;
+        safeNodes.length !== lastBroadcastData.nodes.length;
       
       if (dataChanged) {
         io.to('nodes_updates').emit('nodes_status_update', {
-          nodes,
+          nodes: safeNodes,
           stats,
           timestamp: new Date().toISOString()
         });

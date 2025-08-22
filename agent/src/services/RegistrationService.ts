@@ -2,6 +2,7 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 import { config } from '../config';
 import { getSystemInfo, getPublicIPs } from '../utils/system';
+import { buildSignedHeaders } from '../utils/signing';
 
 export interface RegistrationResult {
   success: boolean;
@@ -69,8 +70,8 @@ export class RegistrationService {
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': `SsalgTen-Agent/${config.id}`,
-            // Backend expects API key via header or body
-            'x-api-key': config.apiKey,
+            // Signed headers for backend verification
+            ...buildSignedHeaders(config.apiKey, registrationData),
           }
         }
       );
@@ -196,8 +197,7 @@ export class RegistrationService {
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': `SsalgTen-Agent/${config.id}`,
-            // Include API key to authorize heartbeat
-            'x-api-key': config.apiKey,
+            ...buildSignedHeaders(config.apiKey, heartbeatData),
           }
         }
       );

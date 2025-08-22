@@ -1,11 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AgentInstallCommands } from './AgentInstallCommands';
+import { Button } from '@/components/ui/button';
 import { 
   Download, 
-  AlertTriangle
+  AlertTriangle,
+  Copy,
+  Check
 } from 'lucide-react';
 
 export const AgentInstaller: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+  
+  const uninstallCommand = 'curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall';
+  
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      alert('复制失败，请手动选择并复制命令');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -39,8 +71,34 @@ export const AgentInstaller: React.FC = () => {
           如需卸载已安装的节点，请在目标服务器上执行：
         </p>
 
-        <div className="bg-red-900 text-red-200 p-4 rounded-lg overflow-x-auto text-sm font-mono">
-          <code>curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall</code>
+        <div className="relative">
+          <pre className="bg-red-900 text-red-200 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+            <code>{uninstallCommand}</code>
+          </pre>
+          <Button
+            size="sm"
+            variant="outline"
+            className={`absolute top-2 right-2 transition-all duration-200 ${
+              copied 
+                ? 'bg-green-600 border-green-500 hover:bg-green-700 text-white' 
+                : 'bg-red-800 border-red-600 hover:bg-red-700 text-red-200'
+            }`}
+            onClick={() => copyToClipboard(uninstallCommand)}
+            aria-label={copied ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
+            title={copied ? '已复制！' : '复制命令'}
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4 text-white mr-1" />
+                <span className="text-xs">已复制</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4 mr-1" />
+                <span className="text-xs">复制</span>
+              </>
+            )}
+          </Button>
         </div>
 
         <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">

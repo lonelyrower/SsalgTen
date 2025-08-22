@@ -13,6 +13,10 @@ export interface ApiKeyInfo {
 }
 
 export class ApiKeyService {
+  // 签名校验缓存（防重放）: nonce -> expireAt
+  private nonceCache: Map<string, number> = new Map();
+  private signatureTtlSec = parseInt(process.env.AGENT_SIGNATURE_TTL_SECONDS || '300');
+  private requireSignature = (process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true';
   // 旧密钥宽限期（小时）
   private previousKeyGraceHours = parseInt(process.env.PREVIOUS_API_KEY_GRACE_HOURS || '24');
   // 生成安全的API密钥
@@ -354,6 +358,70 @@ export class ApiKeyService {
         warnings: ['无法检查API密钥安全性'],
         recommendations: ['检查数据库连接和配置']
       };
+    }
+  }
+
+  // 校验Agent签名请求（可选启用）
+  async validateSignedRequest(options: {
+    providedApiKey?: string;
+    timestamp?: string;
+    signature?: string;
+    nonce?: string;
+    body?: any;
+  }): Promise<{ ok: boolean; reason?: string }>{
+    const { providedApiKey, timestamp, signature, nonce, body } = options;
+    if (!this.requireSignature) {
+      // 未强制要求时，如果未提供签名则放行，但记录提示
+      if (!signature) {
+        logger.debug('[ApiKeyService] Signature not provided (not required)');
+        return { ok: true };
+      }
+    }
+
+    if (!timestamp || !signature) {
+      return { ok: false, reason: 'missing_signature_or_timestamp' };
+    }
+    // 时间窗口校验
+    const ts = parseInt(timestamp, 10);
+    if (!Number.isFinite(ts)) {
+      return { ok: false, reason: 'invalid_timestamp' };
+    }
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (Math.abs(nowSec - ts) > this.signatureTtlSec) {
+      return { ok: false, reason: 'timestamp_out_of_window' };
+    }
+    // nonce 防重放
+    if (nonce) {
+      const exist = this.nonceCache.get(nonce);
+      if (exist && exist > Date.now()) {
+        return { ok: false, reason: 'replay_detected' };
+      }
+    }
+
+    try {
+      // 使用当前或处于宽限期的旧系统密钥
+      const systemKey = await this.getSystemApiKey();
+      const previousKeyRecord = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } });
+      const previousKeyExpires = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } });
+      const candidates = [systemKey];
+      if (previousKeyRecord && previousKeyExpires && new Date() < new Date(previousKeyExpires.value)) {
+        candidates.push(previousKeyRecord.value);
+      }
+
+      const payload = `${timestamp}.${JSON.stringify(body ?? {})}`;
+      const compute = (key: string) => crypto.createHmac('sha256', key).update(payload).digest('hex');
+      const matched = candidates.some(k => compute(k) === signature);
+      if (!matched) {
+        return { ok: false, reason: 'bad_signature' };
+      }
+      // 记录 nonce
+      if (nonce) {
+        this.nonceCache.set(nonce, Date.now() + this.signatureTtlSec * 1000);
+      }
+      return { ok: true };
+    } catch (e) {
+      logger.warn('[ApiKeyService] Signature validation error:', e);
+      return { ok: false, reason: 'internal_error' };
     }
   }
 }
