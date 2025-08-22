@@ -33,7 +33,7 @@ interface FormData {
 }
 
 export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onSaved }) => {
-  const { showSuccess, showError } = useNotification();
+  const { showSuccess } = useNotification();
   const [formData, setFormData] = useState<FormData>({
     username: '',
     email: '',

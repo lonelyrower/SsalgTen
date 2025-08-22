@@ -1,4 +1,4 @@
-import { apiService, ApiResponse } from './api';
+import { apiService, type ApiResponse } from './api';
 
 // Enhanced API service with user feedback
 class EnhancedApiService {
@@ -158,9 +158,10 @@ class EnhancedApiService {
   getNodeById = apiService.getNodeById.bind(apiService);
   getStats = apiService.getStats.bind(apiService);
   getNodeDiagnostics = apiService.getNodeDiagnostics.bind(apiService);
-  getNodeDetails = apiService.getNodeDetails.bind(apiService);
+  // TODO: These methods need to be implemented in apiService
+  // getNodeDetails = apiService.getNodeDetails?.bind(apiService);
   getUsers = apiService.getUsers.bind(apiService);
-  getUserById = apiService.getUserById.bind(apiService);
+  // getUserById = apiService.getUserById?.bind(apiService);
   getInstallCommand = apiService.getInstallCommand.bind(apiService);
   logout = apiService.logout.bind(apiService);
   refreshToken = apiService.refreshToken.bind(apiService);

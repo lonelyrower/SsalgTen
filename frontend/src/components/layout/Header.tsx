@@ -1,4 +1,4 @@
-import { Globe, Activity, Settings, LogOut, User, Shield } from 'lucide-react';
+import { Globe, Activity, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -14,31 +14,6 @@ export const Header = () => {
     navigate('/login');
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return <Shield className="h-4 w-4 text-red-400" />;
-      case 'OPERATOR':
-        return <Settings className="h-4 w-4 text-blue-400" />;
-      case 'VIEWER':
-        return <User className="h-4 w-4 text-green-400" />;
-      default:
-        return <User className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return '管理员';
-      case 'OPERATOR':
-        return '操作员';
-      case 'VIEWER':
-        return '查看者';
-      default:
-        return '未知';
-    }
-  };
 
   return (
     <header className="relative overflow-hidden glass sticky top-0 z-50 border-b border-white/10">

@@ -14,7 +14,7 @@ const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const DashboardPage: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const { nodes, stats, lastUpdate, connected } = useRealTime();
