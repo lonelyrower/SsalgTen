@@ -18,8 +18,16 @@ CREATE INDEX IF NOT EXISTS "refresh_tokens_userId_idx" ON "public"."refresh_toke
 CREATE INDEX IF NOT EXISTS "refresh_tokens_expiresAt_idx" ON "public"."refresh_tokens"("expiresAt");
 
 -- Foreign Key
-ALTER TABLE "public"."refresh_tokens" 
-  ADD CONSTRAINT IF NOT EXISTS "refresh_tokens_userId_fkey" 
-  FOREIGN KEY ("userId") REFERENCES "public"."users"("id") 
-  ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'refresh_tokens_userId_fkey'
+  ) THEN
+    ALTER TABLE "public"."refresh_tokens" 
+      ADD CONSTRAINT "refresh_tokens_userId_fkey" 
+      FOREIGN KEY ("userId") REFERENCES "public"."users"("id") 
+      ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
