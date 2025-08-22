@@ -106,7 +106,7 @@ export const HomePage = () => {
                     <h2 className="text-2xl font-bold gradient-text">
                       全球节点网络
                     </h2>
-                    <p className="text-white/70 text-sm font-medium flex items-center">
+                    <p className="text-gray-600 dark:text-white/70 text-sm font-medium flex items-center">
                       <Activity className="h-4 w-4 mr-2 text-green-400" />
                       实时监控全球网络节点状态和性能
                     </p>
@@ -118,15 +118,15 @@ export const HomePage = () => {
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-green-400" />
-                  <span className="font-medium text-white/90">在线 {stats?.onlineNodes || 0}</span>
+                  <span className="font-medium text-gray-900 dark:text-white/90">在线 {stats?.onlineNodes || 0}</span>
                 </div>
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-red-400" />
-                  <span className="font-medium text-white/90">离线 {stats?.offlineNodes || 0}</span>
+                  <span className="font-medium text-gray-900 dark:text-white/90">离线 {stats?.offlineNodes || 0}</span>
                 </div>
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-gray-400" />
-                  <span className="font-medium text-white/90">未知 {stats?.unknownNodes || 0}</span>
+                  <span className="font-medium text-gray-900 dark:text-white/90">未知 {stats?.unknownNodes || 0}</span>
                 </div>
               </div>
             </div>
@@ -156,7 +156,7 @@ export const HomePage = () => {
                       <h3 className="text-2xl font-bold gradient-text">
                         {selectedNode.name}
                       </h3>
-                      <p className="text-white/70 text-sm font-medium flex items-center">
+                      <p className="text-gray-600 dark:text-white/70 text-sm font-medium flex items-center">
                         <Globe className="h-4 w-4 mr-2 text-purple-400" />
                         已选中网络节点 • 正在监控
                       </p>
@@ -166,23 +166,23 @@ export const HomePage = () => {
                   {/* 节点详细信息网格 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                      <div className="text-xs text-white/60 mb-2 font-medium">地理位置</div>
-                      <div className="font-bold text-white/90 text-lg">
+                      <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">地理位置</div>
+                      <div className="font-bold text-gray-900 dark:text-white/90 text-lg">
                         {selectedNode.city}, {selectedNode.country}
                       </div>
                       <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
                     <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                      <div className="text-xs text-white/60 mb-2 font-medium">服务提供商</div>
-                      <div className="font-bold text-white/90 text-lg">
+                      <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">服务提供商</div>
+                      <div className="font-bold text-gray-900 dark:text-white/90 text-lg">
                         {selectedNode.provider}
                       </div>
                       <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
                     <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                      <div className="text-xs text-white/60 mb-2 font-medium">运行状态</div>
+                      <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">运行状态</div>
                       <div className="flex items-center space-x-2">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           selectedNode.status === 'online' 
@@ -199,7 +199,7 @@ export const HomePage = () => {
                     
                     {selectedNode.ipv4 && (
                       <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                        <div className="text-xs text-white/60 mb-2 font-medium">IPv4 地址</div>
+                        <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">IPv4 地址</div>
                         <div className="font-mono text-sm text-cyan-300 font-bold">
                           {selectedNode.ipv4}
                         </div>
@@ -209,8 +209,8 @@ export const HomePage = () => {
                     
                     {selectedNode.lastSeen && (
                       <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                        <div className="text-xs text-white/60 mb-2 font-medium">最后在线时间</div>
-                        <div className="font-medium text-sm text-white/90">
+                        <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">最后在线时间</div>
+                        <div className="font-medium text-sm text-gray-900 dark:text-white/90">
                           {new Date(selectedNode.lastSeen).toLocaleString('zh-CN')}
                         </div>
                         <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -232,7 +232,7 @@ export const HomePage = () => {
                   </Button>
                   
                   <div className="text-center lg:text-left">
-                    <div className="text-xs text-white/60 font-medium">
+                    <div className="text-xs text-gray-500 dark:text-white/60 font-medium">
                       点击运行完整网络性能检测
                     </div>
                   </div>

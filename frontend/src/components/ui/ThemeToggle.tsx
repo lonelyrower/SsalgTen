@@ -125,10 +125,11 @@ export const ThemeToggle: React.FC = () => {
           {/* 下拉菜单 */}
           <div 
             ref={menuRef}
-            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] overflow-hidden"
             role="menu"
             aria-labelledby="theme-toggle-button"
             onKeyDown={handleKeyDown}
+            style={{ zIndex: 9999 }}
           >
             <div className="py-2">
               <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">

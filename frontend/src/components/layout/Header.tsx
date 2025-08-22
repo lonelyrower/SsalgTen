@@ -152,39 +152,22 @@ export const Header = () => {
             </div>
           </div>
 
-          {/* 如果已认证，显示用户信息和退出按钮 */}
+          {/* 如果已认证，显示简化的用户操作 */}
           {isAuthenticated && user ? (
             <div className="flex items-center space-x-3">
-              {/* 用户信息卡片 */}
-              <div className="hidden md:flex items-center space-x-3 px-4 py-2 glass rounded-xl border border-white/20">
-                <div className="flex items-center space-x-3">
-                  {/* 用户头像/角色图标 */}
-                  <div className="relative">
-                    <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg backdrop-blur-sm">
-                      {getRoleIcon(user.role)}
-                    </div>
-                    <div className="absolute -top-1 -right-1 status-indicator bg-green-400" />
-                  </div>
-                  
-                  <div className="text-left">
-                    <div className="text-sm font-semibold text-white">
-                      {user.name || user.username}
-                    </div>
-                    <div className="text-xs text-white/60 font-medium">
-                      {getRoleText(user.role)}
-                    </div>
-                  </div>
-                </div>
+              {/* 简化的用户指示器 */}
+              <div className="hidden md:flex items-center space-x-2 text-white/80">
+                <div className="status-indicator bg-green-400" />
+                <span className="text-sm font-medium">{user.name || user.username}</span>
               </div>
 
-              {/* 退出按钮 - 科技感 */}
+              {/* 退出按钮 */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
                 className="relative overflow-hidden bg-transparent border-red-500/50 text-red-400 hover:text-white hover:border-red-500 group transition-all duration-300"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <LogOut className="h-4 w-4 mr-2 relative z-10" />
                 <span className="hidden sm:inline relative z-10">退出</span>
               </Button>

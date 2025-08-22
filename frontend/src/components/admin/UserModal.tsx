@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService, type User } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useNotification } from '@/contexts/NotificationContext';
 import { 
   X, 
   User as UserIcon, 
@@ -32,6 +33,7 @@ interface FormData {
 }
 
 export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onSaved }) => {
+  const { showSuccess, showError } = useNotification();
   const [formData, setFormData] = useState<FormData>({
     username: '',
     email: '',
@@ -166,8 +168,12 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
 
       if (response.success) {
         // 显示成功提示
-        if (isEditing && formData.password) {
-          alert('密码修改成功！');
+        if (isEditing && formData.password.trim()) {
+          showSuccess('密码修改成功', '用户密码已成功更新');
+        } else if (isEditing) {
+          showSuccess('用户更新成功', '用户信息已成功更新');
+        } else {
+          showSuccess('用户创建成功', '新用户已成功创建');
         }
         onSaved();
         onClose();
