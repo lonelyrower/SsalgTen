@@ -2,7 +2,7 @@ import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, BarChart3, Download, Shield, Database, Key } from 'lucide-react';
+import { Users, Settings, BarChart3, Shield, Database, Key } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
@@ -113,26 +113,6 @@ export const AdminPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* 节点部署 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                <Download className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  节点部署
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  管理监控节点部署
-                </p>
-              </div>
-            </div>
-            <Button className="w-full" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              节点部署
-            </Button>
-          </div>
 
           {/* 数据库管理 */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">

@@ -418,7 +418,7 @@ export const NetworkUniverse: React.FC<NetworkUniverseProps> = ({ className = ''
             </div>
             <div>
               <h2 className="text-xl font-bold gradient-text">3D网络宇宙</h2>
-              <p className="text-white/70 text-sm">沉浸式网络拓扑可视化</p>
+              <p className="text-gray-700 dark:text-white/70 text-sm">沉浸式网络拓扑可视化</p>
             </div>
           </div>
           
@@ -440,29 +440,29 @@ export const NetworkUniverse: React.FC<NetworkUniverseProps> = ({ className = ''
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
           <div className="glass rounded-lg p-3 border border-white/20">
             <div className="text-lg font-bold text-blue-400">{stats.total}</div>
-            <div className="text-xs text-white/60">总节点</div>
+            <div className="text-xs text-gray-600 dark:text-white/60">总节点</div>
           </div>
           <div className="glass rounded-lg p-3 border border-white/20">
             <div className="text-lg font-bold text-green-400">{stats.online}</div>
-            <div className="text-xs text-white/60">在线</div>
+            <div className="text-xs text-gray-600 dark:text-white/60">在线</div>
           </div>
           <div className="glass rounded-lg p-3 border border-white/20">
             <div className="text-lg font-bold text-yellow-400">{stats.warning}</div>
-            <div className="text-xs text-white/60">警告</div>
+            <div className="text-xs text-gray-600 dark:text-white/60">警告</div>
           </div>
           <div className="glass rounded-lg p-3 border border-white/20">
             <div className="text-lg font-bold text-red-400">{stats.offline}</div>
-            <div className="text-xs text-white/60">离线</div>
+            <div className="text-xs text-gray-600 dark:text-white/60">离线</div>
           </div>
           <div className="glass rounded-lg p-3 border border-white/20">
             <div className="text-lg font-bold text-purple-400">{stats.connections}</div>
-            <div className="text-xs text-white/60">连接</div>
+            <div className="text-xs text-gray-600 dark:text-white/60">连接</div>
           </div>
         </div>
 
         {/* 视图模式 */}
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-white/70">视图:</span>
+          <span className="text-sm text-gray-700 dark:text-white/70">视图:</span>
           {[
             { key: '3d', label: '3D宇宙', icon: Globe },
             { key: 'network', label: '网络图', icon: Activity },
@@ -497,7 +497,7 @@ export const NetworkUniverse: React.FC<NetworkUniverseProps> = ({ className = ''
           
           {/* 操作提示 */}
           <div className="absolute top-4 right-4 glass rounded-lg p-3 border border-white/20">
-            <div className="text-xs text-white/70 space-y-1">
+            <div className="text-xs text-gray-700 dark:text-white/70 space-y-1">
               <div>🖱️ 拖拽旋转</div>
               <div>🔄 滚轮缩放</div>
               <div>⏯️ 空格暂停</div>
@@ -506,7 +506,7 @@ export const NetworkUniverse: React.FC<NetworkUniverseProps> = ({ className = ''
           
           {/* 性能统计 */}
           <div className="absolute bottom-4 left-4 glass rounded-lg p-3 border border-white/20">
-            <div className="text-xs text-white/70">
+            <div className="text-xs text-gray-700 dark:text-white/70">
               <div>缩放: {Math.round(zoom)}%</div>
               <div>节点: {network.nodes.length}</div>
               <div>连接: {network.connections.length}</div>

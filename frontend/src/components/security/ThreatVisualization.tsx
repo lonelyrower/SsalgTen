@@ -180,7 +180,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
             </div>
             <div>
               <h2 className="text-xl font-bold gradient-text">网络威胁监控</h2>
-              <p className="text-white/70 text-sm">实时检测和分析网络安全威胁</p>
+              <p className="text-gray-700 dark:text-white/70 text-sm">实时检测和分析网络安全威胁</p>
             </div>
           </div>
           
@@ -212,7 +212,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-red-400">{stats.active}</div>
-                <div className="text-xs text-white/60">活跃威胁</div>
+                <div className="text-xs text-gray-600 dark:text-white/60">活跃威胁</div>
               </div>
               <AlertTriangle className="h-6 w-6 text-red-400" />
             </div>
@@ -222,7 +222,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-orange-400">{stats.critical}</div>
-                <div className="text-xs text-white/60">严重威胁</div>
+                <div className="text-xs text-gray-600 dark:text-white/60">严重威胁</div>
               </div>
               <Zap className="h-6 w-6 text-orange-400" />
             </div>
@@ -232,7 +232,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-green-400">{stats.blocked}</div>
-                <div className="text-xs text-white/60">已阻止</div>
+                <div className="text-xs text-gray-600 dark:text-white/60">已阻止</div>
               </div>
               <Shield className="h-6 w-6 text-green-400" />
             </div>
@@ -242,7 +242,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-blue-400">{stats.total}</div>
-                <div className="text-xs text-white/60">总检测数</div>
+                <div className="text-xs text-gray-600 dark:text-white/60">总检测数</div>
               </div>
               <TrendingUp className="h-6 w-6 text-blue-400" />
             </div>
@@ -297,13 +297,13 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
               >
                 <div className="flex items-start space-x-4">
                   <div className={`p-2 rounded-lg bg-gradient-to-br ${threatConfig.bgColor}`}>
-                    <ThreatIcon className="h-5 w-5 text-white" />
+                    <ThreatIcon className="h-5 w-5 text-gray-800 dark:text-white" />
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-white">{threatConfig.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{threatConfig.name}</span>
                         <Badge className={`text-xs ${severityConfig.color} border`}>
                           {severityConfig.label}
                         </Badge>
@@ -311,7 +311,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
                           {statusConfig.label}
                         </Badge>
                       </div>
-                      <span className="text-xs text-white/60">
+                      <span className="text-xs text-gray-600 dark:text-white/60">
                         {threat.timestamp.toLocaleTimeString()}
                       </span>
                     </div>
@@ -319,19 +319,19 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
                       <div className="flex items-center space-x-1">
                         <Wifi className="h-3 w-3 text-cyan-400" />
-                        <span className="text-white/70 font-mono text-xs">{threat.sourceIp}</span>
+                        <span className="text-gray-700 dark:text-white/70 font-mono text-xs">{threat.sourceIp}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Target className="h-3 w-3 text-purple-400" />
-                        <span className="text-white/70 text-xs">{threat.targetNode}</span>
+                        <span className="text-gray-700 dark:text-white/70 text-xs">{threat.targetNode}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <MapPin className="h-3 w-3 text-green-400" />
-                        <span className="text-white/70 text-xs">{threat.country}</span>
+                        <span className="text-gray-700 dark:text-white/70 text-xs">{threat.country}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Activity className="h-3 w-3 text-orange-400" />
-                        <span className="text-white/70 text-xs">{threat.attackVector}</span>
+                        <span className="text-gray-700 dark:text-white/70 text-xs">{threat.attackVector}</span>
                       </div>
                     </div>
                   </div>
@@ -348,8 +348,8 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
         {filteredThreats.length === 0 && (
           <div className="text-center py-8">
             <Shield className="h-12 w-12 text-green-400 mx-auto mb-2" />
-            <div className="text-white/70">暂无威胁检测</div>
-            <div className="text-white/50 text-sm">系统运行安全</div>
+            <div className="text-gray-700 dark:text-white/70">暂无威胁检测</div>
+            <div className="text-gray-500 dark:text-white/50 text-sm">系统运行安全</div>
           </div>
         )}
       </GlassCard>
@@ -363,7 +363,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
               variant="ghost"
               size="sm"
               onClick={() => setSelectedThreat(null)}
-              className="text-white/60 hover:text-white"
+              className="text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
             >
               ×
             </Button>
@@ -372,35 +372,35 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-white/60 mb-1">威胁类型</div>
-                <div className="font-medium text-white">{getThreatConfig(selectedThreat.type).name}</div>
+                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">威胁类型</div>
+                <div className="font-medium text-gray-900 dark:text-white">{getThreatConfig(selectedThreat.type).name}</div>
               </div>
               
               <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-white/60 mb-1">攻击来源</div>
-                <div className="font-mono text-white">{selectedThreat.sourceIp}</div>
+                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">攻击来源</div>
+                <div className="font-mono text-gray-900 dark:text-white">{selectedThreat.sourceIp}</div>
               </div>
               
               <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-white/60 mb-1">攻击目标</div>
-                <div className="font-medium text-white">{selectedThreat.targetNode}</div>
+                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">攻击目标</div>
+                <div className="font-medium text-gray-900 dark:text-white">{selectedThreat.targetNode}</div>
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-white/60 mb-1">严重等级</div>
-                <div className="font-medium text-white">{getSeverityConfig(selectedThreat.severity).label}风险</div>
+                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">严重等级</div>
+                <div className="font-medium text-gray-900 dark:text-white">{getSeverityConfig(selectedThreat.severity).label}风险</div>
               </div>
               
               <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-white/60 mb-1">检测时间</div>
-                <div className="font-medium text-white">{selectedThreat.timestamp.toLocaleString()}</div>
+                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">检测时间</div>
+                <div className="font-medium text-gray-900 dark:text-white">{selectedThreat.timestamp.toLocaleString()}</div>
               </div>
               
               <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-white/60 mb-1">处理状态</div>
-                <div className="font-medium text-white">{getStatusConfig(selectedThreat.status).label}</div>
+                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">处理状态</div>
+                <div className="font-medium text-gray-900 dark:text-white">{getStatusConfig(selectedThreat.status).label}</div>
               </div>
             </div>
           </div>

@@ -16,7 +16,7 @@ export const Header = () => {
 
 
   return (
-    <header className="relative overflow-hidden glass sticky top-0 z-50 border-b border-white/10">
+    <header className="relative glass sticky top-0 z-50 border-b border-white/10">
       {/* 动态背景效果 */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95" />
       <div 
@@ -85,19 +85,16 @@ export const Header = () => {
               <Link to="/security" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
                 <span className="relative z-10">威胁监控</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" />
               </Link>
               <Link to="/universe" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
                 <span className="relative z-10">3D宇宙</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
               </Link>
               {hasRole('ADMIN') && (
                 <Link to="/admin" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
                   <span className="relative z-10">系统管理</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-                </Link>
+                  </Link>
               )}
             </>
           ) : (

@@ -315,7 +315,7 @@ export const EnhancedWorldMap = memo(({
         {showStats && (
           <div className="glass rounded-lg p-4 border border-white/20 backdrop-blur-xl">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-sm text-white/90 flex items-center">
+              <h4 className="font-semibold text-sm text-gray-900 dark:text-white/90 flex items-center">
                 <Activity className="h-4 w-4 mr-2 text-blue-400" />
                 节点统计
               </h4>
@@ -323,7 +323,7 @@ export const EnhancedWorldMap = memo(({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowStats(false)}
-                className="h-6 w-6 p-0 text-white/60 hover:text-white"
+                className="h-6 w-6 p-0 text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
               >
                 ×
               </Button>
@@ -331,25 +331,25 @@ export const EnhancedWorldMap = memo(({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="flex items-center glass rounded p-2 border border-white/10">
                 <div className="status-indicator bg-green-400 mr-2"></div>
-                <span className="text-white/90">在线: {stats.online}</span>
+                <span className="text-gray-900 dark:text-white/90">在线: {stats.online}</span>
               </div>
               <div className="flex items-center glass rounded p-2 border border-white/10">
                 <div className="status-indicator bg-red-400 mr-2"></div>
-                <span className="text-white/90">离线: {stats.offline}</span>
+                <span className="text-gray-900 dark:text-white/90">离线: {stats.offline}</span>
               </div>
               <div className="flex items-center glass rounded p-2 border border-white/10">
                 <TrendingUp className="h-3 w-3 mr-2 text-blue-400" />
-                <span className="text-white/90">可用率: {stats.uptime}%</span>
+                <span className="text-gray-900 dark:text-white/90">可用率: {stats.uptime}%</span>
               </div>
               <div className="flex items-center glass rounded p-2 border border-white/10">
                 <Server className="h-3 w-3 mr-2 text-purple-400" />
-                <span className="text-white/90">总计: {stats.total}</span>
+                <span className="text-gray-900 dark:text-white/90">总计: {stats.total}</span>
               </div>
             </div>
             
             {/* 实时状态指示 */}
             <div className="mt-3 pt-3 border-t border-white/10">
-              <div className="flex items-center justify-between text-xs text-white/70">
+              <div className="flex items-center justify-between text-xs text-gray-700 dark:text-white/70">
                 <span>实时监控</span>
                 <div className="flex items-center space-x-1">
                   <div className="status-indicator bg-green-400"></div>

@@ -40,7 +40,12 @@
       "Bash(git config:*)",
       "Bash(npm i:*)",
       "Bash(sudo npm i -g @anthropic-ai/claude-code)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git -c http.sslVerify=false push origin main)",
+      "Bash(npx tsc:*)",
+      "Bash(/dev/null)",
+      "Bash(npm audit:*)",
+      "Bash(docker compose:*)"
     ],
     "deny": [],
     "additionalDirectories": [
