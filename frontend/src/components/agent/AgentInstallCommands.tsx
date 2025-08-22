@@ -39,36 +39,58 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
     } catch (error) {
       console.error('Failed to fetch install command:', error);
       // 使用fallback数据
+      const masterUrl = window.location.origin;
+      // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
+      const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
+      
       setInstallData({
-        masterUrl: window.location.origin,
-        apiKey: 'your-api-key-here',
-        quickCommand: `curl -fsSL ${window.location.origin}/install.sh | bash`,
-        command: `# 安装SsalgTen网络监控探针
-curl -fsSL ${window.location.origin}/install.sh | bash
+        masterUrl: masterUrl,
+        apiKey: apiKey,
+        quickCommand: `# SsalgTen 网络监控探针快速安装
+bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh) \\
+  --master-url="${masterUrl}" \\
+  --api-key="${apiKey}"`,
+        command: `# SsalgTen 网络监控探针安装
 
-# 或者手动安装
-wget ${window.location.origin}/agent.tar.gz
-tar -xzf agent.tar.gz
-cd ssalgten-agent
-chmod +x install.sh
-./install.sh`,
-        quickUninstallCommand: `curl -fsSL ${window.location.origin}/uninstall.sh | bash`,
-        uninstallCommand: `# 卸载SsalgTen网络监控探针
-curl -fsSL ${window.location.origin}/uninstall.sh | bash
+# 方法1：一键安装（推荐）
+bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh) \\
+  --master-url="${masterUrl}" \\
+  --api-key="${apiKey}"
 
-# 或者手动卸载
+# 方法2：手动安装
+# 1. 下载安装脚本
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh -o install-agent.sh
+chmod +x install-agent.sh
+
+# 2. 运行安装脚本
+./install-agent.sh --master-url="${masterUrl}" --api-key="${apiKey}"
+
+# 3. 启动服务
+sudo systemctl start ssalgten-agent
+sudo systemctl enable ssalgten-agent`,
+        quickUninstallCommand: `# SsalgTen 网络监控探针快速卸载
+bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh)`,
+        uninstallCommand: `# SsalgTen 网络监控探针卸载
+
+# 方法1：一键卸载（推荐）
+bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh)
+
+# 方法2：手动卸载
 sudo systemctl stop ssalgten-agent
 sudo systemctl disable ssalgten-agent
 sudo rm -rf /opt/ssalgten-agent
 sudo rm -f /etc/systemd/system/ssalgten-agent.service
-sudo systemctl daemon-reload`,
+sudo rm -f /usr/local/bin/ssalgten-agent
+sudo systemctl daemon-reload
+sudo systemctl reset-failed`,
         security: {
           isSecure: window.location.protocol === 'https:',
           warnings: window.location.protocol === 'http:' ? ['使用HTTP连接，建议启用HTTPS'] : [],
           recommendations: [
             '安装前请确认服务器具有sudo权限',
             '确保服务器能够访问互联网',
-            '建议在测试环境先行验证'
+            '建议在测试环境先行验证',
+            '使用真实的API密钥进行生产环境部署'
           ]
         }
       });
@@ -187,9 +209,12 @@ sudo systemctl daemon-reload`,
         <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <Key className={`h-5 w-5 ${installData.security.isSecure ? 'text-green-600' : 'text-yellow-600'}`} />
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">API密钥</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">API密钥 <span className="text-xs text-orange-500">(示例)</span></p>
             <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
               {installData.apiKey.substring(0, 8)}...{installData.apiKey.slice(-4)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              生产环境请使用管理员分配的真实密钥
             </p>
           </div>
         </div>
