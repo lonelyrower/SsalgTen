@@ -28,12 +28,15 @@ export const useNodes = (): UseNodesResult => {
     try {
       // 限制请求频率，避免过度请求
       const now = Date.now();
-      if (!forceUpdate && now - lastFetchTime.current < 5000) {
-        return; // 5秒内不重复请求
+      if (!forceUpdate && now - lastFetchTime.current < 10000) {
+        return; // 10秒内不重复请求
       }
       lastFetchTime.current = now;
 
-      setLoading(true);
+      // 只有在没有数据时才显示加载状态，避免闪烁
+      if (lastNodesData.current.length === 0) {
+        setLoading(true);
+      }
       setError(null);
 
       const [nodesResponse, statsResponse] = await Promise.all([
@@ -132,11 +135,11 @@ export const useNodes = (): UseNodesResult => {
     fetchNodes();
   }, [fetchNodes]);
 
-  // 定期刷新数据 (每60秒，降低频率避免闪烁)
+  // 定期刷新数据 (每2分钟，进一步降低频率避免闪烁)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchNodes(false); // 不强制更新，让优化逻辑处理
-    }, 60000);
+    }, 120000);
 
     return () => clearInterval(interval);
   }, [fetchNodes]);

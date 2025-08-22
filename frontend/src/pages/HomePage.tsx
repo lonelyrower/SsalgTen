@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { WorldMap } from '@/components/map/WorldMap';
@@ -14,15 +14,27 @@ export const HomePage = () => {
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const { nodes, stats, loading, error } = useNodes();
 
-  const handleNodeClick = (node: NodeData) => {
+  const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
     setShowDiagnostics(false); // 重置诊断视图
     console.log('Node clicked:', node);
-  };
+  }, []);
 
-  const handleDiagnosticsClose = () => {
+  const handleDiagnosticsClose = useCallback(() => {
     setShowDiagnostics(false);
-  };
+  }, []);
+
+  const handleStartDiagnostics = useCallback(() => {
+    setShowDiagnostics(true);
+  }, []);
+
+  // 缓存统计数据以防止不必要的重新渲染
+  const memoizedStats = useMemo(() => ({
+    totalNodes: stats?.totalNodes || 0,
+    onlineNodes: stats?.onlineNodes || 0,
+    totalCountries: stats?.totalCountries || 0,
+    totalProviders: stats?.totalProviders || 0
+  }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders]);
 
   // 如果正在加载，显示加载状态
   if (loading && nodes.length === 0) {
@@ -85,12 +97,7 @@ export const HomePage = () => {
       
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 统计卡片 */}
-        <StatsCards 
-          totalNodes={stats?.totalNodes || 0}
-          onlineNodes={stats?.onlineNodes || 0}
-          totalCountries={stats?.totalCountries || 0}
-          totalProviders={stats?.totalProviders || 0}
-        />
+        <StatsCards {...memoizedStats} />
         
         {/* 地图区域 */}
         <div className="mb-8">
@@ -222,7 +229,7 @@ export const HomePage = () => {
                 {/* 操作按钮 */}
                 <div className="lg:ml-8 flex flex-col space-y-3">
                   <Button
-                    onClick={() => setShowDiagnostics(true)}
+                    onClick={handleStartDiagnostics}
                     size="lg"
                     className="gradient-btn w-full lg:w-auto min-w-[200px] group relative overflow-hidden"
                   >

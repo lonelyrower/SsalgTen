@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Server, Building, Activity, TrendingUp } from 'lucide-react';
@@ -10,14 +11,13 @@ interface StatsCardsProps {
   totalTests?: number;
 }
 
-export const StatsCards = ({ 
+const StatsCardsComponent = ({ 
   totalNodes = 0, 
   onlineNodes = 0, 
   totalCountries = 0, 
   totalProviders = 0,
   totalTests = 0
 }: StatsCardsProps) => {
-  const uptime = totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : '0';
   const offlineNodes = totalNodes - onlineNodes;
 
   const stats = [
@@ -26,8 +26,8 @@ export const StatsCards = ({
       value: totalNodes.toString(),
       subtitle: `${onlineNodes} 在线 · ${offlineNodes} 离线`,
       icon: <Server className="h-6 w-6 text-blue-400" />,
-      badge: `${uptime}% 可用率`,
-      badgeVariant: parseFloat(uptime) > 90 ? 'default' : 'destructive',
+      badge: '实时监控',
+      badgeVariant: 'default',
       gradient: 'from-blue-500 to-cyan-500',
       bgGradient: 'from-blue-500/10 to-cyan-500/10'
     },
@@ -70,7 +70,7 @@ export const StatsCards = ({
           key={index} 
           variant="tech" 
           animated={true} 
-          glow={index === 0 && parseFloat(uptime) > 95}
+          glow={false}
           className="p-6 group cursor-pointer"
         >
           {/* 科技感背景效果 */}
@@ -124,21 +124,6 @@ export const StatsCards = ({
               </div>
             </div>
 
-            {/* 进度指示器 */}
-            {index === 0 && (
-              <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-xs text-gray-700 dark:text-white/60">
-                  <span>可用率</span>
-                  <span>{uptime}%</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full bg-gradient-to-r ${stat.gradient} transition-all duration-1000 rounded-full`}
-                    style={{ width: `${uptime}%` }}
-                  />
-                </div>
-              </div>
-            )}
           </div>
           
           {/* 底部数据流效果 */}
@@ -148,3 +133,5 @@ export const StatsCards = ({
     </div>
   );
 };
+
+export const StatsCards = memo(StatsCardsComponent);
