@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
-import { Shield, Key, Lock } from 'lucide-react';
+import { Shield, Lock } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
