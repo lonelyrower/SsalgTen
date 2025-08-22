@@ -55,14 +55,6 @@ export const Header = () => {
                 </p>
               </div>
               
-              {/* 版本徽章 */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur animate-pulse" />
-                <span className="relative inline-flex items-center px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-blue-600/80 to-purple-600/80 rounded-full border border-white/20 backdrop-blur-sm">
-                  <div className="status-indicator bg-green-400 mr-2" />
-                  v0.1.0
-                </span>
-              </div>
             </div>
           </Link>
 
@@ -127,11 +119,6 @@ export const Header = () => {
           {/* 如果已认证，显示简化的用户操作 */}
           {isAuthenticated && user ? (
             <div className="flex items-center space-x-3">
-              {/* 简化的用户指示器 */}
-              <div className="hidden md:flex items-center space-x-2 text-white/80">
-                <div className="status-indicator bg-green-400" />
-                <span className="text-sm font-medium">{user.name || user.username}</span>
-              </div>
 
               {/* 退出按钮 */}
               <Button

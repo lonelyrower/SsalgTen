@@ -6,6 +6,7 @@ import { useConnectivityDiagnostics } from '@/hooks/useConnectivityDiagnostics';
 import { ConnectivityDiagnostics } from '@/components/nodes/ConnectivityDiagnostics';
 import { Button } from '@/components/ui/button';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
+import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -26,6 +27,7 @@ export const NodesPage: React.FC = () => {
   const [eventFilter, setEventFilter] = useState<'all' | string>('all');
   const [visitorInfo, setVisitorInfo] = useState<VisitorInfo | null>(null);
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
+  const [showDeployModal, setShowDeployModal] = useState(false);
   const { nodes, stats, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
 
@@ -41,6 +43,14 @@ export const NodesPage: React.FC = () => {
 
   const handleRefresh = () => {
     refreshData();
+  };
+
+  const handleAddNode = () => {
+    setShowDeployModal(true);
+  };
+
+  const handleDeployComplete = async () => {
+    await refreshData(); // 刷新节点列表
   };
 
   // 获取节点详细心跳数据
@@ -219,9 +229,12 @@ export const NodesPage: React.FC = () => {
               </div>
               
               {hasRole('ADMIN') && (
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={handleAddNode}
+                >
                   <Plus className="h-4 w-4 mr-2" />
-                  添加节点
+                  部署节点
                 </Button>
               )}
               
@@ -545,6 +558,13 @@ export const NodesPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* 节点部署模态框 */}
+      <AgentDeployModal
+        isOpen={showDeployModal}
+        onClose={() => setShowDeployModal(false)}
+        onDeployed={handleDeployComplete}
+      />
     </div>
   );
 };

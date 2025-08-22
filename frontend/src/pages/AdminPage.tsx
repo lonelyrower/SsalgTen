@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, BarChart3, Shield, Database, Key } from 'lucide-react';
+import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
+import { Shield, Key, Lock } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   if (!hasRole('ADMIN')) {
     return (
@@ -50,109 +52,28 @@ export const AdminPage: React.FC = () => {
 
         {/* 管理功能卡片网格 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 用户管理 */}
+          {/* 修改密码 */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Lock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  用户管理
+                  修改密码
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  管理系统用户和权限
+                  更改您的登录密码
                 </p>
               </div>
             </div>
-            <Button className="w-full" variant="outline">
-              <Users className="h-4 w-4 mr-2" />
-              管理用户
-            </Button>
-          </div>
-
-          {/* 系统设置 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Settings className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  系统设置
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  配置系统参数和行为
-                </p>
-              </div>
-            </div>
-            <Button className="w-full" variant="outline">
-              <Settings className="h-4 w-4 mr-2" />
-              系统配置
-            </Button>
-          </div>
-
-          {/* 数据分析 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  数据分析
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  查看系统分析报告
-                </p>
-              </div>
-            </div>
-            <Button className="w-full" variant="outline">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              查看分析
-            </Button>
-          </div>
-
-
-          {/* 数据库管理 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                <Database className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  数据库管理
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  管理系统数据和备份
-                </p>
-              </div>
-            </div>
-            <Button className="w-full" variant="outline">
-              <Database className="h-4 w-4 mr-2" />
-              数据管理
-            </Button>
-          </div>
-
-          {/* 安全管理 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <Key className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  安全管理
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  管理访问权限和安全策略
-                </p>
-              </div>
-            </div>
-            <Button className="w-full" variant="outline">
-              <Key className="h-4 w-4 mr-2" />
-              安全设置
+            <Button 
+              className="w-full" 
+              variant="outline"
+              onClick={() => setShowChangePasswordModal(true)}
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              修改密码
             </Button>
           </div>
         </div>
@@ -190,6 +111,12 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* 修改密码模态框 */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </div>
   );
 };
