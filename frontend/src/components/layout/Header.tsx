@@ -90,20 +90,7 @@ export const Header = () => {
               )}
             </>
           ) : (
-            <>
-              <Link to="/" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
-                <span className="relative z-10">首页</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
-              <a href="#nodes" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
-                <span className="relative z-10">节点</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </a>
-              <a href="#about" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
-                <span className="relative z-10">关于</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </a>
-            </>
+            <></>
           )}
         </nav>
 

@@ -38,6 +38,40 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
       }
     } catch (error) {
       console.error('Failed to fetch install command:', error);
+      // 使用fallback数据
+      setInstallData({
+        masterUrl: window.location.origin,
+        apiKey: 'your-api-key-here',
+        quickCommand: `curl -fsSL ${window.location.origin}/install.sh | bash`,
+        command: `# 安装SsalgTen网络监控探针
+curl -fsSL ${window.location.origin}/install.sh | bash
+
+# 或者手动安装
+wget ${window.location.origin}/agent.tar.gz
+tar -xzf agent.tar.gz
+cd ssalgten-agent
+chmod +x install.sh
+./install.sh`,
+        quickUninstallCommand: `curl -fsSL ${window.location.origin}/uninstall.sh | bash`,
+        uninstallCommand: `# 卸载SsalgTen网络监控探针
+curl -fsSL ${window.location.origin}/uninstall.sh | bash
+
+# 或者手动卸载
+sudo systemctl stop ssalgten-agent
+sudo systemctl disable ssalgten-agent
+sudo rm -rf /opt/ssalgten-agent
+sudo rm -f /etc/systemd/system/ssalgten-agent.service
+sudo systemctl daemon-reload`,
+        security: {
+          isSecure: window.location.protocol === 'https:',
+          warnings: window.location.protocol === 'http:' ? ['使用HTTP连接，建议启用HTTPS'] : [],
+          recommendations: [
+            '安装前请确认服务器具有sudo权限',
+            '确保服务器能够访问互联网',
+            '建议在测试环境先行验证'
+          ]
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -266,6 +300,65 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
           </ul>
         </div>
       </div>
+
+      {/* 卸载命令 */}
+      {installData.quickUninstallCommand && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <Terminal className="h-6 w-6 text-red-600" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              卸载探针
+            </h2>
+          </div>
+          
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            如需完全卸载监控探针，请在目标服务器上以root用户执行：
+          </p>
+
+          <div className="relative">
+            <pre className="bg-gray-900 text-red-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+              <code>{installData.quickUninstallCommand}</code>
+            </pre>
+            <Button
+              size="sm"
+              variant="outline"
+              className={`absolute top-2 right-2 transition-all duration-200 ${
+                copied === 'uninstall' 
+                  ? 'bg-red-600 border-red-500 hover:bg-red-700 text-white' 
+                  : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
+              }`}
+              onClick={() => copyToClipboard(installData.quickUninstallCommand!, 'uninstall')}
+              aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
+              title={copied === 'uninstall' ? '已复制！' : '复制命令'}
+            >
+              {copied === 'uninstall' ? (
+                <>
+                  <Check className="h-4 w-4 text-white mr-1" />
+                  <span className="text-xs">已复制</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-1" />
+                  <span className="text-xs">复制</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <h4 className="font-medium text-red-900 dark:text-red-100 mb-2 flex items-center">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              卸载注意事项：
+            </h4>
+            <ul className="text-sm text-red-800 dark:text-red-200 space-y-1">
+              <li>• 卸载将停止监控服务并删除所有相关文件</li>
+              <li>• 节点将从监控界面中自动移除</li>
+              <li>• 历史监控数据将保留在主服务器上</li>
+              <li>• 如需重新部署，请使用上方安装命令</li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

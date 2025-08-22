@@ -247,6 +247,8 @@ export interface InstallCommandData {
   apiKey: string;
   quickCommand: string;
   command: string;
+  uninstallCommand?: string;
+  quickUninstallCommand?: string;
   security: {
     isSecure: boolean;
     warnings: string[];
