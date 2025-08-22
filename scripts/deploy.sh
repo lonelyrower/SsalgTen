@@ -35,6 +35,18 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Docker Compose wrapper function
+docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        docker-compose "$@"
+    elif docker compose version &> /dev/null; then
+        docker compose "$@"
+    else
+        log_error "Neither docker-compose nor 'docker compose' is available"
+        exit 1
+    fi
+}
+
 # Check if Docker and Docker Compose are installed
 check_dependencies() {
     log_info "Checking dependencies..."
@@ -44,7 +56,7 @@ check_dependencies() {
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
         log_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
