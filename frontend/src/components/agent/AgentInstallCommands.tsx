@@ -205,24 +205,39 @@ sudo systemctl reset-failed`,
     <div className="space-y-6">
       {/* 服务器信息 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <Server className="h-5 w-5 text-blue-600" />
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">主服务器地址</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">{installData.masterUrl}</p>
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <Server className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">主服务器地址</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">{installData.masterUrl}</p>
+            </div>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => copyToClipboard(installData.masterUrl, 'masterUrl')}
+          >
+            {copied === 'masterUrl' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
         </div>
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <Key className={`h-5 w-5 ${installData.security.isSecure ? 'text-green-600' : 'text-yellow-600'}`} />
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">API密钥 <span className="text-xs text-orange-500">(示例)</span></p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-              {installData.apiKey.substring(0, 8)}...{installData.apiKey.slice(-4)}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-              生产环境请使用管理员分配的真实密钥
-            </p>
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <Key className={`h-5 w-5 ${installData.security.isSecure ? 'text-green-600' : 'text-yellow-600'}`} />
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">API密钥</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                {installData.apiKey.substring(0, 8)}...{installData.apiKey.slice(-4)}
+              </p>
+            </div>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => copyToClipboard(installData.apiKey, 'apiKey')}
+          >
+            {copied === 'apiKey' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
 
