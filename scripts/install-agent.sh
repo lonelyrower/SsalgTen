@@ -679,18 +679,9 @@ services:
     restart: unless-stopped
     ports:
       - "${AGENT_PORT}:${AGENT_PORT}"
-    environment:
-      - NODE_ENV=production
-      - AGENT_ID=${AGENT_ID}
-      - MASTER_URL=${MASTER_URL}
-      - AGENT_API_KEY=${AGENT_API_KEY}
-      - NODE_NAME=${NODE_NAME}
-      - NODE_COUNTRY=${NODE_COUNTRY}
-      - NODE_CITY=${NODE_CITY}
-      - NODE_PROVIDER=${NODE_PROVIDER}
-      - NODE_LATITUDE=${NODE_LATITUDE}
-      - NODE_LONGITUDE=${NODE_LONGITUDE}
-      - PORT=${AGENT_PORT}
+    # 仅从本目录下的 .env 文件注入环境变量，避免宿主机环境变量覆盖
+    env_file:
+      - .env
     volumes:
       - ./logs:/app/logs
       - /proc:/host/proc:ro
