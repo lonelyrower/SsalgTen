@@ -434,6 +434,23 @@ export class NodeController {
         message: 'Agent registered successfully'
       };
       
+      // 即时广播最新节点数据，提升前端可见性
+      try {
+        const io = req.app.get('io');
+        if (io) {
+          const nodes = await nodeService.getAllNodes();
+          const safeNodes = sanitizeNodes(nodes as any[]);
+          const stats = (await import('../services/NodeService')).NodeService.calculateStats(nodes);
+          io.to('nodes_updates').emit('nodes_status_update', {
+            nodes: safeNodes,
+            stats,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        logger.debug('Broadcast after register failed (non-fatal):', e);
+      }
+      
       res.json(response);
     } catch (error) {
       logger.error('Agent registration error:', error);
@@ -552,6 +569,23 @@ export class NodeController {
         message: 'Heartbeat recorded'
       };
       
+      // 即时广播心跳后的最新节点数据
+      try {
+        const io = req.app.get('io');
+        if (io) {
+          const nodes = await nodeService.getAllNodes();
+          const safeNodes = sanitizeNodes(nodes as any[]);
+          const stats = (await import('../services/NodeService')).NodeService.calculateStats(nodes);
+          io.to('nodes_updates').emit('nodes_status_update', {
+            nodes: safeNodes,
+            stats,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        logger.debug('Broadcast after heartbeat failed (non-fatal):', e);
+      }
+      
       res.json(response);
     } catch (error) {
       logger.error('Heartbeat error:', error);
@@ -633,8 +667,11 @@ export class NodeController {
   // 获取Agent安装脚本 - 重定向到GitHub
   async getInstallScript(req: Request, res: Response): Promise<void> {
     try {
-      // 获取服务器信息
-      const serverUrl = `${req.protocol}://${req.get('host')}`;
+      // 获取服务器对外可访问的基础URL（优先使用环境变量）
+      let serverUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      if (!serverUrl) {
+        serverUrl = `${req.protocol}://${req.get('host')}`;
+      }
       const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
       
       // 生成带参数的安装命令脚本
@@ -681,16 +718,17 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
   // 获取Agent安装命令数据（JSON格式）
   async getInstallCommand(req: Request, res: Response): Promise<void> {
     try {
-      // 获取服务器信息
-      let serverUrl = `${req.protocol}://${req.get('host')}`;
-      
-      // 如果服务器运行在非标准端口且host头中没有端口信息，添加端口号
-      const host = req.get('host') || '';
-      const serverPort = process.env.PORT || '3001';
-      
-      if (!host.includes(':') && serverPort !== '80' && serverPort !== '443') {
-        const hostname = host;
-        serverUrl = `${req.protocol}://${hostname}:${serverPort}`;
+      // 获取服务器对外可访问的基础URL（优先使用环境变量）
+      let serverUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      if (!serverUrl) {
+        // 回退：从请求推断（在反向代理下可能不准确）
+        const host = req.get('host') || '';
+        const serverPort = process.env.PORT || '3001';
+        serverUrl = `${req.protocol}://${host}`;
+        if (!host.includes(':') && serverPort !== '80' && serverPort !== '443') {
+          const hostname = host;
+          serverUrl = `${req.protocol}://${hostname}:${serverPort}`;
+        }
       }
       
       const apiKey = await apiKeyService.getSystemApiKey();
