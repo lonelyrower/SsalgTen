@@ -68,8 +68,12 @@ chmod +x install-agent.sh
 # 3. 启动服务
 sudo systemctl start ssalgten-agent
 sudo systemctl enable ssalgten-agent`,
+        interactiveCommand: `# SsalgTen 网络监控探针交互式安装
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
+  --master-url "${masterUrl}" \\
+  --api-key "${apiKey}"`,
         quickUninstallCommand: `# SsalgTen 网络监控探针快速卸载
-bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh)`,
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash`,
         uninstallCommand: `# SsalgTen 网络监控探针卸载
 
 # 方法1：一键卸载（推荐）
@@ -326,13 +330,69 @@ sudo systemctl reset-failed`,
         </div>
       </div>
 
+      {/* 交互式安装命令 */}
+      {installData.interactiveCommand && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <Terminal className="h-6 w-6 text-blue-600" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              交互式安装
+            </h2>
+          </div>
+          
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            适用于需要自定义配置的场景，运行后选择菜单选项"1"即可快速安装：
+          </p>
+
+          <div className="relative">
+            <pre className="bg-gray-900 text-blue-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+              <code>{installData.interactiveCommand}</code>
+            </pre>
+            <Button
+              size="sm"
+              variant="outline"
+              className={`absolute top-2 right-2 transition-all duration-200 ${
+                copied === 'interactive' 
+                  ? 'bg-blue-600 border-blue-500 hover:bg-blue-700 text-white' 
+                  : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
+              }`}
+              onClick={() => copyToClipboard(installData.interactiveCommand, 'interactive')}
+              aria-label={copied === 'interactive' ? '交互式安装命令已复制到剪贴板' : '复制交互式安装命令到剪贴板'}
+              title={copied === 'interactive' ? '已复制！' : '复制命令'}
+            >
+              {copied === 'interactive' ? (
+                <>
+                  <Check className="h-4 w-4 text-white mr-1" />
+                  <span className="text-xs">已复制</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-1" />
+                  <span className="text-xs">复制</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">使用说明：</h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              <li>• 运行命令后将显示安装选项菜单</li>
+              <li>• 选择"1"使用预置参数快速安装</li>
+              <li>• 选择"2"进行完全自定义配置</li>
+              <li>• 地理位置信息将自动检测</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* 卸载命令 */}
       {installData.quickUninstallCommand && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center space-x-3 mb-4">
             <Terminal className="h-6 w-6 text-red-600" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              卸载探针
+              快速卸载
             </h2>
           </div>
           
@@ -352,7 +412,7 @@ sudo systemctl reset-failed`,
                   ? 'bg-red-600 border-red-500 hover:bg-red-700 text-white' 
                   : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
               }`}
-              onClick={() => copyToClipboard(installData.quickUninstallCommand!, 'uninstall')}
+              onClick={() => copyToClipboard(installData.quickUninstallCommand, 'uninstall')}
               aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
               title={copied === 'uninstall' ? '已复制！' : '复制命令'}
             >

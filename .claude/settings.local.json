@@ -45,7 +45,8 @@
       "Bash(npx tsc:*)",
       "Bash(/dev/null)",
       "Bash(npm audit:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(./test-install-prompts.sh:*)"
     ],
     "deny": [],
     "additionalDirectories": [

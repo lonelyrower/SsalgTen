@@ -682,7 +682,17 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
   async getInstallCommand(req: Request, res: Response): Promise<void> {
     try {
       // 获取服务器信息
-      const serverUrl = `${req.protocol}://${req.get('host')}`;
+      let serverUrl = `${req.protocol}://${req.get('host')}`;
+      
+      // 如果服务器运行在非标准端口且host头中没有端口信息，添加端口号
+      const host = req.get('host') || '';
+      const serverPort = process.env.PORT || '3001';
+      
+      if (!host.includes(':') && serverPort !== '80' && serverPort !== '443') {
+        const hostname = host;
+        serverUrl = `${req.protocol}://${hostname}:${serverPort}`;
+      }
+      
       const apiKey = await apiKeyService.getSystemApiKey();
       
       // 检查API密钥安全性
@@ -698,13 +708,18 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       // 生成交互式安装命令（带预置参数，选择1安装时直接使用）
       const interactiveCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --master-url "${serverUrl}" --api-key "${apiKey}"`;
       
+      // 生成快速卸载命令
+      const quickUninstallCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash`;
+      
       const response: ApiResponse = {
         success: true,
         data: {
           masterUrl: serverUrl,
           apiKey: apiKey,
           quickCommand: quickCommand,
-          command: interactiveCommand,
+          interactiveCommand: interactiveCommand,
+          quickUninstallCommand: quickUninstallCommand,
+          command: interactiveCommand, // 保持向后兼容
           security: {
             isSecure: securityCheck.isSecure,
             warnings: securityCheck.warnings,

@@ -246,9 +246,10 @@ export interface InstallCommandData {
   masterUrl: string;
   apiKey: string;
   quickCommand: string;
-  command: string;
+  interactiveCommand: string;
+  quickUninstallCommand: string;
+  command: string; // 保持向后兼容
   uninstallCommand?: string;
-  quickUninstallCommand?: string;
   security: {
     isSecure: boolean;
     warnings: string[];
