@@ -50,41 +50,43 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
   --master-url "${masterUrl}" \\
   --api-key "${apiKey}"`,
-        command: `# SsalgTen 网络监控探针安装
+        command: `# SsalgTen 网络监控探针安装（交互式与手动）
 
-# 方法1：一键安装（推荐）
+# 方式1：交互式安装（可选择 安装/卸载/退出）
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s
+
+# 方式2：一键安装（自动配置）
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
   --master-url "${masterUrl}" \\
   --api-key "${apiKey}"
 
-# 方法2：手动安装
+# 方式3：手动安装
 # 1. 下载安装脚本
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh -o install-agent.sh
 chmod +x install-agent.sh
 
-# 2. 运行安装脚本
+# 2. 运行安装脚本（自动配置或交互式）
 ./install-agent.sh --master-url "${masterUrl}" --api-key "${apiKey}"
+# 或
+./install-agent.sh  # 进入交互式菜单
 
-# 3. 启动服务
+# 3. 启动服务（如需要）
 sudo systemctl start ssalgten-agent
 sudo systemctl enable ssalgten-agent`,
         interactiveCommand: `# SsalgTen 网络监控探针交互式安装
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
-  --master-url "${masterUrl}" \\
-  --api-key "${apiKey}"`,
-        quickUninstallCommand: `# SsalgTen 网络监控探针快速卸载
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash`,
-        uninstallCommand: `# SsalgTen 网络监控探针卸载
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s`,
+        quickUninstallCommand: `# SsalgTen 网络监控探针快速卸载（仅卸载节点，不影响主服务）
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall`,
+        uninstallCommand: `# SsalgTen 网络监控探针卸载（仅卸载节点，不影响主服务）
 
-# 方法1：一键卸载（推荐）
-bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh)
+# 方式1：一键卸载（推荐）
+bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh) --uninstall
 
-# 方法2：手动卸载
+# 方式2：手动卸载
 sudo systemctl stop ssalgten-agent
 sudo systemctl disable ssalgten-agent
 sudo rm -rf /opt/ssalgten-agent
 sudo rm -f /etc/systemd/system/ssalgten-agent.service
-sudo rm -f /usr/local/bin/ssalgten-agent
 sudo systemctl daemon-reload
 sudo systemctl reset-failed`,
         security: {

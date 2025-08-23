@@ -743,11 +743,11 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       // 生成快速安装命令（自动配置）
       const quickCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --auto-config --force-root --master-url "${serverUrl}" --api-key "${apiKey}"`;
       
-      // 生成交互式安装命令（带预置参数，选择1安装时直接使用）
-      const interactiveCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --master-url "${serverUrl}" --api-key "${apiKey}"`;
+      // 生成交互式安装命令（无参数，脚本内可选择 安装/卸载/退出）
+      const interactiveCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s`;
       
-      // 生成快速卸载命令
-      const quickUninstallCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash`;
+      // 生成快速卸载命令（仅卸载Agent节点，不影响主服务）
+      const quickUninstallCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall`;
       
       const response: ApiResponse = {
         success: true,
