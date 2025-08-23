@@ -91,8 +91,8 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
               </div>
             </Card>
 
-            {/* 使用共享的安装命令组件 */}
-            <AgentInstallCommands compact />
+            {/* 使用共享的安装命令组件（完整模式：包含交互式安装与快速卸载命令） */}
+            <AgentInstallCommands />
 
             {/* 安装说明 */}
             <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">

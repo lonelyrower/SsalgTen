@@ -51,9 +51,18 @@ class TokenManager {
 
   static isTokenExpired(token: string): boolean {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const parts = token.split('.');
+      if (parts.length !== 3) return true;
+      const payloadPart = parts[1];
+      // base64url -> base64
+      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const padLen = (4 - (base64.length % 4)) % 4;
+      const padded = base64 + '='.repeat(padLen);
+      const payload = JSON.parse(atob(padded));
+      if (!payload || typeof payload.exp !== 'number') return true;
       return payload.exp * 1000 < Date.now();
     } catch {
+      // 如果解析失败，保守起见认为已过期，避免使用无效token
       return true;
     }
   }
@@ -512,7 +521,11 @@ class ApiService {
     }
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payloadPart = token.split('.')[1];
+      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const padLen = (4 - (base64.length % 4)) % 4;
+      const padded = base64 + '='.repeat(padLen);
+      const payload = JSON.parse(atob(padded));
       return payload.role || null;
     } catch {
       return null;
@@ -605,7 +618,8 @@ class ApiService {
 
   // 获取Agent安装命令（公开接口）
   async getInstallCommand(): Promise<ApiResponse<InstallCommandData>> {
-    return this.request<InstallCommandData>('/agents/install-command');
+    // 该接口需要管理员权限
+    return this.request<InstallCommandData>('/agents/install-command', {}, true);
   }
 }
 
