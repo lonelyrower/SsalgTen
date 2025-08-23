@@ -13,6 +13,13 @@ dotenv.config();
 
 const app = express();
 
+// 当服务位于反向代理或容器网络后面时，信任代理以正确解析 IP（配合 express-rate-limit）
+// 可通过环境变量 TRUST_PROXY=false 关闭
+if ((process.env.TRUST_PROXY || 'true').toLowerCase() === 'true') {
+  // 等价于 app.set('trust proxy', 1)；这里用 true 表示信任第一层代理
+  app.set('trust proxy', true);
+}
+
 // 安全中间件
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
