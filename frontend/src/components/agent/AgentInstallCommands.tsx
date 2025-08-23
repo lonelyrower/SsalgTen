@@ -47,15 +47,15 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
         masterUrl: masterUrl,
         apiKey: apiKey,
         quickCommand: `# SsalgTen 网络监控探针快速安装
-bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh) \\
-  --master-url="${masterUrl}" \\
-  --api-key="${apiKey}"`,
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
+  --master-url "${masterUrl}" \\
+  --api-key "${apiKey}"`,
         command: `# SsalgTen 网络监控探针安装
 
 # 方法1：一键安装（推荐）
-bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh) \\
-  --master-url="${masterUrl}" \\
-  --api-key="${apiKey}"
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
+  --master-url "${masterUrl}" \\
+  --api-key "${apiKey}"
 
 # 方法2：手动安装
 # 1. 下载安装脚本
@@ -63,7 +63,7 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/i
 chmod +x install-agent.sh
 
 # 2. 运行安装脚本
-./install-agent.sh --master-url="${masterUrl}" --api-key="${apiKey}"
+./install-agent.sh --master-url "${masterUrl}" --api-key "${apiKey}"
 
 # 3. 启动服务
 sudo systemctl start ssalgten-agent
