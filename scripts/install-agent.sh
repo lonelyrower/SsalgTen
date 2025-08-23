@@ -1239,9 +1239,22 @@ show_main_menu() {
     echo "========================================"
     echo -e "${NC}"
     echo ""
+    
+    # 如果检测到预置参数，显示特殊提示
+    if [[ -n "${MASTER_URL:-}" && -n "${AGENT_API_KEY:-}" ]]; then
+        echo -e "${GREEN}🔗 已检测到预置连接参数${NC}"
+        echo "   服务器地址: ${MASTER_URL}"
+        echo "   API密钥: ${AGENT_API_KEY:0:8}..."
+        echo ""
+    fi
+    
     echo "请选择要执行的操作："
     echo ""
-    echo -e "${GREEN}1.${NC} 安装监控节点"
+    if [[ -n "${MASTER_URL:-}" && -n "${AGENT_API_KEY:-}" ]]; then
+        echo -e "${GREEN}1.${NC} 一键安装监控节点 ${GREEN}(无需输入参数)${NC}"
+    else
+        echo -e "${GREEN}1.${NC} 安装监控节点"
+    fi
     echo -e "${RED}2.${NC} 卸载监控节点"
     echo -e "${YELLOW}0.${NC} 退出"
     echo ""
@@ -1302,6 +1315,12 @@ main() {
                     case $choice in
                         1)
                             log_info "开始安装监控节点..."
+                            # 如果已经有预置参数，直接使用自动配置模式
+                            if [[ -n "${MASTER_URL:-}" && -n "${AGENT_API_KEY:-}" ]]; then
+                                log_info "检测到预置参数，使用自动配置模式"
+                                AUTO_CONFIG=true
+                                FORCE_ROOT=true
+                            fi
                             show_welcome
                             check_script_update
                             break
