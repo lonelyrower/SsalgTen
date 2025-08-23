@@ -313,26 +313,12 @@ sudo systemctl reset-failed`,
           <Button
             size="sm"
             variant="outline"
-            className={`absolute top-2 right-2 transition-all duration-200 ${
-              copied === 'quick' 
-                ? 'bg-green-600 border-green-500 hover:bg-green-700 text-white' 
-                : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
-            }`}
+            className="absolute top-2 right-2"
             onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
             aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
             title={copied === 'quick' ? '已复制！' : '复制命令'}
           >
-            {copied === 'quick' ? (
-              <>
-                <Check className="h-4 w-4 text-white mr-1" />
-                <span className="text-xs">已复制</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4 mr-1" />
-                <span className="text-xs">复制</span>
-              </>
-            )}
+            {copied === 'quick' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -368,26 +354,12 @@ sudo systemctl reset-failed`,
             <Button
               size="sm"
               variant="outline"
-              className={`absolute top-2 right-2 transition-all duration-200 ${
-                copied === 'interactive' 
-                  ? 'bg-blue-600 border-blue-500 hover:bg-blue-700 text-white' 
-                  : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
-              }`}
+              className="absolute top-2 right-2"
               onClick={() => copyToClipboard(installData.interactiveCommand, 'interactive')}
               aria-label={copied === 'interactive' ? '交互式安装命令已复制到剪贴板' : '复制交互式安装命令到剪贴板'}
               title={copied === 'interactive' ? '已复制！' : '复制命令'}
             >
-              {copied === 'interactive' ? (
-                <>
-                  <Check className="h-4 w-4 text-white mr-1" />
-                  <span className="text-xs">已复制</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1" />
-                  <span className="text-xs">复制</span>
-                </>
-              )}
+              {copied === 'interactive' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
 
@@ -424,26 +396,12 @@ sudo systemctl reset-failed`,
             <Button
               size="sm"
               variant="outline"
-              className={`absolute top-2 right-2 transition-all duration-200 ${
-                copied === 'uninstall' 
-                  ? 'bg-red-600 border-red-500 hover:bg-red-700 text-white' 
-                  : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
-              }`}
+              className="absolute top-2 right-2"
               onClick={() => copyToClipboard(installData.quickUninstallCommand, 'uninstall')}
               aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
               title={copied === 'uninstall' ? '已复制！' : '复制命令'}
             >
-              {copied === 'uninstall' ? (
-                <>
-                  <Check className="h-4 w-4 text-white mr-1" />
-                  <span className="text-xs">已复制</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1" />
-                  <span className="text-xs">复制</span>
-                </>
-              )}
+              {copied === 'uninstall' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
 
