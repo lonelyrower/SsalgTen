@@ -669,9 +669,23 @@ export class NodeController {
     try {
       // 获取服务器对外可访问的基础URL（优先使用环境变量）
       let serverUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      const backendPort = `${process.env.PORT || '3001'}`;
+      const appendPortIfMissing = (url: string): string => {
+        try {
+          const u = new URL(url);
+          // 仅当未显式指定端口，且后端端口不是80/443时追加端口
+          if (!u.port && backendPort !== '80' && backendPort !== '443') {
+            return `${u.protocol}//${u.hostname}:${backendPort}`;
+          }
+          return url;
+        } catch {
+          return url;
+        }
+      };
       if (!serverUrl) {
         serverUrl = `${req.protocol}://${req.get('host')}`;
       }
+      serverUrl = appendPortIfMissing(serverUrl);
       const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
       
       // 生成带参数的安装命令脚本
@@ -720,6 +734,18 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
     try {
       // 获取服务器对外可访问的基础URL（优先使用环境变量）
       let serverUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      const backendPort = `${process.env.PORT || '3001'}`;
+      const appendPortIfMissing = (url: string): string => {
+        try {
+          const u = new URL(url);
+          if (!u.port && backendPort !== '80' && backendPort !== '443') {
+            return `${u.protocol}//${u.hostname}:${backendPort}`;
+          }
+          return url;
+        } catch {
+          return url;
+        }
+      };
       if (!serverUrl) {
         // 回退：从请求推断（在反向代理下可能不准确）
         const host = req.get('host') || '';
@@ -730,6 +756,7 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
           serverUrl = `${req.protocol}://${hostname}:${serverPort}`;
         }
       }
+      serverUrl = appendPortIfMissing(serverUrl);
       
       const apiKey = await apiKeyService.getSystemApiKey();
       
