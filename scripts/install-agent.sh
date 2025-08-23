@@ -265,6 +265,34 @@ parse_arguments() {
     done
 }
 
+# 解析主机和端口
+parse_master_host_port() {
+    local url="$MASTER_URL"
+    # 提取协议、主机、端口
+    MASTER_SCHEME=$(echo "$url" | sed -nE 's#^(https?)://.*#\1#p')
+    MASTER_HOST=$(echo "$url" | sed -nE 's#^https?://([^/:]+).*$#\1#p')
+    MASTER_PORT=$(echo "$url" | sed -nE 's#^https?://[^/:]+:([0-9]+).*$#\1#p')
+    if [[ -z "$MASTER_PORT" ]]; then
+        if [[ "$MASTER_SCHEME" == "https" ]]; then MASTER_PORT=443; else MASTER_PORT=3001; fi
+    fi
+}
+
+# 判断 MASTER_URL 是否指向本机（同机部署）
+detect_same_host() {
+    SAME_HOST=false
+    # 解析主机和端口
+    parse_master_host_port
+    # 解析主机对应的IP（优先 IPv4）
+    local resolved_ip
+    resolved_ip=$(getent ahosts "$MASTER_HOST" 2>/dev/null | awk '/STREAM/ {print $1; exit}')
+    # 本机所有IP
+    local local_ips
+    local_ips=$(hostname -I 2>/dev/null)
+    if echo " $local_ips " | grep -q " $resolved_ip "; then
+        SAME_HOST=true
+    fi
+}
+
 # 自动获取地理位置信息
 get_geo_info() {
     log_info "自动获取地理位置信息..."
@@ -423,7 +451,15 @@ collect_node_info() {
     
     # 生成唯一Agent ID
     AGENT_ID="agent_$(hostname)_$(date +%s)_$(shuf -i 1000-9999 -n 1)"
-    
+
+    # 如果与主站同机，则将 MASTER_URL 切换为 host.docker.internal 以避免容器访问宿主公网IP的回环问题
+    detect_same_host
+    EFFECTIVE_MASTER_URL="$MASTER_URL"
+    if [[ "$SAME_HOST" == "true" ]]; then
+        EFFECTIVE_MASTER_URL="http://host.docker.internal:${MASTER_PORT}"
+        log_info "检测到与主站同机部署，使用内部地址: $EFFECTIVE_MASTER_URL"
+    fi
+
     echo ""
     log_info "节点配置信息:"
     echo "  - 节点ID: $AGENT_ID"
@@ -682,6 +718,9 @@ services:
     # 仅从本目录下的 .env 文件注入环境变量，避免宿主机环境变量覆盖
     env_file:
       - .env
+    # 为同机通信提供稳定的宿主名解析
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./logs:/app/logs
       - /proc:/host/proc:ro
@@ -716,8 +755,8 @@ create_env_config() {
 AGENT_ID=${AGENT_ID}
 NODE_NAME=${NODE_NAME}
 
-# 服务器连接
-MASTER_URL=${MASTER_URL}
+# 服务器连接（同机部署自动切换为 host.docker.internal）
+MASTER_URL=${EFFECTIVE_MASTER_URL}
 AGENT_API_KEY=${AGENT_API_KEY}
 
 # 地理位置信息
