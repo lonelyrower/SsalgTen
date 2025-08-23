@@ -72,7 +72,7 @@ check_script_update() {
         echo ""
         echo -e "${YELLOW}建议更新到最新版本以获得最佳体验${NC}"
         echo ""
-        update_choice=$(read_from_tty "是否立即更新脚本？ [回车=是/N=否]: ")
+        update_choice=$(read_from_tty "是否立即更新脚本？ [Y/N] (回车默认选择 Y): ")
         update_choice="${update_choice:-y}"  # 默认为 y
         if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
             update_script
@@ -80,7 +80,7 @@ check_script_update() {
         else
             log_warning "继续使用当前版本，可能遇到已知问题"
             echo ""
-            confirm_continue=$(read_from_tty "确认继续？ [回车=是/N=否]: ")
+            confirm_continue=$(read_from_tty "确认继续？ [Y/N] (回车默认选择 Y): ")
             confirm_continue="${confirm_continue:-y}"  # 默认为 y
             if [[ "$confirm_continue" != "y" && "$confirm_continue" != "Y" ]]; then
                 log_info "已取消安装"
@@ -131,7 +131,7 @@ show_welcome() {
     echo ""
     echo -e "${GREEN}💡 温馨提示:${NC}"
     echo "  - 只需输入主服务器地址，其他信息全部自动检测"
-    echo "  - 所有确认选项直接按回车即可（默认选择推荐操作）"
+    echo "  - 所有选择项支持直接按回车使用默认值"
     echo "  - 节点信息可在安装后通过管理界面修改"
     echo ""
 }
@@ -435,7 +435,7 @@ collect_node_info() {
     echo ""
     
     if [[ "$AUTO_CONFIG" != "true" ]]; then
-        confirm=$(read_from_tty "确认配置信息正确？ [回车=是/N=否]: ")
+        confirm=$(read_from_tty "确认配置信息正确？ [Y/N] (回车默认选择 Y): ")
         confirm="${confirm:-y}"  # 默认为 y
         if [[ "$confirm" =~ ^[Nn] ]]; then
             log_info "请重新运行脚本"
@@ -1048,7 +1048,7 @@ uninstall_agent() {
     echo ""
     
     # 确认卸载
-    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[回车=否/Y=是]: ")
+    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[Y/N] (回车默认选择 N): ")
     confirm_uninstall="${confirm_uninstall:-n}"  # 默认为 n，卸载操作更加谨慎
     if [[ "$confirm_uninstall" != "y" && "$confirm_uninstall" != "Y" ]]; then
         log_info "已取消卸载"
@@ -1132,7 +1132,7 @@ uninstall_agent() {
     if command -v ufw >/dev/null 2>&1; then
         sudo ufw --force delete allow 3002/tcp 2>/dev/null || true
         # 询问是否同时删除其他可能规则
-        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[回车=否/Y=是]: ")
+        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N] (回车默认选择 N): ")
         extra_fw="${extra_fw:-n}"  # 默认为 n，防火墙操作更谨慎
         if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
             for port in 3001 3003; do
@@ -1142,7 +1142,7 @@ uninstall_agent() {
         log_success "UFW防火墙规则已清理"
     elif command -v firewall-cmd >/dev/null 2>&1; then
         sudo firewall-cmd --permanent --remove-port=3002/tcp 2>/dev/null || true
-        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[回车=否/Y=是]: ")
+        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N] (回车默认选择 N): ")
         extra_fw="${extra_fw:-n}"  # 默认为 n，防火墙操作更谨慎
         if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
             for port in 3001 3003; do
@@ -1157,7 +1157,7 @@ uninstall_agent() {
     
     # 6. 提供卸载Docker的选项（可选）
     echo ""
-    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [回车=否/Y=是]: ")
+    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [Y/N] (回车默认选择 N): ")
     uninstall_docker="${uninstall_docker:-n}"  # 默认为 n，危险操作更谨慎
     if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
         log_info "卸载Docker..."
@@ -1344,7 +1344,7 @@ main() {
             echo "- 回车继续使用root用户"
             echo "- 输入 'n' 取消安装"
             echo ""
-            confirm_root=$(read_from_tty "继续使用root用户？ [回车=是/N=否]: ")
+            confirm_root=$(read_from_tty "继续使用root用户？ [Y/N] (回车默认选择 Y): ")
             confirm_root="${confirm_root:-y}"  # 默认为 y
             if [[ "$confirm_root" =~ ^[Nn] ]]; then
                 log_info "已取消安装"
