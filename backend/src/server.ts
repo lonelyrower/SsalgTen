@@ -53,9 +53,10 @@ const server = httpServer.listen(PORT, async () => {
   try {
     const systemApiKey = await apiKeyService.initializeSystemApiKey();
     const securityCheck = await apiKeyService.checkApiKeySecurity();
-  await apiKeyService.purgeExpiredPreviousKey();
+    await apiKeyService.purgeExpiredPreviousKey();
     
     logger.info('🔑 API key system initialized');
+    logger.info(`🔑 当前系统API密钥: ${systemApiKey ? systemApiKey.substring(0, 10) + '...' : 'null'}`);
     
     if (!securityCheck.isSecure) {
       logger.warn('⚠️ API密钥安全检查警告:');
@@ -69,8 +70,25 @@ const server = httpServer.listen(PORT, async () => {
     } else {
       logger.info('✅ API key security check passed');
     }
+    
+    // 显示API密钥信息供调试
+    try {
+      const apiKeyInfo = await apiKeyService.getApiKeyInfo();
+      logger.info(`🔑 API密钥详情:`);
+      logger.info(`  - 密钥ID: ${apiKeyInfo.id}`);
+      logger.info(`  - 创建时间: ${apiKeyInfo.createdAt.toISOString()}`);
+      logger.info(`  - 使用次数: ${apiKeyInfo.usageCount}`);
+      logger.info(`  - 最后使用: ${apiKeyInfo.lastUsed ? apiKeyInfo.lastUsed.toISOString() : '从未使用'}`);
+    } catch (infoError) {
+      logger.warn('获取API密钥详情失败:', infoError);
+    }
+    
   } catch (error) {
     logger.error('❌ Failed to initialize API key system:', error);
+    logger.error('尝试回退到环境变量API密钥...');
+    
+    const fallbackKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
+    logger.warn(`🔄 使用回退API密钥: ${fallbackKey.substring(0, 10)}...`);
   }
 
   // 启动定时清理任务

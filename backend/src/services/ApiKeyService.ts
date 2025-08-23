@@ -132,39 +132,53 @@ export class ApiKeyService {
 
   // 验证API密钥
   async validateApiKey(key: string): Promise<boolean> {
-  logger.debug(`[ApiKeyService] 开始验证API密钥: ${key ? key.substring(0, 4) + '...' : 'null/undefined'}`);
+    logger.info(`[ApiKeyService] 开始验证API密钥: ${key ? key.substring(0, 10) + '...' : 'null/undefined'}`);
     
-    if (!key || !this.isValidApiKeyFormat(key)) {
-  logger.debug(`[ApiKeyService] API密钥格式无效`);
+    if (!key) {
+      logger.warn(`[ApiKeyService] API密钥为空或未定义`);
+      return false;
+    }
+
+    if (!this.isValidApiKeyFormat(key)) {
+      logger.warn(`[ApiKeyService] API密钥格式无效: ${key.substring(0, 10)}...`);
       return false;
     }
 
     try {
       const systemKey = await this.getSystemApiKey();
+      logger.info(`[ApiKeyService] 系统密钥: ${systemKey ? systemKey.substring(0, 10) + '...' : 'null/undefined'}`);
+      
       let matches = key === systemKey;
+      logger.info(`[ApiKeyService] 与当前系统密钥比较结果: ${matches}`);
 
       // 如果不匹配当前密钥，检查是否匹配仍在宽限期的旧密钥
       if (!matches) {
+        logger.info(`[ApiKeyService] 检查旧密钥宽限期...`);
         const previousKeyRecord = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } });
         const previousKeyExpires = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } });
+        
         if (previousKeyRecord && previousKeyExpires) {
           const expiresAt = new Date(previousKeyExpires.value);
-            if (new Date() < expiresAt && key === previousKeyRecord.value) {
-              matches = true; // 旧密钥仍然有效
-              logger.debug('[ApiKeyService] 使用处于宽限期的旧API密钥');
-            }
+          logger.info(`[ApiKeyService] 找到旧密钥，过期时间: ${expiresAt.toISOString()}`);
+          
+          if (new Date() < expiresAt && key === previousKeyRecord.value) {
+            matches = true;
+            logger.info('[ApiKeyService] 使用处于宽限期的旧API密钥');
+          }
+        } else {
+          logger.info(`[ApiKeyService] 未找到旧密钥记录`);
         }
       }
 
-      logger.debug(`[ApiKeyService] 密钥匹配结果: ${matches}`);
+      logger.info(`[ApiKeyService] 最终密钥匹配结果: ${matches}`);
 
       if (matches) {
-        logger.debug(`[ApiKeyService] API密钥验证成功，更新使用统计`);
+        logger.info(`[ApiKeyService] API密钥验证成功，更新使用统计`);
         await this.updateApiKeyUsage(key);
         return true;
       }
 
-      logger.debug(`[ApiKeyService] API密钥不匹配`);
+      logger.warn(`[ApiKeyService] API密钥不匹配 - 提供的密钥: ${key.substring(0, 10)}..., 系统密钥: ${systemKey.substring(0, 10)}...`);
       return false;
     } catch (error) {
       logger.error('[ApiKeyService] 验证API密钥时出错:', error);
