@@ -72,14 +72,16 @@ check_script_update() {
         echo ""
         echo -e "${YELLOW}建议更新到最新版本以获得最佳体验${NC}"
         echo ""
-        update_choice=$(read_from_tty "是否立即更新脚本？ [Y/N]: ")
+        update_choice=$(read_from_tty "是否立即更新脚本？ [回车=是/N=否]: ")
+        update_choice="${update_choice:-y}"  # 默认为 y
         if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
             update_script
             return 0
         else
             log_warning "继续使用当前版本，可能遇到已知问题"
             echo ""
-            confirm_continue=$(read_from_tty "确认继续？ [Y/N]: ")
+            confirm_continue=$(read_from_tty "确认继续？ [回车=是/N=否]: ")
+            confirm_continue="${confirm_continue:-y}"  # 默认为 y
             if [[ "$confirm_continue" != "y" && "$confirm_continue" != "Y" ]]; then
                 log_info "已取消安装"
                 exit 0
@@ -126,6 +128,11 @@ show_welcome() {
     echo "  交互式安装: curl -fsSL ... | bash"
     echo "  自动化安装: curl -fsSL ... | bash -s -- --auto-config --master-url URL --api-key KEY"
     echo "  卸载Agent: curl -fsSL ... | bash -s -- --uninstall"
+    echo ""
+    echo -e "${GREEN}💡 温馨提示:${NC}"
+    echo "  - 只需输入主服务器地址，其他信息全部自动检测"
+    echo "  - 所有确认选项直接按回车即可（默认选择推荐操作）"
+    echo "  - 节点信息可在安装后通过管理界面修改"
     echo ""
 }
 
@@ -325,7 +332,7 @@ get_geo_info() {
     # 设置默认值以防获取失败
     AUTO_DETECTED_COUNTRY=${AUTO_DETECTED_COUNTRY:-"Unknown"}
     AUTO_DETECTED_CITY=${AUTO_DETECTED_CITY:-"Unknown"}  
-    AUTO_DETECTED_PROVIDER=${AUTO_DETECTED_PROVIDER:-"Unknown"}
+    AUTO_DETECTED_PROVIDER=${AUTO_DETECTED_PROVIDER:-"Unknown Provider"}
     AUTO_DETECTED_LATITUDE=${AUTO_DETECTED_LATITUDE:-"0.0"}
     AUTO_DETECTED_LONGITUDE=${AUTO_DETECTED_LONGITUDE:-"0.0"}
     
@@ -371,12 +378,12 @@ collect_node_info() {
         fi
     fi
     
+    # 总是自动获取地理位置信息（用于提供智能建议）
+    get_geo_info
+    
     # 设置默认值（适用于自动配置和交互式配置）
     if [[ "$AUTO_CONFIG" == "true" ]]; then
         log_info "使用自动配置模式..."
-        
-        # 自动获取地理位置信息
-        get_geo_info
         
         # 设置节点信息（优先使用手动指定的参数，其次使用自动检测的信息）
         NODE_NAME=${NODE_NAME:-"Agent-$(hostname)-$(date +%s)"}
@@ -389,31 +396,29 @@ collect_node_info() {
         
         log_success "已使用自动配置模式"
     else
-        # 节点名称
-        NODE_NAME=$(read_from_tty "节点名称 (如: Tokyo-VPS-01): ")
-        NODE_NAME=${NODE_NAME:-"Agent-$(hostname)"}
-        
-        # 地理位置信息
-        NODE_COUNTRY=$(read_from_tty "国家/地区 (如: Japan): ")
-        NODE_COUNTRY=${NODE_COUNTRY:-"Unknown"}
-        
-        NODE_CITY=$(read_from_tty "城市 (如: Tokyo): ")
-        NODE_CITY=${NODE_CITY:-"Unknown"}
-        
-        NODE_PROVIDER=$(read_from_tty "服务商 (如: Vultr, DigitalOcean): ")
-        NODE_PROVIDER=${NODE_PROVIDER:-"Unknown"}
-        
-        # 坐标（可选）
+        # 交互式配置 - 直接使用自动检测的信息，无需用户输入
+        log_info "使用交互式配置模式..."
         echo ""
-        echo "GPS坐标 (可选，用于地图显示):"
-        NODE_LATITUDE=$(read_from_tty "纬度 (如: 35.6762): ")
-        NODE_LONGITUDE=$(read_from_tty "经度 (如: 139.6503): ")
-        NODE_LATITUDE=${NODE_LATITUDE:-"0.0"}
-        NODE_LONGITUDE=${NODE_LONGITUDE:-"0.0"}
         
-        # 端口设置
-        AGENT_PORT=$(read_from_tty "Agent端口 (默认3002): ")
-        AGENT_PORT=${AGENT_PORT:-"3002"}
+        # 显示自动检测的信息
+        if [[ "$AUTO_DETECTED_COUNTRY" != "Unknown" ]]; then
+            echo "🔍 自动检测到以下信息，将直接使用："
+            echo "   位置: $AUTO_DETECTED_CITY, $AUTO_DETECTED_COUNTRY"
+            echo "   服务商: $AUTO_DETECTED_PROVIDER"
+            echo "   坐标: $AUTO_DETECTED_LATITUDE, $AUTO_DETECTED_LONGITUDE"
+            echo ""
+        fi
+        
+        # 直接使用自动检测的信息，无需用户输入
+        NODE_NAME="Agent-$(hostname)-$(date +%s)"
+        NODE_COUNTRY="$AUTO_DETECTED_COUNTRY"
+        NODE_CITY="$AUTO_DETECTED_CITY"
+        NODE_PROVIDER="$AUTO_DETECTED_PROVIDER"
+        NODE_LATITUDE="$AUTO_DETECTED_LATITUDE"
+        NODE_LONGITUDE="$AUTO_DETECTED_LONGITUDE"
+        AGENT_PORT="3002"
+        
+        log_success "节点信息配置完成（可在安装后通过管理界面修改）"
     fi
     
     # 生成唯一Agent ID
@@ -430,11 +435,13 @@ collect_node_info() {
     echo ""
     
     if [[ "$AUTO_CONFIG" != "true" ]]; then
-    confirm=$(read_from_tty "确认配置信息正确？ [Y/N]: ")
-        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        confirm=$(read_from_tty "确认配置信息正确？ [回车=是/N=否]: ")
+        confirm="${confirm:-y}"  # 默认为 y
+        if [[ "$confirm" =~ ^[Nn] ]]; then
             log_info "请重新运行脚本"
             exit 0
         fi
+        log_success "配置信息已确认，开始安装"
     else
         log_success "自动配置模式，配置信息已确认"
     fi
@@ -1041,7 +1048,8 @@ uninstall_agent() {
     echo ""
     
     # 确认卸载
-    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[Y/N]: ")
+    confirm_uninstall=$(read_from_tty "是否确认卸载？这个操作不可逆！[回车=否/Y=是]: ")
+    confirm_uninstall="${confirm_uninstall:-n}"  # 默认为 n，卸载操作更加谨慎
     if [[ "$confirm_uninstall" != "y" && "$confirm_uninstall" != "Y" ]]; then
         log_info "已取消卸载"
         exit 0
@@ -1124,7 +1132,8 @@ uninstall_agent() {
     if command -v ufw >/dev/null 2>&1; then
         sudo ufw --force delete allow 3002/tcp 2>/dev/null || true
         # 询问是否同时删除其他可能规则
-        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N]: ")
+        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[回车=否/Y=是]: ")
+        extra_fw="${extra_fw:-n}"  # 默认为 n，防火墙操作更谨慎
         if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
             for port in 3001 3003; do
                 sudo ufw --force delete allow $port/tcp 2>/dev/null || true
@@ -1133,7 +1142,8 @@ uninstall_agent() {
         log_success "UFW防火墙规则已清理"
     elif command -v firewall-cmd >/dev/null 2>&1; then
         sudo firewall-cmd --permanent --remove-port=3002/tcp 2>/dev/null || true
-        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N]: ")
+        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[回车=否/Y=是]: ")
+        extra_fw="${extra_fw:-n}"  # 默认为 n，防火墙操作更谨慎
         if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
             for port in 3001 3003; do
                 sudo firewall-cmd --permanent --remove-port=$port/tcp 2>/dev/null || true
@@ -1147,7 +1157,8 @@ uninstall_agent() {
     
     # 6. 提供卸载Docker的选项（可选）
     echo ""
-    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [Y/N]: ")
+    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [回车=否/Y=是]: ")
+    uninstall_docker="${uninstall_docker:-n}"  # 默认为 n，危险操作更谨慎
     if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
         log_info "卸载Docker..."
         
@@ -1333,8 +1344,8 @@ main() {
             echo "- 回车继续使用root用户"
             echo "- 输入 'n' 取消安装"
             echo ""
-            confirm_root=$(read_from_tty "继续使用root用户？ [Y/N]: ")
-            confirm_root="${confirm_root:-y}"
+            confirm_root=$(read_from_tty "继续使用root用户？ [回车=是/N=否]: ")
+            confirm_root="${confirm_root:-y}"  # 默认为 y
             if [[ "$confirm_root" =~ ^[Nn] ]]; then
                 log_info "已取消安装"
                 echo ""
