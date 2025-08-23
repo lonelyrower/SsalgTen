@@ -66,7 +66,8 @@ export class RegistrationService {
         `${masterUrl}/api/agents/register`,
         registrationData,
         {
-          timeout: 10000,
+          // 某些环境首次注册可能较慢（数据库/初始化），放宽超时
+          timeout: 20000,
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': `SsalgTen-Agent/${config.id}`,
@@ -193,7 +194,8 @@ export class RegistrationService {
         `${masterUrl}/api/agents/${config.id}/heartbeat`,
         heartbeatData,
         {
-          timeout: 5000,
+          // 心跳偶发抖动时避免误判，放宽超时
+          timeout: 12000,
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': `SsalgTen-Agent/${config.id}`,
