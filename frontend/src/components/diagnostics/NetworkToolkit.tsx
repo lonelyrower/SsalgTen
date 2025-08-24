@@ -143,13 +143,18 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         const agentEndpoint = `http://${selectedNode.ipv4}:3002`;
         
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 60000);
+          
           const response = await fetch(`${agentEndpoint}/api/latency-test?testType=standard`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 60000, // 60秒超时
+            signal: controller.signal,
           });
+          
+          clearTimeout(timeoutId);
 
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
