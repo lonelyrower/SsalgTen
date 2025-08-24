@@ -35,6 +35,29 @@ class EventService {
       }
     });
   }
+
+  async getGlobalActivities(limit = 100) {
+    return prisma.eventLog.findMany({
+      orderBy: { timestamp: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        type: true,
+        message: true,
+        details: true,
+        timestamp: true,
+        node: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            country: true,
+            status: true,
+          }
+        }
+      }
+    });
+  }
 }
 
 export const eventService = new EventService();

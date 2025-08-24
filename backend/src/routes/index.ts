@@ -76,6 +76,9 @@ router.get('/nodes/:id/diagnostics', nodeController.getNodeDiagnostics.bind(node
 router.get('/nodes/:id/heartbeat', nodeController.getNodeHeartbeatData.bind(nodeController));
 router.get('/nodes/:id/events', nodeController.getNodeEvents.bind(nodeController));
 
+// 全局活动日志路由  
+router.get('/activities', nodeController.getGlobalActivities.bind(nodeController));
+
 // 统计信息路由
 router.get('/stats', publicLimiter, nodeController.getNodeStats.bind(nodeController));
 

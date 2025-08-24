@@ -422,6 +422,11 @@ export class NodeController {
         }
         
         logger.info(`Existing node updated: ${node.name} (${node.id})`);
+        // 记录Agent注册/重连事件
+        await eventService.createEvent(node.id, 'AGENT_REGISTERED', `Agent ${agentId} registered successfully`, { 
+          agentId, 
+          systemInfo: systemInfo ? { platform: systemInfo.platform, hostname: systemInfo.hostname } : null 
+        });
       }
 
       const response: ApiResponse = {
@@ -852,6 +857,28 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       const response: ApiResponse = {
         success: false,
         error: 'Failed to regenerate API key'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // 获取全局活动日志
+  async getGlobalActivities(req: Request, res: Response): Promise<void> {
+    try {
+      const rawLimit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const limit = Math.max(1, Math.min(rawLimit, 200));
+      const activities = await (await import('../services/EventService')).eventService.getGlobalActivities(limit);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: activities,
+      };
+      res.json(response);
+    } catch (error) {
+      logger.error('Get global activities error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to fetch global activities'
       };
       res.status(500).json(response);
     }
