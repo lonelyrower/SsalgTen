@@ -2,7 +2,7 @@
 
 echo "=== SsalgTen Agent 手动安装指令 ==="
 echo ""
-echo "现在后端已修复，运行在 http://localhost:3002"
+echo "后端运行在标准端口 http://localhost:3001"
 echo "请按以下步骤手动安装Agent:"
 echo ""
 
@@ -20,7 +20,7 @@ cat << 'EOF'
 docker run -d \
   --name ssalgten-agent \
   --restart unless-stopped \
-  -e MASTER_URL="http://host.docker.internal:3002" \
+  -e MASTER_URL="http://host.docker.internal:3001" \
   -e MASTER_API_KEY="default-agent-api-key-change-this-in-production" \
   -e NODE_NAME="My-Agent-Node" \
   -e NODE_COUNTRY="US" \
