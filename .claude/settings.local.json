@@ -55,7 +55,8 @@
       "Bash(fuser:*)",
       "Bash(PRISMA_CLI_QUERY_ENGINE_TYPE=binary node get-api-key.js)",
       "Bash(export:*)",
-      "Bash(docker:*)"
+      "Bash(docker:*)",
+      "Bash(echo \"# 检查backend环境变量中的签名设置\ndocker exec ssalgten-backend env | grep SIGNATURE\n\n# 如果没有AGENT_REQUIRE_SIGNATURE=false，需要添加它\")"
     ],
     "deny": [],
     "additionalDirectories": [

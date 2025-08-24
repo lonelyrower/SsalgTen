@@ -58,6 +58,7 @@ services:
       # Agent Configuration
       DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
       AGENT_HEARTBEAT_INTERVAL: ${AGENT_HEARTBEAT_INTERVAL:-30000}
+      AGENT_REQUIRE_SIGNATURE: ${AGENT_REQUIRE_SIGNATURE:-false}
       
       # IP Info Service
       IPINFO_TOKEN: ${IPINFO_TOKEN:-}
