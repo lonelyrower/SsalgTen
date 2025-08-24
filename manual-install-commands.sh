@@ -22,7 +22,7 @@ docker run -d \
   --name ssalgten-agent \
   --restart unless-stopped \
   -e MASTER_URL="http://host.docker.internal:3001" \
-  -e MASTER_API_KEY="default-agent-api-key-change-this-in-production" \
+  -e MASTER_API_KEY="ssalgten_agent_default_2025" \
   -e NODE_NAME="Master-Server-Agent" \
   -e NODE_COUNTRY="US" \
   -e NODE_CITY="MainServer" \
@@ -53,7 +53,7 @@ docker run -d \
   --name ssalgten-agent \
   --restart unless-stopped \
   -e MASTER_URL="http://YOUR_MASTER_SERVER_IP:3001" \
-  -e MASTER_API_KEY="default-agent-api-key-change-this-in-production" \
+  -e MASTER_API_KEY="ssalgten_agent_default_2025" \
   -e NODE_NAME="Remote-Agent" \
   -e NODE_COUNTRY="US" \
   -e NODE_CITY="RemoteCity" \
@@ -81,7 +81,7 @@ docker run -d \
   --name ssalgten-agent \
   --restart unless-stopped \
   -e MASTER_URL="http://160.187.211.115:3001" \
-  -e MASTER_API_KEY="default-agent-api-key-change-this-in-production" \
+  -e MASTER_API_KEY="ssalgten_agent_default_2025" \
   -e NODE_NAME="Malaysia-Agent" \
   -e NODE_COUNTRY="MY" \
   -e NODE_CITY="JohorBahru" \

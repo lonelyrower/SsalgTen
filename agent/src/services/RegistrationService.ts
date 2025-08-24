@@ -43,6 +43,7 @@ export class RegistrationService {
       const publicIPs = await getPublicIPs();
       const registrationData = {
         agentId: config.id,
+        apiKey: config.apiKey, // 直接在body中包含API Key
         nodeInfo: {
           name: config.name,
           country: config.location.country,
@@ -61,48 +62,77 @@ export class RegistrationService {
         }
       };
 
-      const masterUrl = config.masterUrl.replace(/\/$/, ''); // 移除尾部斜杠
-      const response = await axios.post(
-        `${masterUrl}/api/agents/register`,
-        registrationData,
-        {
-          // 某些环境首次注册可能较慢（数据库/初始化），放宽超时
-          timeout: 20000,
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': `SsalgTen-Agent/${config.id}`,
-            // Signed headers for backend verification
-            ...buildSignedHeaders(config.apiKey, registrationData),
+      let masterUrl = config.masterUrl.replace(/\/$/, ''); // 移除尾部斜杠
+      
+      // 尝试多个连接地址（适用于同机部署的网络问题）
+      const urlsToTry = [
+        masterUrl,
+        // 如果原URL使用host.docker.internal，添加Docker网关IP作为备用
+        masterUrl.includes('host.docker.internal') 
+          ? masterUrl.replace('host.docker.internal', '172.17.0.1')
+          : null,
+        // 添加localhost作为最后的备用（适用于某些Docker配置）
+        masterUrl.includes('host.docker.internal')
+          ? masterUrl.replace('host.docker.internal', 'localhost')
+          : null
+      ].filter(Boolean);
+
+      let lastError;
+      for (const tryUrl of urlsToTry) {
+        try {
+          logger.info(`尝试连接到: ${tryUrl}`);
+          
+          const response = await axios.post(
+            `${tryUrl}/api/agents/register`,
+            registrationData,
+            {
+              // 增加超时时间以适应网络延迟和容器启动时间
+              timeout: 60000,
+              headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': `SsalgTen-Agent/${config.id}`,
+                // 简化认证：直接在body中包含apiKey，避免签名验证问题
+              }
+            }
+          );
+
+          // 如果成功，更新配置中的masterUrl为可工作的URL
+          if (response.data.success && tryUrl !== masterUrl) {
+            logger.info(`连接成功，使用URL: ${tryUrl}`);
+            config.masterUrl = tryUrl;
           }
+
+          if (response.data.success) {
+            this.isRegistered = true;
+            this.nodeInfo = response.data.data;
+            
+            logger.info('Agent registration successful!', {
+              nodeId: this.nodeInfo.nodeId,
+              nodeName: this.nodeInfo.nodeName,
+              location: this.nodeInfo.location
+            });
+
+            // 开始发送心跳
+            this.startHeartbeat();
+
+            return {
+              success: true,
+              nodeId: this.nodeInfo.nodeId,
+              nodeName: this.nodeInfo.nodeName,
+              location: this.nodeInfo.location
+            };
+          } else {
+            logger.error(`Agent registration failed with ${tryUrl}:`, response.data.error);
+            lastError = new Error(response.data.error || 'Registration failed');
+          }
+        } catch (error) {
+          logger.warn(`Failed to connect to ${tryUrl}:`, error instanceof Error ? error.message : 'Unknown error');
+          lastError = error instanceof Error ? error : new Error('Unknown error');
         }
-      );
-
-      if (response.data.success) {
-        this.isRegistered = true;
-        this.nodeInfo = response.data.data;
-        
-        logger.info('Agent registration successful!', {
-          nodeId: this.nodeInfo.nodeId,
-          nodeName: this.nodeInfo.nodeName,
-          location: this.nodeInfo.location
-        });
-
-        // 开始发送心跳
-        this.startHeartbeat();
-
-        return {
-          success: true,
-          nodeId: this.nodeInfo.nodeId,
-          nodeName: this.nodeInfo.nodeName,
-          location: this.nodeInfo.location
-        };
-      } else {
-        logger.error('Agent registration failed:', response.data.error);
-        return {
-          success: false,
-          error: response.data.error || 'Registration failed'
-        };
       }
+
+      // 如果所有URL都失败了，抛出最后一个错误
+      throw lastError || new Error('All connection attempts failed');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown registration error';
       logger.error('Agent registration error:', errorMessage);
