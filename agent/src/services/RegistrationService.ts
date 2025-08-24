@@ -79,6 +79,7 @@ export class RegistrationService {
         if (u.hostname === 'host.docker.internal') {
           urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
           urlsToTry.push(`${scheme}//localhost:${u.port || port}`);
+          urlsToTry.push(`${scheme}//127.0.0.1:${u.port || port}`);
         } else if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
           urlsToTry.push(`${scheme}//host.docker.internal:${u.port || port}`);
           urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
@@ -86,6 +87,8 @@ export class RegistrationService {
           // 保守追加同机常见回退（置于末尾，避免影响异机部署）
           urlsToTry.push(`${scheme}//host.docker.internal:${u.port || port}`);
           urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
+          urlsToTry.push(`${scheme}//localhost:${u.port || port}`);
+          urlsToTry.push(`${scheme}//127.0.0.1:${u.port || port}`);
         }
       } catch {
         // URL解析失败时维持原行为

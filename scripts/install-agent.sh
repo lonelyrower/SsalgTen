@@ -468,6 +468,8 @@ collect_node_info() {
     if [[ "$SAME_HOST" == "true" ]]; then
         CANDIDATE_URLS+=("http://host.docker.internal:${MASTER_PORT}")
         CANDIDATE_URLS+=("http://172.17.0.1:${MASTER_PORT}")
+        CANDIDATE_URLS+=("http://localhost:${MASTER_PORT}")
+        CANDIDATE_URLS+=("http://127.0.0.1:${MASTER_PORT}")
     fi
 
     # 在容器网络环境内预探测 /api/health，选择第一个可达地址
@@ -498,6 +500,13 @@ collect_node_info() {
     if ! choose_effective_master_url; then
         log_warning "容器内探测失败，保留原始地址: $MASTER_URL"
         EFFECTIVE_MASTER_URL="$MASTER_URL"
+    fi
+
+    # 若同机部署，启用 host 网络模式以支持主站仅监听 127.0.0.1 的情况
+    AGENT_USE_HOST_NETWORK=false
+    if [[ "$SAME_HOST" == "true" ]]; then
+        AGENT_USE_HOST_NETWORK=true
+        log_info "同机部署：将为 Agent 启用 host 网络模式，确保可访问 localhost:${MASTER_PORT}"
     fi
 
     echo ""
@@ -745,7 +754,33 @@ download_agent_code() {
 create_docker_compose() {
     log_info "创建Docker Compose配置..."
     
-    cat > docker-compose.yml << EOF
+    if [[ "$AGENT_USE_HOST_NETWORK" == "true" ]]; then
+cat > docker-compose.yml << EOF
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssalgten-agent
+    restart: unless-stopped
+    network_mode: host
+    # 仅从本目录下的 .env 文件注入环境变量，避免宿主机环境变量覆盖
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc:/host/etc:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${AGENT_PORT}/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+EOF
+    else
+cat > docker-compose.yml << EOF
 services:
   agent:
     build:
@@ -779,6 +814,7 @@ networks:
   agent-network:
     driver: bridge
 EOF
+    fi
 
     log_success "Docker Compose配置创建完成"
 }
