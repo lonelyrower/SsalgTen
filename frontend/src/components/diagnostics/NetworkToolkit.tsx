@@ -17,7 +17,8 @@ import {
   Server,
   MapPin,
   Network,
-  Target
+  Target,
+  XCircle
 } from 'lucide-react';
 import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -604,6 +605,345 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
               <p className="text-lg font-bold text-purple-600">{data.jitter}ms</p>
               <p className="text-xs text-gray-600">抖动</p>
             </div>
+          </div>
+        </div>
+      );
+
+    case 'latency-test':
+      return (
+        <div className="space-y-6">
+          {/* 测试概览 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-2xl font-bold text-green-600">
+                {data.summary?.successful || 0}/{data.summary?.total || 0}
+              </div>
+              <div className="text-sm text-gray-600">成功率</div>
+            </div>
+            <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-2xl font-bold text-blue-600">
+                {data.summary?.averageLatency?.toFixed(1) || 0}ms
+              </div>
+              <div className="text-sm text-gray-600">平均延迟</div>
+            </div>
+            <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-2xl font-bold text-green-500">
+                {data.summary?.excellentCount || 0}
+              </div>
+              <div className="text-sm text-gray-600">优秀连接</div>
+            </div>
+            <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-2xl font-bold text-yellow-500">
+                {data.duration ? (data.duration / 1000).toFixed(1) : 0}s
+              </div>
+              <div className="text-sm text-gray-600">测试耗时</div>
+            </div>
+          </div>
+
+          {/* 详细结果 */}
+          <div className="space-y-2">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">详细延迟结果</h4>
+            {data.results?.map((result: any, index: number) => {
+              const getStatusColor = (status: string) => {
+                switch (status) {
+                  case 'excellent': return 'bg-green-100 text-green-800 border-green-200';
+                  case 'good': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                  case 'poor': return 'bg-orange-100 text-orange-800 border-orange-200';
+                  case 'failed': return 'bg-red-100 text-red-800 border-red-200';
+                  default: return 'bg-gray-100 text-gray-800 border-gray-200';
+                }
+              };
+
+              const getStatusIcon = (status: string) => {
+                switch (status) {
+                  case 'excellent': return '🟢';
+                  case 'good': return '🟡';
+                  case 'poor': return '🔴';
+                  case 'failed': return '⚫';
+                  default: return '⚫';
+                }
+              };
+
+              return (
+                <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg">{getStatusIcon(result.status)}</span>
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">{result.target}</div>
+                      {result.error && (
+                        <div className="text-xs text-red-500">{result.error}</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`px-2 py-1 rounded text-sm font-medium border ${getStatusColor(result.status)}`}>
+                    {result.latency !== null ? `${result.latency.toFixed(1)}ms` : 'N/A'}
+                  </div>
+                </div>
+              );
+            }) || []}
+          </div>
+
+          {/* 延迟等级说明 */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+            <h5 className="font-medium text-blue-900 dark:text-blue-300 mb-2">延迟等级说明</h5>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+              <div className="flex items-center space-x-1">
+                <span>🟢</span>
+                <span className="text-green-600 font-medium">&lt; 50ms 优秀</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span>🟡</span>
+                <span className="text-yellow-600 font-medium">50-150ms 良好</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span>🔴</span>
+                <span className="text-orange-600 font-medium">&gt; 150ms 较差</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span>⚫</span>
+                <span className="text-red-600 font-medium">失败 无法连接</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'traceroute':
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-4 text-center mb-4">
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-blue-600">{data.hops?.length || 0}</div>
+              <div className="text-sm text-gray-600">跳数</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-green-600">
+                {data.hops?.slice(-1)[0]?.time || 0}ms
+              </div>
+              <div className="text-sm text-gray-600">总延迟</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-purple-600">{data.target || '目标'}</div>
+              <div className="text-sm text-gray-600">目标主机</div>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">路由跟踪结果</h4>
+            {data.hops?.map((hop: any, index: number) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                    {hop.hop || index + 1}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {hop.hostname || hop.ip || '* * *'}
+                    </div>
+                    <div className="text-sm text-gray-500">{hop.ip}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    {hop.time ? `${hop.time}ms` : '超时'}
+                  </div>
+                  {hop.loss && hop.loss > 0 && (
+                    <div className="text-sm text-red-500">{hop.loss}% 丢包</div>
+                  )}
+                </div>
+              </div>
+            )) || []}
+          </div>
+        </div>
+      );
+
+    case 'mtr':
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-blue-600">{data.hops?.length || 0}</div>
+              <div className="text-sm text-gray-600">跳数</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-green-600">{data.report_cycles || 0}</div>
+              <div className="text-sm text-gray-600">测试次数</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-yellow-600">
+                {data.hops?.reduce((avg: number, hop: any) => avg + (hop.avg || 0), 0) / (data.hops?.length || 1) || 0}ms
+              </div>
+              <div className="text-sm text-gray-600">平均延迟</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-red-600">
+                {Math.max(...(data.hops?.map((h: any) => h.loss || 0) || [0]))}%
+              </div>
+              <div className="text-sm text-gray-600">最大丢包</div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">MTR 分析结果</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50 dark:bg-gray-700">
+                    <th className="text-left p-2">跳数</th>
+                    <th className="text-left p-2">主机名</th>
+                    <th className="text-right p-2">丢包%</th>
+                    <th className="text-right p-2">发送</th>
+                    <th className="text-right p-2">最后</th>
+                    <th className="text-right p-2">平均</th>
+                    <th className="text-right p-2">最好</th>
+                    <th className="text-right p-2">最差</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.hops?.map((hop: any, index: number) => (
+                    <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="p-2 font-medium">{hop.hop || index + 1}</td>
+                      <td className="p-2">{hop.hostname || hop.ip || '???'}</td>
+                      <td className="p-2 text-right">
+                        <span className={hop.loss > 0 ? 'text-red-600' : 'text-green-600'}>
+                          {hop.loss || 0}%
+                        </span>
+                      </td>
+                      <td className="p-2 text-right">{hop.sent || 0}</td>
+                      <td className="p-2 text-right">{hop.last || 0}ms</td>
+                      <td className="p-2 text-right font-medium">{hop.avg || 0}ms</td>
+                      <td className="p-2 text-right text-green-600">{hop.best || 0}ms</td>
+                      <td className="p-2 text-right text-red-600">{hop.worst || 0}ms</td>
+                    </tr>
+                  )) || []}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'dns':
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center mb-4">
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-blue-600">{data.queries?.length || 0}</div>
+              <div className="text-sm text-gray-600">查询数量</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-green-600">
+                {data.avg_query_time?.toFixed(1) || 0}ms
+              </div>
+              <div className="text-sm text-gray-600">平均响应时间</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-purple-600">
+                {data.queries?.filter((q: any) => q.result).length || 0}
+              </div>
+              <div className="text-sm text-gray-600">成功查询</div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">DNS 查询结果</h4>
+            {data.queries?.map((query: any, index: number) => (
+              <div key={index} className="p-4 bg-white dark:bg-gray-700 rounded-lg border">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-gray-900 dark:text-white">{query.domain}</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                      {query.type}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {query.time}ms
+                  </div>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">结果: </span>
+                  <span className="font-mono text-gray-900 dark:text-white">
+                    {query.result || '查询失败'}
+                  </span>
+                </div>
+              </div>
+            )) || []}
+          </div>
+        </div>
+      );
+
+    case 'port':
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-blue-600">{data.scanned_ports?.length || 0}</div>
+              <div className="text-sm text-gray-600">扫描端口</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-green-600">{data.open_ports?.length || 0}</div>
+              <div className="text-sm text-gray-600">开放端口</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-red-600">{data.closed_ports?.length || 0}</div>
+              <div className="text-sm text-gray-600">关闭端口</div>
+            </div>
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+              <div className="text-xl font-bold text-yellow-600">
+                {data.scan_time?.toFixed(2) || 0}s
+              </div>
+              <div className="text-sm text-gray-600">扫描耗时</div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {data.open_ports && data.open_ports.length > 0 && (
+              <div>
+                <h4 className="font-medium text-green-600 mb-2 flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  开放端口
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {data.open_ports.map((port: number) => (
+                    <span key={port} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                      {port}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.closed_ports && data.closed_ports.length > 0 && (
+              <div>
+                <h4 className="font-medium text-red-600 mb-2 flex items-center">
+                  <XCircle className="h-4 w-4 mr-2" />
+                  关闭端口
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {data.closed_ports.map((port: number) => (
+                    <span key={port} className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                      {port}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.filtered_ports && data.filtered_ports.length > 0 && (
+              <div>
+                <h4 className="font-medium text-yellow-600 mb-2 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  过滤端口
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {data.filtered_ports.map((port: number) => (
+                    <span key={port} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                      {port}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       );

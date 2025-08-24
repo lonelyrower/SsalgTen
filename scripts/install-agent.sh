@@ -349,7 +349,8 @@ get_geo_info() {
     
     # 清理和验证数据
     AUTO_DETECTED_COUNTRY=${AUTO_DETECTED_COUNTRY// /}
-    AUTO_DETECTED_CITY=${AUTO_DETECTED_CITY// /}
+    # 保留城市名中的空格，只清理首尾空格
+    AUTO_DETECTED_CITY=$(echo "$AUTO_DETECTED_CITY" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     
     # 移除提供商名称中的多余信息
     if [[ -n "$AUTO_DETECTED_PROVIDER" ]]; then
