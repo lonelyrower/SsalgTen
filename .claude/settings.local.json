@@ -46,7 +46,14 @@
       "Bash(/dev/null)",
       "Bash(npm audit:*)",
       "Bash(docker compose:*)",
-      "Bash(./test-install-prompts.sh:*)"
+      "Bash(./test-install-prompts.sh:*)",
+      "Bash(ss:*)",
+      "Bash(PORT=3002 npm run dev)",
+      "Bash(sudo docker restart:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(lsof:*)",
+      "Bash(fuser:*)",
+      "Bash(PRISMA_CLI_QUERY_ENGINE_TYPE=binary node get-api-key.js)"
     ],
     "deny": [],
     "additionalDirectories": [
