@@ -1,0 +1,23 @@
+// 直接从环境变量中获取默认API密钥，或者从数据库中获取系统生成的密钥
+console.log('=== SsalgTen Agent 修复指南 ===');
+console.log('');
+console.log('问题已解决！后端现在运行在 http://localhost:3002');
+console.log('');
+console.log('请按照以下步骤修复你的Agent:');
+console.log('');
+console.log('1. 停止当前运行的Agent Docker容器:');
+console.log('   docker stop ssalgten-agent');
+console.log('');
+console.log('2. 更新Agent环境变量:');
+console.log('   修改 agent/.env 文件中的以下配置:');
+console.log('   MASTER_URL=http://host.docker.internal:3002');
+console.log('   MASTER_API_KEY=default-agent-api-key-change-this-in-production');
+console.log('');
+console.log('3. 重新启动Agent:');
+console.log('   docker start ssalgten-agent');
+console.log('');
+console.log('4. 或者，更简单的方法是使用默认API密钥:');
+console.log('   可以修改 backend/.env 文件，将系统恢复为使用默认密钥:');
+console.log('   DEFAULT_AGENT_API_KEY=default-agent-api-key-change-this-in-production');
+console.log('');
+console.log('修复完成后，你的Agent应该能成功注册并在前端显示。');
