@@ -65,17 +65,17 @@ export class RegistrationService {
       let masterUrl = config.masterUrl.replace(/\/$/, ''); // 移除尾部斜杠
       
       // 尝试多个连接地址（适用于同机部署的网络问题）
-      const urlsToTry = [
+      const urlsToTry: string[] = [
         masterUrl,
         // 如果原URL使用host.docker.internal，添加Docker网关IP作为备用
-        masterUrl.includes('host.docker.internal') 
-          ? masterUrl.replace('host.docker.internal', '172.17.0.1')
-          : null,
+        ...(masterUrl.includes('host.docker.internal') 
+          ? [masterUrl.replace('host.docker.internal', '172.17.0.1')]
+          : []),
         // 添加localhost作为最后的备用（适用于某些Docker配置）
-        masterUrl.includes('host.docker.internal')
-          ? masterUrl.replace('host.docker.internal', 'localhost')
-          : null
-      ].filter(Boolean);
+        ...(masterUrl.includes('host.docker.internal')
+          ? [masterUrl.replace('host.docker.internal', 'localhost')]
+          : [])
+      ];
 
       let lastError;
       for (const tryUrl of urlsToTry) {
