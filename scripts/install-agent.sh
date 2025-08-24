@@ -456,8 +456,48 @@ collect_node_info() {
     detect_same_host
     EFFECTIVE_MASTER_URL="$MASTER_URL"
     if [[ "$SAME_HOST" == "true" ]]; then
-        EFFECTIVE_MASTER_URL="http://host.docker.internal:${MASTER_PORT}"
-        log_info "检测到与主站同机部署，使用内部地址: $EFFECTIVE_MASTER_URL"
+        log_info "检测到与主站同机部署，准备选择最优内部地址..."
+    else
+        log_info "未检测到同机部署，准备验证主服务器可达性..."
+    fi
+
+    # 构建候选地址列表（优先原始地址，其次为同机可达地址）
+    CANDIDATE_URLS=("$MASTER_URL")
+    # 解析端口
+    parse_master_host_port
+    if [[ "$SAME_HOST" == "true" ]]; then
+        CANDIDATE_URLS+=("http://host.docker.internal:${MASTER_PORT}")
+        CANDIDATE_URLS+=("http://172.17.0.1:${MASTER_PORT}")
+    fi
+
+    # 在容器网络环境内预探测 /api/health，选择第一个可达地址
+    choose_effective_master_url() {
+        local chosen=""
+        for url in "${CANDIDATE_URLS[@]}"; do
+            log_info "探测主服务器: ${url}"
+            # 使用轻量容器进行网络探测，贴近Agent运行环境
+            if docker run --rm \
+                --add-host host.docker.internal:host-gateway \
+                alpine:3.20 sh -lc "apk add --no-cache curl >/dev/null 2>&1 && curl -sfm 5 ${url}/api/health >/dev/null"; then
+                chosen="$url"
+                log_success "探测通过，选择: $chosen"
+                break
+            else
+                log_warning "不可达: ${url}"
+            fi
+        done
+        if [[ -z "$chosen" ]]; then
+            log_warning "所有候选地址在容器内均不可达，将保留原始地址: $MASTER_URL（Agent启动后将继续自动重试）"
+            EFFECTIVE_MASTER_URL="$MASTER_URL"
+        else
+            EFFECTIVE_MASTER_URL="$chosen"
+        fi
+    }
+
+    # 若Docker不可用或拉取失败则不阻断
+    if ! choose_effective_master_url; then
+        log_warning "容器内探测失败，保留原始地址: $MASTER_URL"
+        EFFECTIVE_MASTER_URL="$MASTER_URL"
     fi
 
     echo ""

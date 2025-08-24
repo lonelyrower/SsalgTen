@@ -63,31 +63,58 @@ export class RegistrationService {
       };
 
       let masterUrl = config.masterUrl.replace(/\/$/, ''); // 移除尾部斜杠
-      
-      // 尝试多个连接地址（适用于同机部署的网络问题）
-      const urlsToTry: string[] = [
-        masterUrl,
-        // 如果原URL使用host.docker.internal，添加Docker网关IP作为备用
-        ...(masterUrl.includes('host.docker.internal') 
-          ? [masterUrl.replace('host.docker.internal', '172.17.0.1')]
-          : []),
-        // 添加localhost作为最后的备用（适用于某些Docker配置）
-        ...(masterUrl.includes('host.docker.internal')
-          ? [masterUrl.replace('host.docker.internal', 'localhost')]
-          : [])
-      ];
+
+      // 解析原始URL以便构造回退地址
+      let urlsToTry: string[] = [];
+      try {
+        const u = new URL(masterUrl);
+        const scheme = u.protocol; // 'http:' or 'https:'
+        const port = u.port || (scheme === 'https:' ? '443' : '80');
+        const originNoSlash = `${scheme}//${u.hostname}${u.port ? `:${u.port}` : ''}`;
+
+        // 1) 原始地址优先
+        urlsToTry.push(originNoSlash);
+
+        // 2) 基于不同宿主访问方式的回退
+        if (u.hostname === 'host.docker.internal') {
+          urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
+          urlsToTry.push(`${scheme}//localhost:${u.port || port}`);
+        } else if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+          urlsToTry.push(`${scheme}//host.docker.internal:${u.port || port}`);
+          urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
+        } else {
+          // 保守追加同机常见回退（置于末尾，避免影响异机部署）
+          urlsToTry.push(`${scheme}//host.docker.internal:${u.port || port}`);
+          urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
+        }
+      } catch {
+        // URL解析失败时维持原行为
+        urlsToTry = [masterUrl];
+      }
 
       let lastError;
       for (const tryUrl of urlsToTry) {
         try {
           logger.info(`尝试连接到: ${tryUrl}`);
-          
+
+          // 先做一次健康检查，快速过滤明显不可达地址
+          try {
+            const health = await axios.get(`${tryUrl}/api/health`, { timeout: 3000 });
+            if (!health.data?.success) {
+              logger.warn(`健康检查未通过: ${tryUrl}`);
+              continue;
+            }
+          } catch (e) {
+            logger.warn(`健康检查失败，跳过: ${tryUrl}`);
+            continue;
+          }
+
           const response = await axios.post(
             `${tryUrl}/api/agents/register`,
             registrationData,
             {
-              // 增加超时时间以适应网络延迟和容器启动时间
-              timeout: 60000,
+              // 合理超时，避免长时间阻塞
+              timeout: 10000,
               headers: {
                 'Content-Type': 'application/json',
                 'User-Agent': `SsalgTen-Agent/${config.id}`,
