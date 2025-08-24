@@ -53,11 +53,14 @@
       "Bash(git check-ignore:*)",
       "Bash(lsof:*)",
       "Bash(fuser:*)",
-      "Bash(PRISMA_CLI_QUERY_ENGINE_TYPE=binary node get-api-key.js)"
+      "Bash(PRISMA_CLI_QUERY_ENGINE_TYPE=binary node get-api-key.js)",
+      "Bash(export:*)",
+      "Bash(docker:*)"
     ],
     "deny": [],
     "additionalDirectories": [
-      "D:\\d\\Projects"
+      "D:\\d\\Projects",
+      "/opt"
     ]
   }
 }

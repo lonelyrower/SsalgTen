@@ -255,6 +255,7 @@ enum DiagnosticType {
   TRACEROUTE
   MTR
   SPEEDTEST
+  LATENCY_TEST
 }
 
 enum UserRole {

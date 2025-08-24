@@ -40,7 +40,7 @@ export const AgentHeartbeatSchema = z.object({
 }).strict();
 
 export const AgentDiagnosticSchema = z.object({
-  type: z.enum(['PING', 'TRACEROUTE', 'MTR', 'SPEEDTEST']),
+  type: z.enum(['PING', 'TRACEROUTE', 'MTR', 'SPEEDTEST', 'LATENCY_TEST']),
   target: z.string().optional(),
   success: z.boolean(),
   result: z.any(),

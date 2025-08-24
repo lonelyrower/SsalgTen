@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import { networkService } from '../services/NetworkService';
+import { latencyTestService } from '../services/LatencyTestService';
 import { logger } from '../utils/logger';
 import { config } from '../config';
 import { buildSignedHeaders } from '../utils/signing';
@@ -397,6 +398,95 @@ export class DiagnosticController {
       };
       
       res.status(500).json(response);
+    }
+  }
+
+  // 网络延迟测试
+  async latencyTest(req: Request, res: Response): Promise<void> {
+    const { testType } = req.query;
+    
+    try {
+      logger.info(`Starting latency test (${testType || 'standard'})`);
+      const startTime = Date.now();
+      
+      // 验证测试类型参数
+      const validTestType = testType === 'comprehensive' ? 'comprehensive' : 'standard';
+      
+      const result = await latencyTestService.runLatencyTest(validTestType);
+      
+      const duration = Date.now() - startTime;
+      
+      const response: DiagnosticResponse = {
+        success: true,
+        data: {
+          ...result,
+          duration,
+          executedAt: config.name
+        },
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      logger.info(`Latency test completed: ${result.summary.successful}/${result.summary.total} successful, avg: ${result.summary.averageLatency}ms`);
+      res.json(response);
+      
+      // 自动上报测试结果到主服务器
+      this.reportLatencyTestResult(result, duration);
+      
+    } catch (error) {
+      logger.error('Latency test failed:', error);
+      const response: DiagnosticResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Latency test failed',
+        agent: {
+          id: config.id,
+          name: config.name,
+          location: `${config.location.city}, ${config.location.country}`
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.status(500).json(response);
+    }
+  }
+
+  // 上报延迟测试结果到主服务器
+  private async reportLatencyTestResult(result: any, duration: number): Promise<void> {
+    try {
+      const masterUrl = config.masterUrl.replace(/\/$/, '');
+      const reportData = {
+        type: 'LATENCY_TEST' as const,
+        target: result.testType,
+        success: result.summary.successful > 0,
+        result: {
+          testType: result.testType,
+          summary: result.summary,
+          results: result.results,
+          timestamp: result.timestamp
+        },
+        duration
+      };
+
+      await axios.post(
+        `${masterUrl}/api/agents/${config.id}/diagnostic`,
+        reportData,
+        {
+          timeout: 30000,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': `SsalgTen-Agent/${config.id}`,
+            ...buildSignedHeaders(config.apiKey, reportData),
+          }
+        }
+      );
+
+      logger.debug('Latency test result reported to master server');
+    } catch (error) {
+      logger.warn('Failed to report latency test result to master server:', error instanceof Error ? error.message : 'Unknown error');
     }
   }
 }

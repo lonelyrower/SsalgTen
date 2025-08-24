@@ -84,6 +84,7 @@ app.get('/info', (req: Request, res: Response) => {
         'traceroute', 
         'mtr',
         'speedtest',
+        'latency-test',
         'system-monitoring'
       ],
       endpoints: {
@@ -93,6 +94,7 @@ app.get('/info', (req: Request, res: Response) => {
         traceroute: '/api/traceroute/:target',
         mtr: '/api/mtr/:target',
         speedtest: '/api/speedtest',
+        latencyTest: '/api/latency-test',
         networkInfo: '/api/network-info',
         connectivity: '/api/connectivity'
       }
@@ -105,6 +107,7 @@ app.get('/api/ping/:target', diagnosticController.ping.bind(diagnosticController
 app.get('/api/traceroute/:target', diagnosticController.traceroute.bind(diagnosticController));
 app.get('/api/mtr/:target', diagnosticController.mtr.bind(diagnosticController));
 app.get('/api/speedtest', diagnosticController.speedtest.bind(diagnosticController));
+app.get('/api/latency-test', diagnosticController.latencyTest.bind(diagnosticController));
 app.get('/api/network-info', diagnosticController.networkInfo.bind(diagnosticController));
 app.get('/api/connectivity', diagnosticController.connectivity.bind(diagnosticController));
 
@@ -121,7 +124,10 @@ app.use('*', (req: Request, res: Response) => {
       'GET /api/ping/:target',
       'GET /api/traceroute/:target',
       'GET /api/mtr/:target',
-      'GET /api/speedtest'
+      'GET /api/speedtest',
+      'GET /api/latency-test',
+      'GET /api/network-info',
+      'GET /api/connectivity'
     ]
   });
 });
