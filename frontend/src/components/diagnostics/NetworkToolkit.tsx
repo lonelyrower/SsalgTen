@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Activity, 
-  Globe, 
   Zap, 
   Route,
   Timer,
@@ -17,8 +16,7 @@ import {
   Server,
   MapPin,
   Network,
-  Target,
-  XCircle
+  Target
 } from 'lucide-react';
 import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -66,7 +64,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'ping',
       name: 'Ping 测试',
-      description: '测试与节点的连通性和延迟',
+      description: '测试节点到Google DNS的连通性和延迟',
       icon: Activity,
       color: 'blue',
       category: '基础诊断'
@@ -74,7 +72,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'traceroute',
       name: 'Traceroute',
-      description: '追踪数据包到达节点的路径',
+      description: '从节点追踪到目标IP的网络路径',
       icon: Route,
       color: 'green',
       category: '路径分析'
@@ -82,7 +80,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'speedtest',
       name: '速度测试',
-      description: '测试上传和下载速度',
+      description: '测试节点的网络上传和下载速度',
       icon: Zap,
       color: 'orange',
       category: '性能测试'
@@ -90,7 +88,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'mtr',
       name: 'MTR 分析',
-      description: '结合ping和traceroute的网络诊断',
+      description: '综合网络质量分析（延迟+丢包率）',
       icon: TrendingUp,
       color: 'purple',
       category: '综合分析'
@@ -98,30 +96,14 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'latency-test',
       name: '延迟测试',
-      description: '测试到主要网站的网络延迟',
+      description: '测试节点到主要网站的网络延迟',
       icon: Target,
       color: 'cyan',
       category: '延迟分析'
-    },
-    {
-      id: 'dns',
-      name: 'DNS 查询',
-      description: '测试DNS解析性能',
-      icon: Globe,
-      color: 'indigo',
-      category: '域名解析'
-    },
-    {
-      id: 'port',
-      name: '端口扫描',
-      description: '检查常用端口的开放状态',
-      icon: Server,
-      color: 'red',
-      category: '端口检测'
     }
   ];
 
-  // 模拟运行诊断工具
+  // 调用真实诊断工具
   const runDiagnostic = useCallback(async (toolId: string) => {
     const tool = tools.find(t => t.id === toolId);
     if (!tool) return;
@@ -138,45 +120,30 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
 
     try {
       let result;
+      const agentEndpoint = `http://${selectedNode.ipv4}:3002`;
       
-      // 对于延迟测试，调用真实的Agent API
-      if (toolId === 'latency-test') {
-        const agentEndpoint = `http://${selectedNode.ipv4}:3002`;
-        
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 60000);
-          
-          const response = await fetch(`${agentEndpoint}/api/latency-test?testType=standard`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            signal: controller.signal,
-          });
-          
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          
-          if (!data.success) {
-            throw new Error(data.error || '延迟测试失败');
-          }
-
-          result = data.data;
-        } catch (fetchError) {
-          // 如果真实API失败，使用模拟数据
-          console.warn('Failed to fetch real latency test data, using mock data:', fetchError);
-          result = generateMockResult(toolId);
-        }
+      // 根据工具类型调用相应的Agent API
+      // 注意：这些测试是从目标节点执行的，测试常见的网络连通性
+      if (toolId === 'ping') {
+        // 让目标节点ping常见的公共DNS服务器来测试其网络连通性
+        const testTarget = '8.8.8.8'; // Google DNS
+        result = await callAgentAPI(`${agentEndpoint}/api/ping/${testTarget}?count=4`);
+      } else if (toolId === 'traceroute') {
+        // 跟踪到访问者IP的路由（如果可达）或Google DNS
+        const testTarget = visitorInfo?.ip?.includes(':') ? '2001:4860:4860::8888' : (visitorInfo?.ip || '8.8.8.8');
+        result = await callAgentAPI(`${agentEndpoint}/api/traceroute/${testTarget}?maxHops=30`);
+      } else if (toolId === 'speedtest') {
+        result = await callAgentAPI(`${agentEndpoint}/api/speedtest`, 120000); // 2分钟超时
+      } else if (toolId === 'mtr') {
+        // MTR测试到访问者IP（如果是公网）或Google DNS
+        const testTarget = visitorInfo?.ip?.includes('.') && !visitorInfo.ip.startsWith('192.168.') && !visitorInfo.ip.startsWith('10.') && !visitorInfo.ip.startsWith('172.') 
+          ? visitorInfo.ip 
+          : '8.8.8.8';
+        result = await callAgentAPI(`${agentEndpoint}/api/mtr/${testTarget}?count=10`);
+      } else if (toolId === 'latency-test') {
+        result = await callAgentAPI(`${agentEndpoint}/api/latency-test?testType=standard`);
       } else {
-        // 其他工具继续使用模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
-        result = generateMockResult(toolId);
+        throw new Error('不支持的诊断工具');
       }
       
       setResults(prev => ({
@@ -199,162 +166,42 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         }
       }));
     }
-  }, []);
+  }, [visitorInfo]);
 
-  // 生成模拟结果数据（每次调用生成不同的随机数据）
-  const generateMockResult = (toolId: string) => {
-    const randomFloat = (min: number, max: number, decimals: number = 1) => 
-      parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
-    const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+  // 调用Agent API的辅助函数
+  const callAgentAPI = async (url: string, timeout: number = 60000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     
-    switch (toolId) {
-      case 'ping':
-        const baseLatency = randomFloat(10, 50);
-        const results = Array.from({ length: 4 }, (_, i) => ({
-          seq: i + 1,
-          time: randomFloat(baseLatency - 5, baseLatency + 10),
-          ttl: randomInt(56, 64)
-        }));
-        const times = results.map(r => r.time);
-        return {
-          packets_sent: 4,
-          packets_received: Math.random() < 0.1 ? 3 : 4,
-          packet_loss: Math.random() < 0.1 ? randomInt(1, 25) : 0,
-          min_time: Math.min(...times),
-          max_time: Math.max(...times),
-          avg_time: times.reduce((a, b) => a + b, 0) / times.length,
-          results
-        };
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
       
-      case 'traceroute':
-        const hopCount = randomInt(3, 8);
-        const hops = Array.from({ length: hopCount }, (_, i) => {
-          const baseTime = (i + 1) * randomFloat(3, 12);
-          return {
-            hop: i + 1,
-            ip: i === hopCount - 1 ? selectedNode.ipv4 : `${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`,
-            hostname: i === 0 ? 'gateway.local' : (i === hopCount - 1 ? selectedNode.name : `hop${i}.provider.com`),
-            times: [
-              baseTime + randomFloat(-2, 2),
-              baseTime + randomFloat(-2, 2),
-              baseTime + randomFloat(-2, 2)
-            ]
-          };
-        });
-        return {
-          hops,
-          total_hops: hopCount,
-          destination_reached: Math.random() > 0.05
-        };
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
       
-      case 'speedtest':
-        return {
-          download_speed: randomFloat(10, 200),
-          upload_speed: randomFloat(5, 100),
-          ping: randomFloat(5, 80),
-          jitter: randomFloat(0.5, 8),
-          server_info: {
-            name: selectedNode.name,
-            location: `${selectedNode.city}, ${selectedNode.country}`,
-            distance: randomInt(50, 2000)
-          }
-        };
-      
-      case 'mtr':
-        const mtrHopCount = randomInt(3, 6);
-        const cycles = randomInt(50, 100);
-        const mtrHops = Array.from({ length: mtrHopCount }, (_, i) => {
-          const baseLatency = (i + 1) * randomFloat(2, 15);
-          const loss = Math.random() < 0.1 ? randomFloat(0.1, 5) : 0;
-          return {
-            hop: i + 1,
-            hostname: i === 0 ? 'gateway.local' : (i === mtrHopCount - 1 ? selectedNode.name : `hop${i}.isp.com`),
-            loss: parseFloat(loss.toFixed(1)),
-            sent: cycles,
-            last: baseLatency + randomFloat(-3, 3),
-            avg: baseLatency,
-            best: baseLatency - randomFloat(1, 5),
-            worst: baseLatency + randomFloat(3, 10)
-          };
-        });
-        return {
-          report_cycles: cycles,
-          hops: mtrHops
-        };
-      
-      case 'latency-test':
-        const targets = ['Google', 'GitHub', 'Apple', 'Microsoft', 'Amazon', 'Twitter', 'OpenAI', 'Steam', 'Cloudflare', 'Discord'];
-        const testResults = targets.map(target => {
-          const shouldFail = Math.random() < 0.1;
-          if (shouldFail) {
-            return { target, latency: null, status: 'failed', error: 'Connection timeout' };
-          }
-          const latency = randomFloat(15, 200);
-          let status;
-          if (latency < 50) status = 'excellent';
-          else if (latency < 150) status = 'good';
-          else status = 'poor';
-          return { target, latency, status };
-        });
-        const successful = testResults.filter(r => r.latency !== null);
-        const excellentCount = successful.filter(r => r.status === 'excellent').length;
-        const goodCount = successful.filter(r => r.status === 'good').length;
-        const poorCount = successful.filter(r => r.status === 'poor').length;
-        return {
-          testType: 'standard',
-          results: testResults,
-          summary: {
-            total: testResults.length,
-            successful: successful.length,
-            failed: testResults.length - successful.length,
-            averageLatency: successful.length > 0 ? successful.reduce((sum, r) => sum + (r.latency || 0), 0) / successful.length : 0,
-            excellentCount,
-            goodCount,
-            poorCount
-          },
-          timestamp: new Date().toISOString(),
-          duration: randomInt(2000, 5000)
-        };
-      
-      case 'dns':
-        const domains = ['google.com', 'cloudflare.com', 'github.com', 'stackoverflow.com', 'reddit.com'];
-        const types = ['A', 'AAAA', 'MX', 'TXT'];
-        const dnsQueries = Array.from({ length: randomInt(3, 6) }, () => {
-          const domain = domains[randomInt(0, domains.length - 1)];
-          const type = types[randomInt(0, types.length - 1)];
-          const time = randomFloat(5, 50);
-          let result = 'Query failed';
-          if (Math.random() > 0.1) {
-            if (type === 'A') result = `${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
-            else if (type === 'AAAA') result = `2606:${randomInt(1000, 9999).toString(16)}:${randomInt(1000, 9999).toString(16)}::${randomInt(100, 999)}`;
-            else if (type === 'MX') result = `${randomInt(1, 20)} mail.${domain}`;
-            else result = `"v=spf1 include:_spf.${domain} ~all"`;
-          }
-          return { domain, type, time, result };
-        });
-        return {
-          queries: dnsQueries,
-          avg_query_time: dnsQueries.reduce((sum, q) => sum + q.time, 0) / dnsQueries.length
-        };
-      
-      case 'port':
-        const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 3389, 5432, 3306, 6379, 27017];
-        const scannedPorts = commonPorts.slice(0, randomInt(8, commonPorts.length));
-        const openPorts = scannedPorts.filter(() => Math.random() < 0.3);
-        const filteredPorts = scannedPorts.filter(p => !openPorts.includes(p) && Math.random() < 0.1);
-        const closedPorts = scannedPorts.filter(p => !openPorts.includes(p) && !filteredPorts.includes(p));
-        return {
-          scanned_ports: scannedPorts,
-          open_ports: openPorts,
-          closed_ports: closedPorts,
-          filtered_ports: filteredPorts,
-          scan_time: randomFloat(0.5, 3.5)
-        };
-      
-      default:
-        return {};
+      if (!data.success) {
+        throw new Error(data.error || '诊断测试失败');
+      }
+
+      return data.data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.warn(`Agent API call failed for ${url}:`, error);
+      throw error;
     }
   };
+
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -602,29 +449,30 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-green-600">{data.packets_received}/{data.packets_sent}</p>
-              <p className="text-xs text-gray-600">数据包</p>
+              <p className="text-2xl font-bold text-green-600">{data.alive ? '在线' : '离线'}</p>
+              <p className="text-xs text-gray-600">状态</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-blue-600">{data.avg_time}ms</p>
+              <p className="text-2xl font-bold text-blue-600">{data.avg > 0 ? `${data.avg.toFixed(1)}ms` : 'N/A'}</p>
               <p className="text-xs text-gray-600">平均延迟</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-orange-600">{data.packet_loss}%</p>
+              <p className="text-2xl font-bold text-orange-600">{data.packetLoss}%</p>
               <p className="text-xs text-gray-600">丢包率</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-purple-600">{data.max_time}ms</p>
+              <p className="text-2xl font-bold text-purple-600">{data.max > 0 ? `${data.max.toFixed(1)}ms` : 'N/A'}</p>
               <p className="text-xs text-gray-600">最大延迟</p>
             </div>
           </div>
           <div className="border-t pt-4">
-            <h4 className="font-medium mb-2">详细结果:</h4>
-            {data.results.map((ping: any, index: number) => (
-              <div key={index} className="text-sm text-gray-600">
-                序列 {ping.seq}: 时间={ping.time}ms TTL={ping.ttl}
-              </div>
-            ))}
+            <h4 className="font-medium mb-2">测试详情:</h4>
+            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-sm">
+              <p><span className="font-medium">目标:</span> {data.host}</p>
+              <p><span className="font-medium">最小延迟:</span> {data.min > 0 ? `${data.min.toFixed(1)}ms` : 'N/A'}</p>
+              <p><span className="font-medium">最大延迟:</span> {data.max > 0 ? `${data.max.toFixed(1)}ms` : 'N/A'}</p>
+              <p><span className="font-medium">平均延迟:</span> {data.avg > 0 ? `${data.avg.toFixed(1)}ms` : 'N/A'}</p>
+            </div>
           </div>
         </div>
       );
@@ -638,7 +486,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
                 <Download className="h-5 w-5 text-green-500 mr-2" />
                 <span className="text-sm font-medium">下载速度</span>
               </div>
-              <p className="text-3xl font-bold text-green-600">{data.download_speed}</p>
+              <p className="text-3xl font-bold text-green-600">{data.download?.toFixed(1) || '0.0'}</p>
               <p className="text-sm text-gray-600">Mbps</p>
             </div>
             <div className="text-center">
@@ -646,19 +494,20 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
                 <Upload className="h-5 w-5 text-blue-500 mr-2" />
                 <span className="text-sm font-medium">上传速度</span>
               </div>
-              <p className="text-3xl font-bold text-blue-600">{data.upload_speed}</p>
+              <p className="text-3xl font-bold text-blue-600">{data.upload?.toFixed(1) || '0.0'}</p>
               <p className="text-sm text-gray-600">Mbps</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 gap-4 pt-4 border-t">
             <div className="text-center">
-              <p className="text-lg font-bold text-orange-600">{data.ping}ms</p>
-              <p className="text-xs text-gray-600">Ping</p>
+              <p className="text-lg font-bold text-orange-600">{data.ping?.toFixed(1) || 'N/A'}ms</p>
+              <p className="text-xs text-gray-600">延迟</p>
             </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-purple-600">{data.jitter}ms</p>
-              <p className="text-xs text-gray-600">抖动</p>
-            </div>
+          </div>
+          <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-sm">
+            <p><span className="font-medium">测试服务器:</span> {data.server || 'Unknown'}</p>
+            <p><span className="font-medium">服务器位置:</span> {data.location || 'Unknown'}</p>
+            <p><span className="font-medium">测试时间:</span> {data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown'}</p>
           </div>
         </div>
       );
@@ -767,14 +616,14 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-blue-600">{data.hops?.length || 0}</div>
+              <div className="text-xl font-bold text-blue-600">{data.totalHops || data.hops?.length || 0}</div>
               <div className="text-sm text-gray-600">跳数</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
               <div className="text-xl font-bold text-green-600">
-                {data.hops?.slice(-1)[0]?.time || 0}ms
+                {data.hops?.slice(-1)[0]?.rtt1 ? `${data.hops.slice(-1)[0].rtt1}ms` : 'N/A'}
               </div>
-              <div className="text-sm text-gray-600">总延迟</div>
+              <div className="text-sm text-gray-600">最后一跳延迟</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
               <div className="text-xl font-bold text-purple-600">{data.target || '目标'}</div>
@@ -794,16 +643,16 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
                     <div className="font-medium text-gray-900 dark:text-white">
                       {hop.hostname || hop.ip || '* * *'}
                     </div>
-                    <div className="text-sm text-gray-500">{hop.ip}</div>
+                    <div className="text-sm text-gray-500">{hop.ip !== hop.hostname ? hop.ip : ''}</div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-medium text-gray-900 dark:text-white">
-                    {hop.time ? `${hop.time}ms` : '超时'}
+                    {hop.rtt1 ? `${hop.rtt1}ms` : hop.rtt2 ? `${hop.rtt2}ms` : hop.rtt3 ? `${hop.rtt3}ms` : '超时'}
                   </div>
-                  {hop.loss && hop.loss > 0 && (
-                    <div className="text-sm text-red-500">{hop.loss}% 丢包</div>
-                  )}
+                  <div className="text-xs text-gray-500">
+                    {[hop.rtt1, hop.rtt2, hop.rtt3].filter(Boolean).map(rtt => `${rtt}ms`).join(' / ') || ''}
+                  </div>
                 </div>
               </div>
             )) || []}
@@ -812,193 +661,91 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
       );
 
     case 'mtr':
+      const isWindowsType = data.type === 'windows-combined' || data.type === 'linux-fallback';
+      const avgLatency = isWindowsType ? data.summary?.avgLatency : data.result?.report?.mtr?.avg || 0;
+      const packetLoss = isWindowsType ? data.summary?.packetLoss : 0;
+      const totalHops = isWindowsType ? data.summary?.totalHops : data.result?.report?.mtr?.hubs?.length || 0;
+      
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-blue-600">{data.hops?.length || 0}</div>
+              <div className="text-xl font-bold text-blue-600">{totalHops}</div>
               <div className="text-sm text-gray-600">跳数</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-green-600">{data.report_cycles || 0}</div>
+              <div className="text-xl font-bold text-green-600">{data.cycles || 10}</div>
               <div className="text-sm text-gray-600">测试次数</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
               <div className="text-xl font-bold text-yellow-600">
-                {data.hops?.reduce((avg: number, hop: any) => avg + (hop.avg || 0), 0) / (data.hops?.length || 1) || 0}ms
+                {avgLatency?.toFixed(1) || '0.0'}ms
               </div>
               <div className="text-sm text-gray-600">平均延迟</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
               <div className="text-xl font-bold text-red-600">
-                {Math.max(...(data.hops?.map((h: any) => h.loss || 0) || [0]))}%
+                {packetLoss?.toFixed(1) || '0.0'}%
               </div>
-              <div className="text-sm text-gray-600">最大丢包</div>
+              <div className="text-sm text-gray-600">丢包率</div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-3">MTR 分析结果</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 dark:bg-gray-700">
-                    <th className="text-left p-2">跳数</th>
-                    <th className="text-left p-2">主机名</th>
-                    <th className="text-right p-2">丢包%</th>
-                    <th className="text-right p-2">发送</th>
-                    <th className="text-right p-2">最后</th>
-                    <th className="text-right p-2">平均</th>
-                    <th className="text-right p-2">最好</th>
-                    <th className="text-right p-2">最差</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.hops?.map((hop: any, index: number) => (
-                    <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="p-2 font-medium">{hop.hop || index + 1}</td>
-                      <td className="p-2">{hop.hostname || hop.ip || '???'}</td>
-                      <td className="p-2 text-right">
-                        <span className={hop.loss > 0 ? 'text-red-600' : 'text-green-600'}>
-                          {hop.loss || 0}%
-                        </span>
-                      </td>
-                      <td className="p-2 text-right">{hop.sent || 0}</td>
-                      <td className="p-2 text-right">{hop.last || 0}ms</td>
-                      <td className="p-2 text-right font-medium">{hop.avg || 0}ms</td>
-                      <td className="p-2 text-right text-green-600">{hop.best || 0}ms</td>
-                      <td className="p-2 text-right text-red-600">{hop.worst || 0}ms</td>
+          <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-sm">
+            <p><span className="font-medium">测试类型:</span> {data.type || 'Unknown'}</p>
+            <p><span className="font-medium">目标:</span> {data.target}</p>
+            <p><span className="font-medium">测试周期:</span> {data.cycles}</p>
+          </div>
+
+          {isWindowsType && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h5 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Ping 统计</h5>
+                  <p className="text-sm">平均延迟: {data.ping?.avg?.toFixed(1) || 'N/A'}ms</p>
+                  <p className="text-sm">丢包率: {data.ping?.packetLoss || 0}%</p>
+                  <p className="text-sm">最小/最大: {data.ping?.min?.toFixed(1) || 'N/A'}ms / {data.ping?.max?.toFixed(1) || 'N/A'}ms</p>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <h5 className="font-medium text-green-900 dark:text-green-300 mb-2">路由统计</h5>
+                  <p className="text-sm">总跳数: {data.traceroute?.totalHops || 0}</p>
+                  <p className="text-sm">路由可达: {data.traceroute?.hops?.length > 0 ? '是' : '否'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {data.result?.report?.mtr?.hubs && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-gray-900 dark:text-white mb-3">MTR 详细结果</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50 dark:bg-gray-700">
+                      <th className="text-left p-2">跳数</th>
+                      <th className="text-left p-2">主机</th>
+                      <th className="text-right p-2">丢包%</th>
+                      <th className="text-right p-2">平均</th>
                     </tr>
-                  )) || []}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      );
-
-    case 'dns':
-      return (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center mb-4">
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-blue-600">{data.queries?.length || 0}</div>
-              <div className="text-sm text-gray-600">查询数量</div>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-green-600">
-                {data.avg_query_time?.toFixed(1) || 0}ms
+                  </thead>
+                  <tbody>
+                    {data.result.report.mtr.hubs.map((hub: any, index: number) => (
+                      <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="p-2 font-medium">{hub.count || index + 1}</td>
+                        <td className="p-2">{hub.host || 'Unknown'}</td>
+                        <td className="p-2 text-right">
+                          <span className={(hub.Loss || 0) > 0 ? 'text-red-600' : 'text-green-600'}>
+                            {(hub.Loss || 0).toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="p-2 text-right font-medium">{(hub.Avg || 0).toFixed(1)}ms</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="text-sm text-gray-600">平均响应时间</div>
             </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-purple-600">
-                {data.queries?.filter((q: any) => q.result).length || 0}
-              </div>
-              <div className="text-sm text-gray-600">成功查询</div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-3">DNS 查询结果</h4>
-            {data.queries?.map((query: any, index: number) => (
-              <div key={index} className="p-4 bg-white dark:bg-gray-700 rounded-lg border">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900 dark:text-white">{query.domain}</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                      {query.type}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {query.time}ms
-                  </div>
-                </div>
-                <div className="text-sm">
-                  <span className="text-gray-600">结果: </span>
-                  <span className="font-mono text-gray-900 dark:text-white">
-                    {query.result || '查询失败'}
-                  </span>
-                </div>
-              </div>
-            )) || []}
-          </div>
-        </div>
-      );
-
-    case 'port':
-      return (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-blue-600">{data.scanned_ports?.length || 0}</div>
-              <div className="text-sm text-gray-600">扫描端口</div>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-green-600">{data.open_ports?.length || 0}</div>
-              <div className="text-sm text-gray-600">开放端口</div>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-red-600">{data.closed_ports?.length || 0}</div>
-              <div className="text-sm text-gray-600">关闭端口</div>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-yellow-600">
-                {data.scan_time?.toFixed(2) || 0}s
-              </div>
-              <div className="text-sm text-gray-600">扫描耗时</div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {data.open_ports && data.open_ports.length > 0 && (
-              <div>
-                <h4 className="font-medium text-green-600 mb-2 flex items-center">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  开放端口
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {data.open_ports.map((port: number) => (
-                    <span key={port} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      {port}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {data.closed_ports && data.closed_ports.length > 0 && (
-              <div>
-                <h4 className="font-medium text-red-600 mb-2 flex items-center">
-                  <XCircle className="h-4 w-4 mr-2" />
-                  关闭端口
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {data.closed_ports.map((port: number) => (
-                    <span key={port} className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
-                      {port}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {data.filtered_ports && data.filtered_ports.length > 0 && (
-              <div>
-                <h4 className="font-medium text-yellow-600 mb-2 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  过滤端口
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {data.filtered_ports.map((port: number) => (
-                    <span key={port} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                      {port}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       );
 
