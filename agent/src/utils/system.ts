@@ -431,13 +431,22 @@ export const getVirtualizationInfo = async () => {
 
 // 检查系统服务状态
 export const getServicesStatus = async () => {
-  const services = {
+  const services: any = {
     docker: false,
     nginx: false,
     apache: false,
     mysql: false,
     postgresql: false,
     redis: false,
+    // 扩展
+    caddy: false,
+    xray: false,
+    singbox: false,
+    openvpn: false,
+    wireguard: false,
+    tailscale: false,
+    frps: false,
+    frpc: false,
   };
   
   try {
@@ -481,6 +490,15 @@ export const getServicesStatus = async () => {
       if (!services.mysql) services.mysql = (await hasProc(['mysqld'])) || (await portListening(3306));
       if (!services.postgresql) services.postgresql = (await hasProc(['postgres'])) || (await portListening(5432));
       if (!services.redis) services.redis = (await hasProc(['redis-server'])) || (await portListening(6379));
+      // 扩展服务
+      services.caddy = services.caddy || (await hasProc(['caddy'])) || (await portListening(80)) || (await portListening(443));
+      services.xray = services.xray || (await hasProc(['xray']));
+      services.singbox = services.singbox || (await hasProc(['sing-box', 'singbox']));
+      services.openvpn = services.openvpn || (await hasProc(['openvpn'])) || (await portListening(1194));
+      services.wireguard = services.wireguard || (await hasProc(['wg-quick', 'wg'])) || (await portListening(51820));
+      services.tailscale = services.tailscale || (await hasProc(['tailscaled']));
+      services.frps = services.frps || (await hasProc(['frps']));
+      services.frpc = services.frpc || (await hasProc(['frpc']));
     } else if (os.platform() === 'win32') {
       // Windows服务检查
       try {

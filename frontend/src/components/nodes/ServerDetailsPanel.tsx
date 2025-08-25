@@ -69,6 +69,16 @@ interface SystemInfo {
     mysql?: boolean;
     postgresql?: boolean;
     redis?: boolean;
+    caddy?: boolean;
+    xray?: boolean;
+    singbox?: boolean;
+    openvpn?: boolean;
+    wireguard?: boolean;
+    tailscale?: boolean;
+    frps?: boolean;
+    frpc?: boolean;
+    // 允许其他扩展服务键
+    [key: string]: boolean | undefined;
   };
   loadAverage?: number[];
 }

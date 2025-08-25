@@ -128,6 +128,15 @@ export interface SystemInfo {
     mysql?: boolean;
     postgresql?: boolean;
     redis?: boolean;
+    // 扩展常见服务
+    caddy?: boolean;
+    xray?: boolean;
+    singbox?: boolean;
+    openvpn?: boolean;
+    wireguard?: boolean;
+    tailscale?: boolean;
+    frps?: boolean;
+    frpc?: boolean;
   };
 }
 
@@ -157,6 +166,14 @@ export interface HeartbeatData {
       mysql?: boolean;
       postgresql?: boolean;
       redis?: boolean;
+      caddy?: boolean;
+      xray?: boolean;
+      singbox?: boolean;
+      openvpn?: boolean;
+      wireguard?: boolean;
+      tailscale?: boolean;
+      frps?: boolean;
+      frpc?: boolean;
     };
     loadAverage?: number[];
   };
