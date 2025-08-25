@@ -19,7 +19,7 @@ warn(){ echo -e "${YELLOW}[WARN]${NC} $*"; }
 err() { echo -e "${RED}[ERR]${NC}  $*"; }
 
 choose_compose() {
-  if command -v docker-compose >/dev/null 2>&1; then echo docker-compose; elif docker compose version >/dev/null 2>&1; then echo docker compose; else err "未找到 docker-compose/compose"; exit 1; fi
+  if docker compose version >/dev/null 2>&1; then echo docker compose; elif command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then echo docker-compose; else err "未找到可用的 Docker Compose（docker compose 或 docker-compose）"; exit 1; fi
 }
 COMPOSE=$(choose_compose)
 
@@ -67,4 +67,3 @@ ok "完成！常用命令："
 echo "  查看容器      : $COMPOSE -f $COMPOSE_FILE ps"
 echo "  前端日志      : $COMPOSE -f $COMPOSE_FILE logs -f frontend"
 echo "  重建前端      : $COMPOSE -f $COMPOSE_FILE build frontend && $COMPOSE -f $COMPOSE_FILE up -d"
-

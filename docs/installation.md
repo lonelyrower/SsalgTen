@@ -123,13 +123,13 @@ chmod +x scripts/deploy.sh
 **Manual deployment:**
 ```bash
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # Check service status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 #### Step 5: Verify Installation
@@ -407,14 +407,14 @@ curl http://master-server:3001/api/health
 **4. Docker Issues**
 ```bash
 # Check Docker status
-docker-compose ps
+docker compose ps
 
 # View service logs
-docker-compose logs backend
-docker-compose logs frontend
+docker compose logs backend
+docker compose logs frontend
 
 # Restart services
-docker-compose restart
+docker compose restart
 ```
 
 ### Performance Optimization
@@ -429,7 +429,7 @@ CREATE INDEX idx_heartbeat_timestamp ON heartbeat_logs(timestamp);
 **2. System Resources**
 ```bash
 # Monitor resource usage
-docker-compose top
+docker compose top
 htop
 
 # Adjust service limits in docker-compose.yml

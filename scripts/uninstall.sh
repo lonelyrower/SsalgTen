@@ -16,20 +16,27 @@ NC='\033[0m' # No Color
 APP_DIR="/opt/ssalgten"
 DRY_RUN=${DRY_RUN:-false}  # 设置 DRY_RUN=true 可仅查看将执行的操作
 
-# Docker Compose 兼容性函数（支持 dry-run 输出）
+# Docker Compose 兼容性函数（支持 dry-run 输出，优先 v2 插件）
 docker_compose() {
     if [[ "$DRY_RUN" == "true" ]]; then
         echo "[DRY_RUN] docker compose $*"
         return 0
     fi
-    if command -v docker-compose >/dev/null 2>&1; then
-        docker-compose "$@"
-    elif docker compose version >/dev/null 2>&1; then
+    # 优先使用 docker compose v2 插件
+    if docker compose version >/dev/null 2>&1; then
         docker compose "$@"
-    else
-        echo -e "${RED}[ERROR]${NC} 未找到 docker-compose 或 docker compose 命令"
-        return 1
+        return $?
     fi
+    # 尝试 v1 二进制且自检
+    if command -v docker-compose >/dev/null 2>&1; then
+        if docker-compose version >/dev/null 2>&1; then
+            docker-compose "$@"
+            return $?
+        fi
+    fi
+    echo -e "${RED}[ERROR]${NC} 未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+    echo -e "${BLUE}[INFO]${NC} 建议安装 docker-compose-plugin 后重试"
+    return 127
 }
 
 # 日志函数

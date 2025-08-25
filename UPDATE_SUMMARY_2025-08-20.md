@@ -115,8 +115,8 @@
 
 2. **Docker 容器重建** (使用新的 PostgreSQL 版本):
    ```bash
-   docker-compose down
-   docker-compose up --build -d
+  docker compose down
+  docker compose up --build -d
    ```
 
 3. **运行测试套件** (如果有):

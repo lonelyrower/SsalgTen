@@ -12,10 +12,10 @@ cd /opt/ssalgten-agent
 ls -la
 
 # 2. 检查容器状态
-docker-compose ps
+docker compose ps
 
 # 3. 查看容器日志
-docker-compose logs -f agent
+docker compose logs -f agent
 ```
 
 ### 第二步：检查网络连接
@@ -50,12 +50,12 @@ cat .env
 
 ### 问题1: Agent容器启动失败
 
-**现象：** `docker-compose ps` 显示容器状态为 `Exit` 或 `Restarting`
+**现象：** `docker compose ps` 显示容器状态为 `Exit` 或 `Restarting`
 
 **解决方案：**
 ```bash
 # 查看详细错误日志
-docker-compose logs agent
+docker compose logs agent
 
 # 常见错误和解决方案：
 # - "AGENT_API_KEY 未设置或仍为默认值" 
@@ -73,7 +73,7 @@ docker-compose logs agent
 **检查步骤：**
 ```bash
 # 1. 查看Agent注册日志
-docker-compose logs agent | grep -i "register\|registration"
+docker compose logs agent | grep -i "register\|registration"
 
 # 2. 测试API连接
 curl -X POST http://158.51.78.137:3001/api/agents/register \
@@ -105,7 +105,7 @@ curl http://158.51.78.137:3001/api/nodes
 **排查方法：**
 ```bash
 # 查看心跳日志
-docker-compose logs agent | grep -i heartbeat
+docker compose logs agent | grep -i heartbeat
 
 # 检查心跳API
 curl -X POST http://158.51.78.137:3001/api/agents/your-agent-id/heartbeat \
@@ -161,22 +161,22 @@ dig your-domain.com
 ### 重启Agent服务
 ```bash
 cd /opt/ssalgten-agent
-docker-compose restart
+docker compose restart
 ```
 
 ### 完全重建Agent
 ```bash
 cd /opt/ssalgten-agent
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ### 重新安装Agent
 ```bash
 # 1. 停止并删除现有服务
 cd /opt/ssalgten-agent
-docker-compose down
+docker compose down
 cd /
 sudo rm -rf /opt/ssalgten-agent
 
@@ -224,7 +224,7 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/diagnose-
 1. **Agent容器日志：**
    ```bash
    cd /opt/ssalgten-agent
-   docker-compose logs agent > agent.log
+   docker compose logs agent > agent.log
    ```
 
 2. **网络连接测试结果：**

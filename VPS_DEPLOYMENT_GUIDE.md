@@ -63,9 +63,8 @@ su - ssalgten
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
-# 安装Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+# 安装 Docker Compose v2 插件（推荐）
+sudo apt-get update && sudo apt-get install -y docker-compose-plugin
 
 # 添加用户到docker组
 sudo usermod -aG docker $USER
@@ -76,7 +75,7 @@ ssh ssalgten@your-server-ip
 
 # 验证安装
 docker --version
-docker-compose --version
+docker compose version
 ```
 
 ### 1.3 部署SsalgTen主服务
@@ -141,13 +140,13 @@ VITE_ENABLE_DEBUG=false
 
 ```bash
 # 构建和启动服务
-docker-compose up -d --build
+docker compose up -d --build
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 查看日志
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ## 🌍 第二步：域名和SSL配置

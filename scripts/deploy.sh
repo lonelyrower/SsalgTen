@@ -144,7 +144,7 @@ check_health() {
     if docker_compose ps | grep -q "Up (healthy)"; then
         log_success "Services are healthy"
     else
-        log_warning "Some services may not be healthy. Check with: docker_compose ps"
+        log_warning "Some services may not be healthy. Check with: docker compose ps"
     fi
 }
 

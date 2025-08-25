@@ -18,12 +18,17 @@ interface SocketService {
   onConnectionStatusChange: (callback: (connected: boolean) => void) => void;
   removeConnectionErrorListener: (callback: (error: Error) => void) => void;
   removeConnectionStatusListener: (callback: (connected: boolean) => void) => void;
+  // 单节点心跳详情
+  subscribeToNodeHeartbeat: (nodeId: string, callback: (payload: { nodeId: string; data: unknown }) => void) => void;
+  unsubscribeFromNodeHeartbeat: (nodeId: string) => void;
+  requestLatestHeartbeat: (nodeId: string) => void;
 }
 
 class SocketServiceImpl implements SocketService {
   socket: Socket | null = null;
   connected: boolean = false;
   private callbacks: { [event: string]: ((data: unknown) => void)[] } = {};
+  private heartbeatCallbacks: { [nodeId: string]: ((payload: { nodeId: string; data: unknown }) => void)[] } = {};
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private connectionErrorCallbacks: ((error: Error) => void)[] = [];
@@ -70,6 +75,12 @@ class SocketServiceImpl implements SocketService {
       this.reconnectAttempts = 0;
       console.log('Socket.IO 连接成功', { url: serverUrl });
       this.notifyConnectionStatus(true);
+
+      // 重新订阅节点心跳详情
+      const nodeIds = Object.keys(this.heartbeatCallbacks);
+      for (const nodeId of nodeIds) {
+        try { this.socket?.emit('subscribe_node_heartbeat', nodeId); } catch {}
+      }
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -237,6 +248,39 @@ class SocketServiceImpl implements SocketService {
     if (!this.socket) return;
 
     this.socket.on('realtime_nodes', callback);
+  };
+
+  // ========== 单节点心跳详情 ==========
+  subscribeToNodeHeartbeat = (nodeId: string, callback: (payload: { nodeId: string; data: unknown }) => void) => {
+    if (!this.socket) {
+      console.warn('Socket未连接，无法订阅节点心跳详情');
+      return;
+    }
+    this.socket.emit('subscribe_node_heartbeat', nodeId);
+    this.heartbeatCallbacks[nodeId] = this.heartbeatCallbacks[nodeId] || [];
+    this.heartbeatCallbacks[nodeId].push(callback);
+    // 确保全局监听只注册一次
+    if (!this.callbacks['node_heartbeat']) {
+      this.callbacks['node_heartbeat'] = [() => {}];
+      this.socket.on('node_heartbeat', (payload: any) => {
+        const nid = payload?.nodeId;
+        const list = this.heartbeatCallbacks[nid] || [];
+        for (const cb of list) {
+          try { cb(payload); } catch (e) { console.error(e); }
+        }
+      });
+    }
+  };
+
+  unsubscribeFromNodeHeartbeat = (nodeId: string) => {
+    if (!this.socket) return;
+    this.socket.emit('unsubscribe_node_heartbeat', nodeId);
+    delete this.heartbeatCallbacks[nodeId];
+  };
+
+  requestLatestHeartbeat = (nodeId: string) => {
+    if (!this.socket) return;
+    this.socket.emit('get_latest_heartbeat', nodeId);
   };
 }
 

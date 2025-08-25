@@ -16,6 +16,26 @@ $ProjectRoot = Split-Path -Parent $ScriptDir
 $EnvFile = Join-Path $ProjectRoot ".env"
 $DockerComposeFile = Join-Path $ProjectRoot "docker-compose.yml"
 
+# Compose wrapper (prefer Docker Compose v2 plugin)
+function Test-ComposeV2 {
+    try { docker compose version | Out-Null; return $true } catch { return $false }
+}
+
+function Test-ComposeV1 {
+    try { docker-compose --version | Out-Null; return $true } catch { return $false }
+}
+
+function Compose {
+    param([Parameter(ValueFromRemainingArguments = $true)] [string[]]$Args)
+    if (Test-ComposeV2) {
+        & docker compose @Args
+    } elseif (Test-ComposeV1) {
+        & docker-compose @Args
+    } else {
+        throw "Docker Compose is not available. Please install Docker Desktop (with Compose plugin) or docker-compose."
+    }
+}
+
 # Functions
 function Write-Info {
     param([string]$Message)
@@ -48,10 +68,8 @@ function Test-Dependencies {
         exit 1
     }
     
-    try {
-        docker-compose --version | Out-Null
-    } catch {
-        Write-Error "Docker Compose is not installed or not in PATH. Please install Docker Compose first."
+    if (-not (Test-ComposeV2) -and -not (Test-ComposeV1)) {
+        Write-Error "Docker Compose is not installed or not in PATH. Please install Docker Desktop (Compose v2) or docker-compose."
         exit 1
     }
     
@@ -92,7 +110,7 @@ function Build-Images {
     Set-Location $ProjectRoot
     
     # Build all images
-    docker-compose build --no-cache
+    Compose build --no-cache
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to build Docker images"
@@ -110,7 +128,7 @@ function Start-Services {
     
     # Start database first
     Write-Info "Starting database..."
-    docker-compose up -d database redis
+    Compose up -d database redis
     
     # Wait for database to be ready
     Write-Info "Waiting for database to be ready..."
@@ -118,7 +136,7 @@ function Start-Services {
     
     # Start backend
     Write-Info "Starting backend..."
-    docker-compose up -d backend
+    Compose up -d backend
     
     # Wait for backend to be ready
     Write-Info "Waiting for backend to be ready..."
@@ -126,11 +144,11 @@ function Start-Services {
     
     # Start frontend
     Write-Info "Starting frontend..."
-    docker-compose up -d frontend
+    Compose up -d frontend
     
     # Start agents
     Write-Info "Starting agents..."
-    docker-compose up -d agent-nyc
+    Compose up -d agent-nyc
     
     Write-Success "All services started successfully"
 }
@@ -141,13 +159,19 @@ function Test-Health {
     
     Set-Location $ProjectRoot
     
-    $services = docker-compose ps --format json | ConvertFrom-Json
+    try {
+        $services = Compose ps --format json | ConvertFrom-Json
+    } catch {
+        Write-Warning "Compose JSON output not available. Showing textual status instead."
+        Compose ps
+        return
+    }
     $healthyServices = $services | Where-Object { $_.Health -eq "healthy" }
     
     if ($healthyServices.Count -gt 0) {
         Write-Success "Services are healthy"
     } else {
-        Write-Warning "Some services may not be healthy. Check with: docker-compose ps"
+        Write-Warning "Some services may not be healthy. Check with: docker compose ps"
     }
 }
 
@@ -155,7 +179,7 @@ function Test-Health {
 function Show-Status {
     Write-Info "Service status:"
     Set-Location $ProjectRoot
-    docker-compose ps
+    Compose ps
     
     Write-Host ""
     Write-Info "Service URLs:"
@@ -170,7 +194,7 @@ function Stop-Services {
     Write-Info "Stopping SsalgTen services..."
     
     Set-Location $ProjectRoot
-    docker-compose down
+    Compose down
     
     Write-Success "Services stopped"
 }
@@ -183,7 +207,7 @@ function Invoke-Cleanup {
     if ($confirmation -eq 'y' -or $confirmation -eq 'Y') {
         Write-Info "Cleaning up..."
         Set-Location $ProjectRoot
-        docker-compose down -v --remove-orphans
+        Compose down -v --remove-orphans
         docker system prune -f
         Write-Success "Cleanup completed"
     } else {
@@ -198,11 +222,11 @@ function Update-Services {
     Set-Location $ProjectRoot
     
     # Pull latest images and rebuild
-    docker-compose pull
-    docker-compose build --no-cache
+    Compose pull
+    Compose build --no-cache
     
     # Restart services
-    docker-compose up -d --force-recreate
+    Compose up -d --force-recreate
     
     Write-Success "Services updated and restarted"
 }
@@ -215,10 +239,10 @@ function Show-Logs {
     
     if ($ServiceName) {
         Write-Info "Showing logs for $ServiceName..."
-        docker-compose logs -f $ServiceName
+        Compose logs -f $ServiceName
     } else {
         Write-Info "Showing logs for all services..."
-        docker-compose logs -f
+        Compose logs -f
     }
 }
 

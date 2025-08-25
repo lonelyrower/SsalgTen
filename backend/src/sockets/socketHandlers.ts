@@ -50,6 +50,28 @@ export function setupSocketHandlers(io: Server) {
       logger.info(`用户 ${user?.username} 取消订阅节点 ${nodeId} 的诊断更新`);
     });
 
+    // 订阅单节点心跳详情
+    socket.on('subscribe_node_heartbeat', (nodeId: string) => {
+      socket.join(`node_heartbeat_${nodeId}`);
+      logger.info(`用户 ${user?.username} 订阅节点 ${nodeId} 的心跳详情`);
+    });
+
+    // 取消订阅单节点心跳详情
+    socket.on('unsubscribe_node_heartbeat', (nodeId: string) => {
+      socket.leave(`node_heartbeat_${nodeId}`);
+      logger.info(`用户 ${user?.username} 取消订阅节点 ${nodeId} 的心跳详情`);
+    });
+
+    // 请求某节点最新心跳详情（一次性）
+    socket.on('get_latest_heartbeat', async (nodeId: string) => {
+      try {
+        const detail = await nodeService.getLatestHeartbeatData(nodeId);
+        socket.emit('node_heartbeat', { nodeId, data: detail, timestamp: new Date().toISOString() });
+      } catch (e) {
+        logger.debug('获取最新心跳失败:', e);
+      }
+    });
+
     // 请求实时节点数据
     socket.on('get_realtime_nodes', async () => {
       try {

@@ -47,12 +47,11 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
 # 安装Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo apt-get update && sudo apt-get install -y docker-compose-plugin || true
 
 # 验证安装
 docker --version
-docker-compose --version
+docker compose version
 ```
 
 ### Phase 2: 代码部署
@@ -191,17 +190,17 @@ fi
 
 # 构建和启动服务
 echo "📦 构建 Docker 镜像..."
-docker-compose -f docker-compose.yml build --no-cache
+docker compose -f docker-compose.yml build --no-cache
 
 echo "🗄️ 启动数据库..."
-docker-compose up -d postgres
+docker compose up -d postgres
 sleep 15
 
 echo "📊 运行数据库迁移..."
-docker-compose run --rm backend npm run db:migrate
+docker compose run --rm backend npm run db:migrate
 
 echo "🌐 启动所有服务..."
-docker-compose up -d
+docker compose up -d
 
 echo "⏳ 等待服务启动..."
 sleep 30
@@ -209,7 +208,7 @@ sleep 30
 echo "🔍 健康检查..."
 curl -f http://localhost/api/health || {
     echo "❌ 健康检查失败"
-    docker-compose logs
+    docker compose logs
     exit 1
 }
 
@@ -256,7 +255,7 @@ curl -f "$BASE_URL" | grep -q "SsalgTen" || exit 1
 
 # 7. 数据库连接
 echo "🗄️ 测试数据库..."
-docker-compose exec backend npm run db:generate > /dev/null || exit 1
+docker compose exec backend npm run db:generate > /dev/null || exit 1
 
 echo "✅ 所有测试通过！"
 ```
@@ -273,7 +272,7 @@ echo "========================="
 
 # 容器状态
 echo "📦 Docker 容器状态:"
-docker-compose ps
+docker compose ps
 
 echo ""
 
@@ -303,15 +302,15 @@ free -h
 ### 日志查看
 ```bash
 # 查看所有服务日志
-docker-compose logs -f
+docker compose logs -f
 
 # 查看特定服务日志
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f postgres
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f postgres
 
 # 查看最近的错误
-docker-compose logs --tail=50 backend | grep ERROR
+docker compose logs --tail=50 backend | grep ERROR
 ```
 
 ## 🔄 维护和更新
@@ -325,7 +324,7 @@ echo "🔄 开始更新部署..."
 
 # 备份数据库
 echo "💾 备份数据库..."
-docker-compose exec postgres pg_dump -U ssalgten ssalgten > backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose exec postgres pg_dump -U ssalgten ssalgten > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 拉取最新代码
 echo "📥 拉取最新代码..."
@@ -333,14 +332,14 @@ git pull origin main
 
 # 重建镜像
 echo "🔨 重建镜像..."
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # 滚动更新
 echo "🔄 滚动更新服务..."
-docker-compose up -d --no-deps backend
+docker compose up -d --no-deps backend
 sleep 10
 
-docker-compose up -d --no-deps frontend
+docker compose up -d --no-deps frontend
 sleep 5
 
 # 健康检查
@@ -348,8 +347,8 @@ echo "🔍 健康检查..."
 curl -f http://localhost/api/health || {
     echo "❌ 更新失败，开始回滚..."
     git checkout HEAD~1
-    docker-compose build --no-cache
-    docker-compose up -d
+    docker compose build --no-cache
+    docker compose up -d
     exit 1
 }
 
@@ -372,10 +371,10 @@ echo "✅ 更新完成！"
 2. **数据库连接失败**
    ```bash
    # 检查数据库状态
-   docker-compose logs postgres
+   docker compose logs postgres
    
    # 重启数据库
-   docker-compose restart postgres
+   docker compose restart postgres
    ```
 
 3. **内存不足**

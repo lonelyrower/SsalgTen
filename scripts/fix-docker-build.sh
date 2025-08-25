@@ -11,17 +11,21 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Docker Compose 兼容性函数
+# Docker Compose 兼容性函数（优先 v2 插件，校验 v1）
 docker_compose() {
-    if command -v docker-compose >/dev/null 2>&1; then
-        docker-compose "$@"
-    elif docker compose version >/dev/null 2>&1; then
+    if docker compose version >/dev/null 2>&1; then
         docker compose "$@"
-    else
-        log_error "未找到 docker-compose 或 docker compose 命令"
-        log_info "请安装 Docker Compose 或确保 Docker 版本支持 compose 插件"
-        exit 1
+        return $?
     fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        if docker-compose version >/dev/null 2>&1; then
+            docker-compose "$@"
+            return $?
+        fi
+    fi
+    log_error "未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+    log_info "请安装 docker-compose-plugin 或修复后重试"
+    exit 127
 }
 
 log_info() {

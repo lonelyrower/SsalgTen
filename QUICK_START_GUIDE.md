@@ -160,9 +160,9 @@ cd /opt/ssalgten-agent
 ./manage-agent.sh logs      # 查看日志
 
 # 或使用Docker命令
-docker-compose ps           # 查看容器状态
-docker-compose logs -f      # 查看实时日志
-docker-compose restart     # 重启服务
+docker compose ps           # 查看容器状态
+docker compose logs -f      # 查看实时日志
+docker compose restart      # 重启服务
 ```
 
 ## 📊 验证部署成功
@@ -250,19 +250,19 @@ curl https://your-domain.com/api/visitor/ip/8.8.8.8
    ```bash
    # 在Agent节点检查
    cd /opt/ssalgten-agent
-   docker-compose logs
+   docker compose logs
    
    # 重启Agent服务
-   docker-compose restart
+   docker compose restart
    ```
 
 3. **数据库连接问题**
    ```bash
    # 检查数据库容器
-   docker-compose logs postgres
+   docker compose logs postgres
    
    # 重启数据库
-   docker-compose restart postgres
+   docker compose restart postgres
    ```
 
 ## 📈 性能优化建议

@@ -72,8 +72,8 @@ sed -i.backup "s/ssalgten-backend:latest/ssalgten-backend:$PREVIOUS_TAG/" docker
 sed -i.backup "s/ssalgten-frontend:latest/ssalgten-frontend:$PREVIOUS_TAG/" docker-compose.yml
 
 # 重启服务
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 echo "✅ Docker镜像回滚完成"
 ```
@@ -108,27 +108,27 @@ echo "备份文件: $BACKUP_FILE"
 # 创建当前状态的紧急备份
 echo "📦 创建当前数据库的紧急备份..."
 EMERGENCY_BACKUP="emergency_backup_$(date +%Y%m%d_%H%M%S).sql"
-docker-compose exec postgres pg_dump -U $DB_USER $DB_NAME > $EMERGENCY_BACKUP
+docker compose exec postgres pg_dump -U $DB_USER $DB_NAME > $EMERGENCY_BACKUP
 echo "紧急备份已保存: $EMERGENCY_BACKUP"
 
 # 停止应用服务（保留数据库运行）
 echo "⏸️ 停止应用服务..."
-docker-compose stop backend frontend agent
+docker compose stop backend frontend agent
 
 # 恢复数据库
 echo "🔄 恢复数据库..."
-docker-compose exec -T postgres psql -U $DB_USER -c "DROP DATABASE IF EXISTS ${DB_NAME}_temp;"
-docker-compose exec -T postgres psql -U $DB_USER -c "CREATE DATABASE ${DB_NAME}_temp;"
-docker-compose exec -T postgres psql -U $DB_USER $DB_NAME_temp < $BACKUP_FILE
+docker compose exec -T postgres psql -U $DB_USER -c "DROP DATABASE IF EXISTS ${DB_NAME}_temp;"
+docker compose exec -T postgres psql -U $DB_USER -c "CREATE DATABASE ${DB_NAME}_temp;"
+docker compose exec -T postgres psql -U $DB_USER $DB_NAME_temp < $BACKUP_FILE
 
 # 切换数据库
 echo "🔄 切换数据库..."
-docker-compose exec -T postgres psql -U $DB_USER -c "ALTER DATABASE $DB_NAME RENAME TO ${DB_NAME}_old;"
-docker-compose exec -T postgres psql -U $DB_USER -c "ALTER DATABASE ${DB_NAME}_temp RENAME TO $DB_NAME;"
+docker compose exec -T postgres psql -U $DB_USER -c "ALTER DATABASE $DB_NAME RENAME TO ${DB_NAME}_old;"
+docker compose exec -T postgres psql -U $DB_USER -c "ALTER DATABASE ${DB_NAME}_temp RENAME TO $DB_NAME;"
 
 # 重启应用服务
 echo "🚀 重启应用服务..."
-docker-compose start backend frontend agent
+docker compose start backend frontend agent
 
 # 验证恢复
 sleep 10
@@ -138,7 +138,7 @@ if curl -f http://localhost/api/health >/dev/null 2>&1; then
     echo "如确认无问题，可手动删除: DROP DATABASE ${DB_NAME}_old;"
 else
     echo "❌ 数据库回滚后服务异常，请检查日志"
-    docker-compose logs backend
+    docker compose logs backend
 fi
 ```
 
@@ -151,7 +151,7 @@ echo "🔄 开始数据库迁移回滚..."
 
 # 显示当前迁移状态
 echo "📊 当前迁移状态："
-docker-compose exec backend npx prisma migrate status
+docker compose exec backend npx prisma migrate status
 
 # 回滚指定数量的迁移
 ROLLBACK_COUNT=${1:-1}
@@ -191,7 +191,7 @@ for config_file in .env backend/.env frontend/.env agent/.env; do
 done
 
 # 重启服务以应用配置
-docker-compose restart
+docker compose restart
 
 echo "✅ 配置文件回滚完成"
 ```
@@ -234,7 +234,7 @@ echo "代码备份标签: emergency-backup-$TIMESTAMP"
 
 # 备份数据库
 EMERGENCY_DB_BACKUP="emergency_db_backup_$TIMESTAMP.sql"
-docker-compose exec postgres pg_dump -U ssalgten ssalgten > "$EMERGENCY_DB_BACKUP"
+docker compose exec postgres pg_dump -U ssalgten ssalgten > "$EMERGENCY_DB_BACKUP"
 echo "数据库备份: $EMERGENCY_DB_BACKUP"
 
 # 备份配置文件
@@ -245,7 +245,7 @@ cp agent/.env "agent/.env.emergency.$TIMESTAMP"
 
 # Step 2: 停止所有服务
 echo "⏸️ Step 2: 停止所有服务..."
-docker-compose down
+docker compose down
 
 # Step 3: 代码回滚
 echo "🔄 Step 3: 代码回滚..."
@@ -254,23 +254,23 @@ git checkout $ROLLBACK_TARGET
 # Step 4: 数据库回滚（如果指定了备份文件）
 if [[ -n "$BACKUP_FILE" && -f "$BACKUP_FILE" ]]; then
     echo "🗄️ Step 4: 数据库回滚..."
-    docker-compose up -d postgres
+    docker compose up -d postgres
     sleep 10
     
     # 恢复数据库
-    docker-compose exec -T postgres psql -U ssalgten -c "DROP DATABASE IF EXISTS ssalgten_temp;"
-    docker-compose exec -T postgres psql -U ssalgten -c "CREATE DATABASE ssalgten_temp;"
-    docker-compose exec -T postgres psql -U ssalgten ssalgten_temp < "$BACKUP_FILE"
+    docker compose exec -T postgres psql -U ssalgten -c "DROP DATABASE IF EXISTS ssalgten_temp;"
+    docker compose exec -T postgres psql -U ssalgten -c "CREATE DATABASE ssalgten_temp;"
+    docker compose exec -T postgres psql -U ssalgten ssalgten_temp < "$BACKUP_FILE"
     
     # 切换数据库
-    docker-compose exec -T postgres psql -U ssalgten -c "ALTER DATABASE ssalgten RENAME TO ssalgten_old_$TIMESTAMP;"
-    docker-compose exec -T postgres psql -U ssalgten -c "ALTER DATABASE ssalgten_temp RENAME TO ssalgten;"
+    docker compose exec -T postgres psql -U ssalgten -c "ALTER DATABASE ssalgten RENAME TO ssalgten_old_$TIMESTAMP;"
+    docker compose exec -T postgres psql -U ssalgten -c "ALTER DATABASE ssalgten_temp RENAME TO ssalgten;"
 fi
 
 # Step 5: 重建和启动服务
 echo "🚀 Step 5: 重建和启动服务..."
-docker-compose build --no-cache
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 
 # Step 6: 等待服务启动
 echo "⏳ Step 6: 等待服务启动..."
@@ -295,7 +295,7 @@ done
 if [[ $ATTEMPT -gt $MAX_ATTEMPTS ]]; then
     echo "❌ 回滚后服务仍然异常"
     echo "📋 查看服务日志："
-    docker-compose logs --tail=20
+    docker compose logs --tail=20
     echo ""
     echo "🔄 恢复操作："
     echo "1. 代码恢复: git checkout emergency-backup-$TIMESTAMP"

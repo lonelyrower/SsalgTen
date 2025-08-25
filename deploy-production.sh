@@ -23,13 +23,28 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# 检查Docker Compose
-if ! command -v docker-compose &> /dev/null; then
-    echo -e "${RED}❌ Docker Compose is not installed. Please install Docker Compose first.${NC}"
+# Compose 兼容性函数（优先 v2 插件）
+docker_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+        return $?
+    fi
+    if command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
+        docker-compose "$@"
+        return $?
+    fi
+    echo -e "${RED}❌ Docker Compose is not available. Install docker-compose-plugin first.${NC}"
+    return 127
+}
+
+# 检查 Docker Compose 可用性
+if ! docker_compose version >/dev/null 2>&1; then
+    echo -e "${RED}❌ Docker Compose is not installed or not working.${NC}"
+    echo -e "${YELLOW}💡 Try: sudo apt-get install -y docker-compose-plugin${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}✅ Docker and Docker Compose are installed${NC}"
+echo -e "${GREEN}✅ Docker and Docker Compose are available${NC}"
 
 # 检查.env文件
 if [ ! -f ".env" ]; then
@@ -88,15 +103,15 @@ sudo chown -R $USER:$USER /var/lib/ssalgten/
 
 # 停止现有服务
 echo -e "${BLUE}🛑 Stopping existing services...${NC}"
-docker-compose down --remove-orphans || true
+docker_compose down --remove-orphans || true
 
 # 拉取/构建镜像
 echo -e "${BLUE}🏗️  Building images...${NC}"
-docker-compose build --no-cache
+docker_compose build --no-cache
 
 # 启动服务
 echo -e "${BLUE}🚀 Starting services...${NC}"
-docker-compose up -d
+docker_compose up -d
 
 # 等待服务启动
 echo -e "${BLUE}⏳ Waiting for services to start...${NC}"
@@ -110,7 +125,7 @@ if curl -f -s "http://localhost:${BACKEND_PORT:-3001}/api/health" > /dev/null; t
     echo -e "${GREEN}✅ Backend service is healthy${NC}"
 else
     echo -e "${RED}❌ Backend service health check failed${NC}"
-    docker-compose logs backend
+    docker_compose logs backend
     exit 1
 fi
 
@@ -119,13 +134,13 @@ if curl -f -s "http://localhost:${FRONTEND_PORT:-80}/" > /dev/null; then
     echo -e "${GREEN}✅ Frontend service is healthy${NC}"
 else
     echo -e "${RED}❌ Frontend service health check failed${NC}"
-    docker-compose logs frontend
+    docker_compose logs frontend
     exit 1
 fi
 
 # 显示服务状态
 echo -e "${BLUE}📊 Service Status:${NC}"
-docker-compose ps
+docker_compose ps
 
 # 显示访问信息
 echo -e "${GREEN}"
@@ -141,10 +156,10 @@ echo "   Password: admin123"
 echo "   ⚠️  CHANGE DEFAULT CREDENTIALS IMMEDIATELY!"
 echo ""
 echo "📋 Management Commands:"
-echo "   View logs:    docker-compose logs -f"
-echo "   Stop services: docker-compose down"
-echo "   Restart:      docker-compose restart"
-echo "   Update:       git pull && docker-compose build && docker-compose up -d"
+echo "   View logs:    docker compose logs -f"
+echo "   Stop services: docker compose down"
+echo "   Restart:      docker compose restart"
+echo "   Update:       git pull && docker compose build && docker compose up -d"
 echo -e "${NC}"
 
 # 显示防火墙提示

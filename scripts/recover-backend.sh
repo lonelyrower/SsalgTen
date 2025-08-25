@@ -22,12 +22,12 @@ need_cmd() { command -v "$1" >/dev/null 2>&1 || { err "缺少命令：$1"; exit 
 
 # 选择 docker-compose 命令
 choose_compose() {
-  if command -v docker-compose >/dev/null 2>&1; then
-    echo docker-compose
-  elif docker compose version >/dev/null 2>&1; then
+  if docker compose version >/dev/null 2>&1; then
     echo docker compose
+  elif command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
+    echo docker-compose
   else
-    err "未找到 docker-compose 或 docker compose"
+    err "未找到可用的 Docker Compose（docker compose 或 docker-compose）"
     exit 1
   fi
 }
@@ -122,4 +122,3 @@ ok "完成！常用命令："
 echo "  查看容器      : $COMPOSE -f $COMPOSE_FILE ps"
 echo "  查看后端日志  : $COMPOSE -f $COMPOSE_FILE logs -f backend"
 echo "  重建后端      : $COMPOSE -f $COMPOSE_FILE build backend && $COMPOSE -f $COMPOSE_FILE up -d"
-

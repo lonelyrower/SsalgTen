@@ -35,17 +35,56 @@ run_as_root() {
     fi
 }
 
-# Docker Compose 兼容性函数
+# Docker Compose 兼容性与自愈函数（优先使用 v2 插件）
 docker_compose() {
-    if command -v docker-compose >/dev/null 2>&1; then
-        docker-compose "$@"
-    elif docker compose version >/dev/null 2>&1; then
+    # 优先使用 docker compose (v2 插件)
+    if docker compose version >/dev/null 2>&1; then
         docker compose "$@"
-    else
-        log_error "未找到 docker-compose 或 docker compose 命令"
-        log_info "请安装 Docker Compose 或确保 Docker 版本支持 compose 插件"
-        exit 1
+        return $?
     fi
+
+    # 尝试 v1 二进制，但需校验其可用性，避免执行到损坏的 /usr/local/bin/docker-compose
+    if command -v docker-compose >/dev/null 2>&1; then
+        if docker-compose version >/dev/null 2>&1; then
+            docker-compose "$@"
+            return $?
+        else
+            if declare -F log_warning >/dev/null; then
+                log_warning "检测到 docker-compose 可执行文件，但无法正常运行（可能为损坏的下载或404内容）"
+            else
+                echo "[WARNING] 检测到 docker-compose 可执行文件，但无法正常运行（可能为损坏的下载或404内容）"
+            fi
+            DC_PATH="$(command -v docker-compose)"
+            if [ -n "$DC_PATH" ] && [ -f "$DC_PATH" ]; then
+                # 文件过小或前1KB包含明显的文本错误则视为损坏，尝试移除（无论是否拥有权限，失败可忽略）
+                if [ $(wc -c < "$DC_PATH" 2>/dev/null || echo 0) -lt 100000 ]; then
+                    if declare -F log_info >/dev/null; then
+                        log_info "移除疑似损坏的 $DC_PATH（文件过小）"
+                    else
+                        echo "[INFO] 移除疑似损坏的 $DC_PATH（文件过小）"
+                    fi
+                    rm -f "$DC_PATH" 2>/dev/null || sudo rm -f "$DC_PATH" 2>/dev/null || true
+                elif head -c 1024 "$DC_PATH" 2>/dev/null | grep -qi "not found\|<html\|<!doctype"; then
+                    if declare -F log_info >/dev/null; then
+                        log_info "移除疑似损坏的 $DC_PATH（内容异常）"
+                    else
+                        echo "[INFO] 移除疑似损坏的 $DC_PATH（内容异常）"
+                    fi
+                    rm -f "$DC_PATH" 2>/dev/null || sudo rm -f "$DC_PATH" 2>/dev/null || true
+                fi
+            fi
+        fi
+    fi
+
+    # 最终兜底：仍不可用则提示安装
+    if declare -F log_error >/dev/null; then
+        log_error "未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+        log_info "请安装 docker-compose-plugin（推荐）或检查网络后重试"
+    else
+        echo "[ERROR] 未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+        echo "[INFO] 请安装 docker-compose-plugin（推荐）或检查网络后重试"
+    fi
+    return 127
 }
 
 # 改进的输入函数 - 支持默认值和回车确认
@@ -808,17 +847,65 @@ install_docker() {
             exit 1
         fi
         
-        # 安装Docker Compose
-        COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
-        run_as_root curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        run_as_root chmod +x /usr/local/bin/docker-compose
+        # 安装 Docker Compose（优先官方插件）
+        log_info "安装 Docker Compose 插件..."
+        if command -v apt >/dev/null 2>&1; then
+            run_as_root apt install -y docker-compose-plugin || true
+        elif command -v yum >/dev/null 2>&1; then
+            run_as_root yum install -y docker-compose-plugin || true
+        elif command -v dnf >/dev/null 2>&1; then
+            run_as_root dnf install -y docker-compose-plugin || true
+        fi
+
+        if docker compose version >/dev/null 2>&1; then
+            log_success "Docker Compose v2 插件已可用: $(docker compose version 2>/dev/null | head -n1)"
+        else
+            log_warning "docker-compose-plugin 不可用，尝试安装独立二进制作为后备"
+            FALLBACK_COMPOSE_VERSION="1.29.2"
+            TMP_BIN="/usr/local/bin/docker-compose"
+            if run_as_root curl -fsSL "https://github.com/docker/compose/releases/download/${FALLBACK_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o "$TMP_BIN"; then
+                run_as_root chmod +x "$TMP_BIN"
+                if docker-compose version >/dev/null 2>&1; then
+                    log_success "已安装 docker-compose 独立二进制: $(docker-compose version 2>/dev/null | head -n1)"
+                else
+                    log_error "docker-compose 独立二进制自检失败，移除以防干扰"
+                    run_as_root rm -f "$TMP_BIN" || true
+                fi
+            else
+                log_warning "下载 docker-compose 独立二进制失败，跳过后备安装"
+            fi
+        fi
         return 0
     fi
     
-    # 安装Docker Compose
-    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
-    run_as_root curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    run_as_root chmod +x /usr/local/bin/docker-compose
+    # 安装 Docker Compose（APT/YUM/DNF 场景）
+    log_info "安装 Docker Compose 插件..."
+    if command -v apt >/dev/null 2>&1; then
+        run_as_root apt install -y docker-compose-plugin || true
+    elif command -v yum >/dev/null 2>&1; then
+        run_as_root yum install -y docker-compose-plugin || true
+    elif command -v dnf >/dev/null 2>&1; then
+        run_as_root dnf install -y docker-compose-plugin || true
+    fi
+
+    if docker compose version >/dev/null 2>&1; then
+        log_success "Docker Compose v2 插件已可用: $(docker compose version 2>/dev/null | head -n1)"
+    else
+        log_warning "docker-compose-plugin 不可用，尝试安装独立二进制作为后备"
+        FALLBACK_COMPOSE_VERSION="1.29.2"
+        TMP_BIN="/usr/local/bin/docker-compose"
+        if run_as_root curl -fsSL "https://github.com/docker/compose/releases/download/${FALLBACK_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o "$TMP_BIN"; then
+            run_as_root chmod +x "$TMP_BIN"
+            if docker-compose version >/dev/null 2>&1; then
+                log_success "已安装 docker-compose 独立二进制: $(docker-compose version 2>/dev/null | head -n1)"
+            else
+                log_error "docker-compose 独立二进制自检失败，移除以防干扰"
+                run_as_root rm -f "$TMP_BIN" || true
+            fi
+        else
+            log_warning "下载 docker-compose 独立二进制失败，跳过后备安装"
+        fi
+    fi
     
     # 添加用户到docker组
     if [[ "$RUNNING_AS_ROOT" == "true" ]]; then

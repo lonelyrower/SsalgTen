@@ -236,13 +236,13 @@ npm run build           # Compile TypeScript
 npm run start           # Production agent
 ```
 
-**Docker Commands:**
+**Docker Commands (Compose v2):**
 ```bash
-docker-compose up -d    # Start all services in background
-docker-compose down     # Stop all services
-docker-compose logs     # View logs from all services
-docker-compose restart  # Restart all services
-docker-compose ps       # Check service status
+docker compose up -d    # Start all services in background
+docker compose down     # Stop all services
+docker compose logs     # View logs from all services
+docker compose restart  # Restart all services
+docker compose ps       # Check service status
 ```
 
 ### Development Workflow
@@ -365,7 +365,7 @@ GET  /api/speedtest        # Bandwidth test (placeholder)
 - **Authentication & Authorization** - JWT-based system with role management
 - **Network Diagnostics** - Complete implementation of all diagnostic tools
 - **Real-time Monitoring** - Live node status, heartbeat tracking, system metrics
-- **Docker Deployment** - One-command deployment with docker-compose
+- **Docker Deployment** - One-command deployment with docker compose
 - **Scalable Architecture** - Support for unlimited global agents
 - **Management Interface** - Complete admin panel for system configuration
 
@@ -416,11 +416,11 @@ cd SsalgTen
 cp .env.example .env
 # Edit .env with your configuration
 
-# Deploy with Docker Compose
-docker-compose up -d
+# Deploy with Docker Compose v2
+docker compose up -d
 
 # Check service status
-docker-compose ps
+docker compose ps
 ```
 
 **Option 2: Manual Production Build**

@@ -57,12 +57,15 @@
       "Bash(export:*)",
       "Bash(docker:*)",
       "Bash(echo \"# 检查backend环境变量中的签名设置\ndocker exec ssalgten-backend env | grep SIGNATURE\n\n# 如果没有AGENT_REQUIRE_SIGNATURE=false，需要添加它\")",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(sudo netstat:*)",
+      "Read(//usr/local/bin/**)"
     ],
     "deny": [],
     "additionalDirectories": [
       "D:\\d\\Projects",
-      "/opt"
+      "/opt",
+      "/usr/local/bin"
     ]
   }
 }

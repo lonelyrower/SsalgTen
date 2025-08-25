@@ -16,6 +16,22 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# Compose 兼容性函数（优先 v2 插件）
+docker_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+        return $?
+    fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        if docker-compose version >/dev/null 2>&1; then
+            docker-compose "$@"
+            return $?
+        fi
+    fi
+    log_error "未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+    return 127
+}
+
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
@@ -68,13 +84,13 @@ check_docker() {
         return 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
+    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
         log_error "Docker Compose is not installed"
         return 1
     fi
     
     local docker_version=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
-    local compose_version=$(docker_compose --version | cut -d' ' -f3 | cut -d',' -f1)
+    local compose_version=$(docker_compose --version 2>/dev/null | awk '{print $3}' | cut -d',' -f1)
     
     log_success "Docker version: $docker_version"
     log_success "Docker Compose version: $compose_version"
@@ -220,7 +236,7 @@ generate_summary() {
     echo "To deploy, run:"
     echo "  ./scripts/deploy.sh deploy"
     echo "  or"
-    echo "  docker_compose up -d"
+    echo "  docker compose up -d"
 }
 
 # Main execution

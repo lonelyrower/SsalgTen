@@ -48,13 +48,24 @@ EOF
     echo "⚠️  Remember to change passwords and secrets for production!"
 fi
 
+# 选择 Compose 命令（优先 v2 插件）
+choose_compose() {
+  if docker compose version >/dev/null 2>&1; then echo docker compose; elif command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then echo docker-compose; else echo ""; fi
+}
+COMPOSE=$(choose_compose)
+if [[ -z "$COMPOSE" ]]; then
+  echo "❌ 未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+  echo "ℹ️  请安装 docker-compose-plugin 后重试"
+  exit 1
+fi
+
 # 停止现有服务
 echo "🛑 Stopping existing services..."
-docker-compose down 2>/dev/null || true
+$COMPOSE down 2>/dev/null || true
 
 # 构建并启动
 echo "🏗️  Building and starting services..."
-docker-compose up -d --build
+$COMPOSE up -d --build
 
 # 等待服务启动
 echo "⏳ Waiting for services (30 seconds)..."
@@ -62,7 +73,7 @@ sleep 30
 
 # 检查状态
 echo "📊 Checking service status..."
-docker-compose ps
+$COMPOSE ps
 
 # 获取外网IP
 EXTERNAL_IP=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
@@ -86,6 +97,6 @@ echo "   Password: admin123"
 echo "   🚨 CHANGE IMMEDIATELY!"
 echo ""
 echo "📋 Commands:"
-echo "   Logs: docker-compose logs -f"
-echo "   Stop: docker-compose down"
-echo "   Restart: docker-compose restart"
+echo "   Logs: $COMPOSE logs -f"
+echo "   Stop: $COMPOSE down"
+echo "   Restart: $COMPOSE restart"

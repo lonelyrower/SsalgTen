@@ -203,7 +203,7 @@ AGENT_NYC_CITY=New York
 
 ### Docker Service Configuration
 
-Services can be configured via docker-compose.yml:
+Services can be configured via docker compose (docker-compose.yml):
 
 ```yaml
 services:

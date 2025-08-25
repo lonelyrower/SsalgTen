@@ -93,9 +93,10 @@ export const NodesPage: React.FC = () => {
   };
 
   // 获取节点详细心跳数据
-  const fetchHeartbeatData = async (nodeId: string) => {
+  // showSpinner: 是否展示加载骨架（仅首次加载时需要，定时刷新避免闪烁）
+  const fetchHeartbeatData = async (nodeId: string, showSpinner: boolean = true) => {
     try {
-      setLoadingHeartbeat(true);
+      if (showSpinner) setLoadingHeartbeat(true);
       const response = await apiService.getNodeHeartbeatData(nodeId);
       if (response.success && response.data) {
         setHeartbeatData(response.data);
@@ -106,7 +107,7 @@ export const NodesPage: React.FC = () => {
       console.error('Failed to fetch heartbeat data:', error);
       setHeartbeatData(null);
     } finally {
-      setLoadingHeartbeat(false);
+      if (showSpinner) setLoadingHeartbeat(false);
     }
   };
 
@@ -177,7 +178,8 @@ export const NodesPage: React.FC = () => {
   // 当选中节点时获取心跳数据
   useEffect(() => {
     if (selectedNode) {
-      fetchHeartbeatData(selectedNode.id);
+      // 首次打开详细面板前先拉一次，展示加载态
+      fetchHeartbeatData(selectedNode.id, true);
       fetchNodeEvents(selectedNode.id);
     } else {
       setHeartbeatData(null);
@@ -185,17 +187,36 @@ export const NodesPage: React.FC = () => {
     }
   }, [selectedNode]);
 
-  // 面板展开时，定时刷新心跳数据以驱动速率曲线
+  // 面板展开时，优先走WS订阅，回退为定时HTTP刷新
   useEffect(() => {
     if (selectedNode && showServerDetails) {
       const id = selectedNode.id;
+
+      if (connected) {
+        const handler = (payload: any) => {
+          if (payload?.nodeId === id) {
+            setHeartbeatData(payload.data || null);
+          }
+        };
+        socketService.subscribeToNodeHeartbeat(id, handler);
+        // 主动请求一次，确保立即有数据
+        socketService.requestLatestHeartbeat(id);
+
+        const evTimer = setInterval(() => fetchNodeEvents(id), 15000);
+        return () => {
+          socketService.unsubscribeFromNodeHeartbeat(id);
+          clearInterval(evTimer);
+        };
+      }
+
+      // 回退：HTTP 定时刷新
       const timer = setInterval(() => {
-        fetchHeartbeatData(id);
+        fetchHeartbeatData(id, false);
         fetchNodeEvents(id);
       }, 15000);
       return () => clearInterval(timer);
     }
-  }, [selectedNode, showServerDetails]);
+  }, [selectedNode, showServerDetails, connected]);
 
   // 过滤节点
   const filteredNodes = nodes.filter(node => {

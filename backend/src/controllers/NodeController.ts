@@ -586,6 +586,21 @@ export class NodeController {
             stats,
             timestamp: new Date().toISOString()
           });
+
+          // 向订阅了该节点心跳详情的客户端推送最新心跳详情
+          try {
+            const node = await nodeService.getNodeByAgentId(agentId);
+            if (node) {
+              const detail = await nodeService.getLatestHeartbeatData(node.id);
+              io.to(`node_heartbeat_${node.id}`).emit('node_heartbeat', {
+                nodeId: node.id,
+                data: detail,
+                timestamp: new Date().toISOString()
+              });
+            }
+          } catch (e) {
+            logger.debug('Broadcast node heartbeat detail failed (non-fatal):', e);
+          }
         }
       } catch (e) {
         logger.debug('Broadcast after heartbeat failed (non-fatal):', e);

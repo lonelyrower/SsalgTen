@@ -25,17 +25,23 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Docker Compose 兼容性函数
+# Docker Compose 兼容性函数（优先 v2 插件，校验 v1）
 docker_compose() {
-    if command -v docker-compose >/dev/null 2>&1; then
-        docker-compose "$@"
-    elif docker compose version >/dev/null 2>&1; then
+    if docker compose version >/dev/null 2>&1; then
         docker compose "$@"
-    else
-        log_error "未找到 docker-compose 或 docker compose 命令"
-        log_info "请安装 Docker Compose 或确保 Docker 版本支持 compose 插件"
-        exit 1
+        return $?
     fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        if docker-compose version >/dev/null 2>&1; then
+            docker-compose "$@"
+            return $?
+        else
+            log_warning "检测到 docker-compose 可执行文件，但无法正常运行（可能被损坏）"
+        fi
+    fi
+    log_error "未找到可用的 Docker Compose（docker compose 或 docker-compose）"
+    log_info "请安装 docker-compose-plugin 或修复后重试"
+    exit 127
 }
 
 # 版本信息
@@ -632,21 +638,45 @@ install_docker() {
 install_docker_compose() {
     log_info "检查Docker Compose安装状态..."
     
-    if command -v docker-compose >/dev/null 2>&1; then
-        log_success "Docker Compose已安装: $(docker_compose --version)"
+    # 优先使用 docker compose 插件
+    if docker compose version >/dev/null 2>&1; then
+        log_success "Docker Compose v2 插件可用: $(docker compose version 2>/dev/null | head -n1)"
         return 0
     fi
     
-    log_info "安装Docker Compose..."
+    # 通过包管理器安装插件
+    log_info "安装 Docker Compose 插件..."
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt-get update && sudo apt-get install -y docker-compose-plugin || true
+    elif command -v yum >/dev/null 2>&1; then
+        sudo yum install -y docker-compose-plugin || true
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y docker-compose-plugin || true
+    fi
     
-    # 获取最新版本
-    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+    if docker compose version >/dev/null 2>&1; then
+        log_success "Docker Compose v2 插件已安装: $(docker compose version 2>/dev/null | head -n1)"
+        return 0
+    fi
     
-    # 下载并安装
-    sudo curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
+    # 兜底：尝试安装独立二进制并做自检
+    log_warning "docker-compose-plugin 不可用，尝试安装独立二进制作为后备"
+    FALLBACK_COMPOSE_VERSION="1.29.2"
+    if sudo curl -fsSL "https://github.com/docker/compose/releases/download/${FALLBACK_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose; then
+        sudo chmod +x /usr/local/bin/docker-compose
+        if docker-compose version >/dev/null 2>&1; then
+            log_success "已安装 docker-compose 二进制: $(docker-compose version 2>/dev/null | head -n1)"
+            return 0
+        else
+            log_error "docker-compose 二进制自检失败，移除以防干扰"
+            sudo rm -f /usr/local/bin/docker-compose || true
+        fi
+    else
+        log_warning "下载 docker-compose 二进制失败"
+    fi
     
-    log_success "Docker Compose安装完成"
+    log_error "未能安装可用的 Docker Compose，请先安装 docker-compose-plugin 后重试"
+    return 1
 }
 
 # 创建应用目录
@@ -940,8 +970,8 @@ RestartSec=10
 User=$USER
 Group=$USER
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0
 
 [Install]

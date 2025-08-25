@@ -6,6 +6,7 @@ import { SystemInfo, CPUInfo, MemoryInfo, DiskInfo, NetworkStats, ProcessInfo } 
 
 const exec = promisify(require('child_process').exec);
 const readFile = promisify(fs.readFile);
+const readdir = promisify(fs.readdir);
 
 // 获取 CPU 使用率
 export const getCpuUsage = async (): Promise<number> => {
@@ -351,37 +352,43 @@ export const getNetworkStats = async (): Promise<NetworkStats[]> => {
 export const getProcessInfo = async (): Promise<ProcessInfo> => {
   try {
     if (os.platform() === 'linux') {
-      const stat = await readFile('/proc/stat', 'utf8');
-      const processLine = stat.split('\n').find(line => line.startsWith('processes'));
-      const total = processLine ? parseInt(processLine.split(' ')[1]) || 0 : 0;
-      
-      // 从 /proc/loadavg 获取运行进程数
-      const loadavg = await readFile('/proc/loadavg', 'utf8');
-      const parts = loadavg.trim().split(' ');
-      const running = parts[3] ? parseInt(parts[3].split('/')[0]) || 0 : 0;
-      
-      return {
-        total,
-        running,
-        sleeping: Math.max(0, total - running),
-        zombie: 0 // 简化处理
-      };
+      // 当前进程总数：统计 /proc 下的数字目录数量（更贴近“当前总进程数”）
+      let total = 0;
+      try {
+        const entries = await readdir('/proc', { withFileTypes: true } as any);
+        total = entries.filter((e: any) => e.isDirectory?.() && /^\d+$/.test(e.name)).length;
+      } catch {}
+
+      // 运行中的进程数：优先从 /proc/stat 的 procs_running 获取；回退到 /proc/loadavg
+      let running = 0;
+      try {
+        const stat = await readFile('/proc/stat', 'utf8');
+        const runLine = stat.split('\n').find(line => line.startsWith('procs_running'));
+        if (runLine) {
+          const parts = runLine.trim().split(/\s+/);
+          running = parseInt(parts[1]) || 0;
+        } else {
+          const loadavg = await readFile('/proc/loadavg', 'utf8');
+          const parts = loadavg.trim().split(' ');
+          running = parts[3] ? parseInt(parts[3].split('/')[0]) || 0 : 0;
+        }
+      } catch {}
+
+      // 僵尸进程数：尽量从 ps 统计（可能不可用，失败则置 0）
+      let zombie = 0;
+      try {
+        const { stdout } = await exec("ps -eo stat 2>/dev/null | awk '{print $1}' | grep -c '^Z' ");
+        zombie = parseInt(stdout.trim()) || 0;
+      } catch {}
+
+      const sleeping = Math.max(0, total - running - zombie);
+      return { total, running, sleeping, zombie };
     } else {
       // Windows或其他平台的简化处理
-      return {
-        total: 0,
-        running: 0,
-        sleeping: 0,
-        zombie: 0
-      };
+      return { total: 0, running: 0, sleeping: 0, zombie: 0 };
     }
   } catch {
-    return {
-      total: 0,
-      running: 0,
-      sleeping: 0,
-      zombie: 0
-    };
+    return { total: 0, running: 0, sleeping: 0, zombie: 0 };
   }
 };
 
@@ -435,21 +442,45 @@ export const getServicesStatus = async () => {
   
   try {
     if (os.platform() === 'linux') {
-      const checks = [
-        { name: 'docker', command: 'systemctl is-active docker 2>/dev/null' },
-        { name: 'nginx', command: 'systemctl is-active nginx 2>/dev/null' },
-        { name: 'apache', command: 'systemctl is-active apache2 2>/dev/null || systemctl is-active httpd 2>/dev/null' },
-        { name: 'mysql', command: 'systemctl is-active mysql 2>/dev/null || systemctl is-active mysqld 2>/dev/null' },
-        { name: 'postgresql', command: 'systemctl is-active postgresql 2>/dev/null' },
-        { name: 'redis', command: 'systemctl is-active redis 2>/dev/null || systemctl is-active redis-server 2>/dev/null' },
-      ];
-      
-      for (const check of checks) {
-        try {
-          const { stdout } = await exec(check.command);
-          services[check.name as keyof typeof services] = stdout.trim() === 'active';
-        } catch {}
+      // 优先 systemctl，失败则回退到进程/端口探测（容器/无 systemd 环境）
+      const systemctlAvailable = await (async () => {
+        try { const { stdout } = await exec('command -v systemctl || echo ""'); return stdout.trim().length > 0; } catch { return false; }
+      })();
+
+      if (systemctlAvailable) {
+        const checks = [
+          { name: 'docker', command: 'systemctl is-active docker 2>/dev/null' },
+          { name: 'nginx', command: 'systemctl is-active nginx 2>/dev/null' },
+          { name: 'apache', command: 'systemctl is-active apache2 2>/dev/null || systemctl is-active httpd 2>/dev/null' },
+          { name: 'mysql', command: 'systemctl is-active mysql 2>/dev/null || systemctl is-active mysqld 2>/dev/null' },
+          { name: 'postgresql', command: 'systemctl is-active postgresql 2>/dev/null' },
+          { name: 'redis', command: 'systemctl is-active redis 2>/dev/null || systemctl is-active redis-server 2>/dev/null' },
+        ];
+        for (const check of checks) {
+          try { const { stdout } = await exec(check.command); (services as any)[check.name] = stdout.trim() === 'active'; } catch {}
+        }
       }
+
+      // 回退/补充：基于进程名与端口检测
+      const portListening = async (port: number) => {
+        try {
+          const { stdout } = await exec(`(ss -lntup 2>/dev/null || netstat -lntup 2>/dev/null) | grep -E '[:.]${port}[^0-9]' | head -1`);
+          return stdout.trim().length > 0;
+        } catch { return false; }
+      };
+      const hasProc = async (patterns: string[]) => {
+        for (const p of patterns) {
+          try { const { stdout } = await exec(`pgrep -f '${p}' 2>/dev/null || ps -ef | grep -v grep | grep -E '${p}' | head -1`); if (stdout.trim().length > 0) return true; } catch {}
+        }
+        return false;
+      };
+
+      if (!services.docker) services.docker = await hasProc(['dockerd', 'containerd']);
+      if (!services.nginx) services.nginx = (await hasProc(['nginx'])) || (await portListening(80)) || (await portListening(443));
+      if (!services.apache) services.apache = (await hasProc(['apache2', 'httpd'])) || (await portListening(80)) || (await portListening(443));
+      if (!services.mysql) services.mysql = (await hasProc(['mysqld'])) || (await portListening(3306));
+      if (!services.postgresql) services.postgresql = (await hasProc(['postgres'])) || (await portListening(5432));
+      if (!services.redis) services.redis = (await hasProc(['redis-server'])) || (await portListening(6379));
     } else if (os.platform() === 'win32') {
       // Windows服务检查
       try {
@@ -556,6 +587,9 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
       if (ip) result.ipv6 = ip;
     } catch {}
   }
-
+  // 若错误配置导致 v4/v6 返回相同字符串，避免在UI中重复显示
+  if (result.ipv4 && result.ipv6 && result.ipv4 === result.ipv6) {
+    delete (result as any).ipv6;
+  }
   return result;
 };
