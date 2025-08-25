@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { apiService } from '@/services/api';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,7 @@ interface ThreatData {
   volume?: number;
 }
 
-// 模拟实时威胁数据生成
+// 模拟实时威胁数据生成（回退用）
 const generateThreatData = (): ThreatData[] => {
   const threatTypes: ThreatData['type'][] = ['ddos', 'bruteforce', 'malware', 'intrusion', 'anomaly'];
   const severities: ThreatData['severity'][] = ['low', 'medium', 'high', 'critical'];
@@ -129,29 +130,75 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
   const [selectedThreat, setSelectedThreat] = useState<ThreatData | null>(null);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [filter, setFilter] = useState<'all' | ThreatData['type']>('all');
+  const [useRealData, setUseRealData] = useState(true);
 
-  // 实时数据更新
+  // 将后端活动日志转换为威胁项（简单映射）
+  const mapActivityToThreat = (ev: any): ThreatData | null => {
+    const now = new Date();
+    const base = {
+      id: ev.id || `ev-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+      sourceIp: ev.details?.ip || ev.details?.previous?.ipv4 || '0.0.0.0',
+      targetNode: ev.node?.name || ev.nodeName || 'Unknown',
+      country: ev.node?.country || 'Unknown',
+      timestamp: ev.timestamp ? new Date(ev.timestamp) : now,
+      status: 'active' as const,
+      attackVector: 'Anomaly'
+    };
+    const type = (ev.type || '').toUpperCase();
+    if (type.includes('STATUS_CHANGED')) {
+      const to = (ev.details?.to || '').toUpperCase();
+      return {
+        ...base,
+        type: 'anomaly',
+        severity: to === 'OFFLINE' ? 'high' : 'low'
+      };
+    }
+    if (type.includes('IP_CHANGED')) {
+      return { ...base, type: 'anomaly', severity: 'medium' };
+    }
+    if (type.includes('PING') || type.includes('TRACEROUTE') || type.includes('MTR') || type.includes('SPEEDTEST')) {
+      const ok = ev.success !== false && ev.details?.success !== false;
+      return ok ? null : { ...base, type: 'anomaly', severity: 'medium' };
+    }
+    if (type.includes('AGENT_REGISTERED')) {
+      return { ...base, type: 'intrusion', severity: 'low', attackVector: 'New Agent' };
+    }
+    return null;
+  };
+
+  // 数据更新（优先后端活动日志，失败则回退 mock）
   useEffect(() => {
-    const updateThreats = () => {
+    let interval: any = null;
+    const fetchActivities = async () => {
       try {
+        if (!useRealData) {
+          setThreats(generateThreatData());
+          return;
+        }
+        const res = await apiService.getGlobalActivities?.();
+        if (res && (res as any).success && Array.isArray(res.data)) {
+          const items = (res.data as any[])
+            .map(mapActivityToThreat)
+            .filter(Boolean) as ThreatData[];
+          // 若为空则保持上次，避免空白；必要时回退到少量 mock
+          setThreats(items.length > 0 ? items : generateThreatData().slice(0, 5));
+        } else {
+          setThreats(generateThreatData());
+        }
+      } catch (e) {
+        console.warn('Fetch activities failed, fallback to mock:', e);
         setThreats(generateThreatData());
-      } catch (error) {
-        console.error('Failed to generate threat data:', error);
       }
     };
-    
-    // 初始加载
-    updateThreats();
-    
-    // 实时更新 (每5秒)
-    const interval = isLiveMode ? setInterval(updateThreats, 5000) : null;
+    fetchActivities();
+    if (isLiveMode) {
+      interval = setInterval(fetchActivities, 5000);
+    }
     
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      if (interval) clearInterval(interval);
     };
-  }, [isLiveMode]);
+  }, [isLiveMode, useRealData]);
 
   // 统计信息
   const stats = useMemo(() => {
@@ -202,6 +249,13 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
                   暂停
                 </>
               )}
+            </Button>
+            <Button
+              variant={useRealData ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setUseRealData(!useRealData)}
+            >
+              {useRealData ? '实时(后端)' : '模拟数据'}
             </Button>
           </div>
         </div>
