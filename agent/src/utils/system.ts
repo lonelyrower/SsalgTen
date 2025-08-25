@@ -484,21 +484,39 @@ export const getServicesStatus = async () => {
         return false;
       };
 
-      if (!services.docker) services.docker = await hasProc(['dockerd', 'containerd']);
-      if (!services.nginx) services.nginx = (await hasProc(['nginx'])) || (await portListening(80)) || (await portListening(443));
-      if (!services.apache) services.apache = (await hasProc(['apache2', 'httpd'])) || (await portListening(80)) || (await portListening(443));
-      if (!services.mysql) services.mysql = (await hasProc(['mysqld'])) || (await portListening(3306));
-      if (!services.postgresql) services.postgresql = (await hasProc(['postgres'])) || (await portListening(5432));
-      if (!services.redis) services.redis = (await hasProc(['redis-server'])) || (await portListening(6379));
+      // 在容器中通过挂载的 /host/proc 识别宿主机进程（兼容 bridge 网络）
+      const hostHasProc = async (patterns: string[]) => {
+        try {
+          const entries = await readdir('/host/proc', { withFileTypes: true } as any);
+          for (const e of entries) {
+            if (!(e as any).isDirectory?.()) continue;
+            if (!/^\d+$/.test(e.name)) continue;
+            try {
+              const cmd = await readFile(`/host/proc/${e.name}/cmdline`, 'utf8');
+              for (const pat of patterns) {
+                if (new RegExp(pat).test(cmd)) return true;
+              }
+            } catch {}
+          }
+        } catch {}
+        return false;
+      };
+
+      if (!services.docker) services.docker = await hasProc(['dockerd', 'containerd']) || await hostHasProc(['dockerd', 'containerd']);
+      if (!services.nginx) services.nginx = (await hasProc(['nginx']) || await hostHasProc(['nginx'])) || (await portListening(80)) || (await portListening(443));
+      if (!services.apache) services.apache = (await hasProc(['apache2', 'httpd']) || await hostHasProc(['apache2', 'httpd'])) || (await portListening(80)) || (await portListening(443));
+      if (!services.mysql) services.mysql = (await hasProc(['mysqld']) || await hostHasProc(['mysqld'])) || (await portListening(3306));
+      if (!services.postgresql) services.postgresql = (await hasProc(['postgres']) || await hostHasProc(['postgres'])) || (await portListening(5432));
+      if (!services.redis) services.redis = (await hasProc(['redis-server']) || await hostHasProc(['redis-server'])) || (await portListening(6379));
       // 扩展服务
-      services.caddy = services.caddy || (await hasProc(['caddy'])) || (await portListening(80)) || (await portListening(443));
-      services.xray = services.xray || (await hasProc(['xray']));
-      services.singbox = services.singbox || (await hasProc(['sing-box', 'singbox']));
-      services.openvpn = services.openvpn || (await hasProc(['openvpn'])) || (await portListening(1194));
-      services.wireguard = services.wireguard || (await hasProc(['wg-quick', 'wg'])) || (await portListening(51820));
-      services.tailscale = services.tailscale || (await hasProc(['tailscaled']));
-      services.frps = services.frps || (await hasProc(['frps']));
-      services.frpc = services.frpc || (await hasProc(['frpc']));
+      services.caddy = services.caddy || (await hasProc(['caddy']) || await hostHasProc(['caddy'])) || (await portListening(80)) || (await portListening(443));
+      services.xray = services.xray || (await hasProc(['xray']) || await hostHasProc(['xray']));
+      services.singbox = services.singbox || (await hasProc(['sing-box', 'singbox']) || await hostHasProc(['sing-box', 'singbox']));
+      services.openvpn = services.openvpn || (await hasProc(['openvpn']) || await hostHasProc(['openvpn'])) || (await portListening(1194));
+      services.wireguard = services.wireguard || (await hasProc(['wg-quick', 'wg']) || await hostHasProc(['wg-quick', 'wg'])) || (await portListening(51820));
+      services.tailscale = services.tailscale || (await hasProc(['tailscaled']) || await hostHasProc(['tailscaled']));
+      services.frps = services.frps || (await hasProc(['frps']) || await hostHasProc(['frps']));
+      services.frpc = services.frpc || (await hasProc(['frpc']) || await hostHasProc(['frpc']));
     } else if (os.platform() === 'win32') {
       // Windows服务检查
       try {
