@@ -3,6 +3,8 @@ import fs from 'fs';
 import { promisify } from 'util';
 import axios from 'axios';
 import { SystemInfo, CPUInfo, MemoryInfo, DiskInfo, NetworkStats, ProcessInfo } from '../types';
+import net from 'net';
+import tls from 'tls';
 
 const exec = promisify(require('child_process').exec);
 const readFile = promisify(fs.readFile);
@@ -557,6 +559,9 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     getCpuUsage(),
     getDiskUsage()
   ]);
+
+  // 可选的 Xray 自检：通过环境变量启用
+  const xrayDetail = await getXrayCheck();
   
   return {
     // 基本系统信息
@@ -590,7 +595,14 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     
     // 虚拟化和服务信息
     virtualization,
-    services,
+    services: (() => {
+      const svc: any = services;
+      if (xrayDetail) {
+        // 标准布尔状态已在 services.xray 中体现，附加详细结果
+        svc.xrayDetail = xrayDetail;
+      }
+      return svc;
+    })(),
   };
 };
 
@@ -628,4 +640,69 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
     delete (result as any).ipv6;
   }
   return result;
+};
+
+// Xray 自检（可选）：通过环境变量启用
+// XRAY_CHECK_PORT: 端口，XRAY_CHECK_HOST: 默认127.0.0.1，XRAY_CHECK_TLS: 'true'/'false'，XRAY_CHECK_SNI: 可选
+const connectTcp = (host: string, port: number, timeoutMs: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const socket = net.connect({ host, port });
+    let done = false;
+    const cleanup = (ok: boolean) => {
+      if (done) return; done = true;
+      try { socket.destroy(); } catch {}
+      resolve(ok);
+    };
+    const to = setTimeout(() => cleanup(false), timeoutMs);
+    socket.on('connect', () => { clearTimeout(to); cleanup(true); });
+    socket.on('error', () => { clearTimeout(to); cleanup(false); });
+  });
+};
+
+const connectTls = (host: string, port: number, servername?: string, timeoutMs = 2000): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const options: tls.ConnectionOptions = { host, port, servername } as any;
+    const sock = tls.connect(options, () => {
+      resolve(true);
+      try { sock.destroy(); } catch {}
+    });
+    const timer = setTimeout(() => { try { sock.destroy(); } catch {}; resolve(false); }, timeoutMs);
+    sock.on('error', () => { clearTimeout(timer); resolve(false); });
+  });
+};
+
+export const getXrayCheck = async () => {
+  try {
+    const port = parseInt(process.env.XRAY_CHECK_PORT || '0');
+    if (!port || isNaN(port)) return null;
+    const host = process.env.XRAY_CHECK_HOST || '127.0.0.1';
+    const useTls = (process.env.XRAY_CHECK_TLS || 'false').toLowerCase() === 'true';
+    const sni = process.env.XRAY_CHECK_SNI || undefined;
+
+    // 进程存在性（容器/宿主机）
+    const proc = await (async () => {
+      try {
+        const p1 = await (async () => {
+          try { const { stdout } = await exec("pgrep -f 'xray' 2>/dev/null || ps -ef | grep -v grep | grep -E 'xray' | head -1"); return stdout.trim().length > 0; } catch { return false; }
+        })();
+        if (p1) return true;
+        // 查看宿主机进程
+        try {
+          const entries = await readdir('/host/proc', { withFileTypes: true } as any);
+          for (const e of entries) {
+            if (!(e as any).isDirectory?.()) continue;
+            if (!/^\d+$/.test(e.name)) continue;
+            try { const cmd = await readFile(`/host/proc/${e.name}/cmdline`, 'utf8'); if (/xray/.test(cmd)) return true; } catch {}
+          }
+        } catch {}
+        return false;
+      } catch { return false; }
+    })();
+
+    const tcpOk = await connectTcp(host, port, 1500);
+    const tlsOk = useTls ? await connectTls(host, port, sni, 2500) : undefined;
+    return { host, port, tcpOk, tlsOk, running: proc, tls: useTls, sni };
+  } catch {
+    return null;
+  }
 };

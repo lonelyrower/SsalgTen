@@ -622,16 +622,62 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
 
           {/* 系统服务 */}
           {heartbeatData?.services && (
-            <div className="pt-2 border-t">
-              <p className="text-sm font-medium mb-2">系统服务</p>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.entries(heartbeatData.services).map(([service, isActive]) => (
-                  <div key={service} className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                    <span className="text-xs capitalize">{service}</span>
-                  </div>
-                ))}
+            <div className="pt-2 border-t space-y-3">
+              <div>
+                <p className="text-sm font-medium mb-2">系统服务</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(heartbeatData.services).filter(([k]) => !k.endsWith('Detail')).map(([service, isActive]) => (
+                    <div key={service} className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span className="text-xs capitalize">{service}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+              {/* Xray 自检 */}
+              {(() => {
+                const svc: any = heartbeatData.services;
+                const detail = svc?.xrayDetail;
+                if (!detail) return null;
+                return (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm font-medium mb-2">Xray 自检</p>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400">进程</p>
+                        <Badge variant={detail.running ? 'success' : 'secondary'} className="text-xs">
+                          {detail.running ? '存在' : '未检测到'}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400">监听</p>
+                        <p className="font-medium">{detail.host}:{detail.port}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400">TCP连通</p>
+                        <Badge variant={detail.tcpOk ? 'success' : 'destructive'} className="text-xs">
+                          {detail.tcpOk ? '正常' : '失败'}
+                        </Badge>
+                      </div>
+                      {detail.tls !== undefined && (
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">TLS握手</p>
+                          <Badge variant={detail.tlsOk ? 'success' : 'secondary'} className="text-xs">
+                            {detail.tlsOk ? '成功' : '未启用/失败'}
+                          </Badge>
+                        </div>
+                      )}
+                      {detail.sni && (
+                        <div className="col-span-2">
+                          <p className="text-gray-600 dark:text-gray-400">SNI</p>
+                          <p className="font-medium font-mono text-xs">{detail.sni}</p>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">提示：如 Agent 运行在 bridge 网络，已透过 /host/proc 识别宿主进程。</p>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </CardContent>

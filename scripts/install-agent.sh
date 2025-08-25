@@ -884,6 +884,12 @@ ENABLE_DEBUG=false
 
 # 系统配置
 TZ=Asia/Shanghai
+
+# 可选：Xray 自检（启用后将检测本机端口监听/TLS握手）
+# XRAY_CHECK_PORT=443
+# XRAY_CHECK_HOST=127.0.0.1
+# XRAY_CHECK_TLS=true
+# XRAY_CHECK_SNI=your.domain.com
 EOF
 
     log_success "环境配置文件创建完成"
