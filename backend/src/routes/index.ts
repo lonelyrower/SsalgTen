@@ -12,6 +12,7 @@ import { AgentRegisterSchema, AgentHeartbeatSchema, AgentDiagnosticSchema } from
 import { LoginSchema, ChangePasswordSchema, RefreshSchema } from '../schemas/auth';
 import { CreateUserSchema, UpdateUserSchema, CreateNodeSchema, UpdateNodeSchema } from '../schemas/admin';
 import { APP_VERSION } from '../utils/version';
+import { diagnosticsProxyController } from '../controllers/DiagnosticsProxyController';
 
 const router = Router();
 
@@ -78,6 +79,13 @@ router.get('/nodes/:id/events', nodeController.getNodeEvents.bind(nodeController
 
 // 全局活动日志路由  
 router.get('/activities', nodeController.getGlobalActivities.bind(nodeController));
+
+// 诊断代理（可选，需启用开关）：仅认证用户
+router.get('/diagnostics/:id/ping', authenticateToken, diagnosticsProxyController.ping.bind(diagnosticsProxyController));
+router.get('/diagnostics/:id/traceroute', authenticateToken, diagnosticsProxyController.traceroute.bind(diagnosticsProxyController));
+router.get('/diagnostics/:id/mtr', authenticateToken, diagnosticsProxyController.mtr.bind(diagnosticsProxyController));
+router.get('/diagnostics/:id/speedtest', authenticateToken, diagnosticsProxyController.speedtest.bind(diagnosticsProxyController));
+router.get('/diagnostics/:id/latency-test', authenticateToken, diagnosticsProxyController.latencyTest.bind(diagnosticsProxyController));
 
 // 统计信息路由
 router.get('/stats', publicLimiter, nodeController.getNodeStats.bind(nodeController));
