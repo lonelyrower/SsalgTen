@@ -247,6 +247,12 @@ export const DashboardPage: React.FC = () => {
                       <span className="font-mono text-gray-900 dark:text-white">{selectedNode.ipv4}</span>
                     </div>
                   )}
+                  {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
+                    <div className="text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">IPv6: </span>
+                      <span className="font-mono text-gray-900 dark:text-white">{selectedNode.ipv6}</span>
+                    </div>
+                  )}
                   {selectedNode.lastSeen && (
                     <div className="text-sm">
                       <span className="text-gray-500 dark:text-gray-400">最后在线: </span>

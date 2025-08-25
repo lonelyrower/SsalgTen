@@ -512,6 +512,12 @@ export const NodesPage: React.FC = () => {
                     <span className="ml-2 font-mono text-xs">{selectedNode.ipv4}</span>
                   </div>
                 )}
+                {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">IPv6:</span>
+                    <span className="ml-2 font-mono text-xs">{selectedNode.ipv6}</span>
+                  </div>
+                )}
                 {selectedNode.lastSeen && (
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">最后在线:</span>
