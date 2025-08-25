@@ -8,7 +8,6 @@ import {
   Activity, 
   Users, 
   Settings, 
-  BarChart3, 
   LogOut,
   Shield,
   Globe,

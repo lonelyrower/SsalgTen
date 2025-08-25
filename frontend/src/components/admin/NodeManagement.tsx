@@ -130,7 +130,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
     try {
       const response = await apiService.updateNode(nodeId, { name: newNodeName.trim() });
       if (response.success && response.data) {
-        setNodes(nodes.map(n => n.id === nodeId ? { ...n, name: response.data.name } : n));
+        setNodes(nodes.map(n => n.id === nodeId ? { ...n, name: response.data?.name || newNodeName.trim() } : n));
         setShowRenameModal(null);
         setNewNodeName('');
         setError('');

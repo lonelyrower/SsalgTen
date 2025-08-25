@@ -9,8 +9,7 @@ import {
   Settings, 
   AlertTriangle, 
   Clock,
-  RefreshCw,
-  MoreVertical
+  RefreshCw
 } from 'lucide-react';
 
 interface ActivityLogItem {
@@ -37,29 +36,37 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
   const [activities, setActivities] = useState<ActivityLogItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'nodes' | 'users' | 'system'>('all');
+  const [hasRealData, setHasRealData] = useState(false);
 
   // 加载活动数据
   const fetchActivities = async () => {
     try {
       setLoading(true);
       const response = await apiService.getGlobalActivities(50);
-      if (response.success && response.data) {
+      if (response.success && response.data && response.data.length > 0) {
         // 转换数据格式并添加推断的严重程度
         const transformedActivities: ActivityLogItem[] = response.data.map((activity) => ({
           ...activity,
-          severity: inferSeverity(activity.type, activity.details),
+          severity: inferSeverity(activity.type),
         }));
         setActivities(transformedActivities);
+        setHasRealData(true);
+      } else {
+        // 如果API返回空数据或失败，不显示任何活动，避免使用模拟数据
+        setActivities([]);
+        setHasRealData(false);
       }
     } catch (error) {
       console.error('Failed to fetch activities:', error);
+      setActivities([]);
+      setHasRealData(false);
     } finally {
       setLoading(false);
     }
   };
 
   // 根据事件类型推断严重程度
-  const inferSeverity = (type: string, details?: any): 'info' | 'warning' | 'error' | 'success' => {
+  const inferSeverity = (type: string): 'info' | 'warning' | 'error' | 'success' => {
     const lowerType = type.toLowerCase();
     if (lowerType.includes('online') || lowerType.includes('connected') || lowerType.includes('success')) {
       return 'success';
@@ -200,7 +207,16 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
         {filteredActivities.length === 0 ? (
           <div className="p-8 text-center">
             <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">暂无活动记录</p>
+            {!hasRealData ? (
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-2">活动日志功能尚未配置</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  系统将在有实际活动数据时自动显示
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">暂无活动记录</p>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">

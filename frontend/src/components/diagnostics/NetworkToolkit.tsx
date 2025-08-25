@@ -425,41 +425,43 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
             <Server className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900 dark:text-white">目标节点信息</h3>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-sm">节点名称:</span>
-              <span className="font-medium text-sm">{selectedNode.name}</span>
+              <span className="text-gray-600">节点名称:</span>
+              <span className="font-medium">{selectedNode.name}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-sm">位置:</span>
-              <span className="font-medium text-sm">{selectedNode.city}, {selectedNode.country}</span>
+              <span className="text-gray-600">位置:</span>
+              <span className="font-medium">{selectedNode.city}, {selectedNode.country}</span>
             </div>
             {selectedNode.ipv4 && (
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 text-sm">IPv4:</span>
-                <span className="font-mono text-blue-600 text-sm">{selectedNode.ipv4}</span>
+                <span className="text-gray-600">IPv4:</span>
+                <span className="font-mono text-blue-600">{selectedNode.ipv4}</span>
               </div>
             )}
-            {selectedNode.ipv6 && (
+            {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 text-sm">IPv6:</span>
-                <span className="font-mono text-blue-600 text-sm">{selectedNode.ipv6}</span>
+                <span className="text-gray-600">IPv6:</span>
+                <span className="font-mono text-blue-600">{selectedNode.ipv6}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-sm">托管商:</span>
-              <span className="font-medium text-sm">{selectedNode.provider}</span>
+              <span className="text-gray-600">服务商:</span>
+              <span className="font-medium">{selectedNode.provider}</span>
             </div>
             {selectedNode.asnNumber && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">ASN:</span>
-                  <span className="font-mono text-purple-600 text-sm">{selectedNode.asnNumber}</span>
+                  <span className="text-gray-600">ASN:</span>
+                  <span className="font-mono text-purple-600">{selectedNode.asnNumber}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">网络运营商:</span>
-                  <span className="font-medium text-sm">{selectedNode.asnName || selectedNode.asnOrg}</span>
-                </div>
+                {(selectedNode.asnName || selectedNode.asnOrg) && (selectedNode.asnName || selectedNode.asnOrg) !== selectedNode.provider && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">ASN组织:</span>
+                    <span className="font-medium">{selectedNode.asnName || selectedNode.asnOrg}</span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -475,39 +477,39 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
             )}
           </div>
           {visitorInfo ? (
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 text-sm">您的IP:</span>
-                <span className="font-mono text-green-600 text-sm">{visitorInfo.ip}</span>
+                <span className="text-gray-600">您的IP:</span>
+                <span className="font-mono text-green-600">{visitorInfo.ip}</span>
               </div>
               {visitorInfo.city && visitorInfo.country && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">位置:</span>
-                  <span className="font-medium text-sm">{visitorInfo.city}, {visitorInfo.country}</span>
+                  <span className="text-gray-600">位置:</span>
+                  <span className="font-medium">{visitorInfo.city}, {visitorInfo.country}</span>
                 </div>
               )}
               {visitorInfo.asn && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 text-sm">ASN:</span>
-                    <span className="font-mono text-purple-600 text-sm">{visitorInfo.asn.asn}</span>
+                    <span className="text-gray-600">ASN:</span>
+                    <span className="font-mono text-purple-600">{visitorInfo.asn.asn}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 text-sm">网络运营商:</span>
-                    <span className="font-medium text-sm">{visitorInfo.asn.name}</span>
+                    <span className="text-gray-600">网络运营商:</span>
+                    <span className="font-medium">{visitorInfo.asn.name}</span>
                   </div>
                 </>
               )}
               {visitorInfo.company && visitorInfo.company.name !== visitorInfo.asn?.name && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">所属机构:</span>
-                  <span className="font-medium text-sm">{visitorInfo.company.name}</span>
+                  <span className="text-gray-600">所属机构:</span>
+                  <span className="font-medium">{visitorInfo.company.name}</span>
                 </div>
               )}
               {visitorInfo.timezone && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">时区:</span>
-                  <span className="font-medium text-sm">{visitorInfo.timezone}</span>
+                  <span className="text-gray-600">时区:</span>
+                  <span className="font-medium">{visitorInfo.timezone}</span>
                 </div>
               )}
             </div>

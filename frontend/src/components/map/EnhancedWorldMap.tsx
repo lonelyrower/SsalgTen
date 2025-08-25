@@ -1,4 +1,4 @@
-import { useRef, memo, useMemo, useState, useCallback } from 'react';
+import { useRef, memo, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
@@ -286,7 +286,7 @@ export const EnhancedWorldMap = memo(({
                   </div>
                   
                   <div className="space-y-2">
-                    {cluster.nodes.map((node, idx) => {
+                    {cluster.nodes.map((node) => {
                       const style = getNodeStyle(node.status);
                       const IconComponent = style.icon;
                       return (
