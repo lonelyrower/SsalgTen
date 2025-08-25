@@ -306,7 +306,14 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     if (key.includes('password') || key.includes('secret') || key.includes('token')) {
       return 'password';
     }
-    if (key.includes('port') || key.includes('timeout') || key.includes('interval') || key.includes('limit')) {
+    if (
+      key.includes('port') ||
+      key.includes('timeout') ||
+      key.includes('interval') ||
+      key.includes('limit') ||
+      key.includes('window') ||
+      key.includes('threshold')
+    ) {
       return 'number';
     }
     if (value === 'true' || value === 'false') {
@@ -523,78 +530,191 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
             {/* 配置项 */}
             {expandedGroups.has(group.category) && (
-              <div className="p-6">
-                <div className="space-y-6">
-                  {group.configs.map(config => {
-                    const inputType = getInputType(config.key, config.value);
-                    const currentValue = changedConfigs.get(config.key) ?? config.value;
-                    const hasChanged = changedConfigs.has(config.key);
+              <div className="p-6 space-y-8">
+                {(() => {
+                  // 针对 security 分类，提炼 SSH 监控默认项分组
+                  const sshKeyMeta: Record<string, { label: string; desc: string }> = {
+                    'security.ssh_monitor_default_enabled': {
+                      label: 'SSH 监控默认启用',
+                      desc: '开启后：新复制的 Agent 安装命令中会附带注释示例，安装者取消注释即可启用；不影响已安装的 Agent。'
+                    },
+                    'security.ssh_monitor_default_window_min': {
+                      label: 'SSH 监控统计窗口（分钟）',
+                      desc: '在该时间窗口内统计失败登录尝试次数（用于判断是否触发暴力破解）。'
+                    },
+                    'security.ssh_monitor_default_threshold': {
+                      label: 'SSH 监控阈值（次数）',
+                      desc: '时间窗口内尝试次数超过该阈值即判定为“暴力破解”，Agent 将上报事件。'
+                    }
+                  };
 
-                    return (
-                      <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0 mr-4">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                                {formatConfigKey(config.key)}
-                              </h3>
-                              {hasChanged && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                  已修改
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
-                              {config.key}
+                  const isSecurity = group.category === 'security';
+                  const sshConfigs = isSecurity
+                    ? group.configs.filter(c => sshKeyMeta[c.key as keyof typeof sshKeyMeta])
+                    : [];
+                  const otherConfigs = isSecurity
+                    ? group.configs.filter(c => !sshKeyMeta[c.key as keyof typeof sshKeyMeta])
+                    : group.configs;
+
+                  return (
+                    <>
+                      {isSecurity && sshConfigs.length > 0 && (
+                        <div className="border border-blue-200 dark:border-blue-800 rounded-xl overflow-hidden">
+                          <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                              SSH 监控默认项（安装引导模板）
+                            </h3>
+                            <p className="text-xs text-blue-800/80 dark:text-blue-200/80 mt-1">
+                              这些设置仅影响“新复制”的安装命令模板，已安装的 Agent 不受影响。
                             </p>
-                            {config.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                {config.description}
-                              </p>
-                            )}
                           </div>
-                          <div className="flex-shrink-0 w-64">
-                            {inputType === 'boolean' ? (
-                              <select
-                                value={currentValue}
-                                onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              >
-                                <option value="true">启用</option>
-                                <option value="false">禁用</option>
-                              </select>
-                            ) : (
-                              <input
-                                type={inputType}
-                                value={currentValue}
-                                onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                step={inputType === 'number' ? 1 : undefined}
-                              />
-                            )}
+                          <div className="p-4 space-y-4">
+                            {sshConfigs.map(config => {
+                              const inputType = getInputType(config.key, config.value);
+                              const currentValue = changedConfigs.get(config.key) ?? config.value;
+                              const hasChanged = changedConfigs.has(config.key);
+                              const meta = sshKeyMeta[config.key];
+                              return (
+                                <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1 min-w-0 mr-4">
+                                      <div className="flex items-center space-x-2">
+                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                          {meta?.label || formatConfigKey(config.key)}
+                                        </h4>
+                                        {hasChanged && (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                            已修改
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
+                                        {config.key}
+                                      </p>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                        {meta?.desc || config.description}
+                                      </p>
+                                    </div>
+                                    <div className="flex-shrink-0 w-64">
+                                      {inputType === 'boolean' ? (
+                                        <select
+                                          value={currentValue}
+                                          onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                          <option value="true">启用</option>
+                                          <option value="false">禁用</option>
+                                        </select>
+                                      ) : (
+                                        <input
+                                          type={inputType}
+                                          value={currentValue}
+                                          onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                          step={inputType === 'number' ? 1 : undefined}
+                                        />
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
+                                    <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
+                                    {hasChanged && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          const newChanges = new Map(changedConfigs);
+                                          newChanges.delete(config.key);
+                                          setChangedConfigs(newChanges);
+                                        }}
+                                        className="text-gray-500 hover:text-gray-700 h-auto p-1"
+                                      >
+                                        撤销
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
-                          <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
-                          {hasChanged && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newChanges = new Map(changedConfigs);
-                                newChanges.delete(config.key);
-                                setChangedConfigs(newChanges);
-                              }}
-                              className="text-gray-500 hover:text-gray-700 h-auto p-1"
-                            >
-                              撤销
-                            </Button>
-                          )}
-                        </div>
+                      )}
+
+                      {/* 其余配置项 */}
+                      <div className="space-y-6">
+                        {otherConfigs.map(config => {
+                          const inputType = getInputType(config.key, config.value);
+                          const currentValue = changedConfigs.get(config.key) ?? config.value;
+                          const hasChanged = changedConfigs.has(config.key);
+
+                          return (
+                            <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0 mr-4">
+                                  <div className="flex items-center space-x-2">
+                                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                                      {formatConfigKey(config.key)}
+                                    </h3>
+                                    {hasChanged && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                        已修改
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
+                                    {config.key}
+                                  </p>
+                                  {config.description && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                      {config.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex-shrink-0 w-64">
+                                  {inputType === 'boolean' ? (
+                                    <select
+                                      value={currentValue}
+                                      onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                      <option value="true">启用</option>
+                                      <option value="false">禁用</option>
+                                    </select>
+                                  ) : (
+                                    <input
+                                      type={inputType}
+                                      value={currentValue}
+                                      onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      step={inputType === 'number' ? 1 : undefined}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
+                                <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
+                                {hasChanged && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const newChanges = new Map(changedConfigs);
+                                      newChanges.delete(config.key);
+                                      setChangedConfigs(newChanges);
+                                    }}
+                                    className="text-gray-500 hover:text-gray-700 h-auto p-1"
+                                  >
+                                    撤销
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </Card>

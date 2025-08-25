@@ -86,46 +86,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// 生成模拟时间序列数据
-const generateTimeSeriesData = (hours: number = 24) => {
-  const data = [];
-  const now = new Date();
-  
-  for (let i = hours; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-    data.push({
-      time: time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: time.getTime(),
-      latency: Math.round(10 + Math.random() * 30 + Math.sin(i / 4) * 10),
-      throughput: Math.round(80 + Math.random() * 40 + Math.cos(i / 6) * 20),
-      packet_loss: Math.max(0, Math.round(Math.random() * 5)),
-      online_nodes: Math.round(45 + Math.random() * 10),
-      cpu_usage: Math.round(20 + Math.random() * 60),
-      memory_usage: Math.round(30 + Math.random() * 50),
-      uptime: Math.round(95 + Math.random() * 5)
-    });
-  }
-  
-  return data;
-};
-
-// 生成饼图数据
-const generatePieData = () => [
-  { name: '在线', value: 42, color: COLORS.success },
-  { name: '离线', value: 5, color: COLORS.danger },
-  { name: '维护', value: 3, color: COLORS.warning },
-  { name: '未知', value: 2, color: COLORS.purple }
-];
-
-// 地理分布数据
-const generateGeoData = () => [
-  { region: '亚洲', nodes: 18, performance: 95 },
-  { region: '欧洲', nodes: 15, performance: 92 },
-  { region: '北美', nodes: 12, performance: 98 },
-  { region: '南美', nodes: 4, performance: 88 },
-  { region: '非洲', nodes: 2, performance: 85 },
-  { region: '大洋洲', nodes: 1, performance: 90 }
-];
+// 仅显示传入的真实数据
 
 export const NetworkMetricsChart = memo(({
   data,
@@ -136,20 +97,17 @@ export const NetworkMetricsChart = memo(({
   className = '',
   height = 300
 }: NetworkMetricsChartProps) => {
-  const chartData = useMemo(() => {
-    if (data) return data;
-    
-    switch (type) {
-      case 'pie':
-        return generatePieData();
-      case 'bar':
-        return generateGeoData();
-      default:
-        return generateTimeSeriesData(timeRange === '1h' ? 1 : timeRange === '7d' ? 168 : 24);
-    }
-  }, [data, type, timeRange]);
+  const chartData = useMemo(() => Array.isArray(data) ? data : [], [data]);
 
   const renderChart = () => {
+    if (!chartData.length) {
+      return (
+        <div className="w-full h-[160px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          暂无数据
+        </div>
+      );
+    }
+
     switch (type) {
       case 'line':
         return (

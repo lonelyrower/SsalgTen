@@ -52,7 +52,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
         setActivities(transformedActivities);
         setHasRealData(true);
       } else {
-        // 如果API返回空数据或失败，不显示任何活动，避免使用模拟数据
+        // 如果API返回空数据或失败，不显示任何活动
         setActivities([]);
         setHasRealData(false);
       }

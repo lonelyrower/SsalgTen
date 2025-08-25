@@ -16,7 +16,7 @@ import {
   Wifi
 } from 'lucide-react';
 
-// 模拟威胁数据类型
+// 威胁数据类型
 interface ThreatData {
   id: string;
   type: 'ddos' | 'bruteforce' | 'malware' | 'intrusion' | 'anomaly';
@@ -30,33 +30,6 @@ interface ThreatData {
   volume?: number;
 }
 
-// 模拟实时威胁数据生成（回退用）
-const generateThreatData = (): ThreatData[] => {
-  const threatTypes: ThreatData['type'][] = ['ddos', 'bruteforce', 'malware', 'intrusion', 'anomaly'];
-  const severities: ThreatData['severity'][] = ['low', 'medium', 'high', 'critical'];
-  const countries = ['CN', 'US', 'RU', 'KR', 'JP', 'DE', 'UK', 'FR'];
-  const attackVectors = ['HTTP Flood', 'SSH Brute Force', 'Malicious Payload', 'Port Scan', 'Traffic Anomaly'];
-  
-  const threats: ThreatData[] = [];
-  const threatCount = Math.floor(Math.random() * 15) + 5; // 5-20 威胁
-  
-  for (let i = 0; i < threatCount; i++) {
-    threats.push({
-      id: `threat-${Date.now()}-${i}`,
-      type: threatTypes[Math.floor(Math.random() * threatTypes.length)],
-      severity: severities[Math.floor(Math.random() * severities.length)],
-      sourceIp: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-      targetNode: `Node-${Math.floor(Math.random() * 100) + 1}`,
-      country: countries[Math.floor(Math.random() * countries.length)],
-      timestamp: new Date(Date.now() - Math.random() * 3600000), // 过去1小时内
-      status: Math.random() > 0.7 ? 'blocked' : Math.random() > 0.5 ? 'investigating' : 'active',
-      attackVector: attackVectors[Math.floor(Math.random() * attackVectors.length)],
-      volume: Math.floor(Math.random() * 10000) + 100
-    });
-  }
-  
-  return threats.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-};
 
 // 威胁类型配置
 const getThreatConfig = (type: ThreatData['type']) => {
@@ -130,7 +103,6 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
   const [selectedThreat, setSelectedThreat] = useState<ThreatData | null>(null);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [filter, setFilter] = useState<'all' | ThreatData['type']>('all');
-  const [useRealData, setUseRealData] = useState(true);
 
   // 将后端活动日志转换为威胁项（简单映射）
   const mapActivityToThreat = (ev: any): ThreatData | null => {
@@ -169,28 +141,24 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
     return null;
   };
 
-  // 数据更新（优先后端活动日志，失败则回退 mock）
+  // 数据更新（仅使用后端活动日志）
   useEffect(() => {
     let interval: any = null;
     const fetchActivities = async () => {
       try {
-        if (!useRealData) {
-          setThreats(generateThreatData());
-          return;
-        }
         const res = await apiService.getGlobalActivities?.();
         if (res && (res as any).success && Array.isArray(res.data)) {
           const items = (res.data as any[])
             .map(mapActivityToThreat)
             .filter(Boolean) as ThreatData[];
-          // 若为空则保持上次，避免空白；必要时回退到少量 mock
-          setThreats(items.length > 0 ? items : generateThreatData().slice(0, 5));
+          // 若无数据，展示空状态
+          setThreats(items);
         } else {
-          setThreats(generateThreatData());
+          setThreats([]);
         }
       } catch (e) {
-        console.warn('Fetch activities failed, fallback to mock:', e);
-        setThreats(generateThreatData());
+        console.warn('Fetch activities failed:', e);
+        setThreats([]);
       }
     };
     fetchActivities();
@@ -201,7 +169,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isLiveMode, useRealData]);
+  }, [isLiveMode]);
 
   // 统计信息
   const stats = useMemo(() => {
@@ -252,13 +220,6 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
                   暂停
                 </>
               )}
-            </Button>
-            <Button
-              variant={useRealData ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setUseRealData(!useRealData)}
-            >
-              {useRealData ? '实时(后端)' : '模拟数据'}
             </Button>
           </div>
         </div>
@@ -405,8 +366,8 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
         {filteredThreats.length === 0 && (
           <div className="text-center py-8">
             <Shield className="h-12 w-12 text-green-400 mx-auto mb-2" />
-            <div className="text-gray-700 dark:text-white/70">暂无威胁检测</div>
-            <div className="text-gray-500 dark:text-white/50 text-sm">系统运行安全</div>
+            <div className="text-gray-700 dark:text-white/70">暂无数据</div>
+            <div className="text-gray-500 dark:text-white/50 text-sm">未检测到威胁事件</div>
           </div>
         )}
       </GlassCard>

@@ -1,17 +1,14 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { NetworkMetricsChart } from '@/components/charts/NetworkMetricsChart';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { apiService, type NodeStats } from '@/services/api';
 import { 
   TrendingUp, 
-  Activity, 
   Globe, 
-  Zap,
   Server,
   Clock,
-  AlertTriangle,
-  CheckCircle,
   RefreshCw,
   Download,
   Filter
@@ -24,49 +21,42 @@ interface AnalyticsPanelProps {
 export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => {
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
   const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState<NodeStats | null>(null);
 
-  // 模拟刷新数据
+  // 刷新数据
   const handleRefresh = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await fetchStats();
     setRefreshing(false);
   };
 
-  // 关键指标数据
-  const keyMetrics = [
-    {
-      label: '平均延迟',
-      value: '14.2ms',
-      change: -8.5,
-      icon: Activity,
-      color: 'blue',
-      description: '相比上小时'
-    },
-    {
-      label: '网络吞吐量',
-      value: '1.2Gbps',
-      change: 12.3,
-      icon: Zap,
-      color: 'green',
-      description: '峰值流量'
-    },
-    {
-      label: '系统可用性',
-      value: '99.97%',
-      change: 0.02,
-      icon: CheckCircle,
-      color: 'emerald',
-      description: '本月平均'
-    },
-    {
-      label: '故障次数',
-      value: '2',
-      change: -33.3,
-      icon: AlertTriangle,
-      color: 'red',
-      description: '相比上周'
+  const fetchStats = async () => {
+    try {
+      const res = await apiService.getStats();
+      if (res.success && res.data) {
+        setStats(res.data);
+      } else {
+        setStats(null);
+      }
+    } catch (e) {
+      console.error('获取统计失败:', e);
+      setStats(null);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  // 关键指标数据（无模拟数据，占位等待真实数据接入）
+  const keyMetrics: Array<{
+    label: string;
+    value?: string;
+    change?: number;
+    icon: any;
+    color: string;
+    description?: string;
+  }> = [];
 
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-600';
@@ -79,6 +69,16 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
       <TrendingUp className="h-3 w-3" /> : 
       <TrendingUp className="h-3 w-3 rotate-180" />;
   };
+
+  // 基于统计数据构建饼图（节点状态分布）
+  const nodeStatusPieData = useMemo(() => {
+    if (!stats) return [] as any[];
+    return [
+      { name: '在线', value: stats.onlineNodes, color: '#22c55e' },
+      { name: '离线', value: stats.offlineNodes, color: '#ef4444' },
+      { name: '未知', value: stats.unknownNodes, color: '#8b5cf6' }
+    ];
+  }, [stats]);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -132,38 +132,45 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
       </div>
 
       {/* 关键指标卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {keyMetrics.map((metric, index) => {
-          const IconComponent = metric.icon;
-          return (
-            <GlassCard key={index} className="p-6" animated>
-              <div className="flex items-center justify-between">
-                <div className={`p-3 rounded-xl bg-${metric.color}-50 dark:bg-${metric.color}-900/20`}>
-                  <IconComponent className={`h-6 w-6 text-${metric.color}-600`} />
+      {keyMetrics.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {keyMetrics.map((metric, index) => {
+            const IconComponent = metric.icon;
+            return (
+              <GlassCard key={index} className="p-6" animated>
+                <div className="flex items-center justify-between">
+                  <div className={`p-3 rounded-xl bg-${metric.color}-50 dark:bg-${metric.color}-900/20`}>
+                    <IconComponent className={`h-6 w-6 text-${metric.color}-600`} />
+                  </div>
+                  {typeof metric.change === 'number' && (
+                    <div className={`flex items-center space-x-1 text-sm ${getChangeColor(metric.change)}`}>
+                      {getChangeIcon(metric.change)}
+                      <span className="font-medium">{Math.abs(metric.change)}%</span>
+                    </div>
+                  )}
                 </div>
-                <div className={`flex items-center space-x-1 text-sm ${getChangeColor(metric.change)}`}>
-                  {getChangeIcon(metric.change)}
-                  <span className="font-medium">
-                    {Math.abs(metric.change)}%
-                  </span>
+                <div className="mt-4">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {metric.value ?? '—'}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {metric.label}
+                  </p>
+                  {metric.description && (
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                      {metric.description}
+                    </p>
+                  )}
                 </div>
-              </div>
-              
-              <div className="mt-4">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {metric.value}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {metric.label}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                  {metric.description}
-                </p>
-              </div>
-            </GlassCard>
-          );
-        })}
-      </div>
+              </GlassCard>
+            );
+          })}
+        </div>
+      ) : (
+        <GlassCard className="p-6">
+          <div className="text-center text-gray-600 dark:text-gray-400">暂无关键指标数据</div>
+        </GlassCard>
+      )}
 
       {/* 主要图表区域 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -184,6 +191,7 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
             type="pie"
             title="节点状态分布"
             metric="status"
+            data={nodeStatusPieData}
             height={320}
           />
         </div>
@@ -254,15 +262,15 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
           <div className="flex items-center space-x-4 text-sm">
             <Badge variant="outline" className="flex items-center space-x-1">
               <Server className="h-3 w-3" />
-              <span>52 节点在线</span>
+              <span>在线节点 {stats ? stats.onlineNodes : '—'}</span>
             </Badge>
             <Badge variant="outline" className="flex items-center space-x-1">
               <Globe className="h-3 w-3" />
-              <span>15 个国家</span>
+              <span>国家数 {stats ? stats.totalCountries : '—'}</span>
             </Badge>
             <Badge variant="outline" className="flex items-center space-x-1">
               <Clock className="h-3 w-3" />
-              <span>99.97% 可用性</span>
+              <span>可用性 —</span>
             </Badge>
           </div>
         </div>

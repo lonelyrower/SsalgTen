@@ -596,6 +596,8 @@ class ApiService {
     return this.request<IPInfo>(`/visitor/ip/${encodeURIComponent(ip)}`);
   }
 
+  
+
   // 访问者统计API（管理员专用）
   async getVisitorStats(days: number = 7): Promise<ApiResponse<VisitorStats>> {
     return this.request<VisitorStats>(`/admin/visitors/stats?days=${days}`, {}, true);
