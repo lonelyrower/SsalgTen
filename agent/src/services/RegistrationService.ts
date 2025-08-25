@@ -2,6 +2,7 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 import { config } from '../config';
 import { getSystemInfo, getPublicIPs } from '../utils/system';
+import { securityMonitor } from './SecurityMonitor';
 import { buildSignedHeaders } from '../utils/signing';
 
 export interface RegistrationResult {
@@ -248,6 +249,14 @@ export class RegistrationService {
           loadAverage: systemInfo.loadAverage
         }
       };
+
+      // 附加安全摘要（可选）
+      try {
+        const summary = await securityMonitor.checkSshBruteforce();
+        if (summary?.ssh) {
+          (heartbeatData as any).security = { ssh: summary.ssh };
+        }
+      } catch {}
 
       const masterUrl = config.masterUrl.replace(/\/$/, '');
       const response = await axios.post(

@@ -145,6 +145,9 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
       attackVector: 'Anomaly'
     };
     const type = (ev.type || '').toUpperCase();
+    if (type.includes('SSH_BRUTEFORCE')) {
+      return { ...base, type: 'bruteforce', severity: 'high', attackVector: 'SSH Brute Force' };
+    }
     if (type.includes('STATUS_CHANGED')) {
       const to = (ev.details?.to || '').toUpperCase();
       return {

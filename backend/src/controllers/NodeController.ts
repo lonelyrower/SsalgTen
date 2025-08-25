@@ -568,6 +568,22 @@ export class NodeController {
       }
 
       await nodeService.recordHeartbeat(agentId, heartbeatData);
+
+      // 可选：从心跳中解析安全告警并写入事件
+      try {
+        const node = await nodeService.getNodeByAgentId(agentId);
+        if (node && (heartbeatData as any)?.security?.ssh?.alerts?.length) {
+          for (const alert of (heartbeatData as any).security.ssh.alerts) {
+            await eventService.createEvent(node.id, 'SSH_BRUTEFORCE', `SSH brute force attempts detected`, {
+              ip: alert.ip,
+              count: alert.count,
+              windowMinutes: alert.windowMinutes
+            });
+          }
+        }
+      } catch (e) {
+        logger.debug('Optional security alerts handling failed:', e);
+      }
       
       const response: ApiResponse = {
         success: true,

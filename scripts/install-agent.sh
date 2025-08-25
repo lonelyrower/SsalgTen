@@ -803,6 +803,7 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
+      - /var/log:/host/var/log:ro
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:${AGENT_PORT}/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
@@ -832,6 +833,7 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
+      - /var/log:/host/var/log:ro
     networks:
       - agent-network
     healthcheck:
@@ -890,6 +892,11 @@ TZ=Asia/Shanghai
 # XRAY_CHECK_HOST=127.0.0.1
 # XRAY_CHECK_TLS=true
 # XRAY_CHECK_SNI=your.domain.com
+
+# 可选：SSH 暴力破解监控（读取 /var/log/auth.log 或 /var/log/secure）
+# SSH_MONITOR_ENABLED=false
+# SSH_MONITOR_WINDOW_MIN=10
+# SSH_MONITOR_THRESHOLD=10
 EOF
 
     log_success "环境配置文件创建完成"
