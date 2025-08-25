@@ -374,8 +374,8 @@ export const NodesPage: React.FC = () => {
         {/* 地图视图 */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* 地图 */}
-          <div className="xl:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="xl:col-span-2 min-h-[700px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sticky top-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布地图

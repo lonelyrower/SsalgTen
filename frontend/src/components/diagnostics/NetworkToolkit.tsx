@@ -332,16 +332,16 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">服务商:</span>
+              <span className="text-gray-600">配置服务商:</span>
               <span className="font-medium" title="Agent配置的服务提供商名称（如DigitalOcean、阿里云等）">{selectedNode.provider}</span>
             </div>
             {selectedNode.asnNumber && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">ASN:</span>
+                  <span className="text-gray-600">ASN编号:</span>
                   <span className="font-mono text-purple-600" title="自治系统编号，通过IP地址自动查询获得">{selectedNode.asnNumber}</span>
                 </div>
-                {(selectedNode.asnName || selectedNode.asnOrg) && (selectedNode.asnName || selectedNode.asnOrg) !== selectedNode.provider && (
+                {(selectedNode.asnName || selectedNode.asnOrg) && (
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">ASN组织:</span>
                     <span className="font-medium" title="IP地址对应的实际网络运营商，通过ipinfo.io查询获得">{selectedNode.asnName || selectedNode.asnOrg}</span>

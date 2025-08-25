@@ -96,6 +96,9 @@ export const WorldMap = memo(({ nodes = [], onNodeClick }: WorldMapProps) => {
         style={{ height: '100%', width: '100%' }}
         ref={mapRef}
         className="z-0"
+        worldCopyJump={true}
+        maxBounds={[[-90, -180], [90, 180]]}
+        maxBoundsViscosity={0.5}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

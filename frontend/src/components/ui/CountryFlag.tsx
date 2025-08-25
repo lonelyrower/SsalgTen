@@ -6,6 +6,9 @@ const countryCodeMap: Record<string, string> = {
   'China': 'cn',
   '中国': 'cn',
   'United States': 'us',
+  'United States of America': 'us',
+  'USA': 'us',
+  'US': 'us',
   '美国': 'us',
   'Japan': 'jp',
   '日本': 'jp',
@@ -139,15 +142,35 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
       return '';
     }
     
-    // 直接查找
+    // 1. 直接精确匹配
     const code = countryCodeMap[countryName];
     if (code) return code;
     
-    // 模糊匹配 - 查找包含关键词的
-    const lowerCountry = countryName.toLowerCase();
+    const lowerCountry = countryName.toLowerCase().trim();
+    
+    // 2. 忽略大小写的精确匹配
     for (const [key, value] of Object.entries(countryCodeMap)) {
-      if (key.toLowerCase().includes(lowerCountry) || lowerCountry.includes(key.toLowerCase())) {
+      if (key.toLowerCase() === lowerCountry) {
         return value || '';
+      }
+    }
+    
+    // 3. 前缀匹配（输入的国家名以映射表中的名称开头）
+    for (const [key, value] of Object.entries(countryCodeMap)) {
+      const lowerKey = key.toLowerCase();
+      if (lowerCountry.startsWith(lowerKey) || lowerKey.startsWith(lowerCountry)) {
+        return value || '';
+      }
+    }
+    
+    // 4. 包含匹配（但要求匹配的部分足够长，避免误匹配）
+    if (lowerCountry.length >= 4) {
+      for (const [key, value] of Object.entries(countryCodeMap)) {
+        const lowerKey = key.toLowerCase();
+        // 只有当匹配的部分足够长时才认为是有效匹配
+        if (lowerKey.length >= 4 && (lowerKey.includes(lowerCountry) || lowerCountry.includes(lowerKey))) {
+          return value || '';
+        }
       }
     }
     

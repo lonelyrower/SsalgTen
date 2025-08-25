@@ -453,7 +453,7 @@ export const EnhancedWorldMap = memo(({
                       </div>
                     )}
 
-                    {node.ipv6 && (
+                    {node.ipv6 && node.ipv6 !== node.ipv4 && (
                       <div className="space-y-1">
                         <div className="flex items-center text-sm">
                           <Wifi className="h-4 w-4 mr-2 text-green-500" />
@@ -693,6 +693,9 @@ export const EnhancedWorldMap = memo(({
           ref={mapRef}
           className="z-0"
           preferCanvas={true}
+          worldCopyJump={true}
+          maxBounds={[[-90, -180], [90, 180]]}
+          maxBoundsViscosity={0.5}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
