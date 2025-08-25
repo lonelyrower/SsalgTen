@@ -1,77 +1,20 @@
-import React, { useState, Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Button } from '@/components/ui/button';
-import { CountryFlag } from '@/components/ui/CountryFlag';
-import { Activity, Loader2 } from 'lucide-react';
-import type { NodeData } from '@/services/api';
-import { apiService } from '@/services/api';
+import { Activity, Loader2, Globe, MapPin, Settings, Shield, BarChart } from 'lucide-react';
 import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 
 // Lazy load heavy components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
-const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const { nodes, stats, lastUpdate, connected } = useRealTime();
   
-  // 从当前nodes中找到选中的节点，保持数据同步
-  const selectedNode = useMemo(() => {
-    return selectedNodeId ? nodes.find(node => node.id === selectedNodeId) || null : null;
-  }, [selectedNodeId, nodes]);
 
-  const handleNodeClick = (node: NodeData) => {
-    setSelectedNodeId(node.id);
-    setShowDiagnostics(false);
-    console.log('Node clicked:', node);
-  };
 
-  const handleDiagnosticsClose = () => {
-    setShowDiagnostics(false);
-  };
-
-  // 处理节点改名
-  const handleNodeRename = async (nodeId: string, newName: string) => {
-    try {
-      const response = await apiService.updateNode(nodeId, { name: newName });
-      if (response.success) {
-        // 实时数据会自动更新，这里不需要手动刷新
-        console.log('Node renamed successfully');
-      } else {
-        console.error('Failed to rename node:', response.error);
-        alert('改名失败: ' + (response.error || '未知错误'));
-      }
-    } catch (error) {
-      console.error('Error renaming node:', error);
-      alert('改名失败，请重试');
-    }
-  };
-
-  // 处理节点删除
-  const handleNodeDelete = async (nodeId: string) => {
-    try {
-      const response = await apiService.deleteNode(nodeId);
-      if (response.success) {
-        // 如果删除的是当前选中的节点，清空选择
-        if (selectedNodeId === nodeId) {
-          setSelectedNodeId(null);
-          setShowDiagnostics(false);
-        }
-        console.log('Node deleted successfully');
-      } else {
-        console.error('Failed to delete node:', response.error);
-        alert('删除失败: ' + (response.error || '未知错误'));
-      }
-    } catch (error) {
-      console.error('Error deleting node:', error);
-      alert('删除失败，请重试');
-    }
-  };
 
   // 如果没有连接且没有数据，显示加载状态
   if (!connected && nodes.length === 0) {
@@ -90,26 +33,6 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  // 如果显示诊断界面且有选中节点
-  if (showDiagnostics && selectedNode) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
-          }>
-            <NetworkToolkit 
-              selectedNode={selectedNode} 
-              onClose={handleDiagnosticsClose} 
-            />
-          </Suspense>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -161,12 +84,12 @@ export const DashboardPage: React.FC = () => {
             className="mb-8"
           />
           
-          {/* 全球节点网络地图 */}
+          {/* 节点状态概览地图 */}
           <div className="mb-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  全球节点网络
+                  全球节点分布
                 </h2>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                   <div className="flex items-center space-x-2">
@@ -177,6 +100,9 @@ export const DashboardPage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
                     <span>离线 ({(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)})</span>
                   </div>
+                  <div className="text-blue-600 text-sm font-medium">
+                    详细管理请前往 → <a href="/nodes" className="underline hover:text-blue-800">节点管理</a>
+                  </div>
                 </div>
               </div>
               
@@ -186,87 +112,145 @@ export const DashboardPage: React.FC = () => {
                     <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
                   </div>
                 }>
+                  {/* 简化版地图 - 只显示状态，无详细操作 */}
                   <EnhancedWorldMap 
                     nodes={nodes} 
-                    onNodeClick={handleNodeClick} 
-                    selectedNode={selectedNode}
-                    showHeatmap={false}
+                    selectedNode={null}
+                    showHeatmap={true}
                     className="mb-4"
-                    onNodeRename={user?.role === 'ADMIN' ? handleNodeRename : undefined}
-                    onNodeDelete={user?.role === 'ADMIN' ? handleNodeDelete : undefined}
                   />
                 </Suspense>
               </ComponentErrorBoundary>
             </div>
           </div>
 
-          {/* 选中节点信息 */}
-          {selectedNode && (
+          {/* 系统监控概览 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* 节点健康状态 */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    {selectedNode.name}
-                  </h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Activity className="h-5 w-5 mr-2 text-green-600" />
+                节点健康状态
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">在线率</span>
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      selectedNode.status.toLowerCase() === 'online' 
-                        ? 'bg-green-500' 
-                        : selectedNode.status.toLowerCase() === 'unknown'
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                    }`}></div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      {selectedNode.status.toUpperCase()}
+                    <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${stats?.totalNodes ? Math.round((stats.onlineNodes / stats.totalNodes) * 100) : 0}%` 
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {stats?.totalNodes ? Math.round((stats.onlineNodes / stats.totalNodes) * 100) : 0}%
                     </span>
                   </div>
                 </div>
-                <Button
-                  onClick={() => setShowDiagnostics(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  网络诊断
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-sm flex items-center space-x-2">
-                    <span className="text-gray-500 dark:text-gray-400">位置: </span>
-                    <CountryFlag country={selectedNode.country} size="sm" showName={false} />
-                    <span className="text-gray-900 dark:text-white">{selectedNode.city}, {selectedNode.country}</span>
+                
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{stats?.onlineNodes || 0}</div>
+                    <div className="text-xs text-green-700 dark:text-green-300">在线节点</div>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">服务商: </span>
-                    <span className="text-gray-900 dark:text-white">{selectedNode.provider}</span>
+                  <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">
+                      {(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)}
+                    </div>
+                    <div className="text-xs text-red-700 dark:text-red-300">离线节点</div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  {selectedNode.ipv4 && (
-                    <div className="text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">IPv4: </span>
-                      <span className="font-mono text-gray-900 dark:text-white">{selectedNode.ipv4}</span>
-                    </div>
-                  )}
-                  {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
-                    <div className="text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">IPv6: </span>
-                      <span className="font-mono text-gray-900 dark:text-white">{selectedNode.ipv6}</span>
-                    </div>
-                  )}
-                  {selectedNode.lastSeen && (
-                    <div className="text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">最后在线: </span>
-                      <span className="text-gray-900 dark:text-white">
-                        {new Date(selectedNode.lastSeen).toLocaleString()}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
-          )}
+
+            {/* 地理分布 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Globe className="h-5 w-5 mr-2 text-blue-600" />
+                全球分布统计
+              </h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">覆盖国家</span>
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {stats?.totalCountries || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">服务商数量</span>
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {stats?.totalProviders || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">总节点数</span>
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {stats?.totalNodes || 0}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <a 
+                  href="/nodes" 
+                  className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                >
+                  查看详细节点管理 →
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* 快速操作 */}
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">快速操作</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <a 
+                href="/nodes" 
+                className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <MapPin className="h-8 w-8 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900 dark:text-white">节点管理</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">管理和诊断节点</div>
+                </div>
+              </a>
+              
+              <a 
+                href="/admin" 
+                className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <Settings className="h-8 w-8 text-green-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900 dark:text-white">系统管理</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">用户和系统设置</div>
+                </div>
+              </a>
+
+              <a 
+                href="/security" 
+                className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <Shield className="h-8 w-8 text-purple-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900 dark:text-white">安全中心</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">安全日志和告警</div>
+                </div>
+              </a>
+
+              <div className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm opacity-75">
+                <BarChart className="h-8 w-8 text-gray-400 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-500 dark:text-gray-400">数据分析</div>
+                  <div className="text-xs text-gray-400">即将推出</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
 
         {/* 连接状态提示 */}
