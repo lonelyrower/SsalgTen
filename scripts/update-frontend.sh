@@ -27,25 +27,53 @@ if sudo lsof -ti:5432 >/dev/null 2>&1; then
     sleep 2
 fi
 
+# 强制清理Docker网络和容器
+echo "🧹 强制清理Docker资源..."
+# 尝试不同的Docker Compose命令格式
+if command -v "docker" &> /dev/null && docker compose version &> /dev/null; then
+    docker compose down -v --remove-orphans 2>/dev/null || true
+elif command -v "docker-compose" &> /dev/null; then
+    docker-compose down -v --remove-orphans 2>/dev/null || true
+else
+    echo "❌ Docker Compose 未安装或不可用"
+    exit 1
+fi
+docker system prune -f --volumes 2>/dev/null || true
+
+# 再次检查并强制清理端口
+echo "🔍 再次检查端口5432..."
+if sudo lsof -ti:5432 >/dev/null 2>&1; then
+    echo "⚠️  仍有进程占用5432端口，执行强制清理..."
+    sudo fuser -k 5432/tcp 2>/dev/null || true
+    sleep 3
+fi
+
+# 检查是否有遗留的PostgreSQL Docker容器
+echo "🔍 清理遗留的PostgreSQL容器..."
+docker ps -a --format "table {{.Names}}" | grep -i postgres | xargs -r docker rm -f 2>/dev/null || true
+docker ps -a --format "table {{.Names}}" | grep -i database | xargs -r docker rm -f 2>/dev/null || true
+
 # 拉取最新代码
 echo "📥 拉取最新代码..."
 git pull origin main
 
-# 停止当前容器
-echo "🛑 停止当前容器..."
-docker compose down
-
-# 清理可能的网络问题
-echo "🧹 清理Docker网络..."
-docker network prune -f >/dev/null 2>&1 || true
+# 这部分已经在上面的强制清理中处理了
 
 # 重新构建前端
 echo "🔨 重新构建前端容器..."
-docker compose build --no-cache frontend
+if command -v "docker" &> /dev/null && docker compose version &> /dev/null; then
+    docker compose build --no-cache frontend
+elif command -v "docker-compose" &> /dev/null; then
+    docker-compose build --no-cache frontend
+fi
 
 # 启动所有服务
 echo "🚀 启动所有服务..."
-docker compose up -d
+if command -v "docker" &> /dev/null && docker compose version &> /dev/null; then
+    docker compose up -d
+elif command -v "docker-compose" &> /dev/null; then
+    docker-compose up -d
+fi
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
