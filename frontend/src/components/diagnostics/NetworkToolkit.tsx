@@ -64,7 +64,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'ping',
       name: 'Ping 测试',
-      description: '测试节点到Google DNS的连通性和延迟',
+      description: '测试节点到您IP的连通性和延迟',
       icon: Activity,
       color: 'blue',
       category: '基础诊断'
@@ -72,7 +72,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'traceroute',
       name: 'Traceroute',
-      description: '从节点追踪到目标IP的网络路径',
+      description: '从节点追踪到您IP的网络路径',
       icon: Route,
       color: 'green',
       category: '路径分析'
@@ -88,7 +88,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     {
       id: 'mtr',
       name: 'MTR 分析',
-      description: '综合网络质量分析（延迟+丢包率）',
+      description: '到您IP的综合网络质量分析',
       icon: TrendingUp,
       color: 'purple',
       category: '综合分析'
@@ -123,22 +123,20 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
       const agentEndpoint = `http://${selectedNode.ipv4}:3002`;
       
       // 根据工具类型调用相应的Agent API
-      // 注意：这些测试是从目标节点执行的，测试常见的网络连通性
+      // 注意：这些测试是从目标节点执行的
       if (toolId === 'ping') {
-        // 让目标节点ping常见的公共DNS服务器来测试其网络连通性
-        const testTarget = '8.8.8.8'; // Google DNS
+        // 优先ping访问者IP，如果无法获取或是私网IP，则使用公共DNS
+        const testTarget = getBestTestTarget();
         result = await callAgentAPI(`${agentEndpoint}/api/ping/${testTarget}?count=4`);
       } else if (toolId === 'traceroute') {
-        // 跟踪到访问者IP的路由（如果可达）或Google DNS
-        const testTarget = visitorInfo?.ip?.includes(':') ? '2001:4860:4860::8888' : (visitorInfo?.ip || '8.8.8.8');
+        // 跟踪到访问者IP的路由（如果可达）或Google DNS，IPv6优先使用IPv6 DNS
+        const testTarget = getBestTestTarget(visitorInfo?.ip?.includes(':'));
         result = await callAgentAPI(`${agentEndpoint}/api/traceroute/${testTarget}?maxHops=30`);
       } else if (toolId === 'speedtest') {
         result = await callAgentAPI(`${agentEndpoint}/api/speedtest`, 120000); // 2分钟超时
       } else if (toolId === 'mtr') {
         // MTR测试到访问者IP（如果是公网）或Google DNS
-        const testTarget = visitorInfo?.ip?.includes('.') && !visitorInfo.ip.startsWith('192.168.') && !visitorInfo.ip.startsWith('10.') && !visitorInfo.ip.startsWith('172.') 
-          ? visitorInfo.ip 
-          : '8.8.8.8';
+        const testTarget = getBestTestTarget();
         result = await callAgentAPI(`${agentEndpoint}/api/mtr/${testTarget}?count=10`);
       } else if (toolId === 'latency-test') {
         result = await callAgentAPI(`${agentEndpoint}/api/latency-test?testType=standard`);
@@ -167,6 +165,42 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
       }));
     }
   }, [visitorInfo]);
+
+  // 判断IP是否为公网地址的辅助函数
+  const isPublicIP = (ip: string): boolean => {
+    if (!ip) return false;
+    
+    // IPv4 公网地址判断
+    if (ip.includes('.')) {
+      return !ip.startsWith('192.168.') && 
+             !ip.startsWith('10.') && 
+             !ip.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./) && // 172.16-172.31
+             !ip.startsWith('127.') && 
+             !ip.startsWith('169.254.') &&
+             !ip.startsWith('0.') &&
+             !ip.startsWith('255.');
+    }
+    
+    // IPv6 公网地址判断  
+    if (ip.includes(':')) {
+      return !ip.startsWith('fe80:') && // 链路本地
+             !ip.startsWith('::1') &&   // 本地回环
+             !ip.startsWith('fc00:') && // 唯一本地地址
+             !ip.startsWith('fd00:') && // 唯一本地地址
+             !ip.startsWith('ff00:');   // 多播地址
+    }
+    
+    return false;
+  };
+
+  // 获取最佳测试目标的辅助函数
+  const getBestTestTarget = (preferIPv6: boolean = false): string => {
+    if (visitorInfo?.ip && isPublicIP(visitorInfo.ip)) {
+      return visitorInfo.ip;
+    }
+    // 回退到公共DNS
+    return preferIPv6 ? '2001:4860:4860::8888' : '8.8.8.8';
+  };
 
   // 调用Agent API的辅助函数
   const callAgentAPI = async (url: string, timeout: number = 60000) => {
@@ -315,6 +349,29 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         </Card>
 
         {/* 访问者信息 */}
+        {/* 测试目标信息 */}
+        <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 shadow-lg border-blue-200 dark:border-blue-800 p-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <Target className="h-5 w-5 text-blue-600" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">测试目标</h3>
+          </div>
+          <div className="text-sm bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+            <p className="text-gray-700 dark:text-gray-300">
+              <span className="font-medium">Ping/MTR目标：</span>
+              {visitorInfo?.ip && isPublicIP(visitorInfo.ip) ? (
+                <span className="text-blue-600 font-mono ml-1">{visitorInfo.ip} (您的IP)</span>
+              ) : (
+                <span className="text-orange-600 font-mono ml-1">8.8.8.8 (Google DNS)</span>
+              )}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {visitorInfo?.ip && isPublicIP(visitorInfo.ip) 
+                ? '✅ 检测到您的公网IP，将直接测试节点到您的网络连接' 
+                : '⚠️ 未检测到公网IP或您使用代理，将测试到公共DNS服务器'}
+            </p>
+          </div>
+        </Card>
+
         <Card className="p-4">
           <div className="flex items-center space-x-2 mb-3">
             <MapPin className="h-5 w-5 text-green-600" />
