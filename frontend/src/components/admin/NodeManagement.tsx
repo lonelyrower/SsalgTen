@@ -32,6 +32,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showRenameModal, setShowRenameModal] = useState<string | null>(null);
+  const [newNodeName, setNewNodeName] = useState('');
 
   useEffect(() => {
     loadNodes();
@@ -117,6 +119,32 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
     } catch {
       setError('Failed to delete node');
     }
+  };
+
+  const handleRenameNode = async (nodeId: string) => {
+    if (!newNodeName.trim()) {
+      setError('节点名称不能为空');
+      return;
+    }
+
+    try {
+      const response = await apiService.updateNode(nodeId, { name: newNodeName.trim() });
+      if (response.success && response.data) {
+        setNodes(nodes.map(n => n.id === nodeId ? { ...n, name: response.data.name } : n));
+        setShowRenameModal(null);
+        setNewNodeName('');
+        setError('');
+      } else {
+        setError(response.error || 'Failed to rename node');
+      }
+    } catch {
+      setError('Failed to rename node');
+    }
+  };
+
+  const openRenameModal = (nodeId: string, currentName: string) => {
+    setShowRenameModal(nodeId);
+    setNewNodeName(currentName);
   };
 
   if (loading) {
@@ -255,9 +283,9 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   <Button
                     variant="ghost"
                     size="sm"
-                    disabled
+                    onClick={() => openRenameModal(node.id, node.name)}
                     className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                    title="编辑节点（暂不可用）"
+                    title="重命名节点"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -397,6 +425,64 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   className="bg-red-600 hover:bg-red-700 text-white min-w-[80px] shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   删除
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 重命名节点对话框 */}
+      {showRenameModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-start mb-6">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-4">
+                  <Edit2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    重命名节点
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                    请输入新的节点名称
+                  </p>
+                  <input
+                    type="text"
+                    value={newNodeName}
+                    onChange={(e) => setNewNodeName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    placeholder="输入节点名称"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRenameNode(showRenameModal);
+                      } else if (e.key === 'Escape') {
+                        setShowRenameModal(null);
+                        setNewNodeName('');
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowRenameModal(null);
+                    setNewNodeName('');
+                  }}
+                  className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={() => handleRenameNode(showRenameModal)}
+                  disabled={!newNodeName.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white min-w-[80px] shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  确认
                 </Button>
               </div>
             </div>

@@ -1,5 +1,5 @@
-import { useRef, memo, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { useRef, memo, useMemo, useState, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,96 @@ interface EnhancedWorldMapProps {
   selectedNode?: NodeData | null;
   className?: string;
 }
+
+// 聚合节点类型
+interface NodeCluster {
+  id: string;
+  latitude: number;
+  longitude: number;
+  nodes: NodeData[];
+  count: number;
+  onlineCount: number;
+  offlineCount: number;
+  maintenanceCount: number;
+}
+
+// 聚合距离计算（基于缩放级别）
+const getClusterDistance = (zoom: number): number => {
+  // 缩放级别越低，聚合距离越大
+  if (zoom <= 3) return 500; // 国家级别
+  if (zoom <= 6) return 200; // 州/省级别  
+  if (zoom <= 9) return 100; // 城市级别
+  if (zoom <= 12) return 50;  // 区域级别
+  return 20; // 街道级别
+};
+
+// 计算两点之间的距离（公里）
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // 地球半径
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+// 节点聚合算法
+const clusterNodes = (nodes: NodeData[], zoom: number): (NodeData | NodeCluster)[] => {
+  if (!nodes.length) return [];
+  
+  const clusterDistance = getClusterDistance(zoom);
+  const clusters: (NodeData | NodeCluster)[] = [];
+  const processed = new Set<string>();
+  
+  nodes.forEach((node, index) => {
+    if (processed.has(node.id)) return;
+    
+    const nearbyNodes: NodeData[] = [node];
+    processed.add(node.id);
+    
+    // 寻找附近的节点
+    nodes.slice(index + 1).forEach(otherNode => {
+      if (processed.has(otherNode.id)) return;
+      
+      const distance = calculateDistance(
+        node.latitude, node.longitude,
+        otherNode.latitude, otherNode.longitude
+      );
+      
+      if (distance <= clusterDistance) {
+        nearbyNodes.push(otherNode);
+        processed.add(otherNode.id);
+      }
+    });
+    
+    if (nearbyNodes.length === 1) {
+      // 单个节点
+      clusters.push(nearbyNodes[0]);
+    } else {
+      // 创建聚合节点
+      const avgLat = nearbyNodes.reduce((sum, n) => sum + n.latitude, 0) / nearbyNodes.length;
+      const avgLon = nearbyNodes.reduce((sum, n) => sum + n.longitude, 0) / nearbyNodes.length;
+      
+      const cluster: NodeCluster = {
+        id: `cluster-${nearbyNodes.map(n => n.id).join('-')}`,
+        latitude: avgLat,
+        longitude: avgLon,
+        nodes: nearbyNodes,
+        count: nearbyNodes.length,
+        onlineCount: nearbyNodes.filter(n => n.status.toLowerCase() === 'online').length,
+        offlineCount: nearbyNodes.filter(n => n.status.toLowerCase() === 'offline').length,
+        maintenanceCount: nearbyNodes.filter(n => n.status.toLowerCase() === 'maintenance').length,
+      };
+      
+      clusters.push(cluster);
+    }
+  });
+  
+  return clusters;
+};
 
 // 状态对应的颜色和图标
 const getNodeStyle = (status: string) => {
@@ -97,6 +187,31 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
   });
 };
 
+// 创建聚合节点图标
+const createClusterIcon = (cluster: NodeCluster) => {
+  const size = Math.min(40 + Math.log2(cluster.count) * 8, 60); // 动态大小
+  const primaryColor = cluster.onlineCount > cluster.offlineCount ? '#22c55e' : 
+                       cluster.offlineCount > 0 ? '#ef4444' : '#6b7280';
+  
+  return new DivIcon({
+    html: `
+      <div class="flex items-center justify-center" style="width: ${size}px; height: ${size}px;">
+        <div class="w-full h-full rounded-full border-3 border-white shadow-lg flex items-center justify-center text-white font-bold" 
+             style="background-color: ${primaryColor}; font-size: ${Math.max(12, size / 4)}px;">
+          ${cluster.count}
+        </div>
+        ${cluster.onlineCount > 0 && cluster.offlineCount > 0 ? `
+          <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white" 
+               style="background-color: #ef4444;"></div>
+        ` : ''}
+      </div>
+    `,
+    className: 'custom-cluster-marker',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+};
+
 // 计算节点统计信息
 const calculateNodeStats = (nodes: NodeData[]) => {
   const total = nodes.length;
@@ -106,6 +221,16 @@ const calculateNodeStats = (nodes: NodeData[]) => {
   const uptime = total > 0 ? Math.round((online / total) * 100) : 0;
   
   return { total, online, offline, maintenance, uptime };
+};
+
+// 缩放监听组件
+const ZoomHandler = ({ onZoomChange }: { onZoomChange: (zoom: number) => void }) => {
+  const map = useMapEvents({
+    zoomend: () => {
+      onZoomChange(map.getZoom());
+    },
+  });
+  return null;
 };
 
 export const EnhancedWorldMap = memo(({ 
@@ -118,25 +243,96 @@ export const EnhancedWorldMap = memo(({
   const mapRef = useRef<any>(null);
   const [viewMode, setViewMode] = useState<'markers' | 'heatmap' | 'connections'>('markers');
   const [showStats, setShowStats] = useState(true);
+  const [currentZoom, setCurrentZoom] = useState(3);
 
   const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
 
+  // 聚合节点
+  const clusteredItems = useMemo(() => {
+    return clusterNodes(nodes, currentZoom);
+  }, [nodes, currentZoom]);
+
   // 生成标记组件
   const markers = useMemo(() => {
-    return nodes.map((node) => {
-      const isSelected = selectedNode?.id === node.id;
-      const style = getNodeStyle(node.status);
-      const IconComponent = style.icon;
+    return clusteredItems.map((item) => {
+      // 检查是否为聚合节点
+      if ('count' in item) {
+        // 聚合节点
+        const cluster = item as NodeCluster;
+        return (
+          <Marker
+            key={cluster.id}
+            position={[cluster.latitude, cluster.longitude]}
+            icon={createClusterIcon(cluster)}
+            eventHandlers={{
+              click: () => {
+                // 点击聚合节点时可以放大地图或显示节点列表
+                if (mapRef.current) {
+                  mapRef.current.setView([cluster.latitude, cluster.longitude], Math.min(currentZoom + 2, 18));
+                }
+              },
+            }}
+          >
+            <Popup className="custom-popup" maxWidth={400}>
+              <Card className="border-0 shadow-lg">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-lg text-gray-900">
+                      集群节点 ({cluster.count})
+                    </h3>
+                    <Badge variant="secondary">
+                      在线: {cluster.onlineCount}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {cluster.nodes.map((node, idx) => {
+                      const style = getNodeStyle(node.status);
+                      const IconComponent = style.icon;
+                      return (
+                        <div key={node.id} className="flex items-center justify-between p-2 rounded border">
+                          <div className="flex items-center space-x-2">
+                            <div className={`p-1 rounded ${style.bgColor}`}>
+                              <IconComponent className={`h-3 w-3 ${style.textColor}`} />
+                            </div>
+                            <div>
+                              <div className="font-medium text-sm">{node.name}</div>
+                              <div className="text-xs text-gray-500">{node.city}</div>
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => onNodeClick?.(node)}
+                            className="text-xs"
+                          >
+                            查看
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Card>
+            </Popup>
+          </Marker>
+        );
+      } else {
+        // 单个节点
+        const node = item as NodeData;
+        const isSelected = selectedNode?.id === node.id;
+        const style = getNodeStyle(node.status);
+        const IconComponent = style.icon;
 
-      return (
-        <Marker
-          key={`${node.id}-${node.status}-${isSelected}`}
-          position={[node.latitude, node.longitude]}
-          icon={createEnhancedIcon(node.status, isSelected)}
-          eventHandlers={{
-            click: () => onNodeClick?.(node),
-          }}
-        >
+        return (
+          <Marker
+            key={`${node.id}-${node.status}-${isSelected}`}
+            position={[node.latitude, node.longitude]}
+            icon={createEnhancedIcon(node.status, isSelected)}
+            eventHandlers={{
+              click: () => onNodeClick?.(node),
+            }}
+          >
           <Popup className="custom-popup" maxWidth={350}>
             <Card className="border-0 shadow-lg">
               <div className="p-4">
@@ -282,7 +478,8 @@ export const EnhancedWorldMap = memo(({
             </Card>
           </Popup>
         </Marker>
-      );
+        );
+      }
     });
   }, [nodes, onNodeClick, selectedNode]);
 
@@ -417,6 +614,9 @@ export const EnhancedWorldMap = memo(({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             className="grayscale-[20%] contrast-[110%]"
           />
+          
+          {/* 缩放监听组件 */}
+          <ZoomHandler onZoomChange={setCurrentZoom} />
           
           {/* 根据视图模式渲染不同内容 */}
           {viewMode === 'markers' && markers}

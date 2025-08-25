@@ -201,102 +201,154 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     }
   }, []);
 
-  // 生成模拟结果数据
+  // 生成模拟结果数据（每次调用生成不同的随机数据）
   const generateMockResult = (toolId: string) => {
+    const randomFloat = (min: number, max: number, decimals: number = 1) => 
+      parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
+    const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+    
     switch (toolId) {
       case 'ping':
+        const baseLatency = randomFloat(10, 50);
+        const results = Array.from({ length: 4 }, (_, i) => ({
+          seq: i + 1,
+          time: randomFloat(baseLatency - 5, baseLatency + 10),
+          ttl: randomInt(56, 64)
+        }));
+        const times = results.map(r => r.time);
         return {
           packets_sent: 4,
-          packets_received: 4,
-          packet_loss: 0,
-          min_time: 12.3,
-          max_time: 15.8,
-          avg_time: 14.1,
-          results: [
-            { seq: 1, time: 12.3, ttl: 64 },
-            { seq: 2, time: 14.5, ttl: 64 },
-            { seq: 3, time: 15.8, ttl: 64 },
-            { seq: 4, time: 13.8, ttl: 64 }
-          ]
+          packets_received: Math.random() < 0.1 ? 3 : 4,
+          packet_loss: Math.random() < 0.1 ? randomInt(1, 25) : 0,
+          min_time: Math.min(...times),
+          max_time: Math.max(...times),
+          avg_time: times.reduce((a, b) => a + b, 0) / times.length,
+          results
         };
       
       case 'traceroute':
+        const hopCount = randomInt(3, 8);
+        const hops = Array.from({ length: hopCount }, (_, i) => {
+          const baseTime = (i + 1) * randomFloat(3, 12);
+          return {
+            hop: i + 1,
+            ip: i === hopCount - 1 ? selectedNode.ipv4 : `${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`,
+            hostname: i === 0 ? 'gateway.local' : (i === hopCount - 1 ? selectedNode.name : `hop${i}.provider.com`),
+            times: [
+              baseTime + randomFloat(-2, 2),
+              baseTime + randomFloat(-2, 2),
+              baseTime + randomFloat(-2, 2)
+            ]
+          };
+        });
         return {
-          hops: [
-            { hop: 1, ip: '192.168.1.1', hostname: 'gateway.local', times: [1.2, 1.1, 1.3] },
-            { hop: 2, ip: '10.0.0.1', hostname: 'isp.provider.com', times: [8.5, 9.2, 8.8] },
-            { hop: 3, ip: selectedNode.ipv4, hostname: selectedNode.name, times: [14.1, 14.5, 13.8] }
-          ],
-          total_hops: 3,
-          destination_reached: true
+          hops,
+          total_hops: hopCount,
+          destination_reached: Math.random() > 0.05
         };
       
       case 'speedtest':
         return {
-          download_speed: 95.6,
-          upload_speed: 42.3,
-          ping: 14.1,
-          jitter: 2.1,
+          download_speed: randomFloat(10, 200),
+          upload_speed: randomFloat(5, 100),
+          ping: randomFloat(5, 80),
+          jitter: randomFloat(0.5, 8),
           server_info: {
             name: selectedNode.name,
             location: `${selectedNode.city}, ${selectedNode.country}`,
-            distance: 234
+            distance: randomInt(50, 2000)
           }
         };
       
       case 'mtr':
+        const mtrHopCount = randomInt(3, 6);
+        const cycles = randomInt(50, 100);
+        const mtrHops = Array.from({ length: mtrHopCount }, (_, i) => {
+          const baseLatency = (i + 1) * randomFloat(2, 15);
+          const loss = Math.random() < 0.1 ? randomFloat(0.1, 5) : 0;
+          return {
+            hop: i + 1,
+            hostname: i === 0 ? 'gateway.local' : (i === mtrHopCount - 1 ? selectedNode.name : `hop${i}.isp.com`),
+            loss: parseFloat(loss.toFixed(1)),
+            sent: cycles,
+            last: baseLatency + randomFloat(-3, 3),
+            avg: baseLatency,
+            best: baseLatency - randomFloat(1, 5),
+            worst: baseLatency + randomFloat(3, 10)
+          };
+        });
         return {
-          report_cycles: 100,
-          hops: [
-            { hop: 1, hostname: 'gateway.local', loss: 0, sent: 100, last: 1.2, avg: 1.1, best: 0.9, worst: 2.1 },
-            { hop: 2, hostname: 'isp.provider.com', loss: 0, sent: 100, last: 8.8, avg: 8.9, best: 7.2, worst: 12.4 },
-            { hop: 3, hostname: selectedNode.name, loss: 0, sent: 100, last: 14.1, avg: 14.3, best: 12.1, worst: 18.9 }
-          ]
+          report_cycles: cycles,
+          hops: mtrHops
         };
       
       case 'latency-test':
+        const targets = ['Google', 'GitHub', 'Apple', 'Microsoft', 'Amazon', 'Twitter', 'OpenAI', 'Steam', 'Cloudflare', 'Discord'];
+        const testResults = targets.map(target => {
+          const shouldFail = Math.random() < 0.1;
+          if (shouldFail) {
+            return { target, latency: null, status: 'failed', error: 'Connection timeout' };
+          }
+          const latency = randomFloat(15, 200);
+          let status;
+          if (latency < 50) status = 'excellent';
+          else if (latency < 150) status = 'good';
+          else status = 'poor';
+          return { target, latency, status };
+        });
+        const successful = testResults.filter(r => r.latency !== null);
+        const excellentCount = successful.filter(r => r.status === 'excellent').length;
+        const goodCount = successful.filter(r => r.status === 'good').length;
+        const poorCount = successful.filter(r => r.status === 'poor').length;
         return {
           testType: 'standard',
-          results: [
-            { target: 'Google', latency: 28.5, status: 'excellent' },
-            { target: 'GitHub', latency: 45.2, status: 'excellent' },
-            { target: 'Apple', latency: 62.8, status: 'good' },
-            { target: 'Microsoft', latency: 38.9, status: 'excellent' },
-            { target: 'Amazon', latency: 92.3, status: 'good' },
-            { target: 'Twitter', latency: 156.7, status: 'poor' },
-            { target: 'OpenAI', latency: 74.5, status: 'good' },
-            { target: 'Steam', latency: null, status: 'failed', error: 'Connection timeout' }
-          ],
+          results: testResults,
           summary: {
-            total: 8,
-            successful: 7,
-            failed: 1,
-            averageLatency: 71.3,
-            excellentCount: 3,
-            goodCount: 3,
-            poorCount: 1
+            total: testResults.length,
+            successful: successful.length,
+            failed: testResults.length - successful.length,
+            averageLatency: successful.length > 0 ? successful.reduce((sum, r) => sum + (r.latency || 0), 0) / successful.length : 0,
+            excellentCount,
+            goodCount,
+            poorCount
           },
           timestamp: new Date().toISOString(),
-          duration: 3240
+          duration: randomInt(2000, 5000)
         };
       
       case 'dns':
+        const domains = ['google.com', 'cloudflare.com', 'github.com', 'stackoverflow.com', 'reddit.com'];
+        const types = ['A', 'AAAA', 'MX', 'TXT'];
+        const dnsQueries = Array.from({ length: randomInt(3, 6) }, () => {
+          const domain = domains[randomInt(0, domains.length - 1)];
+          const type = types[randomInt(0, types.length - 1)];
+          const time = randomFloat(5, 50);
+          let result = 'Query failed';
+          if (Math.random() > 0.1) {
+            if (type === 'A') result = `${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
+            else if (type === 'AAAA') result = `2606:${randomInt(1000, 9999).toString(16)}:${randomInt(1000, 9999).toString(16)}::${randomInt(100, 999)}`;
+            else if (type === 'MX') result = `${randomInt(1, 20)} mail.${domain}`;
+            else result = `"v=spf1 include:_spf.${domain} ~all"`;
+          }
+          return { domain, type, time, result };
+        });
         return {
-          queries: [
-            { domain: 'google.com', type: 'A', time: 23.4, result: '142.250.191.78' },
-            { domain: 'cloudflare.com', type: 'A', time: 18.9, result: '104.16.132.229' },
-            { domain: 'github.com', type: 'AAAA', time: 31.2, result: '2606:50c0:8000::153' }
-          ],
-          avg_query_time: 24.5
+          queries: dnsQueries,
+          avg_query_time: dnsQueries.reduce((sum, q) => sum + q.time, 0) / dnsQueries.length
         };
       
       case 'port':
+        const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 3389, 5432, 3306, 6379, 27017];
+        const scannedPorts = commonPorts.slice(0, randomInt(8, commonPorts.length));
+        const openPorts = scannedPorts.filter(() => Math.random() < 0.3);
+        const filteredPorts = scannedPorts.filter(p => !openPorts.includes(p) && Math.random() < 0.1);
+        const closedPorts = scannedPorts.filter(p => !openPorts.includes(p) && !filteredPorts.includes(p));
         return {
-          scanned_ports: [22, 80, 443, 993, 995, 25, 53, 110],
-          open_ports: [22, 80, 443],
-          closed_ports: [993, 995, 25, 110],
-          filtered_ports: [53],
-          scan_time: 1.24
+          scanned_ports: scannedPorts,
+          open_ports: openPorts,
+          closed_ports: closedPorts,
+          filtered_ports: filteredPorts,
+          scan_time: randomFloat(0.5, 3.5)
         };
       
       default:
@@ -375,38 +427,38 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">节点名称:</span>
-              <span className="font-medium">{selectedNode.name}</span>
+              <span className="text-gray-600 text-sm">节点名称:</span>
+              <span className="font-medium text-sm">{selectedNode.name}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">位置:</span>
-              <span className="font-medium">{selectedNode.city}, {selectedNode.country}</span>
+              <span className="text-gray-600 text-sm">位置:</span>
+              <span className="font-medium text-sm">{selectedNode.city}, {selectedNode.country}</span>
             </div>
             {selectedNode.ipv4 && (
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">IPv4:</span>
-                <span className="font-mono text-blue-600">{selectedNode.ipv4}</span>
+                <span className="text-gray-600 text-sm">IPv4:</span>
+                <span className="font-mono text-blue-600 text-sm">{selectedNode.ipv4}</span>
               </div>
             )}
             {selectedNode.ipv6 && (
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">IPv6:</span>
-                <span className="font-mono text-blue-600 text-xs">{selectedNode.ipv6}</span>
+                <span className="text-gray-600 text-sm">IPv6:</span>
+                <span className="font-mono text-blue-600 text-sm">{selectedNode.ipv6}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">服务商:</span>
-              <span className="font-medium">{selectedNode.provider}</span>
+              <span className="text-gray-600 text-sm">托管商:</span>
+              <span className="font-medium text-sm">{selectedNode.provider}</span>
             </div>
             {selectedNode.asnNumber && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">ASN:</span>
-                  <span className="font-mono text-purple-600">{selectedNode.asnNumber}</span>
+                  <span className="text-gray-600 text-sm">ASN:</span>
+                  <span className="font-mono text-purple-600 text-sm">{selectedNode.asnNumber}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">ASN组织:</span>
-                  <span className="font-medium text-xs">{selectedNode.asnName || selectedNode.asnOrg}</span>
+                  <span className="text-gray-600 text-sm">网络运营商:</span>
+                  <span className="font-medium text-sm">{selectedNode.asnName || selectedNode.asnOrg}</span>
                 </div>
               </>
             )}
@@ -425,37 +477,37 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
           {visitorInfo ? (
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">您的IP:</span>
-                <span className="font-mono text-green-600">{visitorInfo.ip}</span>
+                <span className="text-gray-600 text-sm">您的IP:</span>
+                <span className="font-mono text-green-600 text-sm">{visitorInfo.ip}</span>
               </div>
               {visitorInfo.city && visitorInfo.country && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">位置:</span>
-                  <span className="font-medium">{visitorInfo.city}, {visitorInfo.country}</span>
+                  <span className="text-gray-600 text-sm">位置:</span>
+                  <span className="font-medium text-sm">{visitorInfo.city}, {visitorInfo.country}</span>
                 </div>
               )}
               {visitorInfo.asn && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">ASN:</span>
-                    <span className="font-mono text-purple-600">{visitorInfo.asn.asn}</span>
+                    <span className="text-gray-600 text-sm">ASN:</span>
+                    <span className="font-mono text-purple-600 text-sm">{visitorInfo.asn.asn}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">网络运营商:</span>
-                    <span className="font-medium text-xs">{visitorInfo.asn.name}</span>
+                    <span className="text-gray-600 text-sm">网络运营商:</span>
+                    <span className="font-medium text-sm">{visitorInfo.asn.name}</span>
                   </div>
                 </>
               )}
-              {visitorInfo.company && (
+              {visitorInfo.company && visitorInfo.company.name !== visitorInfo.asn?.name && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">服务商:</span>
-                  <span className="font-medium text-xs">{visitorInfo.company.name}</span>
+                  <span className="text-gray-600 text-sm">所属机构:</span>
+                  <span className="font-medium text-sm">{visitorInfo.company.name}</span>
                 </div>
               )}
               {visitorInfo.timezone && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">时区:</span>
-                  <span className="font-medium">{visitorInfo.timezone}</span>
+                  <span className="text-gray-600 text-sm">时区:</span>
+                  <span className="font-medium text-sm">{visitorInfo.timezone}</span>
                 </div>
               )}
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { apiService } from '@/services/api';
 import { 
   Activity, 
   Server, 
@@ -14,12 +15,18 @@ import {
 
 interface ActivityLogItem {
   id: string;
-  type: 'node_online' | 'node_offline' | 'user_login' | 'config_change' | 'diagnostic_run' | 'system_alert';
-  title: string;
-  description: string;
-  timestamp: Date;
-  severity: 'info' | 'warning' | 'error' | 'success';
-  metadata?: Record<string, any>;
+  type: string;
+  message?: string;
+  details?: any;
+  timestamp: string;
+  node: {
+    id: string;
+    name: string;
+    city: string;
+    country: string;
+    status: string;
+  };
+  severity?: 'info' | 'warning' | 'error' | 'success';
 }
 
 interface ActivityLogProps {
@@ -31,84 +38,63 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'nodes' | 'users' | 'system'>('all');
 
-  // 模拟活动数据
-  useEffect(() => {
-    const mockActivities: ActivityLogItem[] = [
-      {
-        id: '1',
-        type: 'node_online',
-        title: 'New York Node 上线',
-        description: 'Agent 30c0914f 成功连接并开始心跳监控',
-        timestamp: new Date(Date.now() - 2 * 60 * 1000), // 2分钟前
-        severity: 'success',
-        metadata: { nodeId: '30c0914f', location: 'New York, US' }
-      },
-      {
-        id: '2',
-        type: 'diagnostic_run',
-        title: '网络诊断完成',
-        description: 'ping 测试成功完成，目标: google.com',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5分钟前
-        severity: 'info',
-        metadata: { target: 'google.com', latency: '15ms' }
-      },
-      {
-        id: '3',
-        type: 'user_login',
-        title: '管理员登录',
-        description: '用户 admin 从 192.168.1.100 成功登录',
-        timestamp: new Date(Date.now() - 10 * 60 * 1000), // 10分钟前
-        severity: 'info',
-        metadata: { username: 'admin', ip: '192.168.1.100' }
-      },
-      {
-        id: '4',
-        type: 'config_change',
-        title: '系统配置更新',
-        description: 'heartbeat_interval 配置从 30000 更改为 25000',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15分钟前
-        severity: 'warning',
-        metadata: { config: 'heartbeat_interval', oldValue: '30000', newValue: '25000' }
-      },
-      {
-        id: '5',
-        type: 'node_offline',
-        title: 'London Node 离线',
-        description: 'Agent 6749d98b 心跳超时，已标记为离线',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30分钟前
-        severity: 'error',
-        metadata: { nodeId: '6749d98b', location: 'London, UK' }
-      },
-      {
-        id: '6',
-        type: 'system_alert',
-        title: '系统性能警告',
-        description: 'CPU 使用率超过 80%，建议检查系统负载',
-        timestamp: new Date(Date.now() - 45 * 60 * 1000), // 45分钟前
-        severity: 'warning',
-        metadata: { cpuUsage: '85%', threshold: '80%' }
+  // 加载活动数据
+  const fetchActivities = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getGlobalActivities(50);
+      if (response.success && response.data) {
+        // 转换数据格式并添加推断的严重程度
+        const transformedActivities: ActivityLogItem[] = response.data.map((activity) => ({
+          ...activity,
+          severity: inferSeverity(activity.type, activity.details),
+        }));
+        setActivities(transformedActivities);
       }
-    ];
+    } catch (error) {
+      console.error('Failed to fetch activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setActivities(mockActivities);
+  // 根据事件类型推断严重程度
+  const inferSeverity = (type: string, details?: any): 'info' | 'warning' | 'error' | 'success' => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('online') || lowerType.includes('connected') || lowerType.includes('success')) {
+      return 'success';
+    }
+    if (lowerType.includes('offline') || lowerType.includes('failed') || lowerType.includes('error')) {
+      return 'error';
+    }
+    if (lowerType.includes('warning') || lowerType.includes('timeout') || lowerType.includes('changed')) {
+      return 'warning';
+    }
+    return 'info';
+  };
+
+  useEffect(() => {
+    fetchActivities();
   }, []);
 
-  const getActivityIcon = (type: ActivityLogItem['type']) => {
-    switch (type) {
-      case 'node_online':
-      case 'node_offline':
-        return <Server className="h-4 w-4" />;
-      case 'user_login':
-        return <User className="h-4 w-4" />;
-      case 'config_change':
-        return <Settings className="h-4 w-4" />;
-      case 'diagnostic_run':
-        return <Activity className="h-4 w-4" />;
-      case 'system_alert':
-        return <AlertTriangle className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
+  const getActivityIcon = (type: string) => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('node') || lowerType.includes('agent') || lowerType.includes('heartbeat')) {
+      return <Server className="h-4 w-4" />;
     }
+    if (lowerType.includes('user') || lowerType.includes('login') || lowerType.includes('auth')) {
+      return <User className="h-4 w-4" />;
+    }
+    if (lowerType.includes('config') || lowerType.includes('setting') || lowerType.includes('update')) {
+      return <Settings className="h-4 w-4" />;
+    }
+    if (lowerType.includes('diagnostic') || lowerType.includes('test') || lowerType.includes('ping')) {
+      return <Activity className="h-4 w-4" />;
+    }
+    if (lowerType.includes('alert') || lowerType.includes('warning') || lowerType.includes('error')) {
+      return <AlertTriangle className="h-4 w-4" />;
+    }
+    return <Clock className="h-4 w-4" />;
   };
 
   const getSeverityClasses = (severity: ActivityLogItem['severity']) => {
@@ -146,13 +132,15 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
 
   const filteredActivities = activities.filter(activity => {
     if (filter === 'all') return true;
-    if (filter === 'nodes') return ['node_online', 'node_offline', 'diagnostic_run'].includes(activity.type);
-    if (filter === 'users') return activity.type === 'user_login';
-    if (filter === 'system') return ['config_change', 'system_alert'].includes(activity.type);
+    const lowerType = activity.type.toLowerCase();
+    if (filter === 'nodes') return lowerType.includes('node') || lowerType.includes('agent') || lowerType.includes('heartbeat') || lowerType.includes('diagnostic');
+    if (filter === 'users') return lowerType.includes('user') || lowerType.includes('login') || lowerType.includes('auth');
+    if (filter === 'system') return lowerType.includes('config') || lowerType.includes('system') || lowerType.includes('alert') || lowerType.includes('warning');
     return true;
   });
 
-  const formatRelativeTime = (date: Date) => {
+  const formatRelativeTime = (timestamp: string) => {
+    const date = new Date(timestamp);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -165,11 +153,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
   };
 
   const handleRefresh = () => {
-    setLoading(true);
-    // 模拟刷新
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    fetchActivities();
   };
 
   return (
@@ -240,39 +224,43 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {activity.title}
+                          {activity.type} - {activity.node.name}
                         </p>
                         <div className="flex items-center space-x-2">
                           <time className="text-xs text-gray-500 dark:text-gray-400">
                             {formatRelativeTime(activity.timestamp)}
                           </time>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreVertical className="h-3 w-3" />
-                          </Button>
                         </div>
                       </div>
                       
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {activity.description}
+                        {activity.message || `${activity.node.city}, ${activity.node.country}`}
                       </p>
                       
-                      {activity.metadata && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {Object.entries(activity.metadata).map(([key, value]) => (
-                            <span
-                              key={key}
-                              className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                            >
-                              <span className="font-medium">{key}:</span>
-                              <span className="ml-1">{String(value)}</span>
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                          <span className="font-medium">节点:</span>
+                          <span className="ml-1">{activity.node.name}</span>
+                        </span>
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                          <span className="font-medium">位置:</span>
+                          <span className="ml-1">{activity.node.city}, {activity.node.country}</span>
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${
+                          activity.node.status.toLowerCase() === 'online' 
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                        }`}>
+                          <span className="font-medium">状态:</span>
+                          <span className="ml-1">{activity.node.status}</span>
+                        </span>
+                        {activity.details && (
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                            <span className="font-medium">详情:</span>
+                            <span className="ml-1">{JSON.stringify(activity.details).substring(0, 50)}...</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

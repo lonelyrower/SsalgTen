@@ -381,6 +381,12 @@ class ApiService {
     return this.request(`/nodes/${nodeId}/events${query}`);
   }
 
+  // 获取全局活动日志
+  async getGlobalActivities(limit: number = 50): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: any; timestamp: string; node: { id: string; name: string; city: string; country: string; status: string } }>>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request(`/activities${query}`);
+  }
+
   // Agent 诊断请求 API (直接调用Agent)
   async callAgentDiagnostic(agentUrl: string, type: string, target?: string): Promise<any> {
     const endpoint = target ? `${type}/${target}` : type;
