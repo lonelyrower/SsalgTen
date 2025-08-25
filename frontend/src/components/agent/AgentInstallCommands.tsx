@@ -32,7 +32,31 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
       setLoading(true);
       const response = await apiService.getInstallCommand();
       if (response.success && response.data) {
-        setInstallData(response.data);
+        // 注入系统配置（SSH 监控默认值）到展示文本
+        const cfgs = await apiService.getSystemConfigs();
+        let sshEnabled = false;
+        let sshWindow = 10;
+        let sshThreshold = 10;
+        if (cfgs.success && Array.isArray(cfgs.data)) {
+          const getVal = (k: string) => cfgs.data!.find(c => c.key === k)?.value;
+          sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
+          sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
+          sshThreshold = parseInt(String(getVal('security.ssh_monitor_default_threshold') ?? '10'), 10) || 10;
+        }
+
+        const withSshEnv = (cmd: string) => {
+          if (!sshEnabled) return cmd;
+          const tpl = `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# 仅在需要时取消注释\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n`;
+          return cmd + tpl;
+        };
+
+        const data = response.data as InstallCommandData;
+        setInstallData({
+          ...data,
+          quickCommand: withSshEnv(data.quickCommand),
+          command: withSshEnv(data.command),
+          interactiveCommand: withSshEnv(data.interactiveCommand),
+        });
       } else {
         throw new Error(response.error || 'Failed to fetch install command');
       }
@@ -43,7 +67,7 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
       // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
       const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
       
-      setInstallData({
+      const base = {
         masterUrl: masterUrl,
         apiKey: apiKey,
         quickCommand: `# SsalgTen 网络监控探针快速安装
@@ -99,7 +123,23 @@ sudo systemctl reset-failed`,
             '使用真实的API密钥进行生产环境部署'
           ]
         }
-      });
+      } as InstallCommandData;
+      try {
+        const cfgs = await apiService.getSystemConfigs();
+        let sshEnabled = false;
+        let sshWindow = 10;
+        let sshThreshold = 10;
+        if (cfgs.success && Array.isArray(cfgs.data)) {
+          const getVal = (k: string) => cfgs.data!.find(c => c.key === k)?.value;
+          sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
+          sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
+          sshThreshold = parseInt(String(getVal('security.ssh_monitor_default_threshold') ?? '10'), 10) || 10;
+        }
+        const tpl = sshEnabled ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n` : '';
+        setInstallData({ ...base, quickCommand: base.quickCommand + tpl, command: base.command + tpl, interactiveCommand: base.interactiveCommand + tpl });
+      } catch {
+        setInstallData(base);
+      }
     } finally {
       setLoading(false);
     }

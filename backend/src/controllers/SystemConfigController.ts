@@ -121,6 +121,22 @@ export const DEFAULT_SYSTEM_CONFIGS = {
     category: 'security',
     description: 'Require strong passwords for new users'
   },
+  // SSH 监控默认开关（用于安装指引与模板）
+  'security.ssh_monitor_default_enabled': {
+    value: false,
+    category: 'security',
+    description: 'Default enabled state for SSH brute-force monitoring on new agents (for installer templates)'
+  },
+  'security.ssh_monitor_default_window_min': {
+    value: 10,
+    category: 'security',
+    description: 'Default window minutes for SSH monitoring template'
+  },
+  'security.ssh_monitor_default_threshold': {
+    value: 10,
+    category: 'security',
+    description: 'Default threshold of attempts in window for SSH monitoring template'
+  },
 
   // API配置
   'api.rate_limit_requests': {
