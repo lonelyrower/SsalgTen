@@ -94,6 +94,11 @@ export const DEFAULT_SYSTEM_CONFIGS = {
     category: 'diagnostics',
     description: 'Maximum concurrent diagnostic tests per agent'
   },
+  'diagnostics.proxy_enabled': {
+    value: false,
+    category: 'diagnostics',
+    description: 'Enable backend diagnostics proxy endpoints'
+  },
 
   // 安全配置
   'security.jwt_expires_in': {

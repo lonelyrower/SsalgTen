@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import { nodeService } from '../services/NodeService';
 import { logger } from '../utils/logger';
+import { getSystemConfig } from '../utils/initSystemConfig';
 
-const DIAGNOSTICS_PROXY_ENABLED = (process.env.DIAGNOSTICS_PROXY_ENABLED || 'false').toLowerCase() === 'true';
+const envProxyEnabled = (process.env.DIAGNOSTICS_PROXY_ENABLED || 'false').toLowerCase() === 'true';
 
 // Basic target validation similar to agent
 const isValidTarget = (target: string): boolean => {
@@ -14,12 +15,21 @@ const isValidTarget = (target: string): boolean => {
   return ipv4Regex.test(target) || domainRegex.test(target) || target.includes(':'); // allow IPv6 for proxy
 };
 
-const ensureEnabled = (res: Response): boolean => {
-  if (!DIAGNOSTICS_PROXY_ENABLED) {
-    res.status(403).json({ success: false, error: 'Diagnostics proxy is disabled by server configuration' });
-    return false;
+const ensureEnabled = async (res: Response): Promise<boolean> => {
+  try {
+    const flag = await getSystemConfig<boolean>('diagnostics.proxy_enabled', envProxyEnabled);
+    if (!flag) {
+      res.status(403).json({ success: false, error: 'Diagnostics proxy is disabled by server configuration' });
+      return false;
+    }
+    return true;
+  } catch {
+    if (!envProxyEnabled) {
+      res.status(403).json({ success: false, error: 'Diagnostics proxy is disabled' });
+      return false;
+    }
+    return true;
   }
-  return true;
 };
 
 const buildAgentEndpoint = (node: any): string | null => {
@@ -31,7 +41,7 @@ const buildAgentEndpoint = (node: any): string | null => {
 export class DiagnosticsProxyController {
   async ping(req: Request, res: Response) {
     try {
-      if (!ensureEnabled(res)) return;
+      if (!(await ensureEnabled(res))) return;
       const { id } = req.params; // nodeId
       const { target, count } = req.query as any;
       if (!target || !isValidTarget(String(target))) {
@@ -52,7 +62,7 @@ export class DiagnosticsProxyController {
 
   async traceroute(req: Request, res: Response) {
     try {
-      if (!ensureEnabled(res)) return;
+      if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const { target, maxHops } = req.query as any;
       if (!target || !isValidTarget(String(target))) {
@@ -74,7 +84,7 @@ export class DiagnosticsProxyController {
 
   async mtr(req: Request, res: Response) {
     try {
-      if (!ensureEnabled(res)) return;
+      if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const { target, count } = req.query as any;
       if (!target || !isValidTarget(String(target))) {
@@ -96,7 +106,7 @@ export class DiagnosticsProxyController {
 
   async speedtest(req: Request, res: Response) {
     try {
-      if (!ensureEnabled(res)) return;
+      if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const node = await nodeService.getNodeById(id);
       const endpoint = buildAgentEndpoint(node);
@@ -112,7 +122,7 @@ export class DiagnosticsProxyController {
 
   async latencyTest(req: Request, res: Response) {
     try {
-      if (!ensureEnabled(res)) return;
+      if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const { testType } = req.query as any;
       const node = await nodeService.getNodeById(id);
@@ -130,4 +140,3 @@ export class DiagnosticsProxyController {
 }
 
 export const diagnosticsProxyController = new DiagnosticsProxyController();
-
