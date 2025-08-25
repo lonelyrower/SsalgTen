@@ -3,21 +3,15 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 're
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { CountryFlag } from '@/components/ui/CountryFlag';
 import { 
   Activity, 
-  Globe, 
-  Wifi, 
   Server, 
   MapPin, 
   Clock, 
   Zap,
   Eye,
   TrendingUp,
-  AlertTriangle,
-  Edit,
-  Trash2
+  AlertTriangle
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 import 'leaflet/dist/leaflet.css';
@@ -242,8 +236,6 @@ interface EnhancedWorldMapProps {
   selectedNode?: NodeData | null;
   showHeatmap?: boolean;
   className?: string;
-  onNodeRename?: (nodeId: string, newName: string) => void;
-  onNodeDelete?: (nodeId: string) => void;
 }
 
 export const EnhancedWorldMap = memo(({ 
@@ -251,56 +243,14 @@ export const EnhancedWorldMap = memo(({
   onNodeClick, 
   showHeatmap = false,
   selectedNode,
-  className = '',
-  onNodeRename,
-  onNodeDelete
+  className = ''
 }: EnhancedWorldMapProps) => {
   const mapRef = useRef<any>(null);
   const [viewMode, setViewMode] = useState<'markers' | 'heatmap' | 'connections'>('markers');
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
   
-  // 节点管理状态
-  const [renamingNode, setRenamingNode] = useState<NodeData | null>(null);
-  const [newNodeName, setNewNodeName] = useState('');
-  const [deletingNode, setDeletingNode] = useState<NodeData | null>(null);
-
   const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
-
-  // 处理节点改名
-  const handleRename = (node: NodeData) => {
-    setRenamingNode(node);
-    setNewNodeName(node.name);
-  };
-
-  const confirmRename = () => {
-    if (renamingNode && newNodeName.trim() && onNodeRename) {
-      onNodeRename(renamingNode.id, newNodeName.trim());
-      setRenamingNode(null);
-      setNewNodeName('');
-    }
-  };
-
-  const cancelRename = () => {
-    setRenamingNode(null);
-    setNewNodeName('');
-  };
-
-  // 处理节点删除
-  const handleDelete = (node: NodeData) => {
-    setDeletingNode(node);
-  };
-
-  const confirmDelete = () => {
-    if (deletingNode && onNodeDelete) {
-      onNodeDelete(deletingNode.id);
-      setDeletingNode(null);
-    }
-  };
-
-  const cancelDelete = () => {
-    setDeletingNode(null);
-  };
 
   // 聚合节点
   const clusteredItems = useMemo(() => {
@@ -328,47 +278,18 @@ export const EnhancedWorldMap = memo(({
               },
             }}
           >
-            <Popup className="custom-popup" maxWidth={400}>
-              <Card className="border-0 shadow-lg">
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-lg text-gray-900">
-                      集群节点 ({cluster.count})
-                    </h3>
-                    <Badge variant="secondary">
-                      在线: {cluster.onlineCount}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {cluster.nodes.map((node) => {
-                      const style = getNodeStyle(node.status);
-                      const IconComponent = style.icon;
-                      return (
-                        <div key={node.id} className="flex items-center justify-between p-2 rounded border">
-                          <div className="flex items-center space-x-2">
-                            <div className={`p-1 rounded ${style.bgColor}`}>
-                              <IconComponent className={`h-3 w-3 ${style.textColor}`} />
-                            </div>
-                            <div>
-                              <div className="font-medium text-sm">{node.name}</div>
-                              <div className="text-xs text-gray-500">{node.city}</div>
-                            </div>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => onNodeClick?.(node)}
-                            className="text-xs"
-                          >
-                            查看
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
+            <Popup className="custom-popup" maxWidth={300}>
+              <div className="p-3">
+                <h3 className="font-bold text-base text-gray-900 mb-2">
+                  集群节点 ({cluster.count})
+                </h3>
+                <div className="text-sm text-gray-600 mb-2">
+                  在线: {cluster.onlineCount} | 离线: {cluster.offlineCount}
                 </div>
-              </Card>
+                <p className="text-xs text-gray-500">
+                  放大地图以查看单个节点
+                </p>
+              </div>
             </Popup>
           </Marker>
         );
@@ -376,8 +297,6 @@ export const EnhancedWorldMap = memo(({
         // 单个节点
         const node = item as NodeData;
         const isSelected = selectedNode?.id === node.id;
-        const style = getNodeStyle(node.status);
-        const IconComponent = style.icon;
 
         return (
           <Marker
@@ -388,181 +307,6 @@ export const EnhancedWorldMap = memo(({
               click: () => onNodeClick?.(node),
             }}
           >
-          <Popup className="custom-popup" maxWidth={350}>
-            <Card className="border-0 shadow-lg">
-              <div className="p-4">
-                {/* 头部信息 */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${style.bgColor}`}>
-                      <IconComponent className={`h-5 w-5 ${style.textColor}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">{node.name}</h3>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <MapPin className="h-4 w-4" />
-                        <CountryFlag country={node.country} size="sm" showName={false} />
-                        <span>{node.city}, {node.country}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Badge 
-                    className={`${
-                      node.status.toLowerCase() === 'online' ? 'bg-green-100 text-green-800 border-green-200' :
-                      node.status.toLowerCase() === 'offline' ? 'bg-red-100 text-red-800 border-red-200' :
-                      node.status.toLowerCase() === 'maintenance' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                      'bg-gray-100 text-gray-800 border-gray-200'
-                    } px-2 py-1 font-medium`}
-                  >
-                    {node.status.toUpperCase()}
-                  </Badge>
-                </div>
-
-                {/* 详细信息网格 */}
-                <div className="space-y-3 mb-4">
-                  {/* 基础信息行 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm">
-                        <Globe className="h-4 w-4 mr-2 text-blue-500" />
-                        <span className="text-gray-600">供应商:</span>
-                      </div>
-                      <p className="font-medium text-gray-900 ml-6 text-sm">{node.provider}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm">
-                        <Server className="h-4 w-4 mr-2 text-purple-500" />
-                        <span className="text-gray-600">坐标:</span>
-                      </div>
-                      <p className="font-mono text-xs text-gray-900 ml-6">
-                        {node.latitude.toFixed(4)}, {node.longitude.toFixed(4)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* IP地址信息 */}
-                  <div className="grid grid-cols-1 gap-3">
-                    {node.ipv4 && (
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm">
-                          <Wifi className="h-4 w-4 mr-2 text-green-500" />
-                          <span className="text-gray-600">IPv4:</span>
-                        </div>
-                        <p className="font-mono text-sm text-blue-600 ml-6">{node.ipv4}</p>
-                      </div>
-                    )}
-
-                    {node.ipv6 && node.ipv6 !== node.ipv4 && (
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm">
-                          <Wifi className="h-4 w-4 mr-2 text-green-500" />
-                          <span className="text-gray-600">IPv6:</span>
-                        </div>
-                        <p className="font-mono text-xs text-blue-600 ml-6 break-all">{node.ipv6}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ASN信息 */}
-                  {node.asnNumber && (
-                    <div className="border-t pt-3">
-                      <div className="grid grid-cols-1 gap-2">
-                        <div className="space-y-1">
-                          <div className="flex items-center text-sm">
-                            <TrendingUp className="h-4 w-4 mr-2 text-purple-500" />
-                            <span className="text-gray-600">ASN:</span>
-                          </div>
-                          <p className="font-mono text-sm text-purple-600 ml-6">{node.asnNumber}</p>
-                        </div>
-                        
-                        {(node.asnName || node.asnOrg) && (
-                          <div className="space-y-1">
-                            <div className="flex items-center text-sm">
-                              <Globe className="h-4 w-4 mr-2 text-indigo-500" />
-                              <span className="text-gray-600">ASN组织:</span>
-                            </div>
-                            <p className="text-xs text-gray-900 ml-6 break-words">
-                              {node.asnName || node.asnOrg}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 状态信息 */}
-                  {node.lastSeen && (
-                    <div className="border-t pt-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm">
-                          <Clock className="h-4 w-4 mr-2 text-orange-500" />
-                          <span className="text-gray-600">最后在线:</span>
-                        </div>
-                        <p className="text-sm text-gray-900 ml-6">
-                          {new Date(node.lastSeen).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 操作按钮 */}
-                <div className="space-y-2">
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => onNodeClick?.(node)}
-                    >
-                      <Activity className="h-4 w-4 mr-2" />
-                      运行诊断
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        if (mapRef.current) {
-                          mapRef.current.setView([node.latitude, node.longitude], 8);
-                        }
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* 管理按钮 */}
-                  {(onNodeRename || onNodeDelete) && (
-                    <div className="flex space-x-2">
-                      {onNodeRename && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="flex-1 text-blue-600 border-blue-300 hover:bg-blue-50"
-                          onClick={() => handleRename(node)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          改名
-                        </Button>
-                      )}
-                      {onNodeDelete && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-                          onClick={() => handleDelete(node)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          删除
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </Popup>
         </Marker>
         );
       }
@@ -730,76 +474,6 @@ export const EnhancedWorldMap = memo(({
         </div>
       </div>
 
-      {/* 改名对话框 */}
-      {renamingNode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 w-96 max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">重命名节点</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              当前节点: <span className="font-medium">{renamingNode.name}</span>
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">新名称</label>
-                <input
-                  type="text"
-                  value={newNodeName}
-                  onChange={(e) => setNewNodeName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="输入新的节点名称"
-                  autoFocus
-                />
-              </div>
-              <div className="flex space-x-3">
-                <Button 
-                  onClick={confirmRename}
-                  className="flex-1"
-                  disabled={!newNodeName.trim()}
-                >
-                  确认
-                </Button>
-                <Button 
-                  onClick={cancelRename}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  取消
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* 删除确认对话框 */}
-      {deletingNode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 w-96 max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-red-600 mb-4">确认删除节点</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              确定要删除节点 <span className="font-medium text-red-600">{deletingNode.name}</span> 吗？
-            </p>
-            <p className="text-xs text-red-500 mb-4">
-              ⚠️ 此操作不可撤销，将永久删除该节点的所有数据。
-            </p>
-            <div className="flex space-x-3">
-              <Button 
-                onClick={confirmDelete}
-                variant="outline"
-                className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-              >
-                确认删除
-              </Button>
-              <Button 
-                onClick={cancelDelete}
-                className="flex-1"
-              >
-                取消
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
   );
 });

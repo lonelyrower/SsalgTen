@@ -1,13 +1,11 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
+import { NodeStatusChart } from '@/components/dashboard/NodeStatusChart';
+import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Activity, Loader2, Globe, MapPin, Settings, Shield, BarChart } from 'lucide-react';
-import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
-
-// Lazy load heavy components
-const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -84,43 +82,19 @@ export const DashboardPage: React.FC = () => {
             className="mb-8"
           />
           
-          {/* 节点状态概览地图 */}
-          <div className="mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  全球节点分布
-                </h2>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span>在线 ({stats?.onlineNodes || 0})</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span>离线 ({(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)})</span>
-                  </div>
-                  <div className="text-blue-600 text-sm font-medium">
-                    详细管理请前往 → <a href="/nodes" className="underline hover:text-blue-800">节点管理</a>
-                  </div>
-                </div>
-              </div>
-              
-              <ComponentErrorBoundary componentName="世界地图">
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-64">
-                    <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                  </div>
-                }>
-                  {/* 简化版地图 - 只显示状态，无详细操作 */}
-                  <EnhancedWorldMap 
-                    nodes={nodes} 
-                    selectedNode={null}
-                    showHeatmap={true}
-                    className="mb-4"
-                  />
-                </Suspense>
-              </ComponentErrorBoundary>
+          {/* 节点状态和分布分析 */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-6">
+            {/* 节点状态饼图 */}
+            <div className="xl:col-span-2">
+              <NodeStatusChart 
+                onlineNodes={stats?.onlineNodes || 0}
+                offlineNodes={(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)}
+              />
+            </div>
+            
+            {/* 地理和服务商分布 */}
+            <div className="xl:col-span-3">
+              <GeographicDistribution nodes={nodes} />
             </div>
           </div>
 

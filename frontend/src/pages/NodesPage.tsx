@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown } from 'lucide-react';
 import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
 import { socketService } from '@/services/socketService';
@@ -55,43 +55,6 @@ export const NodesPage: React.FC = () => {
     await refreshData(); // 刷新节点列表
   };
 
-  // 处理节点改名
-  const handleNodeRename = async (nodeId: string, newName: string) => {
-    try {
-      const response = await apiService.updateNode(nodeId, { name: newName });
-      if (response.success) {
-        console.log('Node renamed successfully');
-      } else {
-        console.error('Failed to rename node:', response.error);
-        alert('改名失败: ' + (response.error || '未知错误'));
-      }
-    } catch (error) {
-      console.error('Error renaming node:', error);
-      alert('改名失败，请重试');
-    }
-  };
-
-  // 处理节点删除
-  const handleNodeDelete = async (nodeId: string) => {
-    try {
-      const response = await apiService.deleteNode(nodeId);
-      if (response.success) {
-        // 如果删除的是当前选中的节点，清空选择
-        if (selectedNode?.id === nodeId) {
-          setSelectedNode(null);
-          setShowDiagnostics(false);
-          setShowServerDetails(false);
-        }
-        console.log('Node deleted successfully');
-      } else {
-        console.error('Failed to delete node:', response.error);
-        alert('删除失败: ' + (response.error || '未知错误'));
-      }
-    } catch (error) {
-      console.error('Error deleting node:', error);
-      alert('删除失败，请重试');
-    }
-  };
 
   // 获取节点详细心跳数据
   // showSpinner: 是否展示加载骨架（仅首次加载时需要，定时刷新避免闪烁）
@@ -431,191 +394,233 @@ export const NodesPage: React.FC = () => {
                   selectedNode={selectedNode}
                   showHeatmap={false}
                   className="mb-4"
-                  onNodeRename={hasRole('ADMIN') ? handleNodeRename : undefined}
-                  onNodeDelete={hasRole('ADMIN') ? handleNodeDelete : undefined}
                 />
               </Suspense>
             </div>
           </div>
           
-          {/* 节点列表 */}
+          {/* 节点列表/详情 */}
           <div className="xl:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                节点列表
-              </h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {filteredNodes.map((node) => (
-                  <div
-                    key={node.id}
-                    onClick={() => handleNodeClick(node)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      selectedNode?.id === node.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
+              {selectedNode ? (
+                /* 节点详情视图 */
+                <div className="space-y-4">
+                  {/* 返回按钮和标题 */}
+                  <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedNode(null)}
+                      className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    >
+                      <div className="w-4 h-4">←</div>
+                      <span>返回列表</span>
+                    </Button>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      节点详情
+                    </h3>
+                  </div>
+
+                  {/* 节点基本信息 */}
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <div className={`w-3 h-3 rounded-full mt-1 ${
+                        selectedNode.status === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                      }`}></div>
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <div className={`w-2 h-2 rounded-full ${
-                            node.status === 'online' ? 'bg-green-500' : 'bg-red-500'
-                          }`}></div>
-                          <h4 className="font-medium text-gray-900 dark:text-white text-sm">
-                            {node.name}
-                          </h4>
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
+                          {selectedNode.name}
+                        </h4>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <CountryFlag country={selectedNode.country} size="sm" showName={false} />
+                          <span>{selectedNode.city}, {selectedNode.country}</span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                          {node.city}, {node.country}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                          {node.provider}
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                          {selectedNode.provider}
                         </p>
                       </div>
-                      {selectedNode?.id === node.id && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDiagnostics(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Activity className="h-3 w-3" />
-                        </Button>
+                    </div>
+
+                    {/* 状态信息 */}
+                    <div className="grid grid-cols-1 gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">状态:</span>
+                        <span className={`text-sm font-medium ${
+                          selectedNode.status === 'online' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {selectedNode.status.toUpperCase()}
+                        </span>
+                      </div>
+                      
+                      {selectedNode.ipv4 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">IPv4:</span>
+                          <span className="text-sm font-mono text-blue-600">{selectedNode.ipv4}</span>
+                        </div>
+                      )}
+                      
+                      {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">IPv6:</span>
+                          <span className="text-xs font-mono text-blue-600 break-all">{selectedNode.ipv6}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">系统:</span>
+                        <span className="text-sm">{selectedNode.osType || 'Unknown'}</span>
+                      </div>
+                      
+                      {selectedNode.lastSeen && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">最后在线:</span>
+                          <span className="text-xs">{new Date(selectedNode.lastSeen).toLocaleString()}</span>
+                        </div>
                       )}
                     </div>
+
+                    {/* 地理信息 */}
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">坐标:</span>
+                          <span className="text-sm font-mono">
+                            {selectedNode.latitude.toFixed(4)}, {selectedNode.longitude.toFixed(4)}
+                          </span>
+                        </div>
+                        
+                        {selectedNode.asnNumber && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">ASN:</span>
+                            <span className="text-sm font-mono">{selectedNode.asnNumber}</span>
+                          </div>
+                        )}
+                        
+                        {(selectedNode.asnName || selectedNode.asnOrg) && (
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">ASN组织:</span>
+                            <span className="text-xs text-right max-w-[200px]">
+                              {selectedNode.asnName || selectedNode.asnOrg}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 操作按钮 */}
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => setShowDiagnostics(true)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Activity className="h-4 w-4 mr-2" />
+                        运行诊断
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowServerDetails(!showServerDetails)}
+                        className="w-full"
+                      >
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        {showServerDetails ? '收起' : '展开'}详细信息
+                      </Button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                /* 节点列表视图 */
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    节点列表
+                  </h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {filteredNodes.map((node) => (
+                      <div
+                        key={node.id}
+                        onClick={() => handleNodeClick(node)}
+                        className="p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <div className={`w-2 h-2 rounded-full ${
+                                node.status === 'online' ? 'bg-green-500' : 'bg-red-500'
+                              }`}></div>
+                              <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                                {node.name}
+                              </h4>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {node.city}, {node.country}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                              {node.provider}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* 选中节点详情 */}
-        {selectedNode && (
-          <div className="mt-6 space-y-6">
-            {/* 快速操作面板 */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {selectedNode.name}
-                  </h3>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                    <CountryFlag country={selectedNode.country} size="sm" showName={false} />
-                    <span>{selectedNode.city}, {selectedNode.country} • {selectedNode.provider}</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowServerDetails(!showServerDetails)}
-                    className="flex items-center space-x-2"
-                  >
-                    {showServerDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    <span>详细信息</span>
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setShowDiagnostics(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    运行诊断
-                  </Button>
-                </div>
+        {/* 详细服务器信息面板 - 仅在展开时在底部显示 */}
+        {selectedNode && showServerDetails && (
+          <div className="mt-6 transition-all duration-300 ease-in-out">
+            {loadingHeartbeat ? (
+              <div className="flex items-center justify-center h-32 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+                <span className="ml-2 text-gray-600 dark:text-gray-400">加载详细信息中...</span>
               </div>
-              
-              {/* 基本状态信息 */}
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">状态:</span>
-                  <span className={`ml-2 font-medium ${selectedNode.status === 'online' ? 'text-green-600' : 'text-red-600'}`}>
-                    {selectedNode.status.toUpperCase()}
-                  </span>
-                </div>
-                {selectedNode.ipv4 && (
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">IPv4:</span>
-                    <span className="ml-2 font-mono text-xs">{selectedNode.ipv4}</span>
-                  </div>
-                )}
-                {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">IPv6:</span>
-                    <span className="ml-2 font-mono text-xs">{selectedNode.ipv6}</span>
-                  </div>
-                )}
-                {selectedNode.lastSeen && (
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">最后在线:</span>
-                    <span className="ml-2">{new Date(selectedNode.lastSeen).toLocaleString()}</span>
-                  </div>
-                )}
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">系统:</span>
-                  <span className="ml-2">{selectedNode.osType || 'Unknown'}</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* 详细服务器信息面板 */}
-            {showServerDetails && (
-              <div className="transition-all duration-300 ease-in-out">
-                {loadingHeartbeat ? (
-                  <div className="flex items-center justify-center h-32 bg-white dark:bg-gray-800 rounded-lg shadow">
-                    <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                    <span className="ml-2 text-gray-600 dark:text-gray-400">加载详细信息中...</span>
-                  </div>
-                ) : (
-                  <ServerDetailsPanel 
-                    node={selectedNode}
-                    heartbeatData={heartbeatData}
-                    visitorInfo={visitorInfo || undefined}
-                  />
-                )}
-                {/* 事件列表 */}
-                <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-md font-semibold text-gray-900 dark:text-white">事件</h4>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">筛选</span>
-                      <select
-                        value={eventFilter}
-                        onChange={(e) => setEventFilter(e.target.value)}
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                      >
-                        <option value="all">全部</option>
-                        {eventTypes.map(t => (
-                          <option key={t} value={t}>{eventTypeLabel(t)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {filteredEvents.length === 0 ? (
-                    <p className="text-sm text-gray-500">暂无事件</p>
-                  ) : (
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {filteredEvents.map((ev) => (
-                        <li key={ev.id} className="py-2 text-sm">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">
-                              <span className={`px-2 py-0.5 rounded text-xs mr-2 ${ev.type === 'STATUS_CHANGED' ? 'bg-blue-100 text-blue-800' : ev.type === 'IP_CHANGED' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                                {eventTypeLabel(ev.type)}
-                              </span>
-                              {renderEventMessage(ev)}
-                            </span>
-                            <span className="text-gray-500">{new Date(ev.timestamp).toLocaleString()}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
+            ) : (
+              <ServerDetailsPanel 
+                node={selectedNode}
+                heartbeatData={heartbeatData}
+                visitorInfo={visitorInfo || undefined}
+              />
             )}
+            {/* 事件列表 */}
+            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white">事件</h4>
+                <div className="flex items-center space-x-2 text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">筛选</span>
+                  <select
+                    value={eventFilter}
+                    onChange={(e) => setEventFilter(e.target.value)}
+                    className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  >
+                    <option value="all">全部</option>
+                    {eventTypes.map(t => (
+                      <option key={t} value={t}>{eventTypeLabel(t)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {filteredEvents.length === 0 ? (
+                <p className="text-sm text-gray-500">暂无事件</p>
+              ) : (
+                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredEvents.map((ev) => (
+                    <li key={ev.id} className="py-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">
+                          <span className={`px-2 py-0.5 rounded text-xs mr-2 ${ev.type === 'STATUS_CHANGED' ? 'bg-blue-100 text-blue-800' : ev.type === 'IP_CHANGED' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {eventTypeLabel(ev.type)}
+                          </span>
+                          {renderEventMessage(ev)}
+                        </span>
+                        <span className="text-gray-500">{new Date(ev.timestamp).toLocaleString()}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         )}
 
