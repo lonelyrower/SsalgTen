@@ -169,16 +169,15 @@ const getNodeStyle = (status: string) => {
 // 创建增强的自定义图标
 const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
   const style = getNodeStyle(status);
-  const size = isSelected ? 28 : 20;
+  const size = isSelected ? 24 : 18;
   const pulseClass = style.pulse ? 'animate-pulse' : '';
-  const selectedClass = isSelected ? 'ring-2 ring-yellow-400 ring-opacity-60' : '';
-  const selectedBorderClass = isSelected ? 'border-4 border-yellow-300' : 'border-2 border-white';
+  const selectedClass = isSelected ? 'transform scale-125' : '';
   
   return new DivIcon({
     html: `
       <div class="flex items-center justify-center ${selectedClass} ${pulseClass}" 
            style="width: ${size}px; height: ${size}px;">
-        <div class="w-full h-full rounded-full ${selectedBorderClass} shadow-lg flex items-center justify-center" 
+        <div class="w-full h-full rounded-full border-2 border-white shadow-lg flex items-center justify-center" 
              style="background-color: ${style.color};">
           <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
         </div>
@@ -660,7 +659,6 @@ export const EnhancedWorldMap = memo(({
               size="sm"
               onClick={() => {
                 setViewMode('heatmap');
-                setShowStats(true);
               }}
               className="justify-start text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             >

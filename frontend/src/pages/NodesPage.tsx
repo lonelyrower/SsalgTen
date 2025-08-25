@@ -53,6 +53,44 @@ export const NodesPage: React.FC = () => {
     await refreshData(); // 刷新节点列表
   };
 
+  // 处理节点改名
+  const handleNodeRename = async (nodeId: string, newName: string) => {
+    try {
+      const response = await apiService.updateNode(nodeId, { name: newName });
+      if (response.success) {
+        console.log('Node renamed successfully');
+      } else {
+        console.error('Failed to rename node:', response.error);
+        alert('改名失败: ' + (response.error || '未知错误'));
+      }
+    } catch (error) {
+      console.error('Error renaming node:', error);
+      alert('改名失败，请重试');
+    }
+  };
+
+  // 处理节点删除
+  const handleNodeDelete = async (nodeId: string) => {
+    try {
+      const response = await apiService.deleteNode(nodeId);
+      if (response.success) {
+        // 如果删除的是当前选中的节点，清空选择
+        if (selectedNode?.id === nodeId) {
+          setSelectedNode(null);
+          setShowDiagnostics(false);
+          setShowServerDetails(false);
+        }
+        console.log('Node deleted successfully');
+      } else {
+        console.error('Failed to delete node:', response.error);
+        alert('删除失败: ' + (response.error || '未知错误'));
+      }
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      alert('删除失败，请重试');
+    }
+  };
+
   // 获取节点详细心跳数据
   const fetchHeartbeatData = async (nodeId: string) => {
     try {
@@ -364,6 +402,8 @@ export const NodesPage: React.FC = () => {
                   selectedNode={selectedNode}
                   showHeatmap={false}
                   className="mb-4"
+                  onNodeRename={hasRole('ADMIN') ? handleNodeRename : undefined}
+                  onNodeDelete={hasRole('ADMIN') ? handleNodeDelete : undefined}
                 />
               </Suspense>
             </div>
