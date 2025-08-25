@@ -11,6 +11,7 @@ import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
+import { socketService } from '@/services/socketService';
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
@@ -202,10 +203,16 @@ export const NodesPage: React.FC = () => {
         // 主动请求一次，确保立即有数据
         socketService.requestLatestHeartbeat(id);
 
-        const evTimer = setInterval(() => fetchNodeEvents(id), 15000);
+        // 节点事件走WS增量订阅
+        const handleEvent = (ev: any) => {
+          setEvents(prev => [ev, ...prev].slice(0, 50));
+        };
+        socketService.subscribeToNodeEvents(id, handleEvent);
+        // 初次拉取一页历史以填充
+        fetchNodeEvents(id);
         return () => {
           socketService.unsubscribeFromNodeHeartbeat(id);
-          clearInterval(evTimer);
+          socketService.unsubscribeFromNodeEvents(id);
         };
       }
 

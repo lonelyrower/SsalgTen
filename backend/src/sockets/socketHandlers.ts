@@ -50,6 +50,17 @@ export function setupSocketHandlers(io: Server) {
       logger.info(`用户 ${user?.username} 取消订阅节点 ${nodeId} 的诊断更新`);
     });
 
+    // 订阅节点事件
+    socket.on('subscribe_node_events', (nodeId: string) => {
+      socket.join(`node_events_${nodeId}`);
+      logger.info(`用户 ${user?.username} 订阅节点 ${nodeId} 的事件`);
+    });
+
+    socket.on('unsubscribe_node_events', (nodeId: string) => {
+      socket.leave(`node_events_${nodeId}`);
+      logger.info(`用户 ${user?.username} 取消订阅节点 ${nodeId} 的事件`);
+    });
+
     // 订阅单节点心跳详情
     socket.on('subscribe_node_heartbeat', (nodeId: string) => {
       socket.join(`node_heartbeat_${nodeId}`);

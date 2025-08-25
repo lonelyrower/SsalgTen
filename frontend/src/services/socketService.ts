@@ -22,6 +22,9 @@ interface SocketService {
   subscribeToNodeHeartbeat: (nodeId: string, callback: (payload: { nodeId: string; data: unknown }) => void) => void;
   unsubscribeFromNodeHeartbeat: (nodeId: string) => void;
   requestLatestHeartbeat: (nodeId: string) => void;
+  // 单节点事件
+  subscribeToNodeEvents: (nodeId: string, callback: (event: any) => void) => void;
+  unsubscribeFromNodeEvents: (nodeId: string) => void;
 }
 
 class SocketServiceImpl implements SocketService {
@@ -29,6 +32,7 @@ class SocketServiceImpl implements SocketService {
   connected: boolean = false;
   private callbacks: { [event: string]: ((data: unknown) => void)[] } = {};
   private heartbeatCallbacks: { [nodeId: string]: ((payload: { nodeId: string; data: unknown }) => void)[] } = {};
+  private eventCallbacks: { [nodeId: string]: ((event: any) => void)[] } = {};
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private connectionErrorCallbacks: ((error: Error) => void)[] = [];
@@ -80,6 +84,11 @@ class SocketServiceImpl implements SocketService {
       const nodeIds = Object.keys(this.heartbeatCallbacks);
       for (const nodeId of nodeIds) {
         try { this.socket?.emit('subscribe_node_heartbeat', nodeId); } catch {}
+      }
+      // 重新订阅节点事件
+      const evNodeIds = Object.keys(this.eventCallbacks);
+      for (const nodeId of evNodeIds) {
+        try { this.socket?.emit('subscribe_node_events', nodeId); } catch {}
       }
     });
 
@@ -281,6 +290,33 @@ class SocketServiceImpl implements SocketService {
   requestLatestHeartbeat = (nodeId: string) => {
     if (!this.socket) return;
     this.socket.emit('get_latest_heartbeat', nodeId);
+  };
+
+  // ========== 单节点事件 ==========
+  subscribeToNodeEvents = (nodeId: string, callback: (event: any) => void) => {
+    if (!this.socket) {
+      console.warn('Socket未连接，无法订阅节点事件');
+      return;
+    }
+    this.socket.emit('subscribe_node_events', nodeId);
+    this.eventCallbacks[nodeId] = this.eventCallbacks[nodeId] || [];
+    this.eventCallbacks[nodeId].push(callback);
+    if (!this.callbacks['node_event']) {
+      this.callbacks['node_event'] = [() => {}];
+      this.socket.on('node_event', (ev: any) => {
+        const nid = ev?.nodeId;
+        const list = this.eventCallbacks[nid] || [];
+        for (const cb of list) {
+          try { cb(ev); } catch (e) { console.error(e); }
+        }
+      });
+    }
+  };
+
+  unsubscribeFromNodeEvents = (nodeId: string) => {
+    if (!this.socket) return;
+    this.socket.emit('unsubscribe_node_events', nodeId);
+    delete this.eventCallbacks[nodeId];
   };
 }
 

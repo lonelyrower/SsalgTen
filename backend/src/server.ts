@@ -4,6 +4,7 @@ import app from './app';
 import { logger } from './utils/logger';
 import { initSystemConfig } from './utils/initSystemConfig';
 import { setupSocketHandlers } from './sockets/socketHandlers';
+import { setIO } from './sockets/ioRegistry';
 import { apiKeyService } from './services/ApiKeyService';
 import { APP_VERSION } from './utils/version';
 import { startSchedulers } from './utils/scheduler';
@@ -29,6 +30,7 @@ const io = new Server(httpServer, {
 
 // 设置 Socket.IO 处理程序
 setupSocketHandlers(io);
+setIO(io);
 
 // 将 io 实例添加到 app 中以便在路由中使用
 app.set('io', io);
