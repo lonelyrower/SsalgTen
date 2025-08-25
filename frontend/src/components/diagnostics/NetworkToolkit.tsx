@@ -41,6 +41,8 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
   const [activeTab, setActiveTab] = useState<string>('ping');
   const [visitorInfo, setVisitorInfo] = useState<VisitorInfo | null>(null);
   const [loadingVisitorInfo, setLoadingVisitorInfo] = useState(false);
+  const [customTarget, setCustomTarget] = useState<string>('');
+  const [preferIPv6, setPreferIPv6] = useState<boolean>(false);
 
   // 获取访问者IP信息
   useEffect(() => {
@@ -121,23 +123,24 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
 
     try {
       let result;
-      const agentEndpoint = `http://${selectedNode.ipv4}:3002`;
+      const agentHost = selectedNode.ipv4 || selectedNode.ipv6 || 'localhost';
+      const agentEndpoint = `http://${agentHost}:3002`;
       
       // 根据工具类型调用相应的Agent API
       // 注意：这些测试是从目标节点执行的
       if (toolId === 'ping') {
         // 优先ping访问者IP，如果无法获取或是私网IP，则使用公共DNS
-        const testTarget = getBestTestTarget();
+        const testTarget = getBestTestTarget(preferIPv6);
         result = await callAgentAPI(`${agentEndpoint}/api/ping/${testTarget}?count=4`);
       } else if (toolId === 'traceroute') {
         // 跟踪到访问者IP的路由（如果可达）或Google DNS，IPv6优先使用IPv6 DNS
-        const testTarget = getBestTestTarget(visitorInfo?.ip?.includes(':'));
+        const testTarget = getBestTestTarget(preferIPv6 || !!visitorInfo?.ip?.includes(':'));
         result = await callAgentAPI(`${agentEndpoint}/api/traceroute/${testTarget}?maxHops=30`);
       } else if (toolId === 'speedtest') {
         result = await callAgentAPI(`${agentEndpoint}/api/speedtest`, 120000); // 2分钟超时
       } else if (toolId === 'mtr') {
         // MTR测试到访问者IP（如果是公网）或Google DNS
-        const testTarget = getBestTestTarget();
+        const testTarget = getBestTestTarget(preferIPv6);
         result = await callAgentAPI(`${agentEndpoint}/api/mtr/${testTarget}?count=10`);
       } else if (toolId === 'latency-test') {
         result = await callAgentAPI(`${agentEndpoint}/api/latency-test?testType=standard`);
@@ -195,12 +198,13 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
   };
 
   // 获取最佳测试目标的辅助函数
-  const getBestTestTarget = (preferIPv6: boolean = false): string => {
+  const getBestTestTarget = (prefer: boolean = false): string => {
+    if (customTarget && customTarget.trim().length > 0) return customTarget.trim();
     if (visitorInfo?.ip && isPublicIP(visitorInfo.ip)) {
       return visitorInfo.ip;
     }
     // 回退到公共DNS
-    return preferIPv6 ? '2001:4860:4860::8888' : '8.8.8.8';
+    return prefer ? '2001:4860:4860::8888' : '8.8.8.8';
   };
 
   // 调用Agent API的辅助函数
@@ -456,6 +460,20 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
             </button>
           );
         })}
+      </div>
+
+      {/* 目标选项 */}
+      <div className="flex items-center space-x-3">
+        <input
+          value={customTarget}
+          onChange={(e) => setCustomTarget(e.target.value)}
+          placeholder="自定义目标（留空使用您的IP或公共DNS）"
+          className="px-3 py-2 border rounded-md flex-1 dark:bg-gray-700 dark:border-gray-600"
+        />
+        <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+          <input type="checkbox" checked={preferIPv6} onChange={(e) => setPreferIPv6(e.target.checked)} />
+          <span>优先IPv6</span>
+        </label>
       </div>
 
       {/* 当前工具详情 */}

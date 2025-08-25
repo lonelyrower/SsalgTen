@@ -50,19 +50,34 @@ export class NetworkService {
     // 基础格式白名单 (IPv4 / 域名) 防止命令注入；不允许空格、分号、&、| 等
     const ipv4Regex = /^(?:\d{1,3}\.){3}\d{1,3}$/;
     const domainRegex = /^(?=.{1,253}$)(?!-)(?:[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}$/;
-    if (!ipv4Regex.test(target) && !domainRegex.test(target)) {
-      return false;
-    }
+    const isIPv4 = ipv4Regex.test(target);
+    const isDomain = domainRegex.test(target);
+    if (!isIPv4 && !isDomain) return false;
 
-    // 拦截危险字符
-    if (/[;|&`$<>\\]/.test(target)) {
-      return false;
-    }
+    if (/[;|&`$<>\\]/.test(target)) return false;
 
-    // 检查阻止列表（支持前缀匹配）
+    // IPv4 CIDR 判断
+    const parseIPv4 = (ip: string): number | null => {
+      const parts = ip.split('.').map(n => parseInt(n, 10));
+      if (parts.length !== 4 || parts.some(n => isNaN(n) || n < 0 || n > 255)) return null;
+      return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+    };
+    const inCIDR = (ip: string, cidr: string): boolean => {
+      const [base, maskStr] = cidr.split('/');
+      const baseInt = parseIPv4(base || '');
+      const mask = parseInt(maskStr || '32', 10);
+      const ipInt = parseIPv4(ip);
+      if (baseInt === null || ipInt === null || isNaN(mask) || mask < 0 || mask > 32) return false;
+      const maskBits = mask === 0 ? 0 : (~0 << (32 - mask)) >>> 0;
+      return (ipInt & maskBits) === (baseInt & maskBits);
+    };
+
+    // 阻止列表（支持 CIDR/前缀匹配/精确匹配）
     for (const blocked of securityConfig.blockedTargets) {
       if (!blocked) continue;
-      if (blocked.endsWith('*')) {
+      if (blocked.includes('/')) {
+        if (isIPv4 && inCIDR(target, blocked)) return false;
+      } else if (blocked.endsWith('*')) {
         const prefix = blocked.slice(0, -1);
         if (target.startsWith(prefix)) return false;
       } else if (target === blocked) {
@@ -70,11 +85,13 @@ export class NetworkService {
       }
     }
 
-    // 允许列表逻辑
+    // 允许列表（支持 CIDR/前缀匹配/精确匹配）
     if (securityConfig.allowedTargets.includes('*')) return true;
     for (const allowed of securityConfig.allowedTargets) {
       if (!allowed) continue;
-      if (allowed.endsWith('*')) {
+      if (allowed.includes('/')) {
+        if (isIPv4 && inCIDR(target, allowed)) return true;
+      } else if (allowed.endsWith('*')) {
         const prefix = allowed.slice(0, -1);
         if (target.startsWith(prefix)) return true;
       } else if (target === allowed) {
@@ -358,12 +375,30 @@ export class NetworkService {
   // Speedtest - 使用 HTTP API 方式
   async speedtest(serverId?: string): Promise<SpeedtestResult> {
     try {
-      logger.info('Starting speedtest using HTTP method...');
-      
-      // 使用简单的下载测试来估算速度
+      // 优先使用 speedtest-cli（已在容器中安装）
+      try {
+        const { stdout } = await execAsync('speedtest-cli --json', { timeout: 120000 });
+        const data = JSON.parse(stdout);
+        const downloadMbps = data.download ? Math.round((data.download / 1_000_000) * 100) / 100 : -1;
+        const uploadMbps = data.upload ? Math.round((data.upload / 1_000_000) * 100) / 100 : -1;
+        const pingMs = typeof data.ping === 'number' ? Math.round(data.ping) : -1;
+        const serverName = data.server?.sponsor || data.server?.name || 'Speedtest.net';
+        const serverLoc = data.server ? `${data.server.name || ''} ${data.server.cc || ''}`.trim() : 'auto';
+        return {
+          download: downloadMbps,
+          upload: uploadMbps,
+          ping: pingMs,
+          server: serverName,
+          location: serverLoc,
+          timestamp: new Date().toISOString()
+        };
+      } catch (e) {
+        logger.warn('speedtest-cli not available, falling back to HTTP method');
+      }
+
+      // 回退：HTTP 下载估算
       const downloadResult = await this.performDownloadTest();
       const pingResult = await this.ping('8.8.8.8', 3);
-      
       return {
         download: downloadResult.downloadSpeed,
         upload: downloadResult.uploadSpeed,
