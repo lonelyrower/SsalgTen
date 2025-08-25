@@ -14,7 +14,9 @@ import {
   Zap,
   Eye,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 import 'leaflet/dist/leaflet.css';
@@ -167,17 +169,18 @@ const getNodeStyle = (status: string) => {
 // 创建增强的自定义图标
 const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
   const style = getNodeStyle(status);
-  const size = isSelected ? 32 : 24;
+  const size = isSelected ? 28 : 20;
   const pulseClass = style.pulse ? 'animate-pulse' : '';
-  const selectedClass = isSelected ? 'ring-4 ring-blue-300' : '';
+  const selectedClass = isSelected ? 'ring-2 ring-yellow-400 ring-opacity-60' : '';
+  const selectedBorderClass = isSelected ? 'border-4 border-yellow-300' : 'border-2 border-white';
   
   return new DivIcon({
     html: `
       <div class="flex items-center justify-center ${selectedClass} ${pulseClass}" 
            style="width: ${size}px; height: ${size}px;">
-        <div class="w-full h-full rounded-full border-3 border-white shadow-lg flex items-center justify-center" 
+        <div class="w-full h-full rounded-full ${selectedBorderClass} shadow-lg flex items-center justify-center" 
              style="background-color: ${style.color};">
-          <div class="w-2 h-2 bg-white rounded-full"></div>
+          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
         </div>
       </div>
     `,
@@ -233,19 +236,71 @@ const ZoomHandler = ({ onZoomChange }: { onZoomChange: (zoom: number) => void })
   return null;
 };
 
+interface EnhancedWorldMapProps {
+  nodes?: NodeData[];
+  onNodeClick?: (node: NodeData) => void;
+  selectedNode?: NodeData | null;
+  showHeatmap?: boolean;
+  className?: string;
+  onNodeRename?: (nodeId: string, newName: string) => void;
+  onNodeDelete?: (nodeId: string) => void;
+}
+
 export const EnhancedWorldMap = memo(({ 
   nodes = [], 
   onNodeClick, 
   showHeatmap = false,
   selectedNode,
-  className = ''
+  className = '',
+  onNodeRename,
+  onNodeDelete
 }: EnhancedWorldMapProps) => {
   const mapRef = useRef<any>(null);
   const [viewMode, setViewMode] = useState<'markers' | 'heatmap' | 'connections'>('markers');
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
+  
+  // 节点管理状态
+  const [renamingNode, setRenamingNode] = useState<NodeData | null>(null);
+  const [newNodeName, setNewNodeName] = useState('');
+  const [deletingNode, setDeletingNode] = useState<NodeData | null>(null);
 
   const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
+
+  // 处理节点改名
+  const handleRename = (node: NodeData) => {
+    setRenamingNode(node);
+    setNewNodeName(node.name);
+  };
+
+  const confirmRename = () => {
+    if (renamingNode && newNodeName.trim() && onNodeRename) {
+      onNodeRename(renamingNode.id, newNodeName.trim());
+      setRenamingNode(null);
+      setNewNodeName('');
+    }
+  };
+
+  const cancelRename = () => {
+    setRenamingNode(null);
+    setNewNodeName('');
+  };
+
+  // 处理节点删除
+  const handleDelete = (node: NodeData) => {
+    setDeletingNode(node);
+  };
+
+  const confirmDelete = () => {
+    if (deletingNode && onNodeDelete) {
+      onNodeDelete(deletingNode.id);
+      setDeletingNode(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeletingNode(null);
+  };
 
   // 聚合节点
   const clusteredItems = useMemo(() => {
@@ -452,27 +507,57 @@ export const EnhancedWorldMap = memo(({
                 </div>
 
                 {/* 操作按钮 */}
-                <div className="flex space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => onNodeClick?.(node)}
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    运行诊断
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => {
-                      if (mapRef.current) {
-                        mapRef.current.setView([node.latitude, node.longitude], 8);
-                      }
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => onNodeClick?.(node)}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      运行诊断
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        if (mapRef.current) {
+                          mapRef.current.setView([node.latitude, node.longitude], 8);
+                        }
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* 管理按钮 */}
+                  {(onNodeRename || onNodeDelete) && (
+                    <div className="flex space-x-2">
+                      {onNodeRename && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex-1 text-blue-600 border-blue-300 hover:bg-blue-50"
+                          onClick={() => handleRename(node)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          改名
+                        </Button>
+                      )}
+                      {onNodeDelete && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
+                          onClick={() => handleDelete(node)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          删除
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
@@ -558,14 +643,14 @@ export const EnhancedWorldMap = memo(({
         )}
 
         {/* 视图控制 */}
-        <div className="glass rounded-lg p-3 border border-white/20 backdrop-blur-xl">
+        <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg p-3 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl shadow-lg">
           <div className="flex flex-col space-y-2">
-            <div className="text-xs text-white/70 mb-1 font-medium">显示模式</div>
+            <div className="text-xs text-gray-700 dark:text-gray-300 mb-1 font-medium">显示模式</div>
             <Button
               variant={viewMode === 'markers' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('markers')}
-              className="justify-start text-xs bg-white/10 hover:bg-white/20 text-white/90"
+              className="justify-start text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
               <MapPin className="h-3 w-3 mr-2" />
               节点标记
@@ -577,7 +662,7 @@ export const EnhancedWorldMap = memo(({
                 setViewMode('heatmap');
                 setShowStats(true);
               }}
-              className="justify-start text-xs bg-white/10 hover:bg-white/20 text-white/90"
+              className="justify-start text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
               <Zap className="h-3 w-3 mr-2" />
               覆盖热图
@@ -585,12 +670,12 @@ export const EnhancedWorldMap = memo(({
           </div>
           
           {/* 快速操作 */}
-          <div className="mt-3 pt-3 border-t border-white/10 space-y-1">
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 space-y-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowStats(!showStats)}
-              className="w-full justify-start text-xs text-white/70 hover:text-white"
+              className="w-full justify-start text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               <Eye className="h-3 w-3 mr-2" />
               {showStats ? '隐藏' : '显示'}统计
@@ -641,6 +726,77 @@ export const EnhancedWorldMap = memo(({
           </Badge>
         </div>
       </div>
+
+      {/* 改名对话框 */}
+      {renamingNode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">重命名节点</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              当前节点: <span className="font-medium">{renamingNode.name}</span>
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">新名称</label>
+                <input
+                  type="text"
+                  value={newNodeName}
+                  onChange={(e) => setNewNodeName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="输入新的节点名称"
+                  autoFocus
+                />
+              </div>
+              <div className="flex space-x-3">
+                <Button 
+                  onClick={confirmRename}
+                  className="flex-1"
+                  disabled={!newNodeName.trim()}
+                >
+                  确认
+                </Button>
+                <Button 
+                  onClick={cancelRename}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  取消
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 删除确认对话框 */}
+      {deletingNode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-red-600 mb-4">确认删除节点</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              确定要删除节点 <span className="font-medium text-red-600">{deletingNode.name}</span> 吗？
+            </p>
+            <p className="text-xs text-red-500 mb-4">
+              ⚠️ 此操作不可撤销，将永久删除该节点的所有数据。
+            </p>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={confirmDelete}
+                variant="outline"
+                className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
+              >
+                确认删除
+              </Button>
+              <Button 
+                onClick={cancelDelete}
+                className="flex-1"
+              >
+                取消
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 });

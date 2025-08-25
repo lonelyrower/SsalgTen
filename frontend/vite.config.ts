@@ -34,10 +34,9 @@ export default defineConfig({
             './src/components/admin/UserModal'
           ],
           
-          // Map and diagnostics chunk
-          'map-diagnostics': [
-            './src/components/map/WorldMap',
-            './src/components/diagnostics/NetworkDiagnostics'
+          // Map chunk
+          'map': [
+            './src/components/map/WorldMap'
           ],
           
           // Dashboard components chunk

@@ -1,12 +1,12 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
-import { ActivityLog } from '@/components/dashboard/ActivityLog';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
 import { Activity, Loader2 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
+import { apiService } from '@/services/api';
 import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 
 // Lazy load heavy components
@@ -15,18 +15,61 @@ const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolki
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const { nodes, stats, lastUpdate, connected } = useRealTime();
+  
+  // 从当前nodes中找到选中的节点，保持数据同步
+  const selectedNode = useMemo(() => {
+    return selectedNodeId ? nodes.find(node => node.id === selectedNodeId) || null : null;
+  }, [selectedNodeId, nodes]);
 
   const handleNodeClick = (node: NodeData) => {
-    setSelectedNode(node);
+    setSelectedNodeId(node.id);
     setShowDiagnostics(false);
     console.log('Node clicked:', node);
   };
 
   const handleDiagnosticsClose = () => {
     setShowDiagnostics(false);
+  };
+
+  // 处理节点改名
+  const handleNodeRename = async (nodeId: string, newName: string) => {
+    try {
+      const response = await apiService.updateNode(nodeId, { name: newName });
+      if (response.success) {
+        // 实时数据会自动更新，这里不需要手动刷新
+        console.log('Node renamed successfully');
+      } else {
+        console.error('Failed to rename node:', response.error);
+        alert('改名失败: ' + (response.error || '未知错误'));
+      }
+    } catch (error) {
+      console.error('Error renaming node:', error);
+      alert('改名失败，请重试');
+    }
+  };
+
+  // 处理节点删除
+  const handleNodeDelete = async (nodeId: string) => {
+    try {
+      const response = await apiService.deleteNode(nodeId);
+      if (response.success) {
+        // 如果删除的是当前选中的节点，清空选择
+        if (selectedNodeId === nodeId) {
+          setSelectedNodeId(null);
+          setShowDiagnostics(false);
+        }
+        console.log('Node deleted successfully');
+      } else {
+        console.error('Failed to delete node:', response.error);
+        alert('删除失败: ' + (response.error || '未知错误'));
+      }
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      alert('删除失败，请重试');
+    }
   };
 
   // 如果没有连接且没有数据，显示加载状态
@@ -117,80 +160,102 @@ export const DashboardPage: React.FC = () => {
             className="mb-8"
           />
           
-          {/* 地图和活动日志布局 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-6">
-            {/* 地图 */}
-            <div className="lg:col-span-2 xl:col-span-2">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    全球节点网络
-                  </h2>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span>在线 ({stats?.onlineNodes || 0})</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span>离线 ({(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)})</span>
-                    </div>
+          {/* 全球节点网络地图 */}
+          <div className="mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  全球节点网络
+                </h2>
+                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span>在线 ({stats?.onlineNodes || 0})</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span>离线 ({(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)})</span>
                   </div>
                 </div>
-                
-                <ComponentErrorBoundary componentName="世界地图">
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center h-64">
-                      <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                    </div>
-                  }>
-                    <EnhancedWorldMap 
-                      nodes={nodes} 
-                      onNodeClick={handleNodeClick} 
-                      selectedNode={selectedNode}
-                      showHeatmap={false}
-                      className="mb-4"
-                    />
-                  </Suspense>
-                </ComponentErrorBoundary>
               </div>
-            </div>
-            
-            {/* 活动日志 */}
-            <div className="lg:col-span-1 xl:col-span-1">
-              <ComponentErrorBoundary componentName="活动日志">
-                <ActivityLog />
+              
+              <ComponentErrorBoundary componentName="世界地图">
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+                  </div>
+                }>
+                  <EnhancedWorldMap 
+                    nodes={nodes} 
+                    onNodeClick={handleNodeClick} 
+                    selectedNode={selectedNode}
+                    showHeatmap={false}
+                    className="mb-4"
+                    onNodeRename={user?.role === 'ADMIN' ? handleNodeRename : undefined}
+                    onNodeDelete={user?.role === 'ADMIN' ? handleNodeDelete : undefined}
+                  />
+                </Suspense>
               </ComponentErrorBoundary>
             </div>
           </div>
 
           {/* 选中节点信息 */}
           {selectedNode && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-blue-900 dark:text-blue-100">
-                  Selected Node: {selectedNode.name}
-                </h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                    {selectedNode.name}
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedNode.status.toLowerCase() === 'online' 
+                        ? 'bg-green-500' 
+                        : selectedNode.status.toLowerCase() === 'unknown'
+                        ? 'bg-yellow-500'
+                        : 'bg-red-500'
+                    }`}></div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      {selectedNode.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
                 <Button
                   onClick={() => setShowDiagnostics(true)}
-                  size="sm"
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <Activity className="h-4 w-4 mr-2" />
-                  Run Diagnostics
+                  网络诊断
                 </Button>
               </div>
-              <p className="text-sm text-blue-700 dark:text-blue-200 mb-2">
-                {selectedNode.city}, {selectedNode.country} • {selectedNode.provider}
-              </p>
-              <div className="text-xs text-blue-600 dark:text-blue-300 space-y-1">
-                <div>Status: <span className="font-medium">{selectedNode.status.toUpperCase()}</span></div>
-                {selectedNode.ipv4 && <div>IPv4: <span className="font-mono">{selectedNode.ipv4}</span></div>}
-                {selectedNode.lastSeen && (
-                  <div>Last Seen: <span className="font-medium">
-                    {new Date(selectedNode.lastSeen).toLocaleString()}
-                  </span></div>
-                )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">位置: </span>
+                    <span className="text-gray-900 dark:text-white">{selectedNode.city}, {selectedNode.country}</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">服务商: </span>
+                    <span className="text-gray-900 dark:text-white">{selectedNode.provider}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {selectedNode.ipv4 && (
+                    <div className="text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">IPv4: </span>
+                      <span className="font-mono text-gray-900 dark:text-white">{selectedNode.ipv4}</span>
+                    </div>
+                  )}
+                  {selectedNode.lastSeen && (
+                    <div className="text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">最后在线: </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {new Date(selectedNode.lastSeen).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

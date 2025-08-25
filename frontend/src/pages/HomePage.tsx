@@ -2,31 +2,20 @@ import { useState, useMemo, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { WorldMap } from '@/components/map/WorldMap';
-import { NetworkDiagnostics } from '@/components/diagnostics/NetworkDiagnostics';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useNodes } from '@/hooks/useNodes';
-import { Button } from '@/components/ui/button';
 import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const { nodes, stats, loading, error } = useNodes();
 
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
-    setShowDiagnostics(false); // 重置诊断视图
     console.log('Node clicked:', node);
   }, []);
 
-  const handleDiagnosticsClose = useCallback(() => {
-    setShowDiagnostics(false);
-  }, []);
-
-  const handleStartDiagnostics = useCallback(() => {
-    setShowDiagnostics(true);
-  }, []);
 
   // 缓存统计数据以防止不必要的重新渲染
   const memoizedStats = useMemo(() => ({
@@ -76,20 +65,6 @@ export const HomePage = () => {
     );
   }
 
-  // 如果显示诊断界面且有选中节点
-  if (showDiagnostics && selectedNode) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          <NetworkDiagnostics 
-            node={selectedNode} 
-            onClose={handleDiagnosticsClose} 
-          />
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -149,7 +124,7 @@ export const HomePage = () => {
         {selectedNode && (
           <div className="mb-8">
             <GlassCard variant="tech" animated={true} glow={true} className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-6 lg:space-y-0">
+              <div>
                 <div className="flex-1">
                   {/* 节点头部信息 */}
                   <div className="flex items-center space-x-4 mb-6">
@@ -226,24 +201,6 @@ export const HomePage = () => {
                   </div>
                 </div>
                 
-                {/* 操作按钮 */}
-                <div className="lg:ml-8 flex flex-col space-y-3">
-                  <Button
-                    onClick={handleStartDiagnostics}
-                    size="lg"
-                    className="gradient-btn w-full lg:w-auto min-w-[200px] group relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <Activity className="h-5 w-5 mr-3 relative z-10" />
-                    <span className="relative z-10 font-semibold">运行网络诊断</span>
-                  </Button>
-                  
-                  <div className="text-center lg:text-left">
-                    <div className="text-xs text-gray-500 dark:text-white/60 font-medium">
-                      点击运行完整网络性能检测
-                    </div>
-                  </div>
-                </div>
               </div>
               
               {/* 底部装饰效果 */}
