@@ -591,7 +591,7 @@ export const EnhancedWorldMap = memo(({
   return (
     <div className={`relative ${className}`}>
       {/* 地图控制面板 */}
-      <div className="absolute top-4 right-4 z-[1000] space-y-3">
+      <div className="absolute top-4 right-4 z-40 space-y-3">
         {/* 统计信息卡片 */}
         {showStats && (
           <div className="glass rounded-lg p-4 border border-white/20 backdrop-blur-xl">
