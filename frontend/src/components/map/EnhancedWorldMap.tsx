@@ -4,6 +4,7 @@ import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { 
   Activity, 
   Globe, 
@@ -398,10 +399,11 @@ export const EnhancedWorldMap = memo(({
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-900">{node.name}</h3>
-                      <p className="text-sm text-gray-500 flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {node.city}, {node.country}
-                      </p>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <MapPin className="h-4 w-4" />
+                        <CountryFlag country={node.country} size="sm" showName={false} />
+                        <span>{node.city}, {node.country}</span>
+                      </div>
                     </div>
                   </div>
                   <Badge 

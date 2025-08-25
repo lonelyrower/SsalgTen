@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { Activity, Loader2 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -231,8 +232,9 @@ export const DashboardPage: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <div className="text-sm">
+                  <div className="text-sm flex items-center space-x-2">
                     <span className="text-gray-500 dark:text-gray-400">位置: </span>
+                    <CountryFlag country={selectedNode.country} size="sm" showName={false} />
                     <span className="text-gray-900 dark:text-white">{selectedNode.city}, {selectedNode.country}</span>
                   </div>
                   <div className="text-sm">

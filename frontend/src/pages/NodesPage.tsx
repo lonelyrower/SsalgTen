@@ -5,6 +5,7 @@ import { useRealTime } from '@/hooks/useRealTime';
 import { useConnectivityDiagnostics } from '@/hooks/useConnectivityDiagnostics';
 import { ConnectivityDiagnostics } from '@/components/nodes/ConnectivityDiagnostics';
 import { Button } from '@/components/ui/button';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -473,9 +474,10 @@ export const NodesPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {selectedNode.name}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedNode.city}, {selectedNode.country} • {selectedNode.provider}
-                  </p>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                    <CountryFlag country={selectedNode.country} size="sm" showName={false} />
+                    <span>{selectedNode.city}, {selectedNode.country} • {selectedNode.provider}</span>
+                  </div>
                 </div>
                 
                 <div className="flex items-center space-x-3">
