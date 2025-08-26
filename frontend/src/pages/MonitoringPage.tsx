@@ -28,7 +28,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const formatUptime = (uptime: number | null) => {
+const formatUptime = (uptime: number | null | undefined) => {
   if (!uptime || uptime <= 0) return '--';
   const days = Math.floor(uptime / (24 * 3600));
   const hours = Math.floor((uptime % (24 * 3600)) / 3600);
