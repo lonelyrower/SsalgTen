@@ -73,3 +73,32 @@ temp/
 
 # Windows
 desktop.ini
+
+# Development and debugging files (local only)
+**/debug-*.js
+**/test-*.js
+**/test-*.sh
+**/diagnose-*.js
+**/diagnose-*.sh
+**/demo-*.md
+**/troubleshoot-*.md
+
+# Development logs (local only)
+DEVELOPMENT_LOG_*.md
+WORK_LOG_*.md
+CHANGELOG_*.md
+TEST_RESULTS*.md
+UPDATE_SUMMARY_*.md
+ROLLBACK_PLAN*.md
+
+# Local utility scripts
+get-*-key.js
+init-dev.md
+manual-install-commands.sh
+database-migration.sql
+preset-params-demo.md
+
+# Local test and check scripts
+check-*.js
+create-test-*.js
+fix-*.js
