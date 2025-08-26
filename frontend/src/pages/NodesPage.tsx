@@ -9,7 +9,7 @@ import { CountryFlag } from '@/components/ui/CountryFlag';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown } from 'lucide-react';
-import type { NodeData, VisitorInfo } from '@/services/api';
+import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
 import { socketService } from '@/services/socketService';
 
@@ -27,7 +27,6 @@ export const NodesPage: React.FC = () => {
   const [heartbeatData, setHeartbeatData] = useState<any | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [eventFilter, setEventFilter] = useState<'all' | string>('all');
-  const [visitorInfo, setVisitorInfo] = useState<VisitorInfo | null>(null);
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const { nodes, stats, connected, refreshData } = useRealTime();
@@ -75,17 +74,6 @@ export const NodesPage: React.FC = () => {
     }
   };
 
-  // 获取访问者信息（仅获取一次）
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiService.getVisitorInfo();
-        if (res.success && res.data) {
-          setVisitorInfo(res.data as VisitorInfo);
-        }
-      } catch {}
-    })();
-  }, []);
 
   // 获取节点事件
   const fetchNodeEvents = async (nodeId: string) => {
@@ -580,7 +568,6 @@ export const NodesPage: React.FC = () => {
               <ServerDetailsPanel 
                 node={selectedNode}
                 heartbeatData={heartbeatData}
-                visitorInfo={visitorInfo || undefined}
               />
             )}
             {/* 事件列表 */}

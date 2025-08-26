@@ -110,16 +110,6 @@ interface ServerDetailsPanelProps {
     ipv6?: string;
   };
   heartbeatData?: HeartbeatData;
-  visitorInfo?: {
-    ip: string;
-    asn?: {
-      asn: string;
-      name: string;
-      org: string;
-      route: string;
-      type: string;
-    }
-  };
   className?: string;
 }
 
@@ -169,7 +159,6 @@ const getHealthBadge = (health?: string, value?: number, threshold?: number) => 
 export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({ 
   node, 
   heartbeatData,
-  visitorInfo,
   className 
 }) => {
   const [rxSeries, setRxSeries] = React.useState<number[]>([]);
@@ -467,20 +456,6 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
           <div className="space-y-3">
             {/* 基础网络信息 */}
             <div className="grid grid-cols-1 gap-2 text-sm">
-              {/* 访问者信息 */}
-              {visitorInfo?.ip && (
-                <div className="mb-2">
-                  <p className="text-gray-600 dark:text-gray-400">访问者 IP</p>
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium font-mono">{visitorInfo.ip}</p>
-                    {visitorInfo.asn && (
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        ASN: {visitorInfo.asn.asn} · {visitorInfo.asn.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
               {node.ipv4 && (
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">IPv4</p>
