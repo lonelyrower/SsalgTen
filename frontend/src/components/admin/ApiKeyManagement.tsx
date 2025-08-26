@@ -15,9 +15,6 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
-  Terminal,
-  
-  ExternalLink,
   Info,
   Zap
 } from 'lucide-react';
@@ -340,24 +337,6 @@ export const ApiKeyManagement: React.FC = () => {
                       AGENT_API_KEY=新的密钥<br/><br/>
                       # 3. 重启Agent服务<br/>
                       systemctl restart ssalgten-agent
-                    </div>
-                    <div className="flex items-center space-x-2 mt-3">
-                      <Button
-                        onClick={() => window.open('/admin', '_blank')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Terminal className="h-4 w-4 mr-2" />
-                        获取安装命令
-                      </Button>
-                      <Button
-                        onClick={() => window.open('https://github.com/lonelyrower/SsalgTen/blob/main/docs/deployment.md', '_blank')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        部署文档
-                      </Button>
                     </div>
                   </div>
                 </Card>

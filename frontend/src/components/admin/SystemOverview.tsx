@@ -60,37 +60,38 @@ export const SystemOverview: React.FC = () => {
       setError(null);
       
       // 并行获取多个统计数据
-      const [nodesRes] = await Promise.all([
+      const [nodesRes, usersRes, versionRes] = await Promise.all([
         apiService.getStats(),
-        // 这里可以添加更多的统计API调用
+        apiService.getUsers().catch(() => ({ success: false, data: null })),
+        apiService.getSystemVersion().catch(() => ({ success: false, data: null })),
       ]);
 
       if (nodesRes.success && nodesRes.data) {
-        // 模拟其他统计数据（实际应用中应该从后端获取）
-        const mockStats: SystemOverviewStats = {
+        // 使用真实数据，只有部分数据仍为模拟
+        const stats: SystemOverviewStats = {
           nodes: nodesRes.data,
           heartbeats: {
-            total: 12480,
-            last24h: 1440,
-            avgPerHour: 60
+            total: 12480, // TODO: 从后端API获取
+            last24h: 1440, // TODO: 从后端API获取
+            avgPerHour: 60 // TODO: 从后端API获取
           },
           diagnostics: {
-            total: 3250,
-            last24h: 156,
-            successRate: 94.5
+            total: 3250, // TODO: 从后端API获取
+            last24h: 156, // TODO: 从后端API获取
+            successRate: 94.5 // TODO: 从后端API获取
           },
           users: {
-            total: 8,
-            active: 3
+            total: usersRes.success && Array.isArray(usersRes.data) ? usersRes.data.length : 0,
+            active: usersRes.success && Array.isArray(usersRes.data) ? usersRes.data.filter((user: any) => user.lastLogin && new Date(user.lastLogin).getTime() > Date.now() - 24 * 60 * 60 * 1000).length : 0
           },
           system: {
-            uptime: 15 * 24 * 3600, // 15天
-            version: 'v1.0.0',
+            uptime: 15 * 24 * 3600, // TODO: 从后端API获取系统启动时间
+            version: versionRes.success && versionRes.data?.localVersion ? versionRes.data.localVersion : '0.1.0',
             environment: 'production'
           }
         };
         
-        setStats(mockStats);
+        setStats(stats);
         setLastUpdate(new Date());
       } else {
         setError(nodesRes.error || '获取统计数据失败');
