@@ -84,8 +84,8 @@ class IPInfoService {
         asn: 'Unknown',
         name: 'Unknown', 
         org: data.org || 'Unknown',
-        route: 'Unknown',
-        type: 'Unknown'
+        route: 'N/A',
+        type: 'N/A'
       };
 
       if (data.org) {
@@ -93,9 +93,39 @@ class IPInfoService {
         if (orgMatch) {
           asnInfo.asn = `AS${orgMatch[1]}`;
           asnInfo.name = orgMatch[2].trim();
+          
+          // 根据ASN名称和已知信息推断类型
+          const name = asnInfo.name.toLowerCase();
+          if (name.includes('google') || name.includes('amazon') || name.includes('microsoft') || 
+              name.includes('facebook') || name.includes('cloudflare') || name.includes('apple')) {
+            asnInfo.type = 'Content/CDN';
+          } else if (name.includes('telecom') || name.includes('mobile') || name.includes('wireless') ||
+                     name.includes('cellular') || name.includes('lte') || name.includes('5g')) {
+            asnInfo.type = 'Mobile/ISP';
+          } else if (name.includes('hosting') || name.includes('server') || name.includes('cloud') ||
+                     name.includes('datacenter') || name.includes('digital ocean') || name.includes('linode')) {
+            asnInfo.type = 'Hosting';
+          } else if (name.includes('university') || name.includes('edu') || name.includes('research') ||
+                     name.includes('academic') || name.includes('institute')) {
+            asnInfo.type = 'Education';
+          } else if (name.includes('government') || name.includes('gov') || name.includes('military') ||
+                     name.includes('defense')) {
+            asnInfo.type = 'Government';
+          } else if (name.includes('isp') || name.includes('internet') || name.includes('broadband') ||
+                     name.includes('fiber') || name.includes('cable')) {
+            asnInfo.type = 'ISP';
+          } else if (name.includes('exchange') || name.includes('ix') || name.includes('peering')) {
+            asnInfo.type = 'IX/Peering';
+          } else {
+            asnInfo.type = 'Commercial';
+          }
+          
+          // 路由信息通常需要专业数据源，这里设置为通用提示
+          asnInfo.route = 'Check BGP tables';
         } else {
           // 如果没有AS前缀，直接使用org作为name
           asnInfo.name = data.org;
+          asnInfo.type = 'Unknown';
         }
       }
 
@@ -137,8 +167,8 @@ class IPInfoService {
           asn: 'Unknown',
           name: 'Unknown',
           org: 'Unknown',
-          route: 'Unknown',
-          type: 'Unknown'
+          route: 'N/A',
+          type: 'N/A'
         }
       };
     }
