@@ -492,9 +492,10 @@ export const getServicesStatus = async () => {
           const entries = await readdir('/host/proc', { withFileTypes: true } as any);
           for (const e of entries) {
             if (!(e as any).isDirectory?.()) continue;
-            if (!/^\d+$/.test(e.name)) continue;
+            const entryName = (e as any).name;
+            if (!/^\d+$/.test(entryName)) continue;
             try {
-              const cmd = await readFile(`/host/proc/${e.name}/cmdline`, 'utf8');
+              const cmd = await readFile(`/host/proc/${entryName}/cmdline`, 'utf8');
               for (const pat of patterns) {
                 if (new RegExp(pat).test(cmd)) return true;
               }
@@ -691,8 +692,9 @@ export const getXrayCheck = async () => {
           const entries = await readdir('/host/proc', { withFileTypes: true } as any);
           for (const e of entries) {
             if (!(e as any).isDirectory?.()) continue;
-            if (!/^\d+$/.test(e.name)) continue;
-            try { const cmd = await readFile(`/host/proc/${e.name}/cmdline`, 'utf8'); if (/xray/.test(cmd)) return true; } catch {}
+            const entryName = (e as any).name;
+            if (!/^\d+$/.test(entryName)) continue;
+            try { const cmd = await readFile(`/host/proc/${entryName}/cmdline`, 'utf8'); if (/xray/.test(cmd)) return true; } catch {}
           }
         } catch {}
         return false;
