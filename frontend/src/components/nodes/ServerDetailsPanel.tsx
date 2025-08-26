@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import { apiService, DiagnosticRecord } from '@/services/api';
+import { apiService } from '@/services/api';
+import type { DiagnosticRecord } from '@/services/api';
 
 interface SystemInfo {
   cpu?: {
@@ -815,7 +816,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
-                  {filteredDiagnostics.map((record, index) => (
+                  {filteredDiagnostics.map((record) => (
                     <div key={record.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-3">

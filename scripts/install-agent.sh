@@ -487,7 +487,7 @@ collect_node_info() {
             # 使用轻量容器进行网络探测，贴近Agent运行环境
             if docker run --rm \
                 --add-host host.docker.internal:host-gateway \
-                alpine:3.20 sh -lc "apk add --no-cache curl >/dev/null 2>&1 && curl -sfm 5 ${url}/api/health >/dev/null"; then
+                alpine:3.20 sh -lc "apk add --no-cache curl ca-certificates >/dev/null 2>&1 && curl -sfm 5 ${url}/api/health >/dev/null"; then
                 chosen="$url"
                 log_success "探测通过，选择: $chosen"
                 break

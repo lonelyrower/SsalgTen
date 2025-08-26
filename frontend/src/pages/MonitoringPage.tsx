@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, MapPin, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, Grid3X3, List, LayoutGrid } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, Grid3X3, List, LayoutGrid } from 'lucide-react';
 import { getCountryFlag } from '@/utils/countryFlags';
 
 // Remove the custom interface since useRealTime provides the data structure we need

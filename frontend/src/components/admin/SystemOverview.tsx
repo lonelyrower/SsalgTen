@@ -15,8 +15,6 @@ import {
   Globe,
   Zap,
   HardDrive,
-  Cpu,
-  MemoryStick
 } from 'lucide-react';
 
 interface SystemStats {

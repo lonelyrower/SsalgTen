@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { apiService, ApiKeyInfo } from '@/services/api';
+import { apiService } from '@/services/api';
+import type { ApiKeyInfo } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +16,7 @@ import {
   Eye,
   EyeOff,
   Terminal,
-  Download,
+  
   ExternalLink,
   Info,
   Zap
@@ -29,7 +30,7 @@ export const ApiKeyManagement: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
+  // 移除未使用的弹窗状态，避免构建告警
 
   const fetchApiKeyInfo = async () => {
     try {
@@ -66,7 +67,6 @@ export const ApiKeyManagement: React.FC = () => {
       if (response.success && response.data) {
         setSuccess(`新API密钥已生成！请尽快更新所有Agent配置。`);
         await fetchApiKeyInfo(); // 重新获取密钥信息
-        setShowRegenerateModal(true);
         setTimeout(() => {
           setSuccess(null);
         }, 10000); // 10秒后自动隐藏成功消息

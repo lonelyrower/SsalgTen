@@ -227,16 +227,17 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    let best: { node: NodeData; dist: number } | null = null;
+    let bestNode: NodeData | null = null;
+    let bestDist = Number.POSITIVE_INFINITY;
     nodes.forEach(node => {
       const { x: vx, y: vy, z: vz } = latLonToXYZ(node.latitude, node.longitude);
       const p = project3D(vx, vy, vz);
       if (!p.visible) return;
       const d2 = (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y);
-      if (!best || d2 < best.dist) best = { node, dist: d2 };
+      if (d2 < bestDist) { bestDist = d2; bestNode = node; }
     });
-    if (best && best.dist < 20 * 20) {
-      return best.node;
+    if (bestNode && bestDist < 20 * 20) {
+      return bestNode;
     }
     return null;
   };

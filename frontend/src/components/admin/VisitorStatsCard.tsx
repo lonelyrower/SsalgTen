@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
+import type { VisitorStats as VisitorStatsT } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,21 +17,7 @@ import {
   Eye
 } from 'lucide-react';
 
-interface VisitorStats {
-  totalVisitors: number;
-  uniqueIPs: number;
-  topCountries: Array<{ country: string; count: number }>;
-  topASNs: Array<{ asn: string; count: number }>;
-  recentVisitors: Array<{
-    ip: string;
-    country?: string;
-    city?: string;
-    asnName?: string;
-    userAgent: string;
-    timestamp: string;
-    path: string;
-  }>;
-}
+// 使用服务定义的类型，避免字段不一致（后端返回 createdAt）
 
 interface CacheStats {
   size: number;
@@ -38,7 +25,7 @@ interface CacheStats {
 }
 
 export const VisitorStatsCard: React.FC = () => {
-  const [stats, setStats] = useState<VisitorStats | null>(null);
+  const [stats, setStats] = useState<VisitorStatsT | null>(null);
   const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
