@@ -13,6 +13,8 @@ export const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [versionInfo, setVersionInfo] = useState<{ localVersion?: string; latestCommit?: string; updateAvailable?: boolean } | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [updateJobId, setUpdateJobId] = useState<string | null>(null);
+  const [updateLog, setUpdateLog] = useState<string>('');
 
   useEffect(() => {
     apiService.getSystemVersion().then(res => {
@@ -176,6 +178,21 @@ export const AdminPage: React.FC = () => {
                     try {
                       const res = await apiService.triggerSystemUpdate(false);
                       if (!res.success) throw new Error(res.error || '更新启动失败');
+                      const job = (res.data as any)?.job;
+                      if (job?.id) {
+                        setUpdateJobId(job.id);
+                        setUpdateLog('更新任务已启动，正在拉取日志...');
+                        // 轮询日志
+                        const timer = setInterval(async () => {
+                          try {
+                            const r = await fetch(`${(window as any).APP_CONFIG?.API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'}/admin/system/update/${job.id}/log?tail=500`);
+                            const text = await r.text();
+                            setUpdateLog(text);
+                          } catch {}
+                        }, 3000);
+                        // 简单超时保护：10分钟后停止轮询
+                        setTimeout(() => clearInterval(timer), 10 * 60 * 1000);
+                      }
                     } catch (e) {
                       console.error(e);
                     } finally {
@@ -187,6 +204,14 @@ export const AdminPage: React.FC = () => {
                   {updating ? '更新中...' : (versionInfo?.updateAvailable ? '立即更新' : '检查并更新')}
                 </Button>
               </div>
+              {updateJobId && (
+                <div className="mt-4">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">任务ID: {updateJobId}</div>
+                  <pre className="h-60 overflow-auto bg-gray-50 dark:bg-gray-900 text-xs p-3 rounded border border-gray-200 dark:border-gray-700 whitespace-pre-wrap">
+                    {updateLog || '暂无日志'}
+                  </pre>
+                </div>
+              )}
             </div>
           </>
         )}

@@ -192,8 +192,21 @@ fi
 # 节点端口占用 -> 默认跳过 docker 内置 agent，避免与本机/外部节点冲突
 SKIP_AGENT_NYC=false
 if port_in_use "$AGENT_NYC_PORT"; then
-  echo "ℹ️  检测到节点端口 $AGENT_NYC_PORT 已被占用，跳过 docker 内置节点(Agent)。"
-  SKIP_AGENT_NYC=true
+  if [ "${FORCE_ENABLE_AGENT:-false}" = "true" ]; then
+    free=$(next_free_port "$AGENT_NYC_PORT")
+    if [ "$free" != "$AGENT_NYC_PORT" ]; then
+      echo "ℹ️  节点端口 $AGENT_NYC_PORT 被占用，FORCE_ENABLE_AGENT=true，改为 $free 并继续启用 Agent。"
+      AGENT_NYC_PORT="$free"
+      ensure_env_kv AGENT_NYC_PORT "$AGENT_NYC_PORT"
+      SKIP_AGENT_NYC=false
+    else
+      echo "ℹ️  未找到可用端口，仍将跳过内置 Agent。"
+      SKIP_AGENT_NYC=true
+    fi
+  else
+    echo "ℹ️  检测到节点端口 $AGENT_NYC_PORT 已被占用，跳过 docker 内置节点(Agent)。"
+    SKIP_AGENT_NYC=true
+  fi
 fi
 
 # 拉取最新代码（通常在 git pull 之后调用，此处容错）

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { mkdirSync, createWriteStream } from 'node:fs';
+import { mkdirSync, createWriteStream, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8765;
@@ -63,6 +63,33 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { ok: true });
   }
 
+  // 列出所有任务（仅文件名）
+  if (req.method === 'GET' && url.pathname === '/jobs') {
+    try {
+      const files = readdirSync(LOG_DIR).filter(f => f.endsWith('.log'));
+      const jobs = files.map(f => ({ id: f.replace(/\.log$/, ''), logfile: join(LOG_DIR, f) }));
+      return send(res, 200, { success: true, jobs });
+    } catch (e) {
+      return send(res, 500, { success: false, error: e?.message || 'failed to list jobs' });
+    }
+  }
+
+  // 获取单个任务日志（支持tail=行数）
+  if (req.method === 'GET' && url.pathname.startsWith('/jobs/')) {
+    const id = url.pathname.split('/')[2];
+    const tail = Math.max(0, Number(url.searchParams.get('tail') || 500));
+    const logfile = join(LOG_DIR, `${id}.log`);
+    try {
+      const content = readFileSync(logfile, 'utf8');
+      const lines = content.split(/\r?\n/);
+      const sliced = tail > 0 ? lines.slice(-tail) : lines;
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      return res.end(sliced.join('\n'));
+    } catch (e) {
+      return send(res, 404, { success: false, error: 'log not found' });
+    }
+  }
+
   if (req.method === 'POST' && url.pathname === '/update') {
     if (TOKEN && req.headers['x-updater-token'] !== TOKEN) {
       return send(res, 401, { error: 'unauthorized' });
@@ -88,4 +115,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Updater listening on :${PORT}`);
 });
-

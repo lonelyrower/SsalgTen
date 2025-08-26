@@ -29,6 +29,7 @@ PROJECT_PORT=3000 NODE_PORT=9000 BACKEND_PORT=3001 DB_PORT=5432 \
 - ✅ 验证前端和后端服务可访问性
 - ✅ 若前端/后端端口被占用，自动切换到可用端口并写入 `.env`
 - ✅ 若节点端口被占用（同机已有节点），自动跳过 docker 内置节点以避免冲突
+  - 如需强制启用内置 Agent 并自动换端口：设置 `FORCE_ENABLE_AGENT=true`
 
 ### 一键前端触发更新（可选）
 
@@ -54,6 +55,7 @@ UPDATER_TOKEN=与你上一步一致
 安全说明：
 - 更新服务仅监听本机 8765 端口，后端容器通过 host.docker.internal 访问；务必设置强 `UPDATER_TOKEN`。
 - 更新过程会写入 `.env` 的 `APP_VERSION` 为当前提交短哈希，前端会显示并用于比对。
+ - 新增日志接口：updater 暴露 `GET /jobs` 和 `GET /jobs/:id?tail=500` 供后端代理，前端可在后台查看更新过程日志。
 - ✅ 支持通过 `PROJECT_PORT`（映射为 `FRONTEND_PORT`）和 `NODE_PORT`（映射为 `AGENT_NYC_PORT`）自定义端口，并自动写入 `.env`
 - ✅ 在重建前检查端口占用，并给出清晰提示
 

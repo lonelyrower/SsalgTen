@@ -53,7 +53,8 @@ export class UpdateController {
 
   async triggerUpdate(req: Request, res: Response) {
     // 通过外部 Updater 服务执行真正的更新
-    const updaterUrl = process.env.UPDATER_URL || 'http://host.docker.internal:8765/update';
+    const updaterBase = (process.env.UPDATER_URL || 'http://host.docker.internal:8765/update').replace(/\/update$/, '');
+    const updaterUrl = `${updaterBase}/update`;
     const updaterToken = process.env.UPDATER_TOKEN || '';
     const forceAgent = Boolean(req.body?.forceAgent);
 
@@ -71,7 +72,9 @@ export class UpdateController {
       if (!resp.ok) {
         return res.status(resp.status).json({ success: false, error: 'Updater error', data: { status: resp.status, body: text } });
       }
-      return res.status(202).json({ success: true, message: 'Update started', data: { body: text } });
+      let payload: any = undefined;
+      try { payload = JSON.parse(text); } catch {}
+      return res.status(202).json({ success: true, message: 'Update started', data: payload?.job ? { job: payload.job } : { raw: text } });
     } catch (e: any) {
       return res.status(501).json({
         success: false,
@@ -83,7 +86,23 @@ export class UpdateController {
       });
     }
   }
+
+  async getUpdateLog(req: Request, res: Response) {
+    const id = req.params.id;
+    if (!id) return res.status(400).json({ success: false, error: 'missing id' });
+    const updaterBase = (process.env.UPDATER_URL || 'http://host.docker.internal:8765/update').replace(/\/update$/, '');
+    const updaterToken = process.env.UPDATER_TOKEN || '';
+    try {
+      const url = `${updaterBase}/jobs/${encodeURIComponent(id)}?tail=${Number(req.query.tail || 500)}`;
+      const resp = await fetch(url, { headers: { ...(updaterToken ? { 'X-Updater-Token': updaterToken } : {}) } });
+      const text = await resp.text();
+      if (!resp.ok) return res.status(resp.status).json({ success: false, error: 'updater log error', data: { body: text } });
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(text);
+    } catch (e: any) {
+      return res.status(502).json({ success: false, error: 'proxy failed' });
+    }
+  }
 }
 
 export const updateController = new UpdateController();
-

@@ -16,6 +16,8 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
   const [zoom, setZoom] = useState(1);
   const [mouseDown, setMouseDown] = useState(false);
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
+  const [hover, setHover] = useState<{ x: number; y: number; node: NodeData } | null>(null);
+  const [powerSave, setPowerSave] = useState<boolean>(() => /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent));
 
   const R = 220; // 球半径（像素）
 
@@ -108,12 +110,21 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
+
+      // 悬浮拾取：粗略匹配屏幕距离
+      if (hover) {
+        const d2 = (p.x - hover.x) ** 2 + (p.y - hover.y) ** 2;
+        if (d2 < (r * 4) ** 2) {
+          // 记录最近匹配
+          hover.node = node;
+        }
+      }
     });
   }, [nodes, project3D, zoom]);
 
   // 动画
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !powerSave) {
       const animate = () => {
         setRotation(prev => ({ x: prev.x, y: prev.y + 0.003 }));
         try { draw(); } catch {}
@@ -128,6 +139,13 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
       animationRef.current = undefined;
     };
   }, [isPlaying, draw]);
+
+  // 页面不可见时自动暂停
+  useEffect(() => {
+    const onVis = () => setIsPlaying(document.visibilityState === 'visible');
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
 
   // 尺寸
   useEffect(() => {
@@ -179,6 +197,14 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
     setRotation(prev => ({ x: Math.max(-Math.PI/2, Math.min(Math.PI/2, prev.x + dy * 0.005)), y: prev.y + dx * 0.005 }));
     setLastMouse({ x: e.clientX, y: e.clientY });
   };
+  const onMouseMoveHover = (e: React.MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    setHover({ x: e.clientX - rect.left, y: e.clientY - rect.top, node: (hover?.node as any) });
+    // 重新绘制以触发标签渲染
+    draw();
+  };
   const onMouseUp = () => setMouseDown(false);
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -210,19 +236,36 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
   return (
     <div className={`relative ${className}`}>
       {Controls}
+      {/* 省电模式开关 */}
+      <div className="absolute top-4 left-4 z-10">
+        <label className="text-xs bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 cursor-pointer select-none">
+          <input type="checkbox" className="mr-1" checked={powerSave} onChange={e => setPowerSave(e.target.checked)} />
+          省电模式
+        </label>
+      </div>
       <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-grab active:cursor-grabbing bg-slate-900"
           onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
+          onMouseMove={(e) => { onMouseMove(e); onMouseMoveHover(e); }}
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
           onWheel={onWheel}
           onClick={onClick}
         />
+        {/* 悬浮提示 */}
+        {hover?.node && (
+          <div
+            className="absolute text-xs bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 pointer-events-none"
+            style={{ left: Math.max(8, Math.min((hover.x + 12), (canvasRef.current?.clientWidth || 0) - 120)), top: Math.max(8, (hover.y + 12)) }}
+          >
+            <div className="font-semibold text-gray-800 dark:text-gray-200">{hover.node.name}</div>
+            <div className="text-gray-600 dark:text-gray-400">{hover.node.city}, {hover.node.country}</div>
+            <div className="text-gray-500 dark:text-gray-400">状态: {hover.node.status}</div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
