@@ -1,0 +1,17 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache bash git curl lsof procps docker-cli docker-compose-plugin
+
+# Updater server
+COPY scripts/updater-server.mjs /app/updater-server.mjs
+
+ENV PORT=8765 \
+    WORKSPACE=/workspace \
+    UPDATE_SCRIPT=/workspace/scripts/update-frontend.sh
+
+EXPOSE 8765
+
+CMD ["node", "/app/updater-server.mjs"]
+

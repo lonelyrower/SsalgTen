@@ -55,6 +55,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOST: 0.0.0.0
+      APP_VERSION: ${APP_VERSION:-0.1.0}
       
       # Database Configuration
       DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten
@@ -89,6 +90,8 @@ services:
       - backend_data:/app/data
     ports:
       - "${BACKEND_PORT:-3001}:3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - ssalgten-network
     healthcheck:

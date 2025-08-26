@@ -587,6 +587,18 @@ class ApiService {
     return this.request<any>('/info');
   }
 
+  // 系统版本与更新
+  async getSystemVersion(): Promise<ApiResponse<{ localVersion: string; latestCommit?: string; updateAvailable?: boolean; repo: string; branch: string }>> {
+    return this.request('/system/version');
+  }
+
+  async triggerSystemUpdate(forceAgent: boolean = false): Promise<ApiResponse<{ body?: string }>> {
+    return this.request('/admin/system/update', {
+      method: 'POST',
+      body: JSON.stringify({ forceAgent })
+    }, true);
+  }
+
   // 访问者信息API
   async getVisitorInfo(): Promise<ApiResponse<VisitorInfo>> {
     return this.request<VisitorInfo>('/visitor/info');

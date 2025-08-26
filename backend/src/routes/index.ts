@@ -13,6 +13,7 @@ import { LoginSchema, ChangePasswordSchema, RefreshSchema } from '../schemas/aut
 import { CreateUserSchema, UpdateUserSchema, CreateNodeSchema, UpdateNodeSchema } from '../schemas/admin';
 import { APP_VERSION } from '../utils/version';
 import { diagnosticsProxyController } from '../controllers/DiagnosticsProxyController';
+import { updateController } from '../controllers/UpdateController';
 
 const router = Router();
 
@@ -61,6 +62,10 @@ router.get('/info', (req: Request, res: Response) => {
   };
   res.json(response);
 });
+
+// 系统版本与更新（版本检查对外公开；更新触发仅管理员）
+router.get('/system/version', publicLimiter, updateController.getVersion.bind(updateController));
+router.post('/admin/system/update', authenticateToken, requireAdmin, updateController.triggerUpdate.bind(updateController));
 
 // 节点管理路由
 router.get('/nodes', publicLimiter, nodeController.getAllNodes.bind(nodeController));

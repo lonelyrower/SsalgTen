@@ -127,6 +127,15 @@ if ! grep -qE '^VITE_API_BASE_URL=' .env 2>/dev/null; then
   export VITE_API_BASE_URL="http://localhost:${BACKEND_PORT}/api"
 fi
 
+# 写入/更新 APP_VERSION（使用当前提交短哈希；若无 .git 则保留原值）
+if [ -d .git ] && have git; then
+  APP_VER=$(git rev-parse --short HEAD 2>/dev/null || echo "${APP_VERSION:-unknown}")
+  if [ -n "$APP_VER" ]; then
+    ensure_env_kv APP_VERSION "$APP_VER"
+    export APP_VERSION="$APP_VER"
+  fi
+fi
+
 echo "📦 使用端口: DB=${DB_PORT} BACKEND=${BACKEND_PORT} FRONTEND=${FRONTEND_PORT} NODE=${AGENT_NYC_PORT}"
 
 # 停止可能冲突的系统 PostgreSQL 服务（仅当 DB_PORT=5432 时尝试）

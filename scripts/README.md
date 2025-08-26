@@ -29,6 +29,31 @@ PROJECT_PORT=3000 NODE_PORT=9000 BACKEND_PORT=3001 DB_PORT=5432 \
 - ✅ 验证前端和后端服务可访问性
 - ✅ 若前端/后端端口被占用，自动切换到可用端口并写入 `.env`
 - ✅ 若节点端口被占用（同机已有节点），自动跳过 docker 内置节点以避免冲突
+
+### 一键前端触发更新（可选）
+
+如果你希望在“前端后台页面”点击按钮即可触发更新，请部署 host 级更新服务（容器化，无需在宿主机安装 Node）：
+
+1) 构建并运行更新服务容器
+```bash
+# 在项目根目录执行（确保 /opt/ssalgten 是你的实际路径）
+cd /opt/ssalgten
+UPDATER_TOKEN=请自定义一个强密码 \
+  WORKSPACE=/opt/ssalgten \
+  bash scripts/updater-run.sh
+```
+
+2) 在 `.env` 设置同样的 `UPDATER_TOKEN`（和默认的 `UPDATER_URL` 保持一致）
+```ini
+UPDATER_URL=http://host.docker.internal:8765/update
+UPDATER_TOKEN=与你上一步一致
+```
+
+3) 重新 `docker compose up -d`。随后，后台“系统管理”页会出现“系统更新”卡片，管理员可点击“立即更新”。
+
+安全说明：
+- 更新服务仅监听本机 8765 端口，后端容器通过 host.docker.internal 访问；务必设置强 `UPDATER_TOKEN`。
+- 更新过程会写入 `.env` 的 `APP_VERSION` 为当前提交短哈希，前端会显示并用于比对。
 - ✅ 支持通过 `PROJECT_PORT`（映射为 `FRONTEND_PORT`）和 `NODE_PORT`（映射为 `AGENT_NYC_PORT`）自定义端口，并自动写入 `.env`
 - ✅ 在重建前检查端口占用，并给出清晰提示
 

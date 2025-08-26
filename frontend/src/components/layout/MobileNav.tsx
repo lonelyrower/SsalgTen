@@ -11,7 +11,8 @@ import {
   LogOut,
   Shield,
   Globe,
-  Lock
+  Lock,
+  Server
 } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
@@ -26,6 +27,7 @@ export const MobileNav: React.FC = () => {
 
   const navItems = isAuthenticated ? [
     { path: '/dashboard', label: '监控面板', icon: Activity, show: true },
+    { path: '/monitoring', label: '监控概览', icon: Server, show: hasRole('VIEWER') },
     { path: '/nodes', label: '节点管理', icon: Settings, show: hasRole('OPERATOR') },
     { path: '/security', label: '安全分析', icon: Lock, show: hasRole('VIEWER') },
     { path: '/universe', label: '网络宇宙', icon: Globe, show: hasRole('VIEWER') },

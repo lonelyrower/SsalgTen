@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
 import { NodeManagement } from '@/components/admin/NodeManagement';
-import { Shield, Lock, Server } from 'lucide-react';
+import { Shield, Lock, Server, RefreshCw } from 'lucide-react';
+import { apiService } from '@/services/api';
 
 export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [versionInfo, setVersionInfo] = useState<{ localVersion?: string; latestCommit?: string; updateAvailable?: boolean } | null>(null);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    apiService.getSystemVersion().then(res => {
+      if (res.success) setVersionInfo(res.data as any);
+    }).catch(() => void 0);
+  }, []);
 
   if (!hasRole('ADMIN')) {
     return (
@@ -136,13 +145,47 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    v0.1.0
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">系统版本</div>
+                  <div className="text-sm font-mono text-purple-600 dark:text-purple-300">
+                    {versionInfo?.localVersion || 'unknown'}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    系统版本
-                  </div>
+                  {versionInfo?.latestCommit && (
+                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      最新: {versionInfo.latestCommit.slice(0,7)}
+                    </div>
+                  )}
+                  {!!versionInfo?.updateAvailable && (
+                    <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">有可用更新</div>
+                  )}
                 </div>
+              </div>
+            </div>
+
+            {/* 系统更新 */}
+            <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">系统更新</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">检测并一键更新到最新版本</p>
+                </div>
+                <Button
+                  variant={versionInfo?.updateAvailable ? 'default' : 'outline'}
+                  disabled={updating}
+                  onClick={async () => {
+                    setUpdating(true);
+                    try {
+                      const res = await apiService.triggerSystemUpdate(false);
+                      if (!res.success) throw new Error(res.error || '更新启动失败');
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setUpdating(false);
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {updating ? '更新中...' : (versionInfo?.updateAvailable ? '立即更新' : '检查并更新')}
+                </Button>
               </div>
             </div>
           </>

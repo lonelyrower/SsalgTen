@@ -13,6 +13,7 @@ const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default
 const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
 const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
+const MonitoringPage = lazy(() => import('@/pages/MonitoringPage').then(module => ({ default: module.MonitoringPage })));
 const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
 const UniversePage = lazy(() => import('@/pages/UniversePage').then(module => ({ default: module.UniversePage })));
 const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
@@ -74,6 +75,16 @@ function App() {
             }
           />
           
+          <Route
+            path="/monitoring"
+            element={
+              <ProtectedRoute requiredRole="VIEWER">
+                <PageErrorBoundary>
+                  <MonitoringPage />
+                </PageErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
           
           {/* 新增炫酷功能路由 */}
           <Route
