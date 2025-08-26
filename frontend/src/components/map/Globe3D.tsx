@@ -4,11 +4,12 @@ import type { NodeData } from '@/services/api';
 interface Globe3DProps {
   nodes?: NodeData[];
   onNodeClick?: (node: NodeData) => void;
+  selectedNode?: NodeData | null;
   className?: string;
 }
 
 // 简易 Canvas 3D 地球，可视化节点（不依赖三方 3D 库）
-export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, className = '' }) => {
+export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selectedNode, className = '' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -20,6 +21,13 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
   const [powerSave, setPowerSave] = useState<boolean>(() => /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent));
 
   const R = 220; // 球半径（像素）
+  
+  // 根据设备像素比调整绘制质量
+  const getDrawingScale = useCallback(() => {
+    if (powerSave) return 1; // 省电模式使用1x
+    const dpr = window.devicePixelRatio || 1;
+    return Math.min(dpr, 2); // 最高2x，避免过度渲染
+  }, [powerSave]);
 
   const toRadians = (deg: number) => (deg * Math.PI) / 180;
 
@@ -94,22 +102,54 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
 
       const status = (node.status || 'unknown').toLowerCase();
       const color = status === 'online' ? '#22c55e' : status === 'offline' ? '#ef4444' : status === 'maintenance' ? '#f59e0b' : '#9ca3af';
+      const isSelected = selectedNode && selectedNode.id === node.id;
       const r = Math.max(1.5, sizeBase * Math.max(0.6, p.scale));
+      
+      // 选中节点的高亮效果
+      if (isSelected) {
+        // 脉冲外环
+        const pulseTime = Date.now() * 0.003;
+        const pulseRadius = r * (2 + Math.sin(pulseTime) * 0.5);
+        const pulseGlow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, pulseRadius);
+        pulseGlow.addColorStop(0, color + '80');
+        pulseGlow.addColorStop(0.7, color + '40');
+        pulseGlow.addColorStop(1, color + '00');
+        ctx.fillStyle = pulseGlow;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, pulseRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 选中指示环
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 1.8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
 
       // 光晕
-      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3);
+      const glowSize = isSelected ? r * 4 : r * 2.5;
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowSize);
       glow.addColorStop(0, color + 'AA');
       glow.addColorStop(1, color + '00');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r * 2.5, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
       ctx.fill();
 
       // 核心点
-      ctx.fillStyle = color;
+      ctx.fillStyle = isSelected ? '#ffffff' : color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, isSelected ? r * 1.2 : r, 0, Math.PI * 2);
       ctx.fill();
+      
+      // 选中节点的内核
+      if (isSelected) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // 悬浮拾取：粗略匹配屏幕距离
       if (hover) {
@@ -120,7 +160,7 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
         }
       }
     });
-  }, [nodes, project3D, zoom]);
+  }, [nodes, project3D, zoom, selectedNode]);
 
   // 动画
   useEffect(() => {
@@ -147,21 +187,37 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, class
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
-  // 尺寸
+  // 尺寸和高DPI支持
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = canvas?.parentElement;
     if (!canvas || !container) return;
+    
     const resize = () => {
       const rect = container.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = Math.max(420, rect.height);
+      const scale = getDrawingScale();
+      
+      // 设置画布的实际大小
+      canvas.width = rect.width * scale;
+      canvas.height = Math.max(420, rect.height) * scale;
+      
+      // 设置画布的显示大小
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = Math.max(420, rect.height) + 'px';
+      
+      // 缩放绘制上下文以匹配设备像素比
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(scale, scale);
+      }
+      
       draw();
     };
+    
     resize();
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
-  }, [draw]);
+  }, [draw, getDrawingScale]);
 
   // 点击拾取最近点
   const pickNode = (clientX: number, clientY: number) => {

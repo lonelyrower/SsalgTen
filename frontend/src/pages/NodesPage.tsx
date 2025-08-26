@@ -406,6 +406,7 @@ export const NodesPage: React.FC = () => {
                   <Globe3D 
                     nodes={filteredNodes}
                     onNodeClick={handleNodeClick}
+                    selectedNode={selectedNode}
                   />
                 )}
               </Suspense>

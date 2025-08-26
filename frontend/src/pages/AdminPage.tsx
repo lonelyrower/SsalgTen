@@ -4,7 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
 import { NodeManagement } from '@/components/admin/NodeManagement';
-import { Shield, Lock, Server, RefreshCw } from 'lucide-react';
+import { SystemSettings } from '@/components/admin/SystemSettings';
+import { SystemOverview } from '@/components/admin/SystemOverview';
+import { VisitorStatsCard } from '@/components/admin/VisitorStatsCard';
+import { ApiKeyManagement } from '@/components/admin/ApiKeyManagement';
+import { ActivityLog } from '@/components/dashboard/ActivityLog';
+import { Shield, Lock, Server, RefreshCw, BarChart3, Settings, Database } from 'lucide-react';
 import { apiService } from '@/services/api';
 
 export const AdminPage: React.FC = () => {
@@ -79,6 +84,28 @@ export const AdminPage: React.FC = () => {
                 系统概览
               </button>
               <button
+                onClick={() => setActiveTab('statistics')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'statistics'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4 inline mr-2" />
+                统计分析
+              </button>
+              <button
+                onClick={() => setActiveTab('system')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'system'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                <Settings className="h-4 w-4 inline mr-2" />
+                系统配置
+              </button>
+              <button
                 onClick={() => setActiveTab('nodes')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'nodes'
@@ -122,6 +149,11 @@ export const AdminPage: React.FC = () => {
                   修改密码
                 </Button>
               </div>
+            </div>
+
+            {/* API密钥管理卡片 */}
+            <div className="mt-8">
+              <ApiKeyManagement />
             </div>
 
             {/* 系统状态概览 */}
@@ -214,6 +246,20 @@ export const AdminPage: React.FC = () => {
               )}
             </div>
           </>
+        )}
+
+        {activeTab === 'statistics' && (
+          <div className="space-y-8">
+            <SystemOverview />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              <VisitorStatsCard />
+              <ActivityLog />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'system' && (
+          <SystemSettings />
         )}
 
         {activeTab === 'nodes' && (

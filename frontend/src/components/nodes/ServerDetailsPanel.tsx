@@ -1,6 +1,7 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Cpu, 
   MemoryStick, 
@@ -10,9 +11,15 @@ import {
   Thermometer,
   Cloud,
   Server,
-  Gauge
-  
+  Gauge,
+  History,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
+import { apiService, DiagnosticRecord } from '@/services/api';
 
 interface SystemInfo {
   cpu?: {
@@ -163,6 +170,35 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
 }) => {
   const [rxSeries, setRxSeries] = React.useState<number[]>([]);
   const [txSeries, setTxSeries] = React.useState<number[]>([]);
+  const [activeTab, setActiveTab] = React.useState<'system' | 'diagnostics'>('system');
+  const [diagnosticRecords, setDiagnosticRecords] = React.useState<DiagnosticRecord[]>([]);
+  const [loadingDiagnostics, setLoadingDiagnostics] = React.useState(false);
+  const [diagnosticFilter, setDiagnosticFilter] = React.useState<'ALL' | 'PING' | 'TRACEROUTE' | 'MTR' | 'SPEEDTEST'>('ALL');
+
+  // 获取诊断历史记录
+  const fetchDiagnosticRecords = async () => {
+    try {
+      setLoadingDiagnostics(true);
+      const response = await apiService.getNodeDiagnostics(node.id, undefined, 50);
+      if (response.success && response.data) {
+        setDiagnosticRecords(response.data);
+      } else {
+        setDiagnosticRecords([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch diagnostic records:', error);
+      setDiagnosticRecords([]);
+    } finally {
+      setLoadingDiagnostics(false);
+    }
+  };
+
+  // 当切换到诊断标签页时获取诊断记录
+  React.useEffect(() => {
+    if (activeTab === 'diagnostics') {
+      fetchDiagnosticRecords();
+    }
+  }, [activeTab, node.id]);
 
   // 聚合所有网卡速率，形成总吞吐量曲线（保留最近20个样本）
   React.useEffect(() => {
@@ -196,8 +232,75 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
       </svg>
     );
   };
+
+  const getStatusIcon = (success: boolean) => {
+    return success ? (
+      <CheckCircle className="h-4 w-4 text-green-600" />
+    ) : (
+      <XCircle className="h-4 w-4 text-red-600" />
+    );
+  };
+
+  const getDiagnosticTypeColor = (type: string) => {
+    switch (type) {
+      case 'PING':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'TRACEROUTE':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'MTR':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'SPEEDTEST':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
+  const formatDuration = (ms?: number) => {
+    if (!ms) return '-';
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
+  const filteredDiagnostics = diagnosticRecords.filter(record => 
+    diagnosticFilter === 'ALL' || record.type === diagnosticFilter
+  );
+
   return (
-    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${className}`}>
+    <div className={className}>
+      {/* 标签页导航 */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('system')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                activeTab === 'system'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              <Server className="h-4 w-4 inline mr-2" />
+              系统信息
+            </button>
+            <button
+              onClick={() => setActiveTab('diagnostics')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                activeTab === 'diagnostics'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              <History className="h-4 w-4 inline mr-2" />
+              诊断历史
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* 标签页内容 */}
+      {activeTab === 'system' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 系统概览 */}
       <Card>
         <CardHeader className="pb-3">
@@ -657,6 +760,136 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
           )}
         </CardContent>
       </Card>
+        </div>
+      )}
+
+      {activeTab === 'diagnostics' && (
+        <div className="space-y-6">
+          {/* 诊断记录控制面板 */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <History className="h-4 w-4" />
+                  <span>诊断历史记录</span>
+                </CardTitle>
+                <div className="flex items-center space-x-3">
+                  <select
+                    value={diagnosticFilter}
+                    onChange={(e) => setDiagnosticFilter(e.target.value as any)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="ALL">全部</option>
+                    <option value="PING">Ping</option>
+                    <option value="TRACEROUTE">Traceroute</option>
+                    <option value="MTR">MTR</option>
+                    <option value="SPEEDTEST">Speedtest</option>
+                  </select>
+                  <Button
+                    onClick={fetchDiagnosticRecords}
+                    variant="outline"
+                    size="sm"
+                    disabled={loadingDiagnostics}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-1 ${loadingDiagnostics ? 'animate-spin' : ''}`} />
+                    刷新
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <p>显示最近50条诊断记录，按时间倒序排列</p>
+                <div className="flex items-center space-x-4">
+                  <span>总记录: {diagnosticRecords.length}</span>
+                  <span>筛选结果: {filteredDiagnostics.length}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 诊断记录列表 */}
+          <Card>
+            <CardContent className="p-0">
+              {loadingDiagnostics ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="animate-spin h-6 w-6 text-blue-600 mr-2" />
+                  <span className="text-gray-600 dark:text-gray-400">加载诊断记录中...</span>
+                </div>
+              ) : filteredDiagnostics.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <History className="h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 mb-2">暂无诊断记录</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    {diagnosticFilter === 'ALL' ? '该节点尚未进行任何诊断测试' : `暂无 ${diagnosticFilter} 类型的诊断记录`}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                  {filteredDiagnostics.map((record, index) => (
+                    <div key={record.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(record.success)}
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${getDiagnosticTypeColor(record.type)}`}>
+                                {record.type}
+                              </span>
+                              {record.target && (
+                                <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
+                                  → {record.target}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{new Date(record.timestamp).toLocaleString()}</span>
+                              </div>
+                              <span>耗时: {formatDuration(record.duration)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* 结果显示 */}
+                      <div className="ml-7">
+                        {record.success ? (
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                            <pre className="text-xs font-mono whitespace-pre-wrap text-gray-700 dark:text-gray-300 overflow-x-auto">
+                              {record.result}
+                            </pre>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {record.error && (
+                              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <AlertCircle className="h-4 w-4 text-red-600" />
+                                  <span className="text-sm font-medium text-red-800 dark:text-red-200">错误信息</span>
+                                </div>
+                                <p className="text-sm text-red-700 dark:text-red-300">{record.error}</p>
+                              </div>
+                            )}
+                            {record.result && (
+                              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                                <pre className="text-xs font-mono whitespace-pre-wrap text-gray-700 dark:text-gray-300 overflow-x-auto">
+                                  {record.result}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 });
