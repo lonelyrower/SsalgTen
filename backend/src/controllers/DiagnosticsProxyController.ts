@@ -39,7 +39,7 @@ const buildAgentEndpoint = (node: any): string | null => {
 };
 
 export class DiagnosticsProxyController {
-  async ping(req: Request, res: Response) {
+  async ping(req: Request, res: Response): Promise<void> {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params; // nodeId
@@ -50,7 +50,10 @@ export class DiagnosticsProxyController {
       }
       const node = await nodeService.getNodeById(id);
       const endpoint = buildAgentEndpoint(node);
-      if (!endpoint) return res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+      if (!endpoint) {
+        res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+        return;
+      }
       const url = `${endpoint}/api/ping/${encodeURIComponent(String(target))}${count ? `?count=${encodeURIComponent(String(count))}` : ''}`;
       const r = await axios.get(url, { timeout: 60000 });
       res.status(r.status).json(r.data);
@@ -60,7 +63,7 @@ export class DiagnosticsProxyController {
     }
   }
 
-  async traceroute(req: Request, res: Response) {
+  async traceroute(req: Request, res: Response): Promise<void> {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
@@ -71,7 +74,10 @@ export class DiagnosticsProxyController {
       }
       const node = await nodeService.getNodeById(id);
       const endpoint = buildAgentEndpoint(node);
-      if (!endpoint) return res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+      if (!endpoint) {
+        res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+        return;
+      }
       const qp = maxHops ? `?maxHops=${encodeURIComponent(String(maxHops))}` : '';
       const url = `${endpoint}/api/traceroute/${encodeURIComponent(String(target))}${qp}`;
       const r = await axios.get(url, { timeout: 60000 });
@@ -82,7 +88,7 @@ export class DiagnosticsProxyController {
     }
   }
 
-  async mtr(req: Request, res: Response) {
+  async mtr(req: Request, res: Response): Promise<void> {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
@@ -93,7 +99,10 @@ export class DiagnosticsProxyController {
       }
       const node = await nodeService.getNodeById(id);
       const endpoint = buildAgentEndpoint(node);
-      if (!endpoint) return res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+      if (!endpoint) {
+        res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+        return;
+      }
       const qp = count ? `?count=${encodeURIComponent(String(count))}` : '';
       const url = `${endpoint}/api/mtr/${encodeURIComponent(String(target))}${qp}`;
       const r = await axios.get(url, { timeout: 120000 });
@@ -104,13 +113,16 @@ export class DiagnosticsProxyController {
     }
   }
 
-  async speedtest(req: Request, res: Response) {
+  async speedtest(req: Request, res: Response): Promise<void> {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const node = await nodeService.getNodeById(id);
       const endpoint = buildAgentEndpoint(node);
-      if (!endpoint) return res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+      if (!endpoint) {
+        res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+        return;
+      }
       const url = `${endpoint}/api/speedtest`;
       const r = await axios.get(url, { timeout: 180000 });
       res.status(r.status).json(r.data);
@@ -120,14 +132,17 @@ export class DiagnosticsProxyController {
     }
   }
 
-  async latencyTest(req: Request, res: Response) {
+  async latencyTest(req: Request, res: Response): Promise<void> {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const { testType } = req.query as any;
       const node = await nodeService.getNodeById(id);
       const endpoint = buildAgentEndpoint(node);
-      if (!endpoint) return res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+      if (!endpoint) {
+        res.status(400).json({ success: false, error: 'Node has no reachable IP' });
+        return;
+      }
       const qp = testType ? `?testType=${encodeURIComponent(String(testType))}` : '';
       const url = `${endpoint}/api/latency-test${qp}`;
       const r = await axios.get(url, { timeout: 60000 });
