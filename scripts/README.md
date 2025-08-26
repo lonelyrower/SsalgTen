@@ -27,6 +27,8 @@ PROJECT_PORT=3000 NODE_PORT=9000 BACKEND_PORT=3001 DB_PORT=5432 \
 - ✅ 重新构建前端容器（使用 `--no-cache`）
 - ✅ 启动所有服务并检查状态
 - ✅ 验证前端和后端服务可访问性
+- ✅ 若前端/后端端口被占用，自动切换到可用端口并写入 `.env`
+- ✅ 若节点端口被占用（同机已有节点），自动跳过 docker 内置节点以避免冲突
 - ✅ 支持通过 `PROJECT_PORT`（映射为 `FRONTEND_PORT`）和 `NODE_PORT`（映射为 `AGENT_NYC_PORT`）自定义端口，并自动写入 `.env`
 - ✅ 在重建前检查端口占用，并给出清晰提示
 
@@ -86,3 +88,8 @@ sudo systemctl stop postgresql
 - 确保在项目根目录或正确路径下运行脚本
 - 脚本会自动停用系统 PostgreSQL，如果需要请手动重启
 - 建议在执行前备份重要数据
+
+### 关于端口自动化
+
+- FRONTEND_PORT/ BACKEND_PORT：若被占用，脚本会寻找下一个空闲端口并写回 `.env`；同时会调整 `VITE_API_BASE_URL` 指向新的后端端口。
+- AGENT_NYC_PORT：若被占用，默认跳过 docker 内置 agent（适用于同机已运行节点的情况）。如需强制启用，请释放端口或修改 `.env` 为空闲端口。

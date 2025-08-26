@@ -35,6 +35,22 @@ ensure_env_kv() {
   fi
 }
 
+next_free_port() {
+  # 从给定起点寻找可用端口；最多尝试 100 次
+  local start="$1"
+  local try="$start"
+  for _ in $(seq 1 100); do
+    if ! port_in_use "$try"; then
+      echo "$try"
+      return 0
+    fi
+    try=$((try+1))
+  done
+  # 兜底返回初始端口（由调用方决定是否继续）
+  echo "$start"
+  return 1
+}
+
 port_in_use() {
   local p="$1"
   if have ss; then
@@ -138,18 +154,43 @@ docker system prune -f --volumes 2>/dev/null || true
 
 # 构建前检查业务端口占用（前端/后端/节点）
 echo "🔎 检查业务端口占用..."
-for p in "$FRONTEND_PORT" "$BACKEND_PORT" "$AGENT_NYC_PORT"; do
-  if port_in_use "$p"; then
-    echo "❌ 端口 $p 已被占用。请修改 .env 中对应端口或停止占用进程后重试。"
-    exit 1
+
+# 前端端口占用 -> 自动选择下一个可用端口并写回 .env
+if port_in_use "$FRONTEND_PORT"; then
+  local_start=$FRONTEND_PORT
+  # 若是 80 常见被 Nginx 占用，则从 3000 起找
+  if [ "$FRONTEND_PORT" = "80" ]; then local_start=3000; fi
+  free=$(next_free_port "$local_start")
+  if [ "$free" != "$FRONTEND_PORT" ]; then
+    echo "ℹ️  FRONTEND_PORT=$FRONTEND_PORT 被占用，改为 $free（已写入 .env）"
+    FRONTEND_PORT="$free"
+    ensure_env_kv FRONTEND_PORT "$FRONTEND_PORT"
   fi
-done
+fi
+
+# 后端端口占用 -> 自动选择下一个可用端口并写回 .env，同时更新 VITE_API_BASE_URL
+if port_in_use "$BACKEND_PORT"; then
+  free=$(next_free_port "$BACKEND_PORT")
+  if [ "$free" != "$BACKEND_PORT" ]; then
+    echo "ℹ️  BACKEND_PORT=$BACKEND_PORT 被占用，改为 $free（已写入 .env）"
+    BACKEND_PORT="$free"
+    ensure_env_kv BACKEND_PORT "$BACKEND_PORT"
+    ensure_env_kv VITE_API_BASE_URL "http://localhost:${BACKEND_PORT}/api"
+    export VITE_API_BASE_URL="http://localhost:${BACKEND_PORT}/api"
+  fi
+fi
+
+# 节点端口占用 -> 默认跳过 docker 内置 agent，避免与本机/外部节点冲突
+SKIP_AGENT_NYC=false
+if port_in_use "$AGENT_NYC_PORT"; then
+  echo "ℹ️  检测到节点端口 $AGENT_NYC_PORT 已被占用，跳过 docker 内置节点(Agent)。"
+  SKIP_AGENT_NYC=true
+fi
 
 # 拉取最新代码（通常在 git pull 之后调用，此处容错）
 echo "📥 拉取最新代码..."
 git pull --ff-only origin main || true
 
-# 仅重建前端镜像以提速（需要全量重建可移除服务名）
 echo "🔨 重新构建前端容器..."
 if have docker && docker compose version >/dev/null 2>&1; then
   docker compose build --no-cache frontend
@@ -157,12 +198,20 @@ else
   docker-compose build --no-cache frontend
 fi
 
-# 启动所有服务
-echo "🚀 启动所有服务..."
+# 启动所有服务（如跳过 agent，则只启动 database/redis/backend/frontend）
+echo "🚀 启动服务..."
 if have docker && docker compose version >/dev/null 2>&1; then
-  docker compose up -d
+  if [ "$SKIP_AGENT_NYC" = true ]; then
+    docker compose up -d database redis backend frontend
+  else
+    docker compose up -d
+  fi
 else
-  docker-compose up -d
+  if [ "$SKIP_AGENT_NYC" = true ]; then
+    docker-compose up -d database redis backend frontend
+  else
+    docker-compose up -d
+  fi
 fi
 
 # 等待服务启动
@@ -209,4 +258,3 @@ echo "如有问题，请检查日志:"
 echo "  docker logs ssalgten-frontend"
 echo "  docker logs ssalgten-backend"
 echo "  docker logs ssalgten-database"
-
