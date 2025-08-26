@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Shield, Server, Cpu, HardDrive, Activity, Clock, MapPin, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, MapPin, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff } from 'lucide-react';
 
 // Remove the custom interface since useRealTime provides the data structure we need
 
@@ -39,17 +39,7 @@ const formatUptime = (uptime: number | null) => {
   return `${minutes}m`;
 };
 
-const formatMemory = (mb: number | undefined) => {
-  if (!mb) return '--';
-  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
-  return `${mb} MB`;
-};
-
-const formatDisk = (gb: number | undefined) => {
-  if (!gb) return '--';
-  if (gb >= 1024) return `${(gb / 1024).toFixed(1)} TB`;
-  return `${gb} GB`;
-};
+// 目前未显示原始内存/磁盘容量，去除未使用的格式化函数以避免编译告警
 
 const ProgressBar: React.FC<{ 
   value: number | null | undefined; 
@@ -77,7 +67,7 @@ const ProgressBar: React.FC<{
 };
 
 export const MonitoringPage: React.FC = () => {
-  const { user } = useAuth();
+  const { /* user */ } = useAuth();
   const { nodes, connected, lastUpdate, refreshData } = useRealTime();
   const [loading, setLoading] = useState(true);
 

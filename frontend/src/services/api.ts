@@ -93,6 +93,11 @@ export interface NodeData {
   apiKey?: string;
   port?: number;
   enabled?: boolean;
+  // Optional runtime metrics (may be provided by realtime channel)
+  cpuUsage?: number | null;
+  memoryUsage?: number | null;
+  diskUsage?: number | null;
+  uptime?: number | null;
   // ASN信息
   asnNumber?: string;
   asnName?: string;
