@@ -113,9 +113,30 @@ SsalgTen consists of three main components:
 
 ### Installation
 
+#### Option 1: One-Click HTTPS Deployment (Recommended)
+
+For production deployment with automatic SSL certificates:
+
+```bash
+# Clone and deploy with HTTPS
+git clone https://github.com/lonelyrower/SsalgTen.git
+cd SsalgTen
+
+# One-click HTTPS deployment
+sudo ./scripts/deploy-https.sh --domain your-domain.com --email admin@your-domain.com
+```
+
+This will automatically:
+- Set up SSL certificates via Let's Encrypt
+- Deploy all services with Docker Compose
+- Configure secure reverse proxy with Caddy
+- Enable security headers and HTTPS redirects
+
+#### Option 2: Standard Docker Deployment
+
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/yourusername/SsalgTen.git
+git clone https://github.com/lonelyrower/SsalgTen.git
 cd SsalgTen
 ```
 

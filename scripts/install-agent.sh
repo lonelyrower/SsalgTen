@@ -503,10 +503,102 @@ collect_node_info() {
         fi
     }
 
+    # SSL/HTTPS 验证函数
+    validate_ssl_connection() {
+        local url="$1"
+        log_info "验证 SSL/HTTPS 连接: $url"
+        
+        # 检查是否为 HTTPS URL
+        if [[ "$url" =~ ^https:// ]]; then
+            # 使用 Docker 容器进行 SSL 验证
+            if docker run --rm \
+                --add-host host.docker.internal:host-gateway \
+                alpine:3.20 sh -lc "
+                    apk add --no-cache curl ca-certificates openssl >/dev/null 2>&1
+                    # 基本 HTTPS 连接测试
+                    if ! curl -sfm 10 '$url/api/health' >/dev/null 2>&1; then
+                        echo 'SSL连接测试失败'
+                        exit 1
+                    fi
+                    
+                    # 获取域名
+                    domain=\$(echo '$url' | sed -nE 's#^https://([^/:]+).*\$#\1#p')
+                    
+                    # SSL 证书验证
+                    cert_info=\$(echo | openssl s_client -servername \"\$domain\" -connect \"\$domain\":443 -verify_return_error 2>/dev/null | openssl x509 -noout -text 2>/dev/null)
+                    if [ \$? -ne 0 ]; then
+                        echo 'SSL证书验证失败'
+                        exit 1
+                    fi
+                    
+                    # 检查证书有效期
+                    not_after=\$(echo \"\$cert_info\" | grep 'Not After:' | sed 's/.*Not After: //')
+                    if [ -n \"\$not_after\" ]; then
+                        # 简单的日期检查（如果可以获取到）
+                        echo \"证书有效期至: \$not_after\"
+                    fi
+                    
+                    echo 'SSL验证通过'
+                " 2>&1; then
+                log_success "SSL/HTTPS 验证通过"
+                return 0
+            else
+                log_warning "SSL/HTTPS 验证失败，将继续尝试连接"
+                return 1
+            fi
+        else
+            log_info "HTTP 连接，跳过 SSL 验证"
+            return 0
+        fi
+    }
+
+    # 增强的连接验证函数
+    enhanced_connection_test() {
+        local url="$1"
+        log_info "执行增强连接测试: $url"
+        
+        # SSL 验证（如果是 HTTPS）
+        if ! validate_ssl_connection "$url"; then
+            log_warning "SSL 验证失败，但将继续尝试"
+        fi
+        
+        # 测试关键端点
+        local endpoints=("/api/health" "/api/stats" "/socket.io/")
+        local success_count=0
+        
+        for endpoint in "${endpoints[@]}"; do
+            if docker run --rm \
+                --add-host host.docker.internal:host-gateway \
+                alpine:3.20 sh -lc "
+                    apk add --no-cache curl ca-certificates >/dev/null 2>&1
+                    curl -sfm 10 '$url$endpoint' >/dev/null 2>&1
+                " >/dev/null 2>&1; then
+                log_success "端点可达: $endpoint"
+                ((success_count++))
+            else
+                log_warning "端点不可达: $endpoint"
+            fi
+        done
+        
+        if [ $success_count -ge 1 ]; then
+            log_success "连接测试通过 ($success_count/${#endpoints[@]} 端点可达)"
+            return 0
+        else
+            log_error "连接测试失败 (0/${#endpoints[@]} 端点可达)"
+            return 1
+        fi
+    }
+
     # 若Docker不可用或拉取失败则不阻断
     if ! choose_effective_master_url; then
         log_warning "容器内探测失败，保留原始地址: $MASTER_URL"
         EFFECTIVE_MASTER_URL="$MASTER_URL"
+    fi
+
+    # 对选定的URL进行增强验证
+    if ! enhanced_connection_test "$EFFECTIVE_MASTER_URL"; then
+        log_warning "增强连接测试失败，但继续安装过程"
+        log_info "Agent 将在启动后持续重试连接"
     fi
 
     # 若同机部署，启用 host 网络模式以支持主站仅监听 127.0.0.1 的情况
