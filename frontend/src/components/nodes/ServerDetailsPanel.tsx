@@ -591,18 +591,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                         <p className="font-medium">{(node as any).asnOrg}</p>
                       </div>
                     )}
-                    {(node as any).asnRoute && (
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">路由</span>
-                        <p className="font-medium font-mono">{(node as any).asnRoute}</p>
-                      </div>
-                    )}
-                    {(node as any).asnType && (
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">类型</span>
-                        <p className="font-medium">{(node as any).asnType}</p>
-                      </div>
-                    )}
+                    {/* 隐藏路由前缀与类型展示，避免误导与无效信息 */}
                   </div>
                 </div>
               )}
