@@ -8,16 +8,15 @@ import {
   Search, 
   Edit2, 
   Trash2, 
-  Globe,
   Plus,
-  Filter,
-  Download,
   RefreshCw,
   MapPin,
   Activity,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  ExternalLink,
+  Settings
 } from 'lucide-react';
 
 interface NodeManagementProps {
@@ -163,80 +162,65 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   return (
     <div className={className}>
       {/* 头部区域 */}
-      <div className="mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-6 lg:space-y-0">
-          <div className="text-center lg:text-left">
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white flex items-center justify-center lg:justify-start">
-              <Server className="h-8 w-8 lg:h-10 lg:w-10 mr-3 text-blue-600 drop-shadow-sm" />
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+              <Settings className="h-6 w-6 mr-3 text-blue-600" />
               节点管理
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-3 text-base lg:text-lg">
-              管理和监控全球网络探针节点
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
+              重命名、删除节点和部署新探针
             </p>
-            <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              {filteredNodes.length > 0 && (
-                <span>
-                  共 {filteredNodes.length} 个节点 • {filteredNodes.filter(n => n.status === 'online').length} 在线
-                </span>
-              )}
+            <div className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+              共 {filteredNodes.length} 个节点 • {filteredNodes.filter(n => n.status === 'online').length} 在线 • 
+              <a href="/nodes" className="text-blue-600 hover:text-blue-700 ml-1 inline-flex items-center">
+                查看详细监控 <ExternalLink className="h-3 w-3 ml-1" />
+              </a>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-3">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              size="default"
+              size="sm"
               onClick={loadNodes}
-              className="flex items-center space-x-2 min-w-[100px] shadow-sm hover:shadow-md transition-shadow"
             >
-              <RefreshCw className="h-4 w-4" />
-              <span>刷新</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="default"
-              className="hidden sm:flex items-center space-x-2 min-w-[100px] shadow-sm hover:shadow-md transition-shadow"
-            >
-              <Download className="h-4 w-4" />
-              <span>导出</span>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              刷新
             </Button>
             <Button
               onClick={() => setShowDeployModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white flex items-center space-x-2 min-w-[120px] shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              size="sm"
             >
-              <Plus className="h-4 w-4" />
-              <span>部署探针</span>
+              <Plus className="h-4 w-4 mr-1" />
+              部署探针
             </Button>
           </div>
         </div>
 
-        {/* 搜索和过滤器 */}
-        <Card className="p-6 bg-white dark:bg-gray-800 shadow-lg border-0 ring-1 ring-gray-200 dark:ring-gray-700">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索节点名称、位置、IP地址或服务商..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center space-x-3 min-w-fit">
-              <Filter className="h-5 w-5 text-gray-500" />
-              <select
-                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm min-w-[140px]"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">所有状态</option>
-                <option value="online">在线</option>
-                <option value="offline">离线</option>
-                <option value="warning">警告</option>
-              </select>
-            </div>
+        {/* 搜索区域 */}
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="搜索节点名称或位置..."
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </Card>
+          <select
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">全部</option>
+            <option value="online">在线</option>
+            <option value="offline">离线</option>
+          </select>
+        </div>
       </div>
 
       {/* 错误提示 */}
@@ -259,127 +243,114 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
         </Card>
       )}
 
-      {/* 节点网格 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredNodes.map((node) => (
-          <Card key={node.id} className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-300 border-0 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-blue-200 dark:hover:ring-blue-700 group">
-            <div className="p-6">
-              {/* 节点头部 */}
-              <div className="flex items-start justify-between mb-5">
-                <div className="flex items-start space-x-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0 mt-1">
-                    {getStatusIcon(node.status)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-                      {node.name}
-                    </h3>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(node.status)} mt-2`}>
+      {/* 节点表格 */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  节点信息
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  位置
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  状态
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  最后在线
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredNodes.map((node) => (
+                <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td className="px-4 py-4">
+                    <div className="flex items-center">
+                      {getStatusIcon(node.status)}
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {node.name}
+                        </div>
+                        {node.ipv4 && (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                            {node.ipv4}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      {node.city}, {node.country}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {node.provider}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(node.status)}`}>
                       {getStatusText(node.status)}
                     </span>
-                  </div>
-                </div>
-                <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openRenameModal(node.id, node.name)}
-                    className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                    title="重命名节点"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDeleteConfirm(node.id)}
-                    className="text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                    title="删除节点"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* 节点信息 */}
-              <div className="space-y-4">
-                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                  <MapPin className="h-4 w-4 mr-3 text-gray-500" />
-                  <span className="font-medium">{node.city}, {node.country}</span>
-                </div>
-                
-                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                  <Globe className="h-4 w-4 mr-3 text-gray-500" />
-                  <span className="font-medium">{node.provider}</span>
-                </div>
-
-                {node.ipv4 && (
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <Activity className="h-4 w-4 mr-3 text-gray-500" />
-                    <span className="font-mono font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">{node.ipv4}</span>
-                  </div>
-                )}
-
-                {node.lastSeen && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
-                    <span className="font-medium">最后在线:</span> {new Date(node.lastSeen).toLocaleString('zh-CN')}
-                  </div>
-                )}
-              </div>
-
-              {/* 节点操作 */}
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs font-medium hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    诊断
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs font-medium hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:hover:bg-green-900/20 dark:hover:border-green-600 dark:hover:text-green-400 transition-colors"
-                  >
-                    监控
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {node.lastSeen ? new Date(node.lastSeen).toLocaleDateString('zh-CN') : '未知'}
+                  </td>
+                  <td className="px-4 py-4 text-right text-sm font-medium">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openRenameModal(node.id, node.name)}
+                        className="text-gray-400 hover:text-blue-600"
+                        title="重命名节点"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowDeleteConfirm(node.id)}
+                        className="text-gray-400 hover:text-red-600"
+                        title="删除节点"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {filteredNodes.length === 0 && (
-        <Card className="bg-white dark:bg-gray-800 shadow-lg border-0 ring-1 ring-gray-200 dark:ring-gray-700">
-          <div className="text-center py-16">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-full"></div>
-              </div>
-              <Server className="h-12 w-12 text-blue-600 mx-auto relative" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {searchTerm || filterStatus !== 'all' ? '没有找到匹配的节点' : '还没有监控节点'}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              {searchTerm || filterStatus !== 'all' 
-                ? '请尝试调整搜索条件或过滤器' 
-                : '开始部署您的第一个网络监控探针'
-              }
-            </p>
-            {(!searchTerm && filterStatus === 'all') && (
-              <Button
-                onClick={() => setShowDeployModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                部署第一个探针
-              </Button>
-            )}
-          </div>
-        </Card>
+        <div className="text-center py-8">
+          <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {searchTerm || filterStatus !== 'all' ? '没有找到匹配的节点' : '还没有节点'}
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            {searchTerm || filterStatus !== 'all' 
+              ? '请尝试调整搜索条件' 
+              : '部署第一个探针开始监控'
+            }
+          </p>
+          {(!searchTerm && filterStatus === 'all') && (
+            <Button
+              onClick={() => setShowDeployModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              部署探针
+            </Button>
+          )}
+        </div>
       )}
 
       {/* Agent部署模态框 */}
