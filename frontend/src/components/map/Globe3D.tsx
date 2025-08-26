@@ -20,7 +20,8 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
   const [hover, setHover] = useState<{ x: number; y: number; node: NodeData } | null>(null);
   const [powerSave, setPowerSave] = useState<boolean>(() => /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent));
 
-  const R = 220; // 球半径（像素）
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const R = Math.min(canvasSize.width, canvasSize.height) * 0.35; // 动态球半径，占容器的35%
   
   // 根据设备像素比调整绘制质量
   const getDrawingScale = useCallback(() => {
@@ -81,17 +82,89 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     ctx.fillStyle = '#0b1220';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 地球球体（渐变）
+    // 地球球体（改进的渐变和大陆轮廓）
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const grad = ctx.createRadialGradient(centerX - R / 3, centerY - R / 3, R / 8, centerX, centerY, R);
-    grad.addColorStop(0, 'rgba(40,120,255,0.9)');
-    grad.addColorStop(0.7, 'rgba(40,120,255,0.4)');
-    grad.addColorStop(1, 'rgba(40,120,255,0.15)');
+    const effectiveRadius = R * zoom;
+    
+    // 主球体渐变
+    const grad = ctx.createRadialGradient(
+      centerX - effectiveRadius * 0.3, 
+      centerY - effectiveRadius * 0.3, 
+      effectiveRadius * 0.1, 
+      centerX, 
+      centerY, 
+      effectiveRadius
+    );
+    grad.addColorStop(0, 'rgba(45, 135, 255, 0.95)');
+    grad.addColorStop(0.6, 'rgba(20, 80, 180, 0.7)');
+    grad.addColorStop(0.8, 'rgba(10, 40, 100, 0.5)');
+    grad.addColorStop(1, 'rgba(5, 20, 50, 0.3)');
+    
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, R * zoom, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, effectiveRadius, 0, Math.PI * 2);
     ctx.fill();
+    
+    // 添加球面高光效果
+    const highlight = ctx.createRadialGradient(
+      centerX - effectiveRadius * 0.4,
+      centerY - effectiveRadius * 0.4,
+      0,
+      centerX - effectiveRadius * 0.4,
+      centerY - effectiveRadius * 0.4,
+      effectiveRadius * 0.6
+    );
+    highlight.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+    highlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+    highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = highlight;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, effectiveRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 绘制大陆轮廓（简化版）
+    ctx.strokeStyle = 'rgba(100, 200, 100, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    
+    // 简单的大陆线条（经纬网格）
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const points = [];
+      for (let lon = -180; lon <= 180; lon += 10) {
+        const { x, y, z } = latLonToXYZ(lat, lon);
+        const p = project3D(x, y, z);
+        if (p.visible && Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2) <= effectiveRadius) {
+          points.push(p);
+        }
+      }
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+      }
+    }
+    
+    for (let lon = -150; lon <= 150; lon += 30) {
+      const points = [];
+      for (let lat = -80; lat <= 80; lat += 5) {
+        const { x, y, z } = latLonToXYZ(lat, lon);
+        const p = project3D(x, y, z);
+        if (p.visible && Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2) <= effectiveRadius) {
+          points.push(p);
+        }
+      }
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+      }
+    }
+    
+    ctx.setLineDash([]);
 
     // 节点点云
     const sizeBase = 3;
@@ -197,13 +270,16 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
       const rect = container.getBoundingClientRect();
       const scale = getDrawingScale();
       
+      // 更新画布尺寸状态
+      setCanvasSize({ width: rect.width, height: rect.height });
+      
       // 设置画布的实际大小
       canvas.width = rect.width * scale;
-      canvas.height = Math.max(420, rect.height) * scale;
+      canvas.height = rect.height * scale;
       
       // 设置画布的显示大小
       canvas.style.width = rect.width + 'px';
-      canvas.style.height = Math.max(420, rect.height) + 'px';
+      canvas.style.height = rect.height + 'px';
       
       // 缩放绘制上下文以匹配设备像素比
       const ctx = canvas.getContext('2d');
@@ -300,7 +376,7 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
           省电模式
         </label>
       </div>
-      <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="w-full h-full min-h-[400px] rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-grab active:cursor-grabbing bg-slate-900"

@@ -392,27 +392,29 @@ export const NodesPage: React.FC = () => {
                 </div>
               </div>
               
-              <Suspense fallback={
-                <div className="flex items-center justify-center h-64">
-                  <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                </div>
-              }>
-                {mapMode === '2d' ? (
-                  <EnhancedWorldMap 
-                    nodes={filteredNodes} 
-                    onNodeClick={handleNodeClick} 
-                    selectedNode={selectedNode}
-                    showHeatmap={false}
-                    className="mb-4"
-                  />
-                ) : (
-                  <Globe3D 
-                    nodes={filteredNodes}
-                    onNodeClick={handleNodeClick}
-                    selectedNode={selectedNode}
-                  />
-                )}
-              </Suspense>
+              <div className={mapMode === '3d' ? 'h-[500px]' : ''}>
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+                  </div>
+                }>
+                  {mapMode === '2d' ? (
+                    <EnhancedWorldMap 
+                      nodes={filteredNodes} 
+                      onNodeClick={handleNodeClick} 
+                      selectedNode={selectedNode}
+                      showHeatmap={false}
+                      className="mb-4"
+                    />
+                  ) : (
+                    <Globe3D 
+                      nodes={filteredNodes}
+                      onNodeClick={handleNodeClick}
+                      selectedNode={selectedNode}
+                    />
+                  )}
+                </Suspense>
+              </div>
             </div>
           </div>
           

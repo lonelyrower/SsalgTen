@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart, Heart, TrendingUp } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
 // Remove the custom interface since useRealTime provides the data structure we need
@@ -135,6 +135,36 @@ export const MonitoringPage: React.FC = () => {
     ? nodes.filter(n => n.diskUsage != null).reduce((sum, n) => sum + (n.diskUsage || 0), 0) / nodes.filter(n => n.diskUsage != null).length
     : 0;
 
+  // 计算节点健康状态
+  const healthyNodes = nodes.filter(node => {
+    if (node.status.toLowerCase() !== 'online') return false;
+    const cpu = node.cpuUsage || 0;
+    const memory = node.memoryUsage || 0;
+    const disk = node.diskUsage || 0;
+    return cpu < 80 && memory < 85 && disk < 90;
+  }).length;
+
+  const warningNodes = nodes.filter(node => {
+    if (node.status.toLowerCase() !== 'online') return false;
+    const cpu = node.cpuUsage || 0;
+    const memory = node.memoryUsage || 0;
+    const disk = node.diskUsage || 0;
+    return (cpu >= 80 && cpu < 95) || (memory >= 85 && memory < 95) || (disk >= 90 && disk < 95);
+  }).length;
+
+  const criticalNodes = nodes.filter(node => {
+    if (node.status.toLowerCase() !== 'online') return false;
+    const cpu = node.cpuUsage || 0;
+    const memory = node.memoryUsage || 0;
+    const disk = node.diskUsage || 0;
+    return cpu >= 95 || memory >= 95 || disk >= 95;
+  }).length;
+
+  // 计算系统整体健康度
+  const systemHealthScore = totalNodes > 0 
+    ? Math.round(((healthyNodes * 100 + warningNodes * 60 + onlineNodes * 40) / totalNodes) / 1.4)
+    : 100;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -216,7 +246,7 @@ export const MonitoringPage: React.FC = () => {
         </div>
 
         {/* 统计信息卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8 max-w-none">
           {/* 节点状态分布 */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
@@ -391,6 +421,54 @@ export const MonitoringPage: React.FC = () => {
                   还有 {Object.keys(providerStats).length - 3} 个服务商
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* 节点健康状态 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+                  <Heart className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  节点健康状态
+                </h3>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-center mb-3">
+                <div className={`text-2xl font-bold ${
+                  systemHealthScore >= 90 ? 'text-green-600' :
+                  systemHealthScore >= 70 ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {systemHealthScore}%
+                </div>
+                <div className="text-xs text-gray-500">系统整体健康度</div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">健康</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{healthyNodes}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">警告</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{warningNodes}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">严重</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{criticalNodes}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
