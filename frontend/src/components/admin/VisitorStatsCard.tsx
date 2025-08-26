@@ -293,7 +293,6 @@ export const VisitorStatsCard: React.FC = () => {
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">IP地址</th>
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">位置</th>
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">ASN</th>
-                    <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">访问页面</th>
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">时间</th>
                   </tr>
                 </thead>
@@ -307,9 +306,8 @@ export const VisitorStatsCard: React.FC = () => {
                         ) || '-'}
                       </td>
                       <td className="p-2 text-xs">{visitor.asnName || '-'}</td>
-                      <td className="p-2 text-xs font-mono">{visitor.path}</td>
                       <td className="p-2 text-xs text-gray-500">
-                        {new Date(visitor.timestamp).toLocaleString()}
+                        {new Date(visitor.createdAt).toLocaleString()}
                       </td>
                     </tr>
                   ))}
