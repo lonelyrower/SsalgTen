@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
 // Remove the custom interface since useRealTime provides the data structure we need
@@ -98,7 +98,42 @@ export const MonitoringPage: React.FC = () => {
   // Remove error handling since useRealTime handles it internally
 
   const onlineNodes = nodes.filter(node => node.status.toLowerCase() === 'online').length;
+  const offlineNodes = nodes.filter(node => node.status.toLowerCase() === 'offline').length;
+  const unknownNodes = totalNodes - onlineNodes - offlineNodes;
   const totalNodes = nodes.length;
+
+  // 计算国家/地区分布
+  const countryStats = nodes.reduce((acc, node) => {
+    acc[node.country] = (acc[node.country] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topCountries = Object.entries(countryStats)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 5);
+
+  // 计算服务商分布
+  const providerStats = nodes.reduce((acc, node) => {
+    acc[node.provider] = (acc[node.provider] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topProviders = Object.entries(providerStats)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 3);
+
+  // 计算平均资源使用率
+  const avgCpuUsage = nodes.length > 0 
+    ? nodes.filter(n => n.cpuUsage != null).reduce((sum, n) => sum + (n.cpuUsage || 0), 0) / nodes.filter(n => n.cpuUsage != null).length
+    : 0;
+
+  const avgMemoryUsage = nodes.length > 0 
+    ? nodes.filter(n => n.memoryUsage != null).reduce((sum, n) => sum + (n.memoryUsage || 0), 0) / nodes.filter(n => n.memoryUsage != null).length
+    : 0;
+
+  const avgDiskUsage = nodes.length > 0 
+    ? nodes.filter(n => n.diskUsage != null).reduce((sum, n) => sum + (n.diskUsage || 0), 0) / nodes.filter(n => n.diskUsage != null).length
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -176,6 +211,186 @@ export const MonitoringPage: React.FC = () => {
                   {onlineNodes}/{totalNodes} 在线
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 统计信息卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* 节点状态分布 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <PieChart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  节点状态分布
+                </h3>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">在线</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{onlineNodes}</span>
+                  <span className="text-xs text-gray-500">
+                    {totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : 0}%
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">离线</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{offlineNodes}</span>
+                  <span className="text-xs text-gray-500">
+                    {totalNodes > 0 ? ((offlineNodes / totalNodes) * 100).toFixed(1) : 0}%
+                  </span>
+                </div>
+              </div>
+              {unknownNodes > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">未知</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{unknownNodes}</span>
+                    <span className="text-xs text-gray-500">
+                      {((unknownNodes / totalNodes) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 地理分布 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  地理分布
+                </h3>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {topCountries.slice(0, 4).map(([country, count]) => (
+                <div key={country} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CountryFlagSvg country={country} size={16} />
+                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {country}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {count}
+                  </span>
+                </div>
+              ))}
+              {Object.keys(countryStats).length > 4 && (
+                <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
+                  还有 {Object.keys(countryStats).length - 4} 个国家/地区
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 资源使用情况 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  平均资源使用
+                </h3>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-2">
+                    <Cpu className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">CPU</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {avgCpuUsage.toFixed(1)}%
+                  </span>
+                </div>
+                <ProgressBar value={avgCpuUsage} color="blue" size="sm" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-2">
+                    <Activity className="h-4 w-4 text-green-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">内存</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {avgMemoryUsage.toFixed(1)}%
+                  </span>
+                </div>
+                <ProgressBar value={avgMemoryUsage} color="green" size="sm" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-2">
+                    <HardDrive className="h-4 w-4 text-purple-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">磁盘</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {avgDiskUsage.toFixed(1)}%
+                  </span>
+                </div>
+                <ProgressBar value={avgDiskUsage} color="green" size="sm" />
+              </div>
+            </div>
+          </div>
+
+          {/* 服务商分布 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                  <Server className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  服务商分布
+                </h3>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {topProviders.map(([provider, count], index) => (
+                <div key={provider} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      index === 0 ? 'bg-blue-500' : 
+                      index === 1 ? 'bg-green-500' : 'bg-purple-500'
+                    }`}></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {provider.length > 12 ? `${provider.substring(0, 12)}...` : provider}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {count}
+                  </span>
+                </div>
+              ))}
+              {Object.keys(providerStats).length > 3 && (
+                <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
+                  还有 {Object.keys(providerStats).length - 3} 个服务商
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -247,22 +247,6 @@ export const NodesPage: React.FC = () => {
                 <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} ${connected ? 'animate-pulse' : ''}`}></div>
                 <span className="text-sm font-medium">{connected ? '实时连接' : '连接断开'}</span>
               </div>
-              
-              {/* 地图模式切换 */}
-              <div className="hidden md:flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <button
-                  className={`px-3 py-2 text-sm ${mapMode === '2d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  onClick={() => setMapMode('2d')}
-                >
-                  2D 地图
-                </button>
-                <button
-                  className={`px-3 py-2 text-sm ${mapMode === '3d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  onClick={() => setMapMode('3d')}
-                >
-                  3D 地球
-                </button>
-              </div>
 
               {hasRole('ADMIN') && (
                 <Button 
@@ -377,14 +361,33 @@ export const NodesPage: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布{mapMode === '3d' ? '（3D 地球）' : '（2D 地图）'}
                 </h2>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span>在线</span>
+                <div className="flex items-center space-x-4">
+                  {/* 地图模式切换按钮 */}
+                  <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                    <button
+                      className={`px-3 py-2 text-sm transition-colors ${mapMode === '2d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                      onClick={() => setMapMode('2d')}
+                    >
+                      2D 地图
+                    </button>
+                    <button
+                      className={`px-3 py-2 text-sm transition-colors ${mapMode === '3d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                      onClick={() => setMapMode('3d')}
+                    >
+                      3D 地球
+                    </button>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span>离线</span>
+                  
+                  {/* 在线/离线状态指示 */}
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span>在线</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span>离线</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -436,22 +439,34 @@ export const NodesPage: React.FC = () => {
                   </div>
 
                   {/* 节点基本信息 */}
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      <div className={`w-3 h-3 rounded-full mt-1 ${
-                        selectedNode.status === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-                      }`}></div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
-                          {selectedNode.name}
-                        </h4>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          <CountryFlagSvg country={selectedNode.country} />
-                          <span>{selectedNode.city}, {selectedNode.country}</span>
+                  <div className="space-y-4">
+                    {/* 节点标题卡片 */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-3 h-3 rounded-full mt-2 ${
+                          selectedNode.status === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                        }`}></div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-2">
+                            {selectedNode.name}
+                          </h4>
+                          <div className="flex items-center space-x-2 mb-2">
+                            <CountryFlagSvg country={selectedNode.country} />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {selectedNode.city}, {selectedNode.country}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {selectedNode.provider}
+                            </span>
+                            {selectedNode.asnNumber && (
+                              <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-mono">
+                                AS{selectedNode.asnNumber}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                          {selectedNode.provider}
-                        </p>
                       </div>
                     </div>
 
@@ -568,9 +583,19 @@ export const NodesPage: React.FC = () => {
                             <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                               {node.city}, {node.country}
                             </p>
+                            {node.ipv4 && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400 font-mono mb-1">
+                                {node.ipv4}
+                              </p>
+                            )}
                             <p className="text-xs text-gray-500 dark:text-gray-500">
                               {node.provider}
                             </p>
+                            {node.asnNumber && (
+                              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">
+                                AS{node.asnNumber}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
