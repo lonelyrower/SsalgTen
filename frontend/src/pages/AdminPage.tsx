@@ -3,11 +3,13 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
-import { Shield, Lock } from 'lucide-react';
+import { NodeManagement } from '@/components/admin/NodeManagement';
+import { Shield, Lock, Server } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   if (!hasRole('ADMIN')) {
     return (
@@ -50,66 +52,105 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 管理功能卡片网格 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 修改密码 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Lock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  修改密码
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  更改您的登录密码
-                </p>
-              </div>
-            </div>
-            <Button 
-              className="w-full" 
-              variant="outline"
-              onClick={() => setShowChangePasswordModal(true)}
-            >
-              <Lock className="h-4 w-4 mr-2" />
-              修改密码
-            </Button>
+        {/* 标签页导航 */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                <Shield className="h-4 w-4 inline mr-2" />
+                系统概览
+              </button>
+              <button
+                onClick={() => setActiveTab('nodes')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'nodes'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                <Server className="h-4 w-4 inline mr-2" />
+                节点管理
+              </button>
+            </nav>
           </div>
         </div>
 
-        {/* 系统状态概览 */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            系统状态概览
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                正常
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                系统状态
+        {/* 标签页内容 */}
+        {activeTab === 'overview' && (
+          <>
+            {/* 管理功能卡片网格 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* 修改密码 */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Lock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      修改密码
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      更改您的登录密码
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => setShowChangePasswordModal(true)}
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  修改密码
+                </Button>
               </div>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {user?.role === 'ADMIN' ? '管理员' : '普通用户'}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                当前权限
+
+            {/* 系统状态概览 */}
+            <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                系统状态概览
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    正常
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    系统状态
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {user?.role === 'ADMIN' ? '管理员' : '普通用户'}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    当前权限
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    v0.1.0
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    系统版本
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                v0.1.0
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                系统版本
-              </div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
+
+        {activeTab === 'nodes' && (
+          <NodeManagement />
+        )}
       </main>
 
       {/* 修改密码模态框 */}
