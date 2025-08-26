@@ -66,6 +66,10 @@ export interface NodeWithStats extends Node {
     status: string;
     uptime: number | null;
   };
+  // 新增：最近一次心跳的资源占用（用于前端概览展示）
+  cpuUsage?: number | null;
+  memoryUsage?: number | null;
+  diskUsage?: number | null;
 }
 
 export class NodeService {
@@ -154,6 +158,9 @@ export class NodeService {
           status: node.heartbeatLogs[0].status,
           uptime: node.heartbeatLogs[0].uptime
         } : undefined,
+        cpuUsage: node.heartbeatLogs[0]?.cpuUsage ?? null,
+        memoryUsage: node.heartbeatLogs[0]?.memoryUsage ?? null,
+        diskUsage: node.heartbeatLogs[0]?.diskUsage ?? null,
         heartbeatLogs: undefined // 移除原始heartbeatLogs数组
       })) as NodeWithStats[];
     } catch (error) {

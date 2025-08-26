@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CountryFlag } from '@/components/ui/CountryFlag';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { 
   Activity, 
   Zap, 
@@ -343,7 +343,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
             <div className="flex items-center justify-between">
               <span className="text-gray-600">位置:</span>
               <div className="flex items-center space-x-2">
-                <CountryFlag country={selectedNode.country} size="sm" showName={false} />
+                <CountryFlagSvg country={selectedNode.country} />
                 <span className="font-medium">{selectedNode.city}, {selectedNode.country}</span>
               </div>
             </div>
@@ -422,7 +422,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">位置:</span>
                   <div className="flex items-center space-x-2">
-                    <CountryFlag country={visitorInfo.country} size="sm" showName={false} />
+                    <CountryFlagSvg country={visitorInfo.country} />
                     <span className="font-medium">{visitorInfo.city}, {visitorInfo.country}</span>
                   </div>
                 </div>

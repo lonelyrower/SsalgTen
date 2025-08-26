@@ -28,45 +28,27 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
   }, []);
 
   const fetchInstallCommand = async () => {
+    const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> => {
+      return new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('timeout')), ms);
+        p.then(v => { clearTimeout(timer); resolve(v); }).catch(e => { clearTimeout(timer); reject(e); });
+      });
+    };
+
     try {
-      setLoading(true);
-      const response = await apiService.getInstallCommand();
-      if (response.success && response.data) {
-        // 注入系统配置（SSH 监控默认值）到展示文本
-        const cfgs = await apiService.getSystemConfigs();
-        let sshEnabled = false;
-        let sshWindow = 10;
-        let sshThreshold = 10;
-        if (cfgs.success && Array.isArray(cfgs.data)) {
-          const getVal = (k: string) => cfgs.data!.find(c => c.key === k)?.value;
-          sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
-          sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
-          sshThreshold = parseInt(String(getVal('security.ssh_monitor_default_threshold') ?? '10'), 10) || 10;
-        }
-
-        const withSshEnv = (cmd: string) => {
-          if (!sshEnabled) return cmd;
-          const tpl = `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# 仅在需要时取消注释\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n`;
-          return cmd + tpl;
-        };
-
-        const data = response.data as InstallCommandData;
-        setInstallData({
-          ...data,
-          quickCommand: withSshEnv(data.quickCommand),
-          command: withSshEnv(data.command),
-          interactiveCommand: withSshEnv(data.interactiveCommand),
-        });
-      } else {
-        throw new Error(response.error || 'Failed to fetch install command');
-      }
-    } catch (error) {
       console.error('Failed to fetch install command:', error);
-      // 使用fallback数据
-      const masterUrl = window.location.origin;
+      setLoading(true);
+      // 并行请求 + 超时降级（3s）
+      const installPromise = withTimeout(apiService.getInstallCommand(), 3000);
+      const cfgPromise = apiService.getSystemConfigs();
+      const [installRes, cfgRes] = await Promise.allSettled([installPromise, cfgPromise]);
+
+      const okInstall = installRes.status === 'fulfilled' && installRes.value.success && installRes.value.data;
+      const okCfg = cfgRes.status === 'fulfilled' && cfgRes.value.success && Array.isArray(cfgRes.value.data);
+
+      const masterUrl = (okInstall ? (installRes as any).value.data.masterUrl : window.location.origin) as string;
       // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
       const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
-      
       const base = {
         masterUrl: masterUrl,
         apiKey: apiKey,
@@ -124,22 +106,31 @@ sudo systemctl reset-failed`,
           ]
         }
       } as InstallCommandData;
-      try {
-        const cfgs = await apiService.getSystemConfigs();
-        let sshEnabled = false;
-        let sshWindow = 10;
-        let sshThreshold = 10;
-        if (cfgs.success && Array.isArray(cfgs.data)) {
-          const getVal = (k: string) => cfgs.data!.find(c => c.key === k)?.value;
-          sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
-          sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
-          sshThreshold = parseInt(String(getVal('security.ssh_monitor_default_threshold') ?? '10'), 10) || 10;
-        }
-        const tpl = sshEnabled ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n` : '';
-        setInstallData({ ...base, quickCommand: base.quickCommand + tpl, command: base.command + tpl, interactiveCommand: base.interactiveCommand + tpl });
-      } catch {
-        setInstallData(base);
+
+      let sshEnabled = false, sshWindow = 10, sshThreshold = 10;
+      if (okCfg) {
+        const cfgs = (cfgRes as any).value.data as any[];
+        const getVal = (k: string) => cfgs.find(c => c.key === k)?.value;
+        sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
+        sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
+        sshThreshold = parseInt(String(getVal('security.ssh_monitor_default_threshold') ?? '10'), 10) || 10;
       }
+      const tpl = sshEnabled ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n` : '';
+
+      if (okInstall) {
+        const data = (installRes as any).value.data as InstallCommandData;
+        setInstallData({
+          ...data,
+          quickCommand: data.quickCommand + tpl,
+          command: data.command + tpl,
+          interactiveCommand: data.interactiveCommand + tpl,
+        });
+      } else {
+        setInstallData({ ...base, quickCommand: base.quickCommand + tpl, command: base.command + tpl, interactiveCommand: base.interactiveCommand + tpl });
+      }
+    } catch (error) {
+      console.error('Failed to build install command:', error);
+      setInstallData(null);
     } finally {
       setLoading(false);
     }

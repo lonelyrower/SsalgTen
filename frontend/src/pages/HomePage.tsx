@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { WorldMap } from '@/components/map/WorldMap';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { CountryFlag } from '@/components/ui/CountryFlag';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { useNodes } from '@/hooks/useNodes';
 import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';
@@ -151,7 +151,7 @@ export const HomePage = () => {
                     <div className="glass rounded-lg p-4 border border-white/20 relative group">
                       <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">地理位置</div>
                       <div className="flex items-center space-x-2 mb-2">
-                        <CountryFlag country={selectedNode.country} size="md" showName={false} />
+                        <CountryFlagSvg country={selectedNode.country} />
                         <div className="font-bold text-gray-900 dark:text-white/90 text-lg">
                           {selectedNode.city}, {selectedNode.country}
                         </div>

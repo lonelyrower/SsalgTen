@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Globe, MapPin, Building2 } from 'lucide-react';
-import { CountryFlag } from '@/components/ui/CountryFlag';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import type { NodeData } from '@/services/api';
 
 interface GeographicDistributionProps {
@@ -113,7 +113,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
                 <div key={item.country} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">#{index + 1}</span>
-                    <CountryFlag country={item.country} size="sm" showName={false} />
+                    <CountryFlagSvg country={item.country} />
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {item.country}
                     </span>

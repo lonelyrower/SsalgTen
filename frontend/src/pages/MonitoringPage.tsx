@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid } from 'lucide-react';
-import { getCountryFlag } from '@/utils/countryFlags';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
 // Remove the custom interface since useRealTime provides the data structure we need
 
@@ -199,7 +199,7 @@ export const MonitoringPage: React.FC = () => {
                     </h3>
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                    <span className="text-lg" title={node.country}>{getCountryFlag(node.country)}</span>
+                    <CountryFlagSvg country={node.country} size={16} />
                     <span className="truncate">{node.city}, {node.country}</span>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
@@ -328,7 +328,7 @@ export const MonitoringPage: React.FC = () => {
                       {/* 位置 */}
                       <div className="col-span-2">
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg" title={node.country}>{getCountryFlag(node.country)}</span>
+                          <CountryFlagSvg country={node.country} size={16} />
                           <div className="min-w-0">
                             <div className="text-sm text-gray-900 dark:text-white truncate">
                               {node.city}
