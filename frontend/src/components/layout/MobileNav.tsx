@@ -10,7 +10,6 @@ import {
   Settings, 
   LogOut,
   Shield,
-  Globe,
   Lock,
   Server
 } from 'lucide-react';
