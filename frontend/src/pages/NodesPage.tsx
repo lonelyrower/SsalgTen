@@ -15,6 +15,7 @@ import { socketService } from '@/services/socketService';
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
+const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const NodesPage: React.FC = () => {
@@ -31,6 +32,7 @@ export const NodesPage: React.FC = () => {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const { nodes, stats, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
+  const [mapMode, setMapMode] = useState<'2d' | '3d'>('2d');
 
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);
@@ -246,6 +248,22 @@ export const NodesPage: React.FC = () => {
                 <span className="text-sm font-medium">{connected ? '实时连接' : '连接断开'}</span>
               </div>
               
+              {/* 地图模式切换 */}
+              <div className="hidden md:flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <button
+                  className={`px-3 py-2 text-sm ${mapMode === '2d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  onClick={() => setMapMode('2d')}
+                >
+                  2D 地图
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${mapMode === '3d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  onClick={() => setMapMode('3d')}
+                >
+                  3D 地球
+                </button>
+              </div>
+
               {hasRole('ADMIN') && (
                 <Button 
                   className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -357,7 +375,7 @@ export const NodesPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sticky top-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  节点分布地图
+                  节点分布{mapMode === '3d' ? '（3D 地球）' : '（2D 地图）'}
                 </h2>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                   <div className="flex items-center space-x-2">
@@ -376,13 +394,20 @@ export const NodesPage: React.FC = () => {
                   <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
                 </div>
               }>
-                <EnhancedWorldMap 
-                  nodes={filteredNodes} 
-                  onNodeClick={handleNodeClick} 
-                  selectedNode={selectedNode}
-                  showHeatmap={false}
-                  className="mb-4"
-                />
+                {mapMode === '2d' ? (
+                  <EnhancedWorldMap 
+                    nodes={filteredNodes} 
+                    onNodeClick={handleNodeClick} 
+                    selectedNode={selectedNode}
+                    showHeatmap={false}
+                    className="mb-4"
+                  />
+                ) : (
+                  <Globe3D 
+                    nodes={filteredNodes}
+                    onNodeClick={handleNodeClick}
+                  />
+                )}
               </Suspense>
             </div>
           </div>
