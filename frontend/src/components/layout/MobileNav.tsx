@@ -30,7 +30,6 @@ export const MobileNav: React.FC = () => {
     { path: '/monitoring', label: '监控概览', icon: Server, show: hasRole('VIEWER') },
     { path: '/nodes', label: '节点管理', icon: Settings, show: hasRole('OPERATOR') },
     { path: '/security', label: '安全分析', icon: Lock, show: hasRole('VIEWER') },
-    { path: '/universe', label: '网络宇宙', icon: Globe, show: hasRole('VIEWER') },
     { path: '/admin', label: '系统管理', icon: Users, show: hasRole('ADMIN') },
   ] : [
     { path: '/', label: '首页', icon: Activity, show: true },

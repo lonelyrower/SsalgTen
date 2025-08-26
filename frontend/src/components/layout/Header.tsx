@@ -78,10 +78,6 @@ export const Header = () => {
                 <span className="relative z-10">威胁监控</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </Link>
-              <Link to="/universe" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
-                <span className="relative z-10">3D宇宙</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
               {hasRole('ADMIN') && (
                 <Link to="/admin" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
                   <span className="relative z-10">系统管理</span>

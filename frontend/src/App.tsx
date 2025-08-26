@@ -15,7 +15,6 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => 
 const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
 const MonitoringPage = lazy(() => import('@/pages/MonitoringPage').then(module => ({ default: module.MonitoringPage })));
 const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
-const UniversePage = lazy(() => import('@/pages/UniversePage').then(module => ({ default: module.UniversePage })));
 const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
 
 function App() {
@@ -98,16 +97,6 @@ function App() {
             }
           />
           
-          <Route
-            path="/universe"
-            element={
-              <ProtectedRoute requiredRole="VIEWER">
-                <PageErrorBoundary>
-                  <UniversePage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
           
           {/* 默认重定向 */}
           <Route path="*" element={<Navigate to="/" replace />} />
