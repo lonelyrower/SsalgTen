@@ -5,13 +5,19 @@
 ## 脚本列表
 
 ### update-frontend.sh
-**功能**: 更新前端并解决常见的端口冲突问题
+**功能**: 更新前端并解决常见的端口冲突问题（支持端口自定义）
 
 **使用方法**:
 ```bash
 # 在VPS上执行
 chmod +x /path/to/SsalgTen/scripts/update-frontend.sh
 /path/to/SsalgTen/scripts/update-frontend.sh
+```
+
+也可以一次性传入端口（会同步写入 `.env`）：
+```bash
+PROJECT_PORT=3000 NODE_PORT=9000 BACKEND_PORT=3001 DB_PORT=5432 \
+  bash /path/to/SsalgTen/scripts/update-frontend.sh
 ```
 
 **脚本功能**:
@@ -21,6 +27,8 @@ chmod +x /path/to/SsalgTen/scripts/update-frontend.sh
 - ✅ 重新构建前端容器（使用 `--no-cache`）
 - ✅ 启动所有服务并检查状态
 - ✅ 验证前端和后端服务可访问性
+- ✅ 支持通过 `PROJECT_PORT`（映射为 `FRONTEND_PORT`）和 `NODE_PORT`（映射为 `AGENT_NYC_PORT`）自定义端口，并自动写入 `.env`
+- ✅ 在重建前检查端口占用，并给出清晰提示
 
 **解决的问题**:
 - `Bind for 0.0.0.0:5432 failed: port is already allocated`
@@ -62,6 +70,15 @@ docker compose down -v
 docker system prune -f
 sudo systemctl stop postgresql
 ```
+
+## 端口说明
+
+- FRONTEND_PORT: 前端对外端口（默认 80），也可通过环境变量 `PROJECT_PORT` 传入
+- BACKEND_PORT: 后端对外端口（默认 3001）
+- AGENT_NYC_PORT: 节点对外端口（默认 3002），也可通过环境变量 `NODE_PORT` 传入
+- DB_PORT: 数据库对外端口（默认 5432）；若为 5432，脚本会尝试停止系统 postgresql 服务以避免冲突
+
+如需控制更多节点端口（例如伦敦/其他地区），可告知我们以扩展脚本映射。
 
 ## 注意事项
 
