@@ -9,7 +9,7 @@ import { SystemOverview } from '@/components/admin/SystemOverview';
 import { VisitorStatsCard } from '@/components/admin/VisitorStatsCard';
 import { ApiKeyManagement } from '@/components/admin/ApiKeyManagement';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
-import { Shield, Lock, Server, RefreshCw, BarChart3, Settings } from 'lucide-react';
+import { Shield, Server, RefreshCw, BarChart3, Settings } from 'lucide-react';
 import { apiService } from '@/services/api';
 
 export const AdminPage: React.FC = () => {

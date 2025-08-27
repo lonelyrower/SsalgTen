@@ -36,7 +36,6 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
     };
 
     try {
-      console.error('Failed to fetch install command:', error);
       setLoading(true);
       // 并行请求 + 超时降级（3s）
       const installPromise = withTimeout(apiService.getInstallCommand(), 3000);

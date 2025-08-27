@@ -10,7 +10,6 @@ import {
   Trash2, 
   Plus,
   RefreshCw,
-  MapPin,
   Activity,
   AlertCircle,
   CheckCircle,

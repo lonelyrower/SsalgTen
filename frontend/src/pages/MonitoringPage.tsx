@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart, Heart, TrendingUp } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart, Heart } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
 // Remove the custom interface since useRealTime provides the data structure we need
@@ -97,10 +97,10 @@ export const MonitoringPage: React.FC = () => {
 
   // Remove error handling since useRealTime handles it internally
 
+  const totalNodes = nodes.length;
   const onlineNodes = nodes.filter(node => node.status.toLowerCase() === 'online').length;
   const offlineNodes = nodes.filter(node => node.status.toLowerCase() === 'offline').length;
   const unknownNodes = totalNodes - onlineNodes - offlineNodes;
-  const totalNodes = nodes.length;
 
   // 计算国家/地区分布
   const countryStats = nodes.reduce((acc, node) => {
