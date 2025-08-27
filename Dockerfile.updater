@@ -9,7 +9,7 @@ COPY scripts/updater-server.mjs /app/updater-server.mjs
 
 ENV PORT=8765 \
     WORKSPACE=/workspace \
-    UPDATE_SCRIPT=/workspace/scripts/update-frontend.sh
+    UPDATE_SCRIPT=/workspace/scripts/update-production.sh
 
 EXPOSE 8765
 

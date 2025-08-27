@@ -170,51 +170,177 @@ export const AdminPage: React.FC = () => {
 
             {/* 系统更新 */}
             <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">系统更新</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">检测并一键更新到最新版本</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    安全的零停机更新，自动备份数据和配置
+                  </p>
+                  {versionInfo && (
+                    <div className="mt-2 flex items-center space-x-4 text-xs">
+                      <div className="flex items-center space-x-1">
+                        <span className="text-gray-500">当前版本:</span>
+                        <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                          {versionInfo.localVersion}
+                        </span>
+                      </div>
+                      {versionInfo.latestCommit && (
+                        <div className="flex items-center space-x-1">
+                          <span className="text-gray-500">最新版本:</span>
+                          <span className="font-mono bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">
+                            {versionInfo.latestCommit.slice(0, 7)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <Button
-                  variant={versionInfo?.updateAvailable ? 'default' : 'outline'}
-                  disabled={updating}
-                  onClick={async () => {
-                    setUpdating(true);
-                    try {
-                      const res = await apiService.triggerSystemUpdate(false);
-                      if (!res.success) throw new Error(res.error || '更新启动失败');
-                      const job = (res.data as any)?.job;
-                      if (job?.id) {
-                        setUpdateJobId(job.id);
-                        setUpdateLog('更新任务已启动，正在拉取日志...');
-                        // 轮询日志
-                        const timer = setInterval(async () => {
-                          try {
-                            const r = await fetch(`${(window as any).APP_CONFIG?.API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'}/admin/system/update/${job.id}/log?tail=500`);
-                            const text = await r.text();
-                            setUpdateLog(text);
-                          } catch {}
-                        }, 3000);
-                        // 简单超时保护：10分钟后停止轮询
-                        setTimeout(() => clearInterval(timer), 10 * 60 * 1000);
+                <div className="flex flex-col items-end space-y-2">
+                  <Button
+                    variant={versionInfo?.updateAvailable ? 'default' : 'outline'}
+                    disabled={updating}
+                    onClick={async () => {
+                      const confirmed = window.confirm(
+                        '确定要开始系统更新吗？\n\n更新过程包括：\n• 自动备份数据和配置\n• 拉取最新代码\n• 重建和重启服务\n• 验证系统健康状态\n\n整个过程大约需要3-5分钟，期间服务会短暂中断。'
+                      );
+                      
+                      if (!confirmed) return;
+                      
+                      setUpdating(true);
+                      setUpdateLog('');
+                      
+                      try {
+                        const res = await apiService.triggerSystemUpdate(false);
+                        if (!res.success) throw new Error(res.error || '更新启动失败');
+                        
+                        const job = (res.data as any)?.job;
+                        if (job?.id) {
+                          setUpdateJobId(job.id);
+                          setUpdateLog('✅ 更新任务已启动\n正在准备更新环境...\n');
+                          
+                          let pollCount = 0;
+                          const maxPollCount = 200; // 10分钟超时 (3秒 * 200 = 10分钟)
+                          
+                          // 轮询日志
+                          const timer = setInterval(async () => {
+                            try {
+                              pollCount++;
+                              const apiUrl = `${(window as any).APP_CONFIG?.API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'}/admin/system/update/${job.id}/log?tail=1000`;
+                              const r = await fetch(apiUrl);
+                              
+                              if (r.ok) {
+                                const text = await r.text();
+                                setUpdateLog(text);
+                                
+                                // 检查是否完成
+                                if (text.includes('🎉 系统更新成功完成') || text.includes('✅ 生产环境更新完成')) {
+                                  clearInterval(timer);
+                                  setUpdating(false);
+                                  // 刷新页面信息
+                                  setTimeout(() => {
+                                    window.location.reload();
+                                  }, 2000);
+                                } else if (text.includes('ERROR') && text.includes('exit')) {
+                                  clearInterval(timer);
+                                  setUpdating(false);
+                                }
+                              } else if (r.status === 404) {
+                                // 任务可能已完成或失败
+                                clearInterval(timer);
+                                setUpdating(false);
+                              }
+                              
+                              // 超时保护
+                              if (pollCount >= maxPollCount) {
+                                clearInterval(timer);
+                                setUpdating(false);
+                                setUpdateLog(prev => prev + '\n\n⚠️ 更新日志获取超时，但更新可能仍在进行中...');
+                              }
+                            } catch (err) {
+                              console.warn('Failed to fetch update log:', err);
+                            }
+                          }, 3000);
+                        } else {
+                          setUpdateLog('⚠️ 更新启动成功，但未获得任务ID');
+                          setUpdating(false);
+                        }
+                      } catch (e: any) {
+                        console.error('Update failed:', e);
+                        setUpdateLog(`❌ 更新启动失败: ${e.message || '未知错误'}\n\n请检查：\n• Updater服务是否正常运行\n• 网络连接是否正常\n• 是否有足够的系统资源`);
+                        setUpdating(false);
                       }
-                    } catch (e) {
-                      console.error(e);
-                    } finally {
-                      setUpdating(false);
-                    }
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {updating ? '更新中...' : (versionInfo?.updateAvailable ? '立即更新' : '检查并更新')}
-                </Button>
+                    }}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${updating ? 'animate-spin' : ''}`} />
+                    {updating ? '更新中...' : (versionInfo?.updateAvailable ? '立即更新' : '检查并更新')}
+                  </Button>
+                  
+                  {versionInfo?.updateAvailable && (
+                    <div className="flex items-center text-xs text-amber-600 dark:text-amber-400">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-1 animate-pulse"></div>
+                      发现新版本
+                    </div>
+                  )}
+                </div>
               </div>
+              
               {updateJobId && (
-                <div className="mt-4">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">任务ID: {updateJobId}</div>
-                  <pre className="h-60 overflow-auto bg-gray-50 dark:bg-gray-900 text-xs p-3 rounded border border-gray-200 dark:border-gray-700 whitespace-pre-wrap">
-                    {updateLog || '暂无日志'}
-                  </pre>
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">更新日志</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">任务ID: {updateJobId}</div>
+                    </div>
+                    {updating && (
+                      <div className="flex items-center text-xs text-blue-600 dark:text-blue-400">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-1 animate-pulse"></div>
+                        实时更新中
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="relative">
+                    <pre className="h-96 overflow-auto bg-gray-50 dark:bg-gray-900 text-xs p-4 rounded border border-gray-200 dark:border-gray-700 whitespace-pre-wrap font-mono leading-relaxed">
+                      {updateLog || '等待日志输出...'}
+                    </pre>
+                    
+                    {/* 滚动到底部按钮 */}
+                    <button
+                      onClick={() => {
+                        const logElement = document.querySelector('.h-96.overflow-auto');
+                        if (logElement) {
+                          logElement.scrollTop = logElement.scrollHeight;
+                        }
+                      }}
+                      className="absolute bottom-2 right-2 p-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
+                      title="滚动到底部"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                  
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    💡 提示：更新完成后页面将自动刷新
+                    {!updating && updateLog.includes('ERROR') && (
+                      <span className="ml-4 text-amber-600 dark:text-amber-400">
+                        如遇问题，可联系管理员或查看系统日志
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {!updateJobId && !updating && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                  <div className="text-sm text-blue-800 dark:text-blue-300">
+                    <strong>更新特性：</strong>
+                    <ul className="mt-1 list-disc list-inside text-xs space-y-1">
+                      <li>零停机更新 - 服务仅短暂中断</li>
+                      <li>自动数据备份 - 确保数据安全</li>
+                      <li>健康检查验证 - 确保更新成功</li>
+                      <li>失败自动回滚 - 最大化可用性</li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>

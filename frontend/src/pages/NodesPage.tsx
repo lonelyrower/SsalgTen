@@ -527,11 +527,11 @@ export const NodesPage: React.FC = () => {
                           </div>
                         )}
                         
-                        {(selectedNode.asnName || selectedNode.asnOrg) && (
+                        {selectedNode.asnName && (
                           <div className="flex justify-between items-start">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">ASN组织:</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">ASN名称:</span>
                             <span className="text-xs text-right max-w-[200px]">
-                              {selectedNode.asnName || selectedNode.asnOrg}
+                              {selectedNode.asnName}
                             </span>
                           </div>
                         )}
@@ -574,27 +574,27 @@ export const NodesPage: React.FC = () => {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
+                            <div className="flex items-center justify-center space-x-2 mb-1">
                               <div className={`w-2 h-2 rounded-full ${
                                 node.status === 'online' ? 'bg-green-500' : 'bg-red-500'
                               }`}></div>
-                              <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-sm text-center">
                                 {node.name}
                               </h4>
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 text-center">
                               {node.city}, {node.country}
                             </p>
                             {node.ipv4 && (
-                              <p className="text-xs text-blue-600 dark:text-blue-400 font-mono mb-1">
+                              <p className="text-xs text-blue-600 dark:text-blue-400 font-mono mb-1 text-center">
                                 {node.ipv4}
                               </p>
                             )}
-                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                            <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
                               {node.provider}
                             </p>
                             {node.asnNumber && (
-                              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">
+                              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">
                                 AS{node.asnNumber}
                               </p>
                             )}

@@ -54,39 +54,48 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
       case 'online':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'offline':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       case 'warning':
         return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'maintenance':
+        return <Clock className="h-4 w-4 text-blue-500" />;
       default:
         return <Activity className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
       case 'online':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'offline':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'warning':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'maintenance':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
       case 'online':
         return '在线';
       case 'offline':
         return '离线';
       case 'warning':
         return '警告';
+      case 'maintenance':
+        return '维护';
       default:
         return '未知';
     }
@@ -169,7 +178,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               节点管理
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-              重命名、删除节点和部署新探针
+              重命名、删除节点和部署新节点
             </p>
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-500">
               共 {filteredNodes.length} 个节点 • {filteredNodes.filter(n => n.status === 'online').length} 在线 • 
@@ -193,7 +202,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               size="sm"
             >
               <Plus className="h-4 w-4 mr-1" />
-              部署探针
+              部署节点
             </Button>
           </div>
         </div>
@@ -248,19 +257,19 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-1/3 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   节点信息
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-1/4 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   位置
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-1/6 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   状态
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-1/6 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   最后在线
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-1/12 px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
@@ -268,7 +277,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredNodes.map((node) => (
                 <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-4">
+                  <td className="w-1/3 px-4 py-4">
                     <div className="flex items-center">
                       {getStatusIcon(node.status)}
                       <div className="ml-3">
@@ -283,7 +292,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="w-1/4 px-4 py-4">
                     <div className="text-sm text-gray-900 dark:text-white">
                       {node.city}, {node.country}
                     </div>
@@ -291,15 +300,15 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       {node.provider}
                     </div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="w-1/6 px-4 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(node.status)}`}>
                       {getStatusText(node.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td className="w-1/6 px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {node.lastSeen ? new Date(node.lastSeen).toLocaleDateString('zh-CN') : '未知'}
                   </td>
-                  <td className="px-4 py-4 text-right text-sm font-medium">
+                  <td className="w-1/12 px-4 py-4 text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
                       <Button
                         variant="ghost"
@@ -337,7 +346,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
           <p className="text-gray-500 dark:text-gray-400 mb-4">
             {searchTerm || filterStatus !== 'all' 
               ? '请尝试调整搜索条件' 
-              : '部署第一个探针开始监控'
+              : '部署第一个节点开始监控'
             }
           </p>
           {(!searchTerm && filterStatus === 'all') && (
@@ -346,7 +355,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
-              部署探针
+              部署节点
             </Button>
           )}
         </div>

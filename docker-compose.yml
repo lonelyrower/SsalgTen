@@ -83,6 +83,14 @@ services:
       DEFAULT_PING_COUNT: ${DEFAULT_PING_COUNT:-4}
       DEFAULT_TRACEROUTE_MAX_HOPS: ${DEFAULT_TRACEROUTE_MAX_HOPS:-30}
       
+      # System Update Configuration
+      UPDATER_URL: http://updater:8765/update
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      REPO_OWNER: ${REPO_OWNER:-lonelyrower}
+      REPO_NAME: ${REPO_NAME:-SsalgTen}
+      REPO_BRANCH: ${REPO_BRANCH:-main}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      
       # Redis (optional)
       REDIS_URL: redis://:${REDIS_PASSWORD:-ssalgten_redis}@redis:6379
     volumes:
@@ -179,6 +187,51 @@ services:
       retries: 3
       start_period: 60s
 
+  # System Updater Service (for production deployments)
+  updater:
+    build:
+      context: .
+      dockerfile: Dockerfile.updater
+    container_name: ssalgten-updater
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      PORT: 8765
+      WORKSPACE: /workspace
+      UPDATE_SCRIPT: /workspace/scripts/update-production.sh
+      UPDATE_LOG_DIR: /workspace/.update/logs
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      
+      # Pass through environment variables for update script
+      PROJECT_PORT: ${FRONTEND_PORT:-80}
+      BACKEND_PORT: ${BACKEND_PORT:-3001}
+      DB_PORT: ${DB_PORT:-5432}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      
+      # Repository configuration
+      REPO_OWNER: ${REPO_OWNER:-lonelyrower}
+      REPO_NAME: ${REPO_NAME:-SsalgTen}
+      REPO_BRANCH: ${REPO_BRANCH:-main}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    volumes:
+      # Mount project source code
+      - .:/workspace
+      # Mount Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount update logs
+      - updater_logs:/workspace/.update/logs
+    ports:
+      - "8765:8765"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   ssalgten-network:
     driver: bridge
@@ -195,3 +248,5 @@ volumes:
     name: ssalgten-backend-data
   agent_nyc_logs:
     name: ssalgten-agent-nyc-logs
+  updater_logs:
+    name: ssalgten-updater-logs

@@ -77,18 +77,35 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    // 背景
+    // 星空背景
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#0b1220';
+    const starGrad = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+    );
+    starGrad.addColorStop(0, '#0f1419');
+    starGrad.addColorStop(1, '#020817');
+    ctx.fillStyle = starGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 地球球体（改进的渐变和大陆轮廓）
+    // 添加星星效果
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    for (let i = 0; i < 50; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const size = Math.random() * 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 地球球体（海洋色彩）
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const effectiveRadius = R * zoom;
     
-    // 主球体渐变
-    const grad = ctx.createRadialGradient(
+    // 海洋渐变（蓝色基调）
+    const oceanGrad = ctx.createRadialGradient(
       centerX - effectiveRadius * 0.3, 
       centerY - effectiveRadius * 0.3, 
       effectiveRadius * 0.1, 
@@ -96,73 +113,116 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
       centerY, 
       effectiveRadius
     );
-    grad.addColorStop(0, 'rgba(45, 135, 255, 0.95)');
-    grad.addColorStop(0.6, 'rgba(20, 80, 180, 0.7)');
-    grad.addColorStop(0.8, 'rgba(10, 40, 100, 0.5)');
-    grad.addColorStop(1, 'rgba(5, 20, 50, 0.3)');
+    oceanGrad.addColorStop(0, 'rgba(65, 105, 200, 1)');
+    oceanGrad.addColorStop(0.4, 'rgba(45, 85, 170, 0.95)');
+    oceanGrad.addColorStop(0.7, 'rgba(25, 65, 140, 0.8)');
+    oceanGrad.addColorStop(1, 'rgba(15, 45, 100, 0.6)');
     
-    ctx.fillStyle = grad;
+    ctx.fillStyle = oceanGrad;
     ctx.beginPath();
     ctx.arc(centerX, centerY, effectiveRadius, 0, Math.PI * 2);
     ctx.fill();
     
-    // 添加球面高光效果
+    // 大陆轮廓（绿棕色）
+    ctx.strokeStyle = 'rgba(120, 160, 80, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    
+    // 简化的大陆轮廓
+    const continents = [
+      // 亚洲主要轮廓
+      [[35, 100], [50, 120], [40, 140], [20, 130], [10, 110], [25, 95]],
+      // 欧洲
+      [[60, 10], [70, 30], [55, 25], [50, 5], [55, -5]],
+      // 非洲
+      [[35, 20], [30, 30], [10, 25], [-10, 30], [-30, 20], [-20, 10], [10, 15]],
+      // 北美洲
+      [[70, -100], [60, -80], [30, -90], [40, -120], [65, -130]],
+      // 南美洲
+      [[10, -70], [5, -60], [-10, -65], [-30, -70], [-40, -60], [-20, -55]],
+      // 澳大利亚
+      [[-20, 130], [-30, 140], [-35, 130], [-25, 120]]
+    ];
+    
+    continents.forEach(continent => {
+      const points = continent.map(([lat, lon]) => {
+        const { x, y, z } = latLonToXYZ(lat, lon);
+        return project3D(x, y, z);
+      }).filter(p => p.visible);
+      
+      if (points.length > 2) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(90, 140, 60, 0.3)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 160, 80, 0.6)';
+        ctx.stroke();
+      }
+    });
+    
+    // 经纬网格（更细致）
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([1, 2]);
+    
+    // 纬线
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const points = [];
+      for (let lon = -180; lon <= 180; lon += 5) {
+        const { x, y, z } = latLonToXYZ(lat, lon);
+        const p = project3D(x, y, z);
+        if (p.visible && Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2) <= effectiveRadius) {
+          points.push(p);
+        }
+      }
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+      }
+    }
+    
+    // 经线
+    for (let lon = -150; lon <= 150; lon += 30) {
+      const points = [];
+      for (let lat = -80; lat <= 80; lat += 3) {
+        const { x, y, z } = latLonToXYZ(lat, lon);
+        const p = project3D(x, y, z);
+        if (p.visible && Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2) <= effectiveRadius) {
+          points.push(p);
+        }
+      }
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+      }
+    }
+    
+    // 球面高光效果（类似地球仪的反光）
     const highlight = ctx.createRadialGradient(
       centerX - effectiveRadius * 0.4,
       centerY - effectiveRadius * 0.4,
       0,
       centerX - effectiveRadius * 0.4,
       centerY - effectiveRadius * 0.4,
-      effectiveRadius * 0.6
+      effectiveRadius * 0.8
     );
-    highlight.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-    highlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+    highlight.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+    highlight.addColorStop(0.3, 'rgba(255, 255, 255, 0.15)');
+    highlight.addColorStop(0.6, 'rgba(255, 255, 255, 0.05)');
     highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
     
     ctx.fillStyle = highlight;
     ctx.beginPath();
     ctx.arc(centerX, centerY, effectiveRadius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // 绘制大陆轮廓（简化版）
-    ctx.strokeStyle = 'rgba(100, 200, 100, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 3]);
-    
-    // 简单的大陆线条（经纬网格）
-    for (let lat = -60; lat <= 60; lat += 30) {
-      const points = [];
-      for (let lon = -180; lon <= 180; lon += 10) {
-        const { x, y, z } = latLonToXYZ(lat, lon);
-        const p = project3D(x, y, z);
-        if (p.visible && Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2) <= effectiveRadius) {
-          points.push(p);
-        }
-      }
-      if (points.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.stroke();
-      }
-    }
-    
-    for (let lon = -150; lon <= 150; lon += 30) {
-      const points = [];
-      for (let lat = -80; lat <= 80; lat += 5) {
-        const { x, y, z } = latLonToXYZ(lat, lon);
-        const p = project3D(x, y, z);
-        if (p.visible && Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2) <= effectiveRadius) {
-          points.push(p);
-        }
-      }
-      if (points.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.stroke();
-      }
-    }
     
     ctx.setLineDash([]);
 
@@ -367,7 +427,7 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
   ), [isPlaying]);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative w-full h-[500px] ${className}`}>
       {Controls}
       {/* 省电模式开关 */}
       <div className="absolute top-4 left-4 z-10">
@@ -376,10 +436,10 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
           省电模式
         </label>
       </div>
-      <div className="w-full h-full min-h-[400px] rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="w-full h-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 bg-slate-900 flex items-center justify-center">
         <canvas
           ref={canvasRef}
-          className="w-full h-full cursor-grab active:cursor-grabbing bg-slate-900"
+          className="cursor-grab active:cursor-grabbing bg-slate-900"
           onMouseDown={onMouseDown}
           onMouseMove={(e) => { onMouseMove(e); onMouseMoveHover(e); }}
           onMouseUp={onMouseUp}

@@ -60,7 +60,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(sudo netstat:*)",
       "Read(//usr/local/bin/**)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git log --oneline -5)",
+      "Bash(./scripts/test-update-system.sh:*)",
+      "Bash(dos2unix:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "additionalDirectories": [
