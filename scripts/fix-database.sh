@@ -3,6 +3,18 @@
 # 数据库修复脚本 - 用于修复现有安装中的数据库问题
 echo "🔧 开始修复数据库..."
 
+# Docker Compose兼容性函数
+docker_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+    else
+        echo "❌ Docker Compose not found"
+        exit 1
+    fi
+}
+
 cd /opt/ssalgten || exit 1
 
 # 1. 检查当前状态
