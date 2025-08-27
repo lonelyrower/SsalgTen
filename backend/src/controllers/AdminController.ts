@@ -603,6 +603,132 @@ export class AdminController {
       res.status(500).json(response);
     }
   }
+
+  async getSystemOverview(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      // 并行查询所有统计数据
+      const [
+        nodeStats,
+        heartbeatTotal,
+        heartbeat24h,
+        diagnosticTotal,
+        diagnosticLast24h,
+        diagnosticSuccess,
+        userTotal,
+        activeUsers
+      ] = await Promise.all([
+        // 节点统计 (复用现有逻辑)
+        this.getNodeStats(),
+        
+        // 心跳统计
+        prisma.heartbeatLog.count(),
+        prisma.heartbeatLog.count({
+          where: { timestamp: { gte: twentyFourHoursAgo } }
+        }),
+        
+        // 诊断统计
+        prisma.diagnosticRecord.count(),
+        prisma.diagnosticRecord.count({
+          where: { timestamp: { gte: twentyFourHoursAgo } }
+        }),
+        prisma.diagnosticRecord.count({
+          where: { 
+            timestamp: { gte: twentyFourHoursAgo },
+            success: true 
+          }
+        }),
+        
+        // 用户统计
+        prisma.user.count(),
+        prisma.user.count({
+          where: {
+            lastLogin: { gte: twentyFourHoursAgo }
+          }
+        })
+      ]);
+
+      // 计算诊断成功率
+      const successRate = diagnosticLast24h > 0 ? 
+        Math.round((diagnosticSuccess / diagnosticLast24h) * 100 * 10) / 10 : 0;
+
+      // 计算平均心跳频率
+      const avgPerHour = heartbeat24h > 0 ? Math.round(heartbeat24h / 24) : 0;
+
+      // 系统信息
+      const startTime = process.uptime();
+      const version = process.env.APP_VERSION || '0.1.0';
+      const environment = process.env.NODE_ENV || 'development';
+
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          nodes: nodeStats,
+          heartbeats: {
+            total: heartbeatTotal,
+            last24h: heartbeat24h,
+            avgPerHour: avgPerHour
+          },
+          diagnostics: {
+            total: diagnosticTotal,
+            last24h: diagnosticLast24h,
+            successRate: successRate
+          },
+          users: {
+            total: userTotal,
+            active: activeUsers
+          },
+          system: {
+            uptime: Math.floor(startTime),
+            version: version,
+            environment: environment
+          }
+        }
+      };
+
+      res.json(response);
+
+    } catch (error) {
+      logger.error('Admin get system overview error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to get system overview'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  private async getNodeStats() {
+    // 复用现有的节点统计逻辑
+    const [totalNodes, onlineNodes, offlineNodes, unknownNodes] = await Promise.all([
+      prisma.node.count(),
+      prisma.node.count({ where: { status: 'ONLINE' } }),
+      prisma.node.count({ where: { status: 'OFFLINE' } }),
+      prisma.node.count({ where: { status: 'UNKNOWN' } })
+    ]);
+
+    const [totalCountries, totalProviders] = await Promise.all([
+      prisma.node.groupBy({
+        by: ['country'],
+        _count: { country: true }
+      }).then(result => result.length),
+      prisma.node.groupBy({
+        by: ['provider'],
+        _count: { provider: true }
+      }).then(result => result.length)
+    ]);
+
+    return {
+      totalNodes,
+      onlineNodes,
+      offlineNodes,
+      unknownNodes,
+      totalCountries,
+      totalProviders
+    };
+  }
 }
 
 export const adminController = new AdminController();

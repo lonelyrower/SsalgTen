@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '@/services/api';
+import { apiService, type SystemOverviewData } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,40 +17,8 @@ import {
   HardDrive,
 } from 'lucide-react';
 
-interface SystemStats {
-  totalNodes: number;
-  onlineNodes: number;
-  offlineNodes: number;
-  unknownNodes: number;
-  totalCountries: number;
-  totalProviders: number;
-}
-
-interface SystemOverviewStats {
-  nodes: SystemStats;
-  heartbeats: {
-    total: number;
-    last24h: number;
-    avgPerHour: number;
-  };
-  diagnostics: {
-    total: number;
-    last24h: number;
-    successRate: number;
-  };
-  users: {
-    total: number;
-    active: number;
-  };
-  system: {
-    uptime: number;
-    version: string;
-    environment: string;
-  };
-}
-
 export const SystemOverview: React.FC = () => {
-  const [stats, setStats] = useState<SystemOverviewStats | null>(null);
+  const [stats, setStats] = useState<SystemOverviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -59,46 +27,18 @@ export const SystemOverview: React.FC = () => {
     try {
       setError(null);
       
-      // 并行获取多个统计数据
-      const [nodesRes, usersRes, versionRes] = await Promise.all([
-        apiService.getStats(),
-        apiService.getUsers().catch(() => ({ success: false, data: null })),
-        apiService.getSystemVersion().catch(() => ({ success: false, data: null })),
-      ]);
-
-      if (nodesRes.success && nodesRes.data) {
-        // 使用真实数据，只有部分数据仍为模拟
-        const stats: SystemOverviewStats = {
-          nodes: nodesRes.data,
-          heartbeats: {
-            total: 12480, // TODO: 从后端API获取
-            last24h: 1440, // TODO: 从后端API获取
-            avgPerHour: 60 // TODO: 从后端API获取
-          },
-          diagnostics: {
-            total: 3250, // TODO: 从后端API获取
-            last24h: 156, // TODO: 从后端API获取
-            successRate: 94.5 // TODO: 从后端API获取
-          },
-          users: {
-            total: usersRes.success && Array.isArray(usersRes.data) ? usersRes.data.length : 0,
-            active: usersRes.success && Array.isArray(usersRes.data) ? usersRes.data.filter((user: any) => user.lastLogin && new Date(user.lastLogin).getTime() > Date.now() - 24 * 60 * 60 * 1000).length : 0
-          },
-          system: {
-            uptime: 15 * 24 * 3600, // TODO: 从后端API获取系统启动时间
-            version: versionRes.success && versionRes.data?.localVersion ? versionRes.data.localVersion : '0.1.0',
-            environment: 'production'
-          }
-        };
-        
-        setStats(stats);
+      // 使用统一的系统概览API
+      const response = await apiService.getSystemOverview();
+      
+      if (response.success && response.data) {
+        setStats(response.data);
         setLastUpdate(new Date());
       } else {
-        setError(nodesRes.error || '获取统计数据失败');
+        setError(response.error || '获取系统概览数据失败');
       }
     } catch (err) {
-      console.error('Failed to fetch system stats:', err);
-      setError('网络错误，无法获取统计数据');
+      console.error('Failed to fetch system overview:', err);
+      setError('网络错误，无法获取系统概览');
     } finally {
       setLoading(false);
     }

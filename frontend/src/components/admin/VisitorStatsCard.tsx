@@ -32,13 +32,15 @@ export const VisitorStatsCard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [days, setDays] = useState(7);
+  const [showDetails, setShowDetails] = useState(false);
 
   const fetchStats = async () => {
     try {
       setError(null);
       
       const [visitorRes, cacheRes] = await Promise.all([
-        apiService.getVisitorStats(7), // 获取7天的统计数据
+        apiService.getVisitorStats(days), // 获取指定天数的统计数据
         apiService.getVisitorCacheStats()
       ]);
 
@@ -88,7 +90,9 @@ export const VisitorStatsCard: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-    
+  }, [days]);
+
+  useEffect(() => {
     // 每10分钟自动刷新
     const interval = setInterval(fetchStats, 10 * 60 * 1000);
     return () => clearInterval(interval);
@@ -154,13 +158,29 @@ export const VisitorStatsCard: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
               <Eye className="h-5 w-5 mr-2 text-blue-600" />
-              访问统计 (近7天)
+              访问统计 (近{days}天)
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               访问者行为分析和地理分布统计
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <select
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={7}>近7天</option>
+              <option value={14}>近14天</option>
+              <option value={30}>近30天</option>
+            </select>
+            <Button
+              onClick={() => setShowDetails(!showDetails)}
+              variant="outline"
+              size="sm"
+            >
+              {showDetails ? '隐藏详情' : '显示详情'}
+            </Button>
             {lastUpdate && (
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {lastUpdate.toLocaleTimeString()}
@@ -293,6 +313,12 @@ export const VisitorStatsCard: React.FC = () => {
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">IP地址</th>
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">位置</th>
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">ASN</th>
+                    {showDetails && (
+                      <>
+                        <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">访问页面</th>
+                        <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">来源</th>
+                      </>
+                    )}
                     <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">时间</th>
                   </tr>
                 </thead>
@@ -306,6 +332,25 @@ export const VisitorStatsCard: React.FC = () => {
                         ) || '-'}
                       </td>
                       <td className="p-2 text-xs">{visitor.asnName || '-'}</td>
+                      {showDetails && (
+                        <>
+                          <td className="p-2 text-xs font-mono text-green-600 dark:text-green-400">
+                            {(visitor as any).endpoint || '-'}
+                          </td>
+                          <td className="p-2 text-xs text-gray-500">
+                            {(visitor as any).referer ? (
+                              <a 
+                                href={(visitor as any).referer} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="hover:text-blue-600 dark:hover:text-blue-400"
+                              >
+                                {new URL((visitor as any).referer).hostname}
+                              </a>
+                            ) : '-'}
+                          </td>
+                        </>
+                      )}
                       <td className="p-2 text-xs text-gray-500">
                         {new Date(visitor.createdAt).toLocaleString()}
                       </td>

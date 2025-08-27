@@ -134,6 +134,9 @@ router.delete('/admin/users/:id', authenticateToken, requireAdmin, adminControll
 // 系统统计
 router.get('/admin/stats', authenticateToken, requireAdmin, adminController.getSystemStats.bind(adminController));
 
+// 系统概览（统一API）
+router.get('/admin/overview', authenticateToken, requireAdmin, adminController.getSystemOverview.bind(adminController));
+
 // 系统配置管理
 router.get('/admin/configs', authenticateToken, requireAdmin, systemConfigController.getAllConfigs.bind(systemConfigController));
 router.get('/admin/configs/categories', authenticateToken, requireAdmin, systemConfigController.getCategories.bind(systemConfigController));

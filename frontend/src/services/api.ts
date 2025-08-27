@@ -179,6 +179,30 @@ export interface SystemConfig {
   updatedAt: string;
 }
 
+// 系统概览数据接口
+export interface SystemOverviewData {
+  nodes: NodeStats;
+  heartbeats: {
+    total: number;
+    last24h: number;
+    avgPerHour: number;
+  };
+  diagnostics: {
+    total: number;
+    last24h: number;
+    successRate: number;
+  };
+  users: {
+    total: number;
+    active: number;
+  };
+  system: {
+    uptime: number;
+    version: string;
+    environment: string;
+  };
+}
+
 // ASN信息接口
 export interface ASNInfo {
   asn: string;
@@ -595,6 +619,10 @@ class ApiService {
   // 系统版本与更新
   async getSystemVersion(): Promise<ApiResponse<{ localVersion: string; latestCommit?: string; updateAvailable?: boolean; repo: string; branch: string }>> {
     return this.request('/system/version');
+  }
+
+  async getSystemOverview(): Promise<ApiResponse<SystemOverviewData>> {
+    return this.request('/admin/overview', {}, true);
   }
 
   async triggerSystemUpdate(forceAgent: boolean = false): Promise<ApiResponse<{ body?: string }>> {
