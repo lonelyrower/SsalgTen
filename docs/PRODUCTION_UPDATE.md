@@ -179,12 +179,16 @@ curl http://localhost:8765/jobs/[job-id]
 
 ```bash
 # 确保只有管理员可以访问更新功能
-# 在防火墙中限制8765端口访问（可选）
-iptables -A INPUT -p tcp --dport 8765 -s 127.0.0.1 -j ACCEPT
-iptables -A INPUT -p tcp --dport 8765 -j DROP
+# Updater 服务已配置为仅本地访问 (127.0.0.1:8765)
+# 生产环境可完全关闭外部端口映射，仅通过内网访问
 
 # 使用强密码作为UPDATER_TOKEN
 UPDATER_TOKEN=$(openssl rand -base64 32)
+
+# 可选：完全关闭外部访问（推荐生产环境）
+# 在 docker-compose.yml 中注释掉端口映射:
+# ports:
+#   # - "127.0.0.1:8765:8765"
 ```
 
 ### 2. 数据保护

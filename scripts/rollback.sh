@@ -7,6 +7,16 @@
 
 set -Eeuo pipefail
 
+# Docker Compose 命令兼容性检查
+if command -v $DC >/dev/null 2>&1; then
+    DC="$DC"
+elif docker compose version >/dev/null 2>&1; then
+    DC="docker compose"
+else
+    echo "错误: 未找到 $DC 或 docker compose 命令"
+    exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BACKUP_DIR="${PROJECT_DIR}/.update/backups"
@@ -75,7 +85,7 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 log_info "🛑 停止所有服务..."
-docker-compose down || {
+$DC down || {
     log_warn "部分服务停止失败，继续执行..."
 }
 
@@ -88,11 +98,11 @@ else
     log_warn ".env 备份文件不存在"
 fi
 
-if [ -f "${BACKUP_PATH}/docker-compose.yml" ]; then
-    cp "${BACKUP_PATH}/docker-compose.yml" docker-compose.yml
-    log_success "恢复 docker-compose.yml 配置"
+if [ -f "${BACKUP_PATH}/$DC.yml" ]; then
+    cp "${BACKUP_PATH}/$DC.yml" $DC.yml
+    log_success "恢复 $DC.yml 配置"
 else
-    log_warn "docker-compose.yml 备份文件不存在"
+    log_warn "$DC.yml 备份文件不存在"
 fi
 
 # 2. 恢复Git版本
@@ -119,7 +129,7 @@ fi
 
 # 3. 启动数据库服务
 log_info "🗄️ 启动数据库服务..."
-docker-compose up -d database || {
+$DC up -d database || {
     log_error "数据库启动失败"
     exit 1
 }
@@ -127,7 +137,7 @@ docker-compose up -d database || {
 # 等待数据库就绪
 log_info "等待数据库就绪..."
 for i in {1..30}; do
-    if docker-compose exec -T database pg_isready -U ssalgten >/dev/null 2>&1; then
+    if $DC exec -T database pg_isready -U ssalgten >/dev/null 2>&1; then
         log_success "数据库已就绪"
         break
     fi
@@ -141,7 +151,7 @@ done
 # 4. 恢复数据库
 if [ -f "${BACKUP_PATH}/database.sql" ]; then
     log_info "💾 恢复数据库..."
-    docker-compose exec -T database psql -U ssalgten -d ssalgten < "${BACKUP_PATH}/database.sql" || {
+    $DC exec -T database psql -U ssalgten -d ssalgten < "${BACKUP_PATH}/database.sql" || {
         log_error "数据库恢复失败"
         exit 1
     }
@@ -161,12 +171,12 @@ fi
 
 # 6. 重建和启动服务
 log_info "🔨 重建并启动所有服务..."
-docker-compose build --no-cache || {
+$DC build --no-cache || {
     log_error "服务构建失败"
     exit 1
 }
 
-docker-compose up -d || {
+$DC up -d || {
     log_error "服务启动失败"
     exit 1
 }
@@ -205,7 +215,7 @@ fi
 
 # 8. 显示状态
 log_info "📊 当前服务状态:"
-docker-compose ps
+$DC ps
 
 log_success "✅ 回滚完成!"
 log_info "📋 回滚摘要:"

@@ -16,7 +16,7 @@ export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [versionInfo, setVersionInfo] = useState<{ localVersion?: string; latestCommit?: string; updateAvailable?: boolean } | null>(null);
+  const [versionInfo, setVersionInfo] = useState<{ localVersion?: string; latestCommit?: string; updateAvailable?: boolean; message?: string } | null>(null);
   const [updating, setUpdating] = useState(false);
   const [updateJobId, setUpdateJobId] = useState<string | null>(null);
   const [updateLog, setUpdateLog] = useState<string>('');
@@ -161,6 +161,11 @@ export const AdminPage: React.FC = () => {
                       最新: {versionInfo.latestCommit.slice(0,7)}
                     </div>
                   )}
+                  {versionInfo?.message && (
+                    <div className="mt-1 text-xs text-yellow-600 dark:text-yellow-400" title={versionInfo.message}>
+                      版本检查失败
+                    </div>
+                  )}
                   {!!versionInfo?.updateAvailable && (
                     <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">有可用更新</div>
                   )}
@@ -184,14 +189,20 @@ export const AdminPage: React.FC = () => {
                           {versionInfo.localVersion}
                         </span>
                       </div>
-                      {versionInfo.latestCommit && (
+                      {versionInfo.latestCommit ? (
                         <div className="flex items-center space-x-1">
                           <span className="text-gray-500">最新版本:</span>
                           <span className="font-mono bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">
                             {versionInfo.latestCommit.slice(0, 7)}
                           </span>
                         </div>
-                      )}
+                      ) : versionInfo.message ? (
+                        <div className="flex items-center space-x-1">
+                          <span className="text-yellow-600 dark:text-yellow-400 text-xs">
+                            ⚠️ {versionInfo.message}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   )}
                 </div>

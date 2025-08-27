@@ -8,6 +8,16 @@
 
 set -Eeuo pipefail
 
+# Docker Compose 命令兼容性检查
+if command -v $DC >/dev/null 2>&1; then
+    DC="$DC"
+elif docker compose version >/dev/null 2>&1; then
+    DC="docker compose"
+else
+    echo "错误: 未找到 $DC 或 docker compose 命令"
+    exit 1
+fi
+
 # 配置
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -58,7 +68,7 @@ fi
 
 # 检查是否有正在运行的容器
 log_info "🔍 检查当前运行状态..."
-RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running" | wc -l)
+RUNNING_CONTAINERS=$($DC ps --services --filter "status=running" | wc -l)
 log_info "当前运行的容器数: $RUNNING_CONTAINERS"
 
 # 1. 创建数据备份
@@ -68,7 +78,7 @@ mkdir -p "$BACKUP_PATH"
 
 # 备份数据库
 log_info "备份数据库..."
-docker-compose exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BACKUP_PATH}/database.sql" 2>/dev/null || {
+$DC exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BACKUP_PATH}/database.sql" 2>/dev/null || {
     log_error "数据库备份失败"
     exit 1
 }
@@ -76,7 +86,7 @@ docker-compose exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exi
 # 备份配置文件
 log_info "备份配置文件..."
 cp -r .env "${BACKUP_PATH}/" 2>/dev/null || log_warn ".env文件备份失败"
-cp -r docker-compose.yml "${BACKUP_PATH}/" 2>/dev/null || log_warn "docker-compose.yml备份失败"
+cp -r $DC.yml "${BACKUP_PATH}/" 2>/dev/null || log_warn "$DC.yml备份失败"
 
 # 备份持久化数据卷（如果存在）
 log_info "备份Docker卷数据..."
@@ -127,7 +137,7 @@ check_service_health() {
     log_info "检查 $service 服务健康状态..."
     
     while [ $attempt -le $max_attempts ]; do
-        if docker-compose ps "$service" | grep -q "healthy\|Up"; then
+        if $DC ps "$service" | grep -q "healthy\|Up"; then
             log_success "$service 服务健康"
             return 0
         fi
@@ -146,12 +156,12 @@ log_info "🔄 开始滚动更新..."
 
 # 更新后端服务
 log_info "更新后端服务..."
-docker-compose build backend 2>&1 | tee -a "$LOG_FILE" || {
+$DC build backend 2>&1 | tee -a "$LOG_FILE" || {
     log_error "后端构建失败"
     exit 1
 }
 
-docker-compose up -d backend 2>&1 | tee -a "$LOG_FILE" || {
+$DC up -d backend 2>&1 | tee -a "$LOG_FILE" || {
     log_error "后端启动失败"
     exit 1
 }
@@ -160,12 +170,12 @@ check_service_health "backend" || exit 1
 
 # 更新前端服务
 log_info "更新前端服务..."
-docker-compose build frontend 2>&1 | tee -a "$LOG_FILE" || {
+$DC build frontend 2>&1 | tee -a "$LOG_FILE" || {
     log_error "前端构建失败"
     exit 1
 }
 
-docker-compose up -d frontend 2>&1 | tee -a "$LOG_FILE" || {
+$DC up -d frontend 2>&1 | tee -a "$LOG_FILE" || {
     log_error "前端启动失败"
     exit 1
 }
@@ -173,10 +183,10 @@ docker-compose up -d frontend 2>&1 | tee -a "$LOG_FILE" || {
 check_service_health "frontend" || exit 1
 
 # 更新代理服务（如果存在）
-if docker-compose ps agent-nyc >/dev/null 2>&1; then
+if $DC ps agent-nyc >/dev/null 2>&1; then
     log_info "更新代理服务..."
-    docker-compose build agent-nyc 2>&1 | tee -a "$LOG_FILE" || log_warn "代理构建失败"
-    docker-compose up -d agent-nyc 2>&1 | tee -a "$LOG_FILE" || log_warn "代理启动失败"
+    $DC build agent-nyc 2>&1 | tee -a "$LOG_FILE" || log_warn "代理构建失败"
+    $DC up -d agent-nyc 2>&1 | tee -a "$LOG_FILE" || log_warn "代理启动失败"
 fi
 
 # 5. 最终健康检查
@@ -229,6 +239,6 @@ log_info "  日志文件: $LOG_FILE"
 
 # 显示运行状态
 log_info "📈 当前服务状态:"
-docker-compose ps 2>&1 | tee -a "$LOG_FILE"
+$DC ps 2>&1 | tee -a "$LOG_FILE"
 
 log_info "🎉 系统更新成功完成，服务正常运行！"

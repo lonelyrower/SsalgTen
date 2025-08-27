@@ -205,7 +205,7 @@ services:
       UPDATER_TOKEN: ${UPDATER_TOKEN:-}
       
       # Pass through environment variables for update script
-      PROJECT_PORT: ${FRONTEND_PORT:-80}
+      FRONTEND_PORT: ${FRONTEND_PORT:-80}
       BACKEND_PORT: ${BACKEND_PORT:-3001}
       DB_PORT: ${DB_PORT:-5432}
       REDIS_PORT: ${REDIS_PORT:-6379}
@@ -223,7 +223,9 @@ services:
       # Mount update logs
       - updater_logs:/workspace/.update/logs
     ports:
-      - "8765:8765"
+      # 生产环境建议注释此行，仅允许内网访问
+      # - "8765:8765"
+      - "127.0.0.1:8765:8765"  # 仅本地访问
     networks:
       - ssalgten-network
     healthcheck:
