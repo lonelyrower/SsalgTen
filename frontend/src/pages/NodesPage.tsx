@@ -386,8 +386,8 @@ export const NodesPage: React.FC = () => {
         {/* 地图视图 */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* 地图 */}
-          <div className="xl:col-span-2 min-h-[700px]">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sticky top-4">
+          <div className="xl:col-span-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sticky top-4 min-h-[700px]">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布{mapMode === '3d' ? '（3D 地球）' : '（2D 地图）'}
@@ -451,7 +451,7 @@ export const NodesPage: React.FC = () => {
           
           {/* 节点列表/详情 */}
           <div className="xl:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-h-[700px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-h-[700px] flex flex-col">
               {selectedNode ? (
                 /* 节点详情视图 */
                 <div className="space-y-4">
@@ -592,11 +592,11 @@ export const NodesPage: React.FC = () => {
                 </div>
               ) : (
                 /* 节点列表视图 */
-                <div>
+                <div className="flex flex-col flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     节点列表
                   </h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                  <div className="space-y-3 flex-1 overflow-y-auto">
                     {filteredNodes.map((node) => (
                       <div
                         key={node.id}
