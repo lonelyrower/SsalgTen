@@ -1445,7 +1445,16 @@ install_ssl_certificate() {
         fi
         
         # 仅申请证书（不自动改写配置），使用nginx插件完成HTTP-01验证
-        run_as_root certbot certonly --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+        # 根据DNS解析结果，智能决定是否包含 www 子域
+        local CERT_DOMAINS=(-d "$DOMAIN")
+        local SERVER_NAMES="$DOMAIN"
+        if getent ahosts "www.$DOMAIN" >/dev/null 2>&1; then
+            CERT_DOMAINS+=( -d "www.$DOMAIN" )
+            SERVER_NAMES+=" www.$DOMAIN"
+        else
+            log_warning "检测到 www.$DOMAIN 无DNS记录，跳过该子域证书申请"
+        fi
+        run_as_root certbot certonly --nginx "${CERT_DOMAINS[@]}" --email $SSL_EMAIL --agree-tos --non-interactive
 
         # 生成最终HTTPS配置（写入证书路径并启用重定向）
         if [[ -d "/etc/nginx/sites-available" ]]; then
@@ -1464,13 +1473,13 @@ install_ssl_certificate() {
 # SsalgTen Nginx 配置 (HTTPS启用)
 server {
     listen $HTTP_PORT;
-    server_name $DOMAIN www.$DOMAIN;
+    server_name $SERVER_NAMES;
     return 301 https://\$server_name$REDIR_PORT_SUFFIX\$request_uri;
 }
 
 server {
     listen $HTTPS_PORT ssl http2;
-    server_name $DOMAIN www.$DOMAIN;
+    server_name $SERVER_NAMES;
     ssl_certificate     $SSL_CERT;
     ssl_certificate_key $SSL_KEY;
 
