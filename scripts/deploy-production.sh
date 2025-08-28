@@ -1413,15 +1413,14 @@ EOF
         log_info "Nginx配置已放置在 conf.d 目录中"
     fi
     
-    # 测试配置
-    run_as_root nginx -t
-    
-    # 重新加载Nginx配置
-    run_as_root systemctl reload nginx
-    
+    # 在HTTPS模式下，先不要reload；待证书安装后再测试并reload
     if [[ "$ENABLE_SSL" == "true" ]]; then
-        log_success "Nginx HTTPS配置创建完成"
+        log_info "HTTPS模式：跳过nginx -t与reload，待证书安装后执行"
+        log_success "Nginx HTTPS配置创建完成（待证书）"
     else
+        # 测试并加载HTTP配置
+        run_as_root nginx -t
+        run_as_root systemctl reload nginx
         log_success "Nginx HTTP配置创建完成"
     fi
 }
@@ -1481,7 +1480,11 @@ EOF'
         run_as_root systemctl list-timers --all | grep certbot || true
         run_as_root journalctl -u certbot.timer -n 5 --no-pager || true
         
-        log_success "SSL证书安装完成"
+        # 证书安装完成后，测试并重新加载Nginx配置
+        run_as_root nginx -t
+        run_as_root systemctl reload nginx
+
+        log_success "SSL证书安装完成，并已重新加载Nginx"
     else
         log_info "跳过SSL证书安装 (HTTP模式)"
     fi
