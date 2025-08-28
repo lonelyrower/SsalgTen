@@ -9,7 +9,7 @@ import { SystemOverview } from '@/components/admin/SystemOverview';
 import { VisitorStatsCard } from '@/components/admin/VisitorStatsCard';
 import { ApiKeyManagement } from '@/components/admin/ApiKeyManagement';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
-import { Shield, Server, RefreshCw, BarChart3, Settings, Copy } from 'lucide-react';
+import { Shield, Server, RefreshCw, BarChart3, Settings, Copy, Check } from 'lucide-react';
 import { apiService } from '@/services/api';
 
 export const AdminPage: React.FC = () => {
@@ -176,30 +176,7 @@ export const AdminPage: React.FC = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     为保证安全与可控性，请通过 SSH 执行一键命令更新
                   </p>
-                  {versionInfo && (
-                    <div className="mt-2 flex items-center space-x-4 text-xs">
-                      <div className="flex items-center space-x-1">
-                        <span className="text-gray-500">当前版本:</span>
-                        <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          {versionInfo.localVersion}
-                        </span>
-                      </div>
-                      {versionInfo.latestCommit ? (
-                        <div className="flex items-center space-x-1">
-                          <span className="text-gray-500">最新版本:</span>
-                          <span className="font-mono bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">
-                            {versionInfo.latestCommit.slice(0, 7)}
-                          </span>
-                        </div>
-                      ) : versionInfo.message ? (
-                        <div className="flex items-center space-x-1">
-                          <span className="text-yellow-600 dark:text-yellow-400 text-xs">
-                            ⚠️ {versionInfo.message}
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
+                  {/* 系统更新区域不显示 当前/最新 版本信息 */}
                 </div>
                 <div className="flex flex-col items-end space-y-2">
                   <Button
@@ -298,7 +275,26 @@ const SSHUpdateInstruction: React.FC = () => {
   const cmd = 'curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/vps-update.sh | sudo bash -s -- --force-reset';
   const [copied, setCopied] = useState(false);
   const copy = async () => {
-    try { await navigator.clipboard.writeText(cmd); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(cmd);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = cmd;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      alert('复制失败，请手动选择并复制命令');
+    }
   };
   return (
     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
@@ -309,9 +305,16 @@ const SSHUpdateInstruction: React.FC = () => {
           <pre className="bg-white/70 dark:bg-gray-900/50 p-2 pr-16 rounded border border-blue-200 dark:border-blue-700 select-all overflow-x-auto whitespace-pre-wrap break-all">
 {cmd}
           </pre>
-          <button onClick={copy} className="absolute top-1 right-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
-            <Copy className="h-3 w-3 mr-1" /> {copied ? '已复制' : '复制'}
-          </button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-1 right-1"
+            onClick={copy}
+            aria-label={copied ? '命令已复制到剪贴板' : '复制命令到剪贴板'}
+            title={copied ? '已复制！' : '复制命令'}
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
     </div>
