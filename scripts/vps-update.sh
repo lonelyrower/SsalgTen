@@ -120,10 +120,15 @@ if [ "$BACKUP_BEFORE_UPDATE" = "true" ]; then
     
     if [ -f "./scripts/backup-db.sh" ]; then
         log_info "执行数据库备份..."
-        if ! bash ./scripts/backup-db.sh "$BACKUP_ID"; then
-            log_warn "数据库备份失败，但继续更新（风险自负）"
-        else
+        # 使用自动化模式执行备份（非交互）
+        BACKUP_DIR="./.update/backups"
+        mkdir -p "$BACKUP_DIR"
+        
+        if BACKUP_AUTO=true bash ./scripts/backup-db.sh "$BACKUP_ID" "$BACKUP_DIR"; then
             log_success "数据库备份完成: backup_$BACKUP_ID"
+        else
+            log_warn "数据库备份失败，但继续更新（风险自负）"
+            log_warn "建议检查Docker服务和数据库容器状态"
         fi
     else
         log_warn "备份脚本不存在，跳过备份"
@@ -133,21 +138,28 @@ fi
 # 4. 处理脚本文件格式
 log_info "🔧 处理脚本文件格式..."
 UPDATE_SCRIPT="./scripts/update-production.sh"
+BACKUP_SCRIPT="./scripts/backup-db.sh"
 
-if [ ! -f "$UPDATE_SCRIPT" ]; then
-    log_error "生产更新脚本不存在: $UPDATE_SCRIPT"
-    exit 1
-fi
+# 检查关键脚本存在
+for script in "$UPDATE_SCRIPT" "$BACKUP_SCRIPT"; do
+    if [ ! -f "$script" ]; then
+        log_error "关键脚本不存在: $script"
+        exit 1
+    fi
+done
 
-# 处理Windows行尾符
-if command -v dos2unix >/dev/null 2>&1; then
-    dos2unix "$UPDATE_SCRIPT" 2>/dev/null || true
-else
-    sed -i 's/\r$//' "$UPDATE_SCRIPT" 2>/dev/null || true
-fi
-
-# 确保脚本可执行
-chmod +x "$UPDATE_SCRIPT"
+# 处理所有关键脚本的Windows行尾符
+log_info "修复脚本文件格式..."
+for script in "$UPDATE_SCRIPT" "$BACKUP_SCRIPT"; do
+    if command -v dos2unix >/dev/null 2>&1; then
+        dos2unix "$script" 2>/dev/null || true
+    else
+        sed -i 's/\r$//' "$script" 2>/dev/null || true
+    fi
+    
+    # 确保脚本可执行
+    chmod +x "$script"
+done
 
 # 5. 执行生产更新
 log_info "🚀 开始执行生产环境更新..."

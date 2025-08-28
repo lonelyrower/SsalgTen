@@ -17,15 +17,25 @@ echo "=================================="
 
 # 获取备份名称
 BACKUP_NAME=${1:-"manual-$(date +%Y%m%d-%H%M%S)"}
-BACKUP_DIR="./backups"
+BACKUP_DIR="${2:-./backups}"
 BACKUP_FILE="${BACKUP_DIR}/ssalgten-${BACKUP_NAME}.sql"
 
 # 创建备份目录
 mkdir -p "$BACKUP_DIR"
 
+# Docker Compose 命令检测
+if command -v docker-compose >/dev/null 2>&1; then
+    DC="docker-compose"
+elif docker compose version >/dev/null 2>&1; then
+    DC="docker compose"
+else
+    echo -e "${RED}❌ Docker Compose 未安装或不可用${NC}"
+    exit 1
+fi
+
 # 检查Docker环境
-if ! command -v docker >/dev/null 2>&1; then
-    echo -e "${RED}❌ Docker 未安装或不可用${NC}"
+if ! docker info >/dev/null 2>&1; then
+    echo -e "${RED}❌ Docker 未运行或不可用${NC}"
     exit 1
 fi
 
@@ -36,30 +46,34 @@ if [ ! -f "docker-compose.yml" ] && [ ! -f "docker-compose.yaml" ]; then
 fi
 
 # 获取数据库容器信息
-DB_CONTAINER=$(docker-compose ps -q database 2>/dev/null)
+DB_CONTAINER=$($DC ps -q database 2>/dev/null | head -1)
 if [ -z "$DB_CONTAINER" ]; then
     echo -e "${RED}❌ 数据库容器未运行${NC}"
-    echo "请先启动服务: docker-compose up -d"
+    echo "请先启动服务: $DC up -d"
     exit 1
 fi
 
-# 读取数据库配置
-DB_NAME=${POSTGRES_DB:-"ssalgten"}
-DB_USER=${POSTGRES_USER:-"ssalgten"}
+# 数据库配置
+DB_NAME="ssalgten"
+DB_USER="ssalgten"
 
 echo -e "${YELLOW}📋 备份信息:${NC}"
 echo "  备份名称: $BACKUP_NAME"
 echo "  数据库: $DB_NAME"
 echo "  用户: $DB_USER"
 echo "  备份文件: $BACKUP_FILE"
+echo "  容器: $DB_CONTAINER"
 echo ""
 
-# 确认备份
-read -p "确认开始备份？(y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}⏹️ 备份已取消${NC}"
-    exit 0
+# 非交互模式检查（用于自动化脚本）
+if [ "${BACKUP_AUTO:-false}" != "true" ] && [ -t 0 ]; then
+    # 确认备份
+    read -p "确认开始备份？(y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}⏹️ 备份已取消${NC}"
+        exit 0
+    fi
 fi
 
 echo -e "${BLUE}🚀 开始备份...${NC}"
@@ -78,6 +92,7 @@ if docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" -d "$DB_NAME" --clean --if-
 备份信息
 ========
 备份时间: $(date)
+备份名称: $BACKUP_NAME
 数据库名: $DB_NAME
 用户名: $DB_USER
 备份大小: $BACKUP_SIZE
@@ -90,19 +105,38 @@ EOF
     
 else
     echo -e "${RED}❌ 备份失败${NC}"
+    rm -f "$BACKUP_FILE" 2>/dev/null || true
     exit 1
 fi
 
-# 列出现有备份
-echo ""
-echo -e "${BLUE}📦 现有备份列表:${NC}"
-ls -lh "$BACKUP_DIR"/*.sql 2>/dev/null | while read -r line; do
-    filename=$(echo "$line" | awk '{print $9}')
-    size=$(echo "$line" | awk '{print $5}')
-    date=$(echo "$line" | awk '{print $6, $7, $8}')
-    basename_file=$(basename "$filename")
-    echo "  $basename_file ($size) - $date"
-done
+# 验证备份完整性
+if [ -s "$BACKUP_FILE" ]; then
+    if head -n 5 "$BACKUP_FILE" | grep -q "PostgreSQL"; then
+        echo -e "${GREEN}✅ 备份文件完整性验证通过${NC}"
+    else
+        echo -e "${YELLOW}⚠️ 备份文件格式可能异常，请检查${NC}"
+    fi
+else
+    echo -e "${RED}❌ 备份文件为空或不存在${NC}"
+    exit 1
+fi
+
+# 列出现有备份（仅在交互模式下显示）
+if [ "${BACKUP_AUTO:-false}" != "true" ] && [ -t 0 ]; then
+    echo ""
+    echo -e "${BLUE}📦 现有备份列表:${NC}"
+    if ls "$BACKUP_DIR"/*.sql >/dev/null 2>&1; then
+        ls -lh "$BACKUP_DIR"/*.sql | while read -r line; do
+            filename=$(echo "$line" | awk '{print $9}')
+            size=$(echo "$line" | awk '{print $5}')
+            date=$(echo "$line" | awk '{print $6, $7, $8}')
+            basename_file=$(basename "$filename")
+            echo "  $basename_file ($size) - $date"
+        done
+    else
+        echo "  (无其他备份文件)"
+    fi
+fi
 
 # 清理旧备份（保留最近10个）
 BACKUP_COUNT=$(ls -1 "$BACKUP_DIR"/ssalgten-*.sql 2>/dev/null | wc -l)
@@ -110,7 +144,7 @@ if [ "$BACKUP_COUNT" -gt 10 ]; then
     echo ""
     echo -e "${YELLOW}🧹 清理旧备份 (保留最近10个)...${NC}"
     ls -t "$BACKUP_DIR"/ssalgten-*.sql | tail -n +11 | xargs -r rm -f
-    ls -t "$BACKUP_DIR"/ssalgten-*.sql.info | tail -n +11 | xargs -r rm -f 2>/dev/null || true
+    ls -t "$BACKUP_DIR"/ssalgten-*.sql.info 2>/dev/null | tail -n +11 | xargs -r rm -f 2>/dev/null || true
     echo -e "${GREEN}✅ 清理完成${NC}"
 fi
 
@@ -118,5 +152,5 @@ echo ""
 echo -e "${GREEN}🎉 备份流程完成！${NC}"
 echo ""
 echo -e "${BLUE}💡 使用备份:${NC}"
-echo "  恢复备份: ./restore-db.sh $BACKUP_NAME"
+echo "  恢复备份: ./scripts/restore-db.sh $BACKUP_NAME"
 echo "  查看信息: cat ${BACKUP_FILE}.info"
