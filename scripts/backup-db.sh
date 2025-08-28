@@ -48,9 +48,14 @@ fi
 # 获取数据库容器信息
 DB_CONTAINER=$($DC ps -q database 2>/dev/null | head -1)
 if [ -z "$DB_CONTAINER" ]; then
-    echo -e "${RED}❌ 数据库容器未运行${NC}"
-    echo "请先启动服务: $DC up -d"
-    exit 1
+    # 尝试通过容器名直接查找
+    DB_CONTAINER=$(docker ps -q --filter "name=ssalgten-database" 2>/dev/null | head -1)
+    if [ -z "$DB_CONTAINER" ]; then
+        echo -e "${RED}❌ 数据库容器未运行${NC}"
+        echo "请先启动服务: $DC up -d"
+        echo "或检查容器状态: docker ps | grep database"
+        exit 1
+    fi
 fi
 
 # 数据库配置

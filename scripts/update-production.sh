@@ -57,6 +57,17 @@ trap cleanup EXIT
 
 cd "$PROJECT_DIR"
 
+# 处理脚本格式问题
+if [ -f "./scripts/backup-db.sh" ]; then
+    # 修复备份脚本格式
+    if command -v dos2unix >/dev/null 2>&1; then
+        dos2unix ./scripts/backup-db.sh 2>/dev/null || true
+    else
+        sed -i 's/\r$//' ./scripts/backup-db.sh 2>/dev/null || true
+    fi
+    chmod +x ./scripts/backup-db.sh
+fi
+
 log_info "🚀 开始生产环境更新 (ID: $UPDATE_ID)"
 log_info "📍 项目目录: $PROJECT_DIR"
 
@@ -76,12 +87,28 @@ log_info "💾 开始创建数据备份..."
 BACKUP_PATH="${BACKUP_DIR}/backup_${UPDATE_ID}"
 mkdir -p "$BACKUP_PATH"
 
-# 备份数据库
+# 备份数据库 - 使用专用备份脚本
 log_info "备份数据库..."
-$DC exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BACKUP_PATH}/database.sql" 2>/dev/null || {
-    log_error "数据库备份失败"
-    exit 1
-}
+if [ -f "./scripts/backup-db.sh" ]; then
+    # 使用自动化模式备份到指定目录
+    if BACKUP_AUTO=true bash ./scripts/backup-db.sh "$UPDATE_ID" "$BACKUP_PATH"; then
+        log_success "数据库备份完成"
+        # 将备份文件移动到正确位置（如果需要）
+        if [ -f "$BACKUP_PATH/ssalgten-${UPDATE_ID}.sql" ]; then
+            mv "$BACKUP_PATH/ssalgten-${UPDATE_ID}.sql" "${BACKUP_PATH}/database.sql" 2>/dev/null || true
+        fi
+    else
+        log_error "数据库备份失败"
+        exit 1
+    fi
+else
+    # 回退到直接备份方法
+    log_warn "备份脚本不存在，使用直接方法"
+    $DC exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BACKUP_PATH}/database.sql" 2>/dev/null || {
+        log_error "数据库备份失败"
+        exit 1
+    }
+fi
 
 # 备份配置文件
 log_info "备份配置文件..."
