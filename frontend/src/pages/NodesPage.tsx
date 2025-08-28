@@ -451,7 +451,7 @@ export const NodesPage: React.FC = () => {
           
           {/* 节点列表/详情 */}
           <div className="xl:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-h-[700px]">
               {selectedNode ? (
                 /* 节点详情视图 */
                 <div className="space-y-4">

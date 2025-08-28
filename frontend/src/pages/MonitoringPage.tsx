@@ -217,7 +217,7 @@ export const MonitoringPage: React.FC = () => {
         </div>
 
         {/* 统计信息卡片 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8 max-w-none">
           {/* 节点状态分布 */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
