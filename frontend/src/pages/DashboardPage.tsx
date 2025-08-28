@@ -99,7 +99,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* 系统监控概览 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="mb-6">
             {/* 节点健康状态 */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -140,43 +140,6 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 地理分布 */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <Globe className="h-5 w-5 mr-2 text-blue-600" />
-                全球分布统计
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">覆盖国家</span>
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {stats?.totalCountries || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">服务商数量</span>
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {stats?.totalProviders || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">总节点数</span>
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {stats?.totalNodes || 0}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a 
-                  href="/nodes" 
-                  className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
-                >
-                  查看详细节点管理 →
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* 快速操作 */}

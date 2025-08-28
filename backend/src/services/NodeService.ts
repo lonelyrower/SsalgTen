@@ -153,6 +153,8 @@ export class NodeService {
       // 转换数据格式以匹配NodeWithStats接口
       return nodes.map(node => ({
         ...node,
+        // 如果存在ASN名称，使用ASN名称作为服务商显示，否则使用原始provider字段
+        provider: node.asnName || node.provider,
         lastHeartbeat: node.heartbeatLogs[0] ? {
           timestamp: node.heartbeatLogs[0].timestamp,
           status: node.heartbeatLogs[0].status,
@@ -172,9 +174,17 @@ export class NodeService {
   // 根据ID获取节点
   async getNodeById(id: string): Promise<Node | null> {
     try {
-      return await prisma.node.findUnique({
+      const node = await prisma.node.findUnique({
         where: { id }
       });
+      
+      if (!node) return null;
+      
+      // 如果存在ASN名称，使用ASN名称作为服务商显示
+      return {
+        ...node,
+        provider: node.asnName || node.provider
+      };
     } catch (error) {
       logger.error(`Failed to fetch node ${id}:`, error);
       throw new Error('Failed to fetch node');
@@ -184,9 +194,17 @@ export class NodeService {
   // 根据agentId获取节点
   async getNodeByAgentId(agentId: string): Promise<Node | null> {
     try {
-      return await prisma.node.findUnique({
+      const node = await prisma.node.findUnique({
         where: { agentId }
       });
+      
+      if (!node) return null;
+      
+      // 如果存在ASN名称，使用ASN名称作为服务商显示
+      return {
+        ...node,
+        provider: node.asnName || node.provider
+      };
     } catch (error) {
       logger.error(`Failed to fetch node by agentId ${agentId}:`, error);
       throw new Error('Failed to fetch node');
@@ -205,7 +223,12 @@ export class NodeService {
       });
 
       logger.info(`Node updated: ${node.name} (${node.id})`);
-      return node;
+      
+      // 如果存在ASN名称，使用ASN名称作为服务商显示
+      return {
+        ...node,
+        provider: node.asnName || node.provider
+      };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new Error('Node not found');
@@ -249,7 +272,12 @@ export class NodeService {
       if (old && old.status !== status) {
         await eventService.createEvent(node.id, 'STATUS_CHANGED', `${old.status} -> ${status}`, { from: old.status, to: status });
       }
-      return node;
+      
+      // 如果存在ASN名称，使用ASN名称作为服务商显示
+      return {
+        ...node,
+        provider: node.asnName || node.provider
+      };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new Error('Node not found');

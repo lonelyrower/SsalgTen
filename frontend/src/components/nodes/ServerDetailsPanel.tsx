@@ -586,12 +586,6 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                         <p className="font-medium">{(node as any).asnName}</p>
                       </div>
                     )}
-                    {(node as any).asnOrg && (
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">组织</span>
-                        <p className="font-medium">{(node as any).asnOrg}</p>
-                      </div>
-                    )}
                     {/* 隐藏路由前缀与类型展示，避免误导与无效信息 */}
                   </div>
                 </div>
