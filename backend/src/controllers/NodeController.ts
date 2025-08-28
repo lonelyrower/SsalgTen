@@ -704,24 +704,49 @@ export class NodeController {
   async getInstallScript(req: Request, res: Response): Promise<void> {
     try {
       // 获取服务器对外可访问的基础URL（优先使用环境变量）
-      let serverUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      const rawOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
       const backendPort = `${process.env.PORT || '3001'}`;
-      const appendPortIfMissing = (url: string): string => {
+
+      // 从代理头推断外部访问URL
+      const deriveFromRequest = (): string => {
+        const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+        const hostHdr = (req.headers['x-forwarded-host'] as string) || req.get('host') || '';
+        if (!hostHdr) return `${proto}://localhost:${backendPort}`;
+        // hostHdr 可能不含端口；对于 https 不追加端口；对于 http 仅在 localhost/127.0.0.1 时追加后端端口
+        const hasPort = hostHdr.includes(':');
+        const hostname = hasPort ? hostHdr.split(':')[0] : hostHdr;
+        if (!hasPort) {
+          if (proto === 'https') {
+            return `${proto}://${hostname}`;
+          }
+          const hn = hostname.toLowerCase();
+          if (hn === 'localhost' || hn === '127.0.0.1') {
+            return `${proto}://${hostname}:${backendPort}`;
+          }
+          return `${proto}://${hostname}`; // 域名 http 默认80
+        }
+        return `${proto}://${hostHdr}`;
+      };
+
+      // 如果设置了 FRONTEND_URL/CORS_ORIGIN，优先信任该值；当其为 https 或域名时不要附加后台端口
+      const normalizeEnvUrl = (url: string): string => {
+        if (!url) return '';
         try {
           const u = new URL(url);
-          // 仅当未显式指定端口，且后端端口不是80/443时追加端口
-          if (!u.port && backendPort !== '80' && backendPort !== '443') {
-            return `${u.protocol}//${u.hostname}:${backendPort}`;
+          if (!u.port) {
+            const hn = u.hostname.toLowerCase();
+            // 仅当是本机地址时追加端口，其它场景（域名/HTTPS）保持原样
+            if ((hn === 'localhost' || hn === '127.0.0.1') && backendPort !== '80' && backendPort !== '443') {
+              return `${u.protocol}//${u.hostname}:${backendPort}`;
+            }
           }
-          return url;
+          return `${u.protocol}//${u.host}`;
         } catch {
           return url;
         }
       };
-      if (!serverUrl) {
-        serverUrl = `${req.protocol}://${req.get('host')}`;
-      }
-      serverUrl = appendPortIfMissing(serverUrl);
+
+      const serverUrl = normalizeEnvUrl(rawOrigin) || deriveFromRequest();
       const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
       
       // 生成带参数的安装命令脚本
@@ -769,30 +794,45 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
   async getInstallCommand(req: Request, res: Response): Promise<void> {
     try {
       // 获取服务器对外可访问的基础URL（优先使用环境变量）
-      let serverUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      const rawOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
       const backendPort = `${process.env.PORT || '3001'}`;
-      const appendPortIfMissing = (url: string): string => {
+
+      const deriveFromRequest = (): string => {
+        const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+        const hostHdr = (req.headers['x-forwarded-host'] as string) || req.get('host') || '';
+        if (!hostHdr) return `${proto}://localhost:${backendPort}`;
+        const hasPort = hostHdr.includes(':');
+        const hostname = hasPort ? hostHdr.split(':')[0] : hostHdr;
+        if (!hasPort) {
+          if (proto === 'https') {
+            return `${proto}://${hostname}`;
+          }
+          const hn = hostname.toLowerCase();
+          if (hn === 'localhost' || hn === '127.0.0.1') {
+            return `${proto}://${hostname}:${backendPort}`;
+          }
+          return `${proto}://${hostname}`;
+        }
+        return `${proto}://${hostHdr}`;
+      };
+
+      const normalizeEnvUrl = (url: string): string => {
+        if (!url) return '';
         try {
           const u = new URL(url);
-          if (!u.port && backendPort !== '80' && backendPort !== '443') {
-            return `${u.protocol}//${u.hostname}:${backendPort}`;
+          if (!u.port) {
+            const hn = u.hostname.toLowerCase();
+            if ((hn === 'localhost' || hn === '127.0.0.1') && backendPort !== '80' && backendPort !== '443') {
+              return `${u.protocol}//${u.hostname}:${backendPort}`;
+            }
           }
-          return url;
+          return `${u.protocol}//${u.host}`;
         } catch {
           return url;
         }
       };
-      if (!serverUrl) {
-        // 回退：从请求推断（在反向代理下可能不准确）
-        const host = req.get('host') || '';
-        const serverPort = process.env.PORT || '3001';
-        serverUrl = `${req.protocol}://${host}`;
-        if (!host.includes(':') && serverPort !== '80' && serverPort !== '443') {
-          const hostname = host;
-          serverUrl = `${req.protocol}://${hostname}:${serverPort}`;
-        }
-      }
-      serverUrl = appendPortIfMissing(serverUrl);
+
+      const serverUrl = normalizeEnvUrl(rawOrigin) || deriveFromRequest();
       
       const apiKey = await apiKeyService.getSystemApiKey();
       
