@@ -84,16 +84,16 @@ export const DashboardPage: React.FC = () => {
           />
 
           {/* 延迟概览和分析 */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             {/* 延迟概览卡片 */}
-            <div className="xl:col-span-1">
+            <div className="lg:col-span-4">
               <LatencyOverviewCard />
             </div>
             
-            {/* 节点状态和分布分析 */}
-            <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* 节点状态和分布分析（更稳健的网格布局以适配13寸屏） */}
+            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 节点状态饼图 */}
-              <div className="lg:col-span-2">
+              <div className="md:col-span-1">
                 <NodeStatusChart 
                   onlineNodes={stats?.onlineNodes || 0}
                   offlineNodes={(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)}
@@ -101,7 +101,7 @@ export const DashboardPage: React.FC = () => {
               </div>
               
               {/* 地理和服务商分布 */}
-              <div className="lg:col-span-3">
+              <div className="md:col-span-1">
                 <GeographicDistribution nodes={nodes} />
               </div>
             </div>

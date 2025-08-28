@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,19 @@ export const MobileNav: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, logout, hasRole } = useAuth();
   const location = useLocation();
+
+  // 小屏菜单打开时锁定页面滚动，避免背景滚动穿透
+  React.useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = originalOverflow || '';
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow || '';
+    };
+  }, [isOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -76,17 +90,17 @@ export const MobileNav: React.FC = () => {
         )}
       </Button>
 
-      {/* 移动端菜单覆盖层 */}
-      {isOpen && (
+      {/* 移动端菜单覆盖层（使用 Portal，确保覆盖在所有元素之上） */}
+      {isOpen && createPortal(
         <>
           {/* 背景遮罩 */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
           
           {/* 侧边菜单 */}
-          <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-50 shadow-xl transform transition-transform duration-300">
+          <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-[9999] shadow-xl transform transition-transform duration-300">
             <div className="flex flex-col h-full">
               {/* 用户信息区域 */}
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -168,7 +182,8 @@ export const MobileNav: React.FC = () => {
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

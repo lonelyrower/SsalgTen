@@ -12,6 +12,7 @@ import {
   Globe,
   Loader2
 } from 'lucide-react';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
 interface LatencyOverviewCardProps {
   className?: string;
@@ -235,8 +236,9 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                       <span className="text-gray-700 dark:text-gray-300">
                         {node.nodeName}
                       </span>
-                      <span className="text-gray-500 dark:text-gray-500 text-xs">
-                        {node.location}
+                      <span className="text-gray-500 dark:text-gray-500 text-xs flex items-center space-x-1">
+                        <CountryFlagSvg country={node.country} size={14} />
+                        <span>{node.location || `${node.city}, ${node.country}`}</span>
                       </span>
                     </div>
                     <span className="font-medium text-green-600">
