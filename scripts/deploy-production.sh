@@ -953,22 +953,33 @@ install_nginx() {
     
     if command -v apt >/dev/null 2>&1; then
         run_as_root apt install -y nginx
-        
+        # 先清理可能残留的站点配置，避免上次中断导致的校验失败
+        run_as_root rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+
         # 检查nginx配置是否正确
         if ! run_as_root nginx -t >/dev/null 2>&1; then
             log_warning "Nginx配置检查失败，尝试修复..."
             # 恢复默认配置
             run_as_root apt install --reinstall -y nginx-common
         fi
-        
-        # 删除默认站点（在启动前删除）
-        run_as_root rm -f /etc/nginx/sites-enabled/default
+        # 再次确保默认站点和残留自定义站点未启用
+        run_as_root rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
         
     elif command -v yum >/dev/null 2>&1; then
         run_as_root yum install -y nginx
+        # 清理可能残留的配置
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
         
     elif command -v dnf >/dev/null 2>&1; then
         run_as_root dnf install -y nginx
+        # 清理可能残留的配置
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
         
     else
         log_error "无法安装Nginx，未找到支持的包管理器"
