@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
-import { apiService, ClientLatencyData, LatencyStats, LatencyTestResults } from '@/services/api';
+import { apiService } from '@/services/api';
+import type { ClientLatencyData, LatencyStats } from '@/services/api';
 
 interface ClientLatencyState {
   isLoading: boolean;
@@ -136,23 +137,24 @@ export function useClientLatency() {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const response = await apiService.getLatencyResults();
-      
-      if (response.success && response.data) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          results: response.data.results,
-          stats: response.data.stats,
-          lastUpdated: response.data.timestamp,
-          clientIP: response.data.clientIP
-        }));
-      } else {
+      if (!response.success || !response.data) {
         setState(prev => ({
           ...prev,
           isLoading: false,
           error: response.error || 'Failed to fetch results'
         }));
+        return;
       }
+
+      const data = response.data; // LatencyTestResults
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        results: data.results,
+        stats: data.stats,
+        lastUpdated: data.timestamp,
+        clientIP: data.clientIP
+      }));
     } catch (error) {
       setState(prev => ({
         ...prev,

@@ -6,7 +6,7 @@ import { NodeStatusChart } from '@/components/dashboard/NodeStatusChart';
 import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
 import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Activity, Loader2, Globe, MapPin, Settings, Shield, BarChart } from 'lucide-react';
+import { Activity, Loader2, MapPin, Settings, Shield, BarChart } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();

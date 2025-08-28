@@ -40,10 +40,9 @@ export const NodesPage: React.FC = () => {
     results: latencyResults, 
     isTestingInProgress, 
     startLatencyTest, 
-    refreshResults: refreshLatencyResults,
     getLatencyColor,
     formatLatency,
-    getTestProgress
+    // getTestProgress
   } = useClientLatency();
 
   // 获取节点的延迟数据
