@@ -139,8 +139,7 @@ CURRENT_COMMIT=$(git rev-parse HEAD)
 LATEST_COMMIT=$(git rev-parse origin/main)
 
 if [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
-    log_info "✅ 代码已经是最新版本，无需更新"
-    exit 0
+    log_info "✅ 代码已经是最新版本；继续执行滚动更新以确保服务与最新代码同步"
 fi
 
 log_info "发现新版本:"
