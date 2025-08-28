@@ -98,16 +98,18 @@ if [ -f "./scripts/backup-db.sh" ]; then
             mv "$BACKUP_PATH/ssalgten-${UPDATE_ID}.sql" "${BACKUP_PATH}/database.sql" 2>/dev/null || true
         fi
     else
-        log_error "数据库备份失败"
-        exit 1
+        log_warn "数据库备份失败或数据库容器未运行，跳过数据库备份"
     fi
 else
     # 回退到直接备份方法
     log_warn "备份脚本不存在，使用直接方法"
-    $DC exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BACKUP_PATH}/database.sql" 2>/dev/null || {
-        log_error "数据库备份失败"
-        exit 1
-    }
+    if $DC ps -q database >/dev/null 2>&1 && [ -n "$($DC ps -q database)" ]; then
+        $DC exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BACKUP_PATH}/database.sql" 2>/dev/null || {
+            log_warn "数据库备份失败，继续更新"
+        }
+    else
+        log_warn "未检测到数据库容器，跳过数据库备份"
+    fi
 fi
 
 # 备份配置文件
