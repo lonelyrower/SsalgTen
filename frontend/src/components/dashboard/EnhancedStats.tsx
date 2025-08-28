@@ -172,7 +172,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
         icon={<Globe className="h-6 w-6" />}
         color="purple"
         trend="stable"
-        changeLabel="全球覆盖"
+        changeLabel={undefined}
       />
       
       <StatsCard
@@ -182,7 +182,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
         icon={<Wifi className="h-6 w-6" />}
         color="indigo"
         trend="up"
-        changeLabel="多元化部署"
+        changeLabel={undefined}
       />
     </div>
   );
