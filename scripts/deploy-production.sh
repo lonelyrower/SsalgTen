@@ -1220,39 +1220,29 @@ create_nginx_config() {
     fi
     
     if [[ "$ENABLE_SSL" == "true" ]]; then
-        # HTTPS模式配置
-        # 443端口时省略重定向端口
-        REDIR_PORT_SUFFIX=":$HTTPS_PORT"
-        if [[ "$HTTPS_PORT" == "443" ]]; then
-            REDIR_PORT_SUFFIX=""
-        fi
+        # 预SSL阶段：仅提供HTTP站点，等待证书申请成功后再切换HTTPS
         run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
-# SsalgTen Nginx 配置 (HTTPS模式)
+# SsalgTen Nginx 配置 (预SSL阶段，仅HTTP)
 server {
     listen $HTTP_PORT;
     server_name $DOMAIN www.$DOMAIN;
-    
-    # 重定向到HTTPS
-    return 301 https://\$server_name$REDIR_PORT_SUFFIX\$request_uri;
-}
 
-server {
-    listen $HTTPS_PORT ssl http2;
-    server_name $DOMAIN www.$DOMAIN;
-    
-    # SSL配置 (将由Certbot自动配置)
+    # 基础安全头
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
     # 通用优化
     client_max_body_size 20m;
     gzip on;
     gzip_proxied any;
     gzip_types application/json application/javascript text/css text/plain application/xml+rss application/atom+xml image/svg+xml;
-    
-    # 安全头
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    
+
+    # ACME 挑战（Certbot临时改写时也会处理，但这里兜底）
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
     # 前端静态文件
     location / {
         proxy_pass http://localhost:$FRONTEND_PORT;
@@ -1260,7 +1250,7 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        
+
         # 静态资源缓存
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
             proxy_pass http://localhost:$FRONTEND_PORT;
@@ -1269,7 +1259,7 @@ server {
             add_header Cache-Control "public, max-age=86400";
         }
     }
-    
+
     # API代理
     location /api {
         proxy_pass http://localhost:$BACKEND_PORT;
@@ -1277,7 +1267,7 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        
+
         # WebSocket支持
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -1285,13 +1275,13 @@ server {
         # 代理策略
         proxy_buffering off;
         proxy_cache off;
-        
+
         # 超时配置（较长以支持长时间请求/流式输出）
         proxy_connect_timeout 60s;
         proxy_send_timeout 300s;
         proxy_read_timeout 300s;
     }
-    
+
     # Socket.IO专用代理
     location /socket.io/ {
         proxy_pass http://localhost:$BACKEND_PORT;
@@ -1299,22 +1289,22 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        
+
         # WebSocket升级支持
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        
+
         # Socket.IO特定配置
         proxy_buffering off;
         proxy_cache off;
-        
+
         # 超时配置
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
-    
+
     # 健康检查端点
     location /health {
         access_log off;
@@ -1424,14 +1414,12 @@ EOF
         log_info "Nginx配置已放置在 conf.d 目录中"
     fi
     
-    # 在HTTPS模式下，先不要reload；待证书安装后再测试并reload
+    # 测试并加载当前配置（HTTPS模式下为预SSL的HTTP配置）
+    run_as_root nginx -t
+    run_as_root systemctl reload nginx
     if [[ "$ENABLE_SSL" == "true" ]]; then
-        log_info "HTTPS模式：跳过nginx -t与reload，待证书安装后执行"
-        log_success "Nginx HTTPS配置创建完成（待证书）"
+        log_success "Nginx 预SSL HTTP配置创建完成"
     else
-        # 测试并加载HTTP配置
-        run_as_root nginx -t
-        run_as_root systemctl reload nginx
         log_success "Nginx HTTP配置创建完成"
     fi
 }
@@ -1456,8 +1444,104 @@ install_ssl_certificate() {
             exit 1
         fi
         
-        # 获取SSL证书
-        run_as_root certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+        # 仅申请证书（不自动改写配置），使用nginx插件完成HTTP-01验证
+        run_as_root certbot certonly --nginx -d $DOMAIN -d www.$DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+
+        # 生成最终HTTPS配置（写入证书路径并启用重定向）
+        if [[ -d "/etc/nginx/sites-available" ]]; then
+            NGINX_CONFIG_FILE="/etc/nginx/sites-available/ssalgten"
+        else
+            NGINX_CONFIG_FILE="/etc/nginx/conf.d/ssalgten.conf"
+            run_as_root mkdir -p /etc/nginx/conf.d
+        fi
+
+        REDIR_PORT_SUFFIX=":$HTTPS_PORT"; [[ "$HTTPS_PORT" == "443" ]] && REDIR_PORT_SUFFIX=""
+        CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
+        SSL_CERT="$CERT_DIR/fullchain.pem"
+        SSL_KEY="$CERT_DIR/privkey.pem"
+
+        run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
+# SsalgTen Nginx 配置 (HTTPS启用)
+server {
+    listen $HTTP_PORT;
+    server_name $DOMAIN www.$DOMAIN;
+    return 301 https://\$server_name$REDIR_PORT_SUFFIX\$request_uri;
+}
+
+server {
+    listen $HTTPS_PORT ssl http2;
+    server_name $DOMAIN www.$DOMAIN;
+    ssl_certificate     $SSL_CERT;
+    ssl_certificate_key $SSL_KEY;
+
+    client_max_body_size 20m;
+    gzip on;
+    gzip_proxied any;
+    gzip_types application/json application/javascript text/css text/plain application/xml+rss application/atom+xml image/svg+xml;
+
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location / {
+        proxy_pass http://localhost:$FRONTEND_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
+            proxy_pass http://localhost:$FRONTEND_PORT;
+            proxy_set_header Host \$host;
+            proxy_cache_valid 200 1d;
+            add_header Cache-Control "public, max-age=86400";
+        }
+    }
+
+    location /api {
+        proxy_pass http://localhost:$BACKEND_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://localhost:$BACKEND_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+        # 确保站点启用（Debian/Ubuntu）
+        if [[ -d "/etc/nginx/sites-available" ]]; then
+            run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/
+        fi
 
         # 部署续期后自动reload Nginx的hook
         run_as_root mkdir -p /etc/letsencrypt/renewal-hooks/deploy
@@ -1495,7 +1579,7 @@ EOF'
         run_as_root nginx -t
         run_as_root systemctl reload nginx
 
-        log_success "SSL证书安装完成，并已重新加载Nginx"
+        log_success "SSL证书安装完成，HTTPS已启用并已重新加载Nginx"
     else
         log_info "跳过SSL证书安装 (HTTP模式)"
     fi
