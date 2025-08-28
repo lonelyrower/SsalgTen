@@ -230,45 +230,22 @@ export const MonitoringPage: React.FC = () => {
                 </h3>
               </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">在线</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{onlineNodes}</span>
-                  <span className="text-xs text-gray-500">
-                    {totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : 0}%
-                  </span>
-                </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-2 rounded bg-green-50 dark:bg-green-900/20">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">在线</div>
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">{onlineNodes}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">离线</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{offlineNodes}</span>
-                  <span className="text-xs text-gray-500">
-                    {totalNodes > 0 ? ((offlineNodes / totalNodes) * 100).toFixed(1) : 0}%
-                  </span>
-                </div>
+              <div className="p-2 rounded bg-red-50 dark:bg-red-900/20">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">离线</div>
+                <div className="text-lg font-bold text-red-600 dark:text-red-400">{offlineNodes}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((offlineNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
               </div>
-              {unknownNodes > 0 && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">未知</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{unknownNodes}</span>
-                    <span className="text-xs text-gray-500">
-                      {((unknownNodes / totalNodes) * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-              )}
+              <div className="p-2 rounded bg-yellow-50 dark:bg-yellow-900/20">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">未知</div>
+                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">{unknownNodes}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((unknownNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
+              </div>
             </div>
           </div>
 

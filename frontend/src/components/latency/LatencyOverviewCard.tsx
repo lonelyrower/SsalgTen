@@ -88,7 +88,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               连通性概览
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              到您的延迟统计（需已部署在线 Agent）
+              到您的延迟统计
             </p>
           </div>
         </div>

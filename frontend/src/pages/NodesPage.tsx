@@ -609,19 +609,16 @@ export const NodesPage: React.FC = () => {
                             <div className={`absolute top-0 left-0 w-2 h-2 rounded-full ${
                               node.status === 'online' ? 'bg-green-500' : 'bg-red-500'
                             }`}></div>
-                            {/* 国旗置于名称上方居中 */}
-                            <div className="flex items-center justify-center mb-2">
-                              <CountryFlagSvg country={node.country} className="w-5 h-5" />
-                            </div>
                             {/* 节点名称居中 */}
                             <div className="text-center mb-1">
                               <h4 className="font-medium text-gray-900 dark:text-white text-sm">
                                 {node.name}
                               </h4>
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 text-center">
-                              {node.city}, {node.country}
-                            </p>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 text-center flex items-center justify-center gap-1">
+                              <CountryFlagSvg country={node.country} className="w-4 h-4" />
+                              <span>{node.city}, {node.country}</span>
+                            </div>
                             {node.ipv4 && (
                               <p className="text-xs text-blue-600 dark:text-blue-400 font-mono mb-1 text-center">
                                 {node.ipv4}

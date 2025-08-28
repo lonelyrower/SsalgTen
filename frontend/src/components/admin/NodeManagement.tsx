@@ -257,7 +257,10 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '30%' }}>
+                <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '5%' }}>
+                  {/* 状态指示 */}
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '28%' }}>
                   节点信息
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '25%' }}>
@@ -269,7 +272,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '20%' }}>
                   最后在线
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '10%' }}>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '7%' }}>
                   操作
                 </th>
               </tr>
@@ -277,10 +280,12 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredNodes.map((node) => (
                 <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-4 text-center" style={{ width: '30%' }}>
+                  <td className="px-2 py-4 text-center" style={{ width: '5%' }}>
+                    {getStatusIcon(node.status)}
+                  </td>
+                  <td className="px-4 py-4 text-center" style={{ width: '28%' }}>
                     <div className="inline-flex items-center">
-                      {getStatusIcon(node.status)}
-                      <div className="ml-2">
+                      <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {node.name}
                         </div>

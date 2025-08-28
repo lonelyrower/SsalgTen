@@ -16,6 +16,7 @@ Icon.Default.mergeOptions({
 interface WorldMapProps {
   nodes?: NodeData[];
   onNodeClick?: (node: NodeData) => void;
+  hideIPs?: boolean; // 隐藏弹窗中的IP（用于未登录首页）
 }
 
 // 状态对应的图标颜色
@@ -45,7 +46,7 @@ const createCustomIcon = (status: string) => {
   });
 };
 
-export const WorldMap = memo(({ nodes = [], onNodeClick }: WorldMapProps) => {
+export const WorldMap = memo(({ nodes = [], onNodeClick, hideIPs = false }: WorldMapProps) => {
   const mapRef = useRef<any>(null);
 
   // 使用 useMemo 缓存标记组件，避免不必要的重新渲染
@@ -77,7 +78,9 @@ export const WorldMap = memo(({ nodes = [], onNodeClick }: WorldMapProps) => {
             <div className="space-y-1 text-sm text-gray-600">
               <p><span className="font-medium">位置:</span> {node.city}, {node.country}</p>
               <p><span className="font-medium">供应商:</span> {node.provider}</p>
-              {node.ipv4 && <p><span className="font-medium">IP:</span> {node.ipv4}</p>}
+              {!hideIPs && node.ipv4 && (
+                <p><span className="font-medium">IP:</span> {node.ipv4}</p>
+              )}
               {node.lastSeen && (
                 <p><span className="font-medium">最后在线:</span> {new Date(node.lastSeen).toLocaleString()}</p>
               )}

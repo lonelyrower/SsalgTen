@@ -4,6 +4,7 @@ import { StatsCards } from '@/components/layout/StatsCards';
 import { WorldMap } from '@/components/map/WorldMap';
 import { GlassCard } from '@/components/ui/GlassCard';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNodes } from '@/hooks/useNodes';
 import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';
@@ -11,6 +12,7 @@ import type { NodeData } from '@/services/api';
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const { nodes, stats, loading, error } = useNodes();
+  const { user } = useAuth();
 
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
@@ -116,7 +118,7 @@ export const HomePage = () => {
             
             {/* 地图容器 */}
             <div className="map-container relative">
-              <WorldMap nodes={nodes} onNodeClick={handleNodeClick} />
+              <WorldMap nodes={nodes} onNodeClick={handleNodeClick} hideIPs={!user} />
             </div>
           </GlassCard>
         </div>
@@ -148,9 +150,9 @@ export const HomePage = () => {
                   
                   {/* 节点详细信息网格 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                    <div className="glass rounded-lg p-4 border border-white/20 relative group text-center">
                       <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">地理位置</div>
-                      <div className="flex items-center space-x-2 mb-2">
+                      <div className="flex items-center justify-center space-x-2 mb-2">
                         <CountryFlagSvg country={selectedNode.country} />
                         <div className="font-bold text-gray-900 dark:text-white/90 text-lg">
                           {selectedNode.city}, {selectedNode.country}
@@ -183,7 +185,7 @@ export const HomePage = () => {
                       <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity animate-pulse" />
                     </div>
                     
-                    {selectedNode.ipv4 && (
+                    {user && selectedNode.ipv4 && (
                       <div className="glass rounded-lg p-4 border border-white/20 relative group">
                         <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">IPv4 地址</div>
                         <div className="font-mono text-sm text-cyan-300 font-bold">
