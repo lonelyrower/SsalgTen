@@ -279,7 +279,8 @@ parse_master_host_port() {
     MASTER_HOST=$(echo "$url" | sed -nE 's#^https?://([^/:]+).*$#\1#p')
     MASTER_PORT=$(echo "$url" | sed -nE 's#^https?://[^/:]+:([0-9]+).*$#\1#p')
     if [[ -z "$MASTER_PORT" ]]; then
-        if [[ "$MASTER_SCHEME" == "https" ]]; then MASTER_PORT=443; else MASTER_PORT=3001; fi
+        # 默认使用标准端口：HTTPS=443，HTTP=80
+        if [[ "$MASTER_SCHEME" == "https" ]]; then MASTER_PORT=443; else MASTER_PORT=80; fi
     fi
 }
 
@@ -391,11 +392,15 @@ collect_node_info() {
         # 主服务器地址
         if [[ -z "$MASTER_URL" ]]; then
             while true; do
-                MASTER_URL=$(read_from_tty "主服务器地址 (如: https://your-domain.com): ")
+                MASTER_URL=$(read_from_tty "主服务器地址 (推荐: https://your-domain.com): ")
+                # 若用户未填写协议，默认使用 https
+                if [[ -n "$MASTER_URL" && ! "$MASTER_URL" =~ ^https?:// ]]; then
+                    MASTER_URL="https://$MASTER_URL"
+                fi
                 if [[ -n "$MASTER_URL" && "$MASTER_URL" =~ ^https?:// ]]; then
                     break
                 else
-                    log_error "请输入有效的URL地址"
+                    log_error "请输入有效的URL地址（以 http:// 或 https:// 开头）"
                 fi
             done
         fi
