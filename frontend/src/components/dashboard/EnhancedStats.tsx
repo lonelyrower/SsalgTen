@@ -148,8 +148,9 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
         subValue={`${onlineNodes} 在线 • ${offlineNodes} 离线`}
         icon={<Server className="h-6 w-6" />}
         color="blue"
-        change={totalNodes > 0 ? 12 : undefined}
-        changeLabel="相比上月"
+        /* 使用静态说明，避免展示不真实的环比数据 */
+        change={undefined}
+        changeLabel={undefined}
       />
       
       <StatsCard
@@ -160,8 +161,8 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
               uptime >= 90 ? <Activity className="h-6 w-6" /> : 
               <AlertTriangle className="h-6 w-6" />}
         color={uptime >= 95 ? "green" : uptime >= 90 ? "yellow" : "red"}
-        change={uptime >= 95 ? 2 : uptime >= 90 ? 0 : -5}
-        changeLabel="相比上周"
+        change={undefined}
+        changeLabel={undefined}
       />
       
       <StatsCard

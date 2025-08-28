@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Settings
 } from 'lucide-react';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
 interface NodeManagementProps {
   className?: string;
@@ -298,8 +299,9 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                     </div>
                   </td>
                   <td className="px-4 py-4 text-center" style={{ width: '25%' }}>
-                    <div className="text-sm text-gray-900 dark:text-white">
-                      {node.city}, {node.country}
+                    <div className="text-sm text-gray-900 dark:text-white inline-flex items-center justify-center gap-1">
+                      <CountryFlagSvg country={node.country} />
+                      <span>{node.city}, {node.country}</span>
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                       {node.provider}

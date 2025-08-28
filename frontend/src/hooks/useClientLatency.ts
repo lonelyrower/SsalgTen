@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { apiService } from '@/services/api';
 import type { ClientLatencyData, LatencyStats } from '@/services/api';
 
@@ -26,6 +26,43 @@ export function useClientLatency() {
   const [state, setState] = useState<ClientLatencyState>(initialState);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const testTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const STORAGE_KEY = 'client_latency_state_v1';
+  const STORAGE_TTL_MS = 10 * 60 * 1000; // 10分钟有效期
+
+  // 启动时尝试从本地存储恢复数据，避免切换页面丢失
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed._savedAt) return;
+      if (Date.now() - parsed._savedAt > STORAGE_TTL_MS) return;
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        isTestingInProgress: false, // 返回页面默认视为非测试进行中
+        results: Array.isArray(parsed.results) ? parsed.results : [],
+        stats: parsed.stats || null,
+        error: null,
+        lastUpdated: parsed.lastUpdated || null,
+        clientIP: parsed.clientIP || null,
+      }));
+    } catch {}
+  }, []);
+
+  // 任何状态变化后保存到本地存储（轻量级持久化）
+  React.useEffect(() => {
+    try {
+      const payload = {
+        results: state.results,
+        stats: state.stats,
+        lastUpdated: state.lastUpdated,
+        clientIP: state.clientIP,
+        _savedAt: Date.now(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {}
+  }, [state.results, state.stats, state.lastUpdated, state.clientIP]);
 
   // 清理定时器
   const clearTimers = useCallback(() => {
@@ -168,6 +205,7 @@ export function useClientLatency() {
   const clearData = useCallback(() => {
     clearTimers();
     setState(initialState);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
   }, [clearTimers]);
 
   // 计算延迟颜色等级

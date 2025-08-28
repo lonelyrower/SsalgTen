@@ -17,9 +17,9 @@ export const AdminPage: React.FC = () => {
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [versionInfo, setVersionInfo] = useState<{ localVersion?: string; latestCommit?: string; updateAvailable?: boolean; message?: string } | null>(null);
-  const [updating, setUpdating] = useState(false);
-  const [updateJobId, setUpdateJobId] = useState<string | null>(null);
-  const [updateLog, setUpdateLog] = useState<string>('');
+  const [updating] = useState(false);
+  const [updateJobId] = useState<string | null>(null);
+  const [updateLog] = useState<string>('');
 
   useEffect(() => {
     apiService.getSystemVersion().then(res => {
@@ -179,7 +179,7 @@ export const AdminPage: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">系统更新</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    安全的零停机更新，自动备份数据和配置
+                    为保证安全与可控性，请通过 SSH 执行一键命令更新
                   </p>
                   {versionInfo && (
                     <div className="mt-2 flex items-center space-x-4 text-xs">
@@ -208,96 +208,11 @@ export const AdminPage: React.FC = () => {
                 </div>
                 <div className="flex flex-col items-end space-y-2">
                   <Button
-                    variant={versionInfo?.updateAvailable ? 'default' : 'outline'}
-                    disabled={updating}
-                    onClick={async () => {
-                      const confirmed = window.confirm(
-                        '确定要开始系统更新吗？\n\n更新过程包括：\n• 自动备份数据和配置\n• 拉取最新代码\n• 重建和重启服务\n• 验证系统健康状态\n\n整个过程大约需要3-5分钟，期间服务会短暂中断。'
-                      );
-                      
-                      if (!confirmed) return;
-                      
-                      setUpdating(true);
-                      setUpdateLog('⏳ 正在启动更新任务...');
-                      
-                      try {
-                        // 预检 Updater 健康状态，提前给出明确提示
-                        try {
-                          const health = await apiService.getUpdaterHealth();
-                          if (!health.success) {
-                            setUpdateLog('❌ 更新启动失败：Updater 未就绪或不可达\n\n请检查：\n• updater 容器是否已启动（docker-compose ps updater）\n• UPDATER_TOKEN 是否与后端一致\n• 后端是否能访问 http://updater:8765');
-                            setUpdating(false);
-                            return;
-                          }
-                        } catch (err) {
-                          setUpdateLog('❌ 更新启动失败：无法连接 Updater 服务\n\n请检查 updater 容器与网络连通性');
-                          setUpdating(false);
-                          return;
-                        }
-
-                        const res = await apiService.triggerSystemUpdate(false);
-                        if (!res.success) throw new Error(res.error || '更新启动失败');
-                        
-                        const job = (res.data as any)?.job;
-                        if (job?.id) {
-                          setUpdateJobId(job.id);
-                          setUpdateLog('✅ 更新任务已启动\n正在准备更新环境...\n');
-                          
-                          let pollCount = 0;
-                          const maxPollCount = 200; // 10分钟超时 (3秒 * 200 = 10分钟)
-                          
-                          // 轮询日志
-                          const timer = setInterval(async () => {
-                            try {
-                              pollCount++;
-                              const apiUrl = `${(window as any).APP_CONFIG?.API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'}/admin/system/update/${job.id}/log?tail=1000`;
-                              const r = await fetch(apiUrl);
-                              
-                              if (r.ok) {
-                                const text = await r.text();
-                                setUpdateLog(text);
-                                
-                                // 检查是否完成
-                                if (text.includes('🎉 系统更新成功完成') || text.includes('✅ 生产环境更新完成')) {
-                                  clearInterval(timer);
-                                  setUpdating(false);
-                                  // 刷新页面信息
-                                  setTimeout(() => {
-                                    window.location.reload();
-                                  }, 2000);
-                                } else if (text.includes('ERROR') && text.includes('exit')) {
-                                  clearInterval(timer);
-                                  setUpdating(false);
-                                }
-                              } else if (r.status === 404) {
-                                // 任务可能已完成或失败
-                                clearInterval(timer);
-                                setUpdating(false);
-                              }
-                              
-                              // 超时保护
-                              if (pollCount >= maxPollCount) {
-                                clearInterval(timer);
-                                setUpdating(false);
-                                setUpdateLog(prev => prev + '\n\n⚠️ 更新日志获取超时，但更新可能仍在进行中...');
-                              }
-                            } catch (err) {
-                              console.warn('Failed to fetch update log:', err);
-                            }
-                          }, 3000);
-                        } else {
-                          setUpdateLog('⚠️ 更新启动成功，但未获得任务ID');
-                          setUpdating(false);
-                        }
-                      } catch (e: any) {
-                        console.error('Update failed:', e);
-                        setUpdateLog(`❌ 更新启动失败: ${e.message || '未知错误'}\n\n请检查：\n• Updater服务是否正常运行\n• 网络连接是否正常\n• 是否有足够的系统资源`);
-                        setUpdating(false);
-                      }
-                    }}
+                    variant="outline"
+                    onClick={() => alert('请通过 SSH 执行页面下方的一键命令进行更新')}
                   >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${updating ? 'animate-spin' : ''}`} />
-                    {updating ? '更新中...' : (versionInfo?.updateAvailable ? '立即更新' : '检查并更新')}
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    使用 SSH 更新
                   </Button>
                   
                   {versionInfo?.updateAvailable && (
@@ -309,7 +224,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
               
-              {(updateJobId || updateLog) && (
+              {false && (updateJobId || updateLog) && (
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
@@ -357,19 +272,15 @@ export const AdminPage: React.FC = () => {
                 </div>
               )}
               
-              {!(updateJobId || updateLog) && !updating && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                  <div className="text-sm text-blue-800 dark:text-blue-300">
-                    <strong>更新特性：</strong>
-                    <ul className="mt-1 list-disc list-inside text-xs space-y-1">
-                      <li>零停机更新 - 服务仅短暂中断</li>
-                      <li>自动数据备份 - 确保数据安全</li>
-                      <li>健康检查验证 - 确保更新成功</li>
-                      <li>失败自动回滚 - 最大化可用性</li>
-                    </ul>
-                  </div>
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                <div className="text-sm text-blue-800 dark:text-blue-300">
+                  <strong>更新指引：</strong>
+                  <div className="mt-2 text-xs">请通过 SSH 执行以下命令更新：</div>
+                  <pre className="mt-2 bg-white/70 dark:bg-gray-900/50 p-2 rounded border border-blue-200 dark:border-blue-700 select-all">
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/vps-update.sh | sudo bash -s -- --force-reset
+                  </pre>
                 </div>
-              )}
+              </div>
             </div>
           </>
         )}
