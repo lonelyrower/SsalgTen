@@ -1,248 +1,119 @@
 #!/usr/bin/env bash
 
-# SsalgTen VPS Production Update Script
-# 安全的一键VPS生产环境更新脚本
+# SsalgTen VPS One-Click Update Script
+# Robust git update that tolerates local changes and avoids merge prompts.
 
 set -Eeuo pipefail
 
-# 颜色输出
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+REPO_URL="https://github.com/lonelyrower/SsalgTen.git"
+PROJECT_DIR="${PROJECT_DIR:-/opt/ssalgten}"
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+# Flags
+FORCE_RESET=0       # discard local changes with git reset --hard && git clean -fd
+AUTO_STASH=1        # stash local changes automatically before updating
 
-# 错误处理
-cleanup() {
-    local exit_code=$?
-    if [ $exit_code -ne 0 ]; then
-        log_error "更新过程出现错误 (退出码: $exit_code)"
-        log_error "可以使用以下命令查看详细日志："
-        log_error "  docker logs ssalgten-backend"
-        log_error "  docker logs ssalgten-frontend"
-    fi
+usage() {
+  cat <<EOF
+Usage: vps-update.sh [options]
+
+Options:
+  --force-reset    Discard all local changes (git reset --hard && git clean -fd)
+  --no-autostash   Do not attempt to stash local changes automatically
+  --dir <path>     Project directory (default: /opt/ssalgten or env PROJECT_DIR)
+  -h, --help       Show this help
+
+Environment:
+  PROJECT_DIR=/opt/ssalgten   Override project directory
+EOF
 }
 
-trap cleanup EXIT
+log()   { echo -e "[INFO] $*"; }
+warn()  { echo -e "[WARN] $*"; }
+error() { echo -e "[ERROR] $*"; }
 
-# 默认配置
-DEFAULT_PROJECT_DIR="/opt/ssalgten"
-PROJECT_DIR="${1:-$DEFAULT_PROJECT_DIR}"
-BACKUP_BEFORE_UPDATE="${BACKUP_BEFORE_UPDATE:-true}"
+# Parse args
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --force-reset) FORCE_RESET=1; shift ;;
+    --no-autostash) AUTO_STASH=0; shift ;;
+    --dir) PROJECT_DIR="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) warn "Unknown option: $1"; usage; exit 1 ;;
+  esac
+done
 
-log_info "🚀 开始SsalgTen VPS生产环境更新"
-log_info "📍 项目目录: $PROJECT_DIR"
+log "🚀 开始SsalgTen VPS生产环境更新"
+log "📍 项目目录: $PROJECT_DIR"
 
-# 1. 基础检查
-log_info "🔍 执行基础环境检查..."
+command -v git >/dev/null 2>&1 || { error "缺少 git，请先安装: apt-get update && apt-get install -y git"; exit 1; }
+command -v docker >/dev/null 2>&1 || warn "未检测到 docker（脚本后续会调用 docker compose 更新服务）"
 
-# 检查是否为root或有sudo权限
-if [ "$EUID" -ne 0 ] && ! sudo -n true 2>/dev/null; then
-    log_error "需要root权限或sudo权限才能执行更新"
-    log_info "请使用: sudo bash $0"
-    exit 1
-fi
+mkdir -p "$PROJECT_DIR"
 
-# 检查Docker是否运行
-if ! docker info >/dev/null 2>&1; then
-    log_error "Docker 服务未运行，尝试启动..."
-    if command -v systemctl >/dev/null 2>&1; then
-        sudo systemctl start docker
-        sleep 5
-        if ! docker info >/dev/null 2>&1; then
-            log_error "Docker 启动失败，请手动检查"
-            exit 1
-        fi
-    else
-        log_error "无法启动Docker服务，请手动启动"
-        exit 1
-    fi
-fi
-
-# 检查项目目录
-if [ ! -d "$PROJECT_DIR" ]; then
-    log_error "项目目录不存在: $PROJECT_DIR"
-    exit 1
+if [[ ! -d "$PROJECT_DIR/.git" ]]; then
+  log "📥 未发现git仓库，正在克隆..."
+  git clone "$REPO_URL" "$PROJECT_DIR"
 fi
 
 cd "$PROJECT_DIR"
 
-# 检查必要文件
-for file in docker-compose.yml .env; do
-    if [ ! -f "$file" ]; then
-        log_error "缺少必要文件: $file"
-        exit 1
-    fi
-done
+# Avoid safe.directory issues under sudo/root
+git config --global --add safe.directory "$PROJECT_DIR" >/dev/null 2>&1 || true
 
-# 2. Git安全目录配置和代码更新
-log_info "📥 配置Git并更新代码..."
+log "🔍 执行基础环境检查..."
+git remote -v || { error "不是有效的git仓库，或远程不可用"; exit 1; }
 
-# 设置安全目录
-git config --global --add safe.directory "$PROJECT_DIR" 2>/dev/null || true
+# Show current commit before update
+OLD_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+log "当前版本: ${OLD_COMMIT}"
 
-# 检查Git状态
-if ! git status >/dev/null 2>&1; then
-    log_error "Git仓库状态异常，请检查"
+# Check working tree status
+is_dirty() {
+  # unstaged or staged changes
+  if ! git diff --quiet || ! git diff --staged --quiet; then
+    return 0
+  fi
+  # untracked files
+  if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+    return 0
+  fi
+  return 1
+}
+
+if is_dirty; then
+  if [[ $FORCE_RESET -eq 1 ]]; then
+    warn "检测到本地变更，按 --force-reset 丢弃本地改动"
+    git reset --hard HEAD
+    git clean -fd
+  elif [[ $AUTO_STASH -eq 1 ]]; then
+    warn "检测到本地变更，自动暂存（stash）后更新"
+    git stash push -u -m "vps-update autostash $(date +%F_%T)" || true
+  else
+    error "工作区有本地改动。
+如需丢弃本地改动并更新，请加参数: --force-reset
+如需自动暂存本地改动后更新，请移除 --no-autostash"
     exit 1
+  fi
 fi
 
-# 获取当前版本信息
-CURRENT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-log_info "当前版本: $CURRENT_COMMIT"
+log "📥 配置Git并更新代码..."
+git fetch origin --prune
 
-# 拉取最新代码
-log_info "拉取最新代码..."
-if ! git pull origin main; then
-    log_error "代码拉取失败"
-    exit 1
-fi
+# Reset to remote main to avoid merge prompts
+git checkout -B main || true
+git reset --hard origin/main
 
-# 获取最新版本信息
-NEW_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-log_info "最新版本: $NEW_COMMIT"
+NEW_COMMIT=$(git rev-parse --short HEAD)
+log "更新到版本: ${NEW_COMMIT} (原 ${OLD_COMMIT})"
 
-# 检查是否有更新
-if [ "$CURRENT_COMMIT" = "$NEW_COMMIT" ]; then
-    log_success "✅ 代码已经是最新版本，无需更新"
-    exit 0
-fi
+# Ensure scripts are executable
+chmod +x scripts/update-production.sh || true
 
-# 3. 创建备份（可选）
-if [ "$BACKUP_BEFORE_UPDATE" = "true" ]; then
-    log_info "💾 创建系统备份..."
-    BACKUP_ID="$(date +%Y%m%d_%H%M%S)"
-    
-    if [ -f "./scripts/backup-db.sh" ]; then
-        log_info "执行数据库备份..."
-        # 使用自动化模式执行备份（非交互）
-        BACKUP_DIR="./.update/backups"
-        mkdir -p "$BACKUP_DIR"
-        
-        if BACKUP_AUTO=true bash ./scripts/backup-db.sh "$BACKUP_ID" "$BACKUP_DIR"; then
-            log_success "数据库备份完成: backup_$BACKUP_ID"
-        else
-            log_warn "数据库备份失败，但继续更新（风险自负）"
-            log_warn "建议检查Docker服务和数据库容器状态"
-        fi
-    else
-        log_warn "备份脚本不存在，跳过备份"
-    fi
-fi
-
-# 4. 处理脚本文件格式
-log_info "🔧 处理脚本文件格式..."
-UPDATE_SCRIPT="./scripts/update-production.sh"
-BACKUP_SCRIPT="./scripts/backup-db.sh"
-
-# 检查关键脚本存在
-for script in "$UPDATE_SCRIPT" "$BACKUP_SCRIPT"; do
-    if [ ! -f "$script" ]; then
-        log_error "关键脚本不存在: $script"
-        exit 1
-    fi
-done
-
-# 处理所有关键脚本的Windows行尾符
-log_info "修复脚本文件格式..."
-for script in "$UPDATE_SCRIPT" "$BACKUP_SCRIPT"; do
-    if command -v dos2unix >/dev/null 2>&1; then
-        dos2unix "$script" 2>/dev/null || true
-    else
-        sed -i 's/\r$//' "$script" 2>/dev/null || true
-    fi
-    
-    # 确保脚本可执行
-    chmod +x "$script"
-done
-
-# 5. 执行生产更新
-log_info "🚀 开始执行生产环境更新..."
-log_info "使用脚本: $UPDATE_SCRIPT"
-
-# 设置环境变量供更新脚本使用
-export PROJECT_DIR="$PROJECT_DIR"
-export CURRENT_COMMIT="$CURRENT_COMMIT"
-export NEW_COMMIT="$NEW_COMMIT"
-
-# 执行更新脚本
-if bash "$UPDATE_SCRIPT"; then
-    log_success "🎉 系统更新完成！"
-    log_info "新版本: $NEW_COMMIT"
+log "🛠️ 执行生产更新脚本..."
+if scripts/update-production.sh; then
+  log "🎉 更新流程完成"
 else
-    UPDATE_EXIT_CODE=$?
-    log_error "更新脚本执行失败 (退出码: $UPDATE_EXIT_CODE)"
-    
-    # 如果有备份，提示回滚
-    if [ "$BACKUP_BEFORE_UPDATE" = "true" ] && [ -n "${BACKUP_ID:-}" ]; then
-        log_warn "可以使用以下命令回滚到备份："
-        log_warn "  bash ./scripts/rollback.sh $BACKUP_ID"
-    fi
-    
-    exit $UPDATE_EXIT_CODE
+  error "更新脚本执行失败"
+  exit 1
 fi
 
-# 6. 最终状态检查
-log_info "🏥 执行最终健康检查..."
-
-# 等待服务稳定
-sleep 15
-
-# 检查关键服务状态
-SERVICES_OK=true
-
-# 检查后端API
-if curl -f -s "http://localhost:3001/api/health" >/dev/null 2>&1; then
-    log_success "✅ 后端API健康"
-else
-    log_error "❌ 后端API不健康"
-    SERVICES_OK=false
-fi
-
-# 检查前端
-if curl -f -s "http://localhost:80/" >/dev/null 2>&1; then
-    log_success "✅ 前端服务健康"
-else
-    log_error "❌ 前端服务不健康"  
-    SERVICES_OK=false
-fi
-
-# 检查Updater服务
-if curl -f -s "http://localhost:8765/health" >/dev/null 2>&1; then
-    log_success "✅ 更新服务健康"
-else
-    log_warn "⚠️ 更新服务不健康（非关键）"
-fi
-
-if [ "$SERVICES_OK" = "false" ]; then
-    log_error "❌ 部分关键服务不健康，请检查日志"
-    log_info "查看日志命令："
-    log_info "  docker logs ssalgten-backend"
-    log_info "  docker logs ssalgten-frontend"
-    exit 1
-fi
-
-# 7. 显示最终状态
-log_success "✅ VPS系统更新成功完成！"
-echo ""
-log_info "📊 更新摘要:"
-log_info "  旧版本: $CURRENT_COMMIT"
-log_info "  新版本: $NEW_COMMIT"
-if [ -n "${BACKUP_ID:-}" ]; then
-    log_info "  备份ID: $BACKUP_ID"
-fi
-echo ""
-log_info "🌐 服务状态:"
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep ssalgten || echo "无SsalgTen容器运行"
-echo ""
-log_info "🎯 访问地址:"
-log_info "  管理界面: http://your-domain/admin"
-log_info "  前端界面: http://your-domain/"
-log_info "  API健康: http://your-domain/api/health"
-
-log_success "🚀 更新完成！系统已升级到最新版本。"
