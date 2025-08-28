@@ -301,20 +301,22 @@ const SSHUpdateInstruction: React.FC = () => {
       <div className="text-sm text-blue-800 dark:text-blue-300">
         <strong>更新指引：</strong>
         <div className="mt-2 text-xs">请通过 SSH 执行以下命令更新：</div>
-        <div className="mt-2 relative">
-          <pre className="bg-white/70 dark:bg-gray-900/50 p-2 pr-16 rounded border border-blue-200 dark:border-blue-700 select-all overflow-x-auto whitespace-pre-wrap break-all">
+        <div className="mt-2">
+          <div className="flex items-center space-x-2">
+            <code className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 rounded font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
 {cmd}
-          </pre>
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute top-1 right-1"
-            onClick={copy}
-            aria-label={copied ? '命令已复制到剪贴板' : '复制命令到剪贴板'}
-            title={copied ? '已复制！' : '复制命令'}
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          </Button>
+            </code>
+            <Button
+              onClick={copy}
+              variant="outline"
+              size="sm"
+              className="px-3"
+              aria-label={copied ? '命令已复制到剪贴板' : '复制命令到剪贴板'}
+              title={copied ? '已复制！' : '复制命令'}
+            >
+              {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
