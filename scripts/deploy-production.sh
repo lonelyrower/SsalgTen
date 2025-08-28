@@ -14,7 +14,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # 配置变量
-SCRIPT_VERSION="1.1.0"
+SCRIPT_VERSION="1.1.1"
 SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh"
 APP_DIR="/opt/ssalgten"
 DOMAIN=""
