@@ -7,7 +7,7 @@ import { join } from 'node:path';
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8765;
 const TOKEN = process.env.UPDATER_TOKEN || '';
 const WORKSPACE = process.env.WORKSPACE || '/workspace';
-const UPDATE_SCRIPT = process.env.UPDATE_SCRIPT || join(WORKSPACE, 'scripts', 'update-frontend.sh');
+const UPDATE_SCRIPT = process.env.UPDATE_SCRIPT || join(WORKSPACE, 'scripts', 'update-production.sh');
 const LOG_DIR = process.env.UPDATE_LOG_DIR || join(WORKSPACE, '.update', 'logs');
 
 mkdirSync(LOG_DIR, { recursive: true });

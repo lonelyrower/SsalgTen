@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-SsalgTen is a production-ready distributed network monitoring system inspired by Looking Glass networks. It consists of three main components:
+SsalgTen is a production-ready distributed network monitoring system inspired by Looking Glass networks. It consists of four main components:
 
 - **Frontend** (React + TypeScript + Vite): Modern web interface with real-time map visualization, dashboard, and admin panels
 - **Backend** (Node.js + Express + TypeScript): REST API server with JWT authentication, PostgreSQL database, and WebSocket support
 - **Agent** (Node.js + TypeScript): Lightweight diagnostic probes that run network tests and report back to the backend
+- **Updater Service** (Node.js + Express): Zero-downtime update system for production deployments with automatic backup/rollback
 
-The system uses a hub-and-spoke architecture where multiple agents worldwide report to a central backend server, providing global network visibility.
+The system uses a hub-and-spoke architecture where multiple agents worldwide report to a central backend server, providing global network visibility. The integrated update system allows for safe production updates through a web interface.
 
 ## Development Commands
 
@@ -95,6 +96,23 @@ docker compose logs -f
 docker compose down
 ```
 
+### System Update Operations
+
+The system includes a production-ready zero-downtime update feature:
+
+```bash
+# Test update system readiness
+./scripts/test-update-system.sh
+
+# Manual update trigger (requires UPDATER_TOKEN)
+curl -X POST http://localhost:8765/update \
+  -H "X-Updater-Token: your-token" \
+  -H "Content-Type: application/json"
+
+# Manual rollback to specific backup
+./scripts/rollback.sh BACKUP_ID
+```
+
 ## Key Technologies
 
 - **Database**: PostgreSQL with Prisma ORM
@@ -139,11 +157,19 @@ The system uses a comprehensive PostgreSQL schema with these key models:
 - `/api/nodes/*` - Node management and status
 - `/api/diagnostics/*` - Network diagnostic operations
 - `/api/visitors/*` - Visitor tracking
+- `/api/system/version` - System version information (public)
+- `/api/admin/system/update` - System update operations (admin only)
 
 **Agent API Endpoints:**
 - `/api/diagnostics/*` - Execute network tests
 - `/api/health` - Health check
 - `/health` - Simple health endpoint
+
+**Updater Service Endpoints:**
+- `/health` - Health check
+- `/update` - Trigger system update (requires X-Updater-Token)
+- `/jobs` - List update jobs
+- `/jobs/:id` - Get specific job status and logs
 
 ## Configuration
 
@@ -159,6 +185,7 @@ Key configuration areas:
 - API keys for agent authentication
 - Geographic coordinates for agent locations
 - Network test parameters (ping count, traceroute hops, etc.)
+- System update configuration (UPDATER_TOKEN, GitHub repository settings)
 
 ## Testing
 
@@ -176,14 +203,23 @@ curl http://localhost:3001/api/health  # Test API
 
 ## Production Deployment
 
-The system is designed for Docker deployment:
-- Complete Docker Compose setup with PostgreSQL and Redis
+The system is designed for Docker deployment with zero-downtime updates:
+- Complete Docker Compose setup with PostgreSQL, Redis, and Updater service
 - Health checks for all services
 - Volume persistence for data
 - Environment-based configuration
 - HTTPS support via Caddy reverse proxy
+- Integrated update system with automatic backup/rollback capabilities
+- Web-based update interface in admin panel (System Management → System Overview)
 
 Default admin credentials: admin/admin123 (change immediately in production)
+
+**System Update Feature:**
+- Access via admin panel: Login → System Management → System Overview → System Update
+- Zero-downtime updates with automatic data backup
+- Real-time update progress tracking
+- Automatic rollback on failure
+- Manual rollback capability via scripts
 
 ## Key Files and Directories
 
@@ -194,3 +230,10 @@ Default admin credentials: admin/admin123 (change immediately in production)
 - `frontend/src/services/api.ts` - Frontend API service layer
 - `agent/src/services/` - Network diagnostic implementations
 - `docker-compose.yml` - Production deployment configuration
+- `scripts/update-production.sh` - Production update script with backup/rollback
+- `scripts/rollback.sh` - Manual rollback script
+- `scripts/test-update-system.sh` - Update system validation
+- `Dockerfile.updater` - Updater service container definition
+- `scripts/updater-server.mjs` - Updater service implementation
+- `UPDATE_SYSTEM.md` - System update user guide
+- `docs/PRODUCTION_UPDATE.md` - Detailed production update documentation

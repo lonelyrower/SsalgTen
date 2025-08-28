@@ -248,6 +248,44 @@ export interface IPInfo {
   };
 }
 
+// 客户端延迟测试接口
+export interface ClientLatencyData {
+  nodeId: string;
+  nodeName: string;
+  location: string;
+  country: string;
+  city: string;
+  ipv4?: string;
+  latency: number | null;
+  status: 'testing' | 'success' | 'failed' | 'timeout';
+  lastTested: string;
+  error?: string;
+}
+
+export interface LatencyStats {
+  average: number;
+  min: number;
+  max: number;
+  tested: number;
+  total: number;
+  distribution: { range: string; count: number }[];
+  bestNodes: ClientLatencyData[];
+}
+
+export interface LatencyTestStart {
+  clientIP: string;
+  nodeCount: number;
+  testId: string;
+  estimatedDuration: string;
+}
+
+export interface LatencyTestResults {
+  clientIP: string;
+  results: ClientLatencyData[];
+  stats: LatencyStats;
+  timestamp: string;
+}
+
 // 访问者统计接口
 export interface VisitorStats {
   totalVisitors: number;
@@ -632,6 +670,10 @@ class ApiService {
     }, true);
   }
 
+  async getUpdaterHealth(): Promise<ApiResponse<any>> {
+    return this.request('/admin/system/updater/health', {}, true);
+  }
+
   // 访问者信息API
   async getVisitorInfo(): Promise<ApiResponse<VisitorInfo>> {
     return this.request<VisitorInfo>('/visitor/info');
@@ -673,6 +715,17 @@ class ApiService {
   async getInstallCommand(): Promise<ApiResponse<InstallCommandData>> {
     // 该接口需要管理员权限
     return this.request<InstallCommandData>('/agents/install-command', {}, true);
+  }
+
+  // 客户端延迟测试 API
+  async startLatencyTest(): Promise<ApiResponse<LatencyTestStart>> {
+    return this.request<LatencyTestStart>('/client-latency/test', {
+      method: 'POST'
+    }, true);
+  }
+
+  async getLatencyResults(): Promise<ApiResponse<LatencyTestResults>> {
+    return this.request<LatencyTestResults>('/client-latency/results', {}, true);
   }
 }
 

@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { NodeStatusChart } from '@/components/dashboard/NodeStatusChart';
 import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
+import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Activity, Loader2, Globe, MapPin, Settings, Shield, BarChart } from 'lucide-react';
 
@@ -81,9 +82,33 @@ export const DashboardPage: React.FC = () => {
             totalProviders={stats?.totalProviders || 0}
             className="mb-8"
           />
-          
-          {/* 节点状态和分布分析 */}
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-6">
+
+          {/* 延迟概览和分析 */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+            {/* 延迟概览卡片 */}
+            <div className="xl:col-span-1">
+              <LatencyOverviewCard />
+            </div>
+            
+            {/* 节点状态和分布分析 */}
+            <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-5 gap-6">
+              {/* 节点状态饼图 */}
+              <div className="lg:col-span-2">
+                <NodeStatusChart 
+                  onlineNodes={stats?.onlineNodes || 0}
+                  offlineNodes={(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)}
+                />
+              </div>
+              
+              {/* 地理和服务商分布 */}
+              <div className="lg:col-span-3">
+                <GeographicDistribution nodes={nodes} />
+              </div>
+            </div>
+          </div>
+
+          {/* 原有的分析图表 */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-6" style={{ display: 'none' }}>
             {/* 节点状态饼图 */}
             <div className="xl:col-span-2">
               <NodeStatusChart 

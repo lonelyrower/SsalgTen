@@ -218,9 +218,23 @@ export const AdminPage: React.FC = () => {
                       if (!confirmed) return;
                       
                       setUpdating(true);
-                      setUpdateLog('');
+                      setUpdateLog('⏳ 正在启动更新任务...');
                       
                       try {
+                        // 预检 Updater 健康状态，提前给出明确提示
+                        try {
+                          const health = await apiService.getUpdaterHealth();
+                          if (!health.success) {
+                            setUpdateLog('❌ 更新启动失败：Updater 未就绪或不可达\n\n请检查：\n• updater 容器是否已启动（docker-compose ps updater）\n• UPDATER_TOKEN 是否与后端一致\n• 后端是否能访问 http://updater:8765');
+                            setUpdating(false);
+                            return;
+                          }
+                        } catch (err) {
+                          setUpdateLog('❌ 更新启动失败：无法连接 Updater 服务\n\n请检查 updater 容器与网络连通性');
+                          setUpdating(false);
+                          return;
+                        }
+
                         const res = await apiService.triggerSystemUpdate(false);
                         if (!res.success) throw new Error(res.error || '更新启动失败');
                         
@@ -295,12 +309,14 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
               
-              {updateJobId && (
+              {(updateJobId || updateLog) && (
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">更新日志</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">任务ID: {updateJobId}</div>
+                      {updateJobId && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">任务ID: {updateJobId}</div>
+                      )}
                     </div>
                     {updating && (
                       <div className="flex items-center text-xs text-blue-600 dark:text-blue-400">
@@ -341,7 +357,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               )}
               
-              {!updateJobId && !updating && (
+              {!(updateJobId || updateLog) && !updating && (
                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
                   <div className="text-sm text-blue-800 dark:text-blue-300">
                     <strong>更新特性：</strong>

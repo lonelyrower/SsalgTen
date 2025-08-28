@@ -7,6 +7,7 @@ import { ConnectivityDiagnostics } from '@/components/nodes/ConnectivityDiagnost
 import { Button } from '@/components/ui/button';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
+import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown } from 'lucide-react';
 import type { NodeData } from '@/services/api';
@@ -33,6 +34,23 @@ export const NodesPage: React.FC = () => {
   const { nodes, stats, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
   const [mapMode, setMapMode] = useState<'2d' | '3d'>('2d');
+  
+  // 延迟测试功能
+  const { 
+    results: latencyResults, 
+    isTestingInProgress, 
+    startLatencyTest, 
+    refreshResults: refreshLatencyResults,
+    getLatencyColor,
+    formatLatency,
+    getTestProgress
+  } = useClientLatency();
+
+  // 获取节点的延迟数据
+  const getNodeLatency = (nodeId: string) => {
+    const result = latencyResults.find(r => r.nodeId === nodeId);
+    return result ? { latency: result.latency, status: result.status } : null;
+  };
 
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);
@@ -261,6 +279,20 @@ export const NodesPage: React.FC = () => {
               <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 刷新
+              </Button>
+
+              <Button 
+                variant="outline" 
+                onClick={startLatencyTest}
+                disabled={isTestingInProgress}
+                className="border-purple-200 text-purple-700 hover:bg-purple-50"
+              >
+                {isTestingInProgress ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Activity className="h-4 w-4 mr-2" />
+                )}
+                {isTestingInProgress ? '测试中...' : '延迟测试'}
               </Button>
             </div>
           </div>
@@ -605,6 +637,37 @@ export const NodesPage: React.FC = () => {
                                 AS{node.asnNumber}
                               </p>
                             )}
+                            {/* 延迟信息 */}
+                            {(() => {
+                              const latencyData = getNodeLatency(node.id);
+                              if (latencyData && latencyData.status !== 'testing') {
+                                const colorClass = latencyData.latency !== null 
+                                  ? getLatencyColor(latencyData.latency) === 'green' ? 'text-green-600'
+                                  : getLatencyColor(latencyData.latency) === 'yellow' ? 'text-yellow-600'
+                                  : getLatencyColor(latencyData.latency) === 'red' ? 'text-red-600'
+                                  : 'text-gray-400'
+                                  : 'text-red-400';
+                                return (
+                                  <div className="mt-1 text-center">
+                                    <span className={`text-xs font-mono ${colorClass}`}>
+                                      {latencyData.status === 'success' ? formatLatency(latencyData.latency) : 
+                                       latencyData.status === 'failed' ? '失败' : 
+                                       latencyData.status === 'timeout' ? '超时' : '--'}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              if (latencyData && latencyData.status === 'testing') {
+                                return (
+                                  <div className="mt-1 text-center">
+                                    <span className="text-xs text-blue-600">
+                                      测试中...
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                         </div>
                       </div>

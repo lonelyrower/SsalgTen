@@ -53,7 +53,7 @@ export class UpdateController {
 
   async triggerUpdate(req: Request, res: Response) {
     // 通过外部 Updater 服务执行真正的更新
-    const updaterBase = (process.env.UPDATER_URL || 'http://host.docker.internal:8765/update').replace(/\/update$/, '');
+    const updaterBase = (process.env.UPDATER_URL || 'http://updater:8765/update').replace(/\/update$/, '');
     const updaterUrl = `${updaterBase}/update`;
     const updaterToken = process.env.UPDATER_TOKEN || '';
     const forceAgent = Boolean(req.body?.forceAgent);
@@ -90,7 +90,7 @@ export class UpdateController {
   async getUpdateLog(req: Request, res: Response) {
     const id = req.params.id;
     if (!id) return res.status(400).json({ success: false, error: 'missing id' });
-    const updaterBase = (process.env.UPDATER_URL || 'http://host.docker.internal:8765/update').replace(/\/update$/, '');
+    const updaterBase = (process.env.UPDATER_URL || 'http://updater:8765/update').replace(/\/update$/, '');
     const updaterToken = process.env.UPDATER_TOKEN || '';
     try {
       const url = `${updaterBase}/jobs/${encodeURIComponent(id)}?tail=${Number(req.query.tail || 500)}`;
@@ -101,6 +101,20 @@ export class UpdateController {
       return res.send(text);
     } catch (e: any) {
       return res.status(502).json({ success: false, error: 'proxy failed' });
+    }
+  }
+
+  async updaterHealth(req: Request, res: Response) {
+    const updaterBase = (process.env.UPDATER_URL || 'http://updater:8765/update').replace(/\/update$/, '');
+    try {
+      const resp = await fetch(`${updaterBase}/health`);
+      if (!resp.ok) {
+        return res.status(resp.status).json({ success: false, error: `updater health ${resp.status}` });
+      }
+      const data = await resp.json().catch(() => ({ ok: true }));
+      return res.json({ success: true, data });
+    } catch (e: any) {
+      return res.status(502).json({ success: false, error: 'updater not reachable' });
     }
   }
 }

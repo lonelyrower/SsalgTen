@@ -64,7 +64,9 @@
       "Bash(git log --oneline -5)",
       "Bash(./scripts/test-update-system.sh:*)",
       "Bash(dos2unix:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(WORKSPACE=/mnt/d/Projects/SsalgTen UPDATE_LOG_DIR=/mnt/d/Projects/SsalgTen/.update/logs UPDATER_TOKEN=secure-updater-token-change-in-production PORT=8765 node scripts/updater-server.mjs)",
+      "Bash(VITE_API_BASE_URL=http://localhost:3001/api npm run dev)"
     ],
     "deny": [],
     "additionalDirectories": [

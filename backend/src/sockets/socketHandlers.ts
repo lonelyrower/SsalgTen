@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { authenticateSocket } from './socketAuth';
 import { NodeService, nodeService } from '../services/NodeService';
 import { sanitizeNodes } from '../utils/serialize';
+import { clientLatencyController } from '../controllers/ClientLatencyController';
 
 export interface AuthenticatedSocket extends Socket {
   user?: {
@@ -99,6 +100,26 @@ export function setupSocketHandlers(io: Server) {
           error: 'Failed to fetch nodes data'
         });
       }
+    });
+
+    // 处理节点ping响应
+    socket.on('ping_response', (data: { 
+      nodeId: string; 
+      clientIP: string; 
+      latency: number | null; 
+      success: boolean; 
+      error?: string;
+    }) => {
+      logger.info(`Received ping response from node ${data.nodeId} for client ${data.clientIP}: ${data.latency}ms`);
+      
+      const status = data.success ? 'success' : 'failed';
+      clientLatencyController.updateNodeLatency(
+        data.clientIP, 
+        data.nodeId, 
+        data.latency, 
+        status, 
+        data.error
+      );
     });
 
     // 断线处理

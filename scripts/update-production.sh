@@ -9,12 +9,12 @@
 set -Eeuo pipefail
 
 # Docker Compose 命令兼容性检查
-if command -v $DC >/dev/null 2>&1; then
-    DC="$DC"
+if command -v docker-compose >/dev/null 2>&1; then
+    DC="docker-compose"
 elif docker compose version >/dev/null 2>&1; then
     DC="docker compose"
 else
-    echo "错误: 未找到 $DC 或 docker compose 命令"
+    echo "错误: 未找到 docker-compose 或 docker compose 命令"
     exit 1
 fi
 
@@ -86,7 +86,7 @@ $DC exec -T database pg_dump -U ssalgten -d ssalgten --clean --if-exists > "${BA
 # 备份配置文件
 log_info "备份配置文件..."
 cp -r .env "${BACKUP_PATH}/" 2>/dev/null || log_warn ".env文件备份失败"
-cp -r $DC.yml "${BACKUP_PATH}/" 2>/dev/null || log_warn "$DC.yml备份失败"
+cp -r docker-compose.yml "${BACKUP_PATH}/" 2>/dev/null || log_warn "docker-compose.yml备份失败"
 
 # 备份持久化数据卷（如果存在）
 log_info "备份Docker卷数据..."
@@ -204,9 +204,9 @@ else
     exit 1
 fi
 
-# 检查前端健康
-FRONTEND_URL="http://localhost:${FRONTEND_PORT:-80}/health"
-if curl -f -s "$FRONTEND_URL" >/dev/null; then
+# 检查前端健康（检查主页）
+FRONTEND_URL="http://localhost:${FRONTEND_PORT:-80}/"
+if curl -f -s "$FRONTEND_URL" | grep -i "SsalgTen\|root" >/dev/null; then
     log_success "前端健康检查通过"
 else
     log_error "前端健康检查失败"
