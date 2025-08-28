@@ -130,41 +130,8 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     ctx.lineWidth = 2;
     ctx.setLineDash([]);
     
-    // 简化的大陆轮廓
-    const continents = [
-      // 亚洲主要轮廓
-      [[35, 100], [50, 120], [40, 140], [20, 130], [10, 110], [25, 95]],
-      // 欧洲
-      [[60, 10], [70, 30], [55, 25], [50, 5], [55, -5]],
-      // 非洲
-      [[35, 20], [30, 30], [10, 25], [-10, 30], [-30, 20], [-20, 10], [10, 15]],
-      // 北美洲
-      [[70, -100], [60, -80], [30, -90], [40, -120], [65, -130]],
-      // 南美洲
-      [[10, -70], [5, -60], [-10, -65], [-30, -70], [-40, -60], [-20, -55]],
-      // 澳大利亚
-      [[-20, 130], [-30, 140], [-35, 130], [-25, 120]]
-    ];
-    
-    continents.forEach(continent => {
-      const points = continent.map(([lat, lon]) => {
-        const { x, y, z } = latLonToXYZ(lat, lon);
-        return project3D(x, y, z);
-      }).filter(p => p.visible);
-      
-      if (points.length > 2) {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(90, 140, 60, 0.3)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(120, 160, 80, 0.6)';
-        ctx.stroke();
-      }
-    });
+    // 移除简化的大陆块状着色，仅保留经纬网与高光以保持“地球仪”外观
+    // （如需轮廓，可在此处绘制细线轮廓）
     
     // 经纬网格（更细致）
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';

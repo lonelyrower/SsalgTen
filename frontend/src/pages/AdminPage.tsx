@@ -9,7 +9,7 @@ import { SystemOverview } from '@/components/admin/SystemOverview';
 import { VisitorStatsCard } from '@/components/admin/VisitorStatsCard';
 import { ApiKeyManagement } from '@/components/admin/ApiKeyManagement';
 import { ActivityLog } from '@/components/dashboard/ActivityLog';
-import { Shield, Server, RefreshCw, BarChart3, Settings } from 'lucide-react';
+import { Shield, Server, RefreshCw, BarChart3, Settings, Copy } from 'lucide-react';
 import { apiService } from '@/services/api';
 
 export const AdminPage: React.FC = () => {
@@ -20,6 +20,7 @@ export const AdminPage: React.FC = () => {
   const [updating] = useState(false);
   const [updateJobId] = useState<string | null>(null);
   const [updateLog] = useState<string>('');
+  // SSH 更新指令显示在子组件中
 
   useEffect(() => {
     apiService.getSystemVersion().then(res => {
@@ -156,19 +157,13 @@ export const AdminPage: React.FC = () => {
                   <div className="text-sm font-mono text-purple-600 dark:text-purple-300">
                     {versionInfo?.localVersion || 'unknown'}
                   </div>
-                  {versionInfo?.latestCommit && (
-                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      最新: {versionInfo.latestCommit.slice(0,7)}
-                    </div>
-                  )}
+                  {/* 不显示最新版本commit 信息 */}
                   {versionInfo?.message && (
                     <div className="mt-1 text-xs text-yellow-600 dark:text-yellow-400" title={versionInfo.message}>
                       版本检查失败
                     </div>
                   )}
-                  {!!versionInfo?.updateAvailable && (
-                    <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">有可用更新</div>
-                  )}
+                  {/* 不显示有可用更新标记 */}
                 </div>
               </div>
             </div>
@@ -214,13 +209,6 @@ export const AdminPage: React.FC = () => {
                     <RefreshCw className="h-4 w-4 mr-2" />
                     使用 SSH 更新
                   </Button>
-                  
-                  {versionInfo?.updateAvailable && (
-                    <div className="flex items-center text-xs text-amber-600 dark:text-amber-400">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-1 animate-pulse"></div>
-                      发现新版本
-                    </div>
-                  )}
                 </div>
               </div>
               
@@ -272,15 +260,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               )}
               
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                <div className="text-sm text-blue-800 dark:text-blue-300">
-                  <strong>更新指引：</strong>
-                  <div className="mt-2 text-xs">请通过 SSH 执行以下命令更新：</div>
-                  <pre className="mt-2 bg-white/70 dark:bg-gray-900/50 p-2 rounded border border-blue-200 dark:border-blue-700 select-all">
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/vps-update.sh | sudo bash -s -- --force-reset
-                  </pre>
-                </div>
-              </div>
+              <SSHUpdateInstruction />
             </div>
           </>
         )}
@@ -309,6 +289,31 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/v
         isOpen={showChangePasswordModal}
         onClose={() => setShowChangePasswordModal(false)}
       />
+    </div>
+  );
+};
+
+// SSH 更新指引组件（带复制按钮）
+const SSHUpdateInstruction: React.FC = () => {
+  const cmd = 'curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/vps-update.sh | sudo bash -s -- --force-reset';
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(cmd); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
+  };
+  return (
+    <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+      <div className="text-sm text-blue-800 dark:text-blue-300">
+        <strong>更新指引：</strong>
+        <div className="mt-2 text-xs">请通过 SSH 执行以下命令更新：</div>
+        <div className="mt-2 relative">
+          <pre className="bg-white/70 dark:bg-gray-900/50 p-2 pr-16 rounded border border-blue-200 dark:border-blue-700 select-all overflow-x-auto whitespace-pre-wrap break-all">
+{cmd}
+          </pre>
+          <button onClick={copy} className="absolute top-1 right-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
+            <Copy className="h-3 w-3 mr-1" /> {copied ? '已复制' : '复制'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
