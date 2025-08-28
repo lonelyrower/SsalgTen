@@ -387,7 +387,7 @@ export const NodesPage: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* 地图 */}
           <div className="xl:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sticky top-4 min-h-[700px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sticky top-4 flex flex-col" style={{ minHeight: '700px' }}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布{mapMode === '3d' ? '（3D 地球）' : '（2D 地图）'}
@@ -423,7 +423,7 @@ export const NodesPage: React.FC = () => {
                 </div>
               </div>
               
-              <div className={mapMode === '3d' ? 'h-[500px]' : ''}>
+              <div className="flex-1 min-h-0">
                 <Suspense fallback={
                   <div className="flex items-center justify-center h-64">
                     <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
@@ -435,14 +435,16 @@ export const NodesPage: React.FC = () => {
                       onNodeClick={handleNodeClick} 
                       selectedNode={selectedNode}
                       showHeatmap={false}
-                      className="mb-4"
+                      className="h-full"
                     />
                   ) : (
-                    <Globe3D 
-                      nodes={filteredNodes}
-                      onNodeClick={handleNodeClick}
-                      selectedNode={selectedNode}
-                    />
+                    <div className="h-full">
+                      <Globe3D 
+                        nodes={filteredNodes}
+                        onNodeClick={handleNodeClick}
+                        selectedNode={selectedNode}
+                      />
+                    </div>
                   )}
                 </Suspense>
               </div>
@@ -451,7 +453,7 @@ export const NodesPage: React.FC = () => {
           
           {/* 节点列表/详情 */}
           <div className="xl:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-h-[700px] flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col" style={{ minHeight: '700px' }}>
               {selectedNode ? (
                 /* 节点详情视图 */
                 <div className="space-y-4">
