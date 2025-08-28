@@ -257,19 +257,19 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '30%' }}>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '30%' }}>
                   节点信息
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '25%' }}>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '25%' }}>
                   位置
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '15%' }}>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '15%' }}>
                   状态
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '20%' }}>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '20%' }}>
                   最后在线
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '10%' }}>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '10%' }}>
                   操作
                 </th>
               </tr>
@@ -277,10 +277,10 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredNodes.map((node) => (
                 <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-4" style={{ width: '30%' }}>
-                    <div className="flex items-center">
+                  <td className="px-4 py-4 text-center" style={{ width: '30%' }}>
+                    <div className="inline-flex items-center">
                       {getStatusIcon(node.status)}
-                      <div className="ml-3">
+                      <div className="ml-2">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {node.name}
                         </div>
@@ -292,7 +292,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4" style={{ width: '25%' }}>
+                  <td className="px-4 py-4 text-center" style={{ width: '25%' }}>
                     <div className="text-sm text-gray-900 dark:text-white">
                       {node.city}, {node.country}
                     </div>
@@ -300,16 +300,16 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       {node.provider}
                     </div>
                   </td>
-                  <td className="px-4 py-4" style={{ width: '15%' }}>
+                  <td className="px-4 py-4 text-center" style={{ width: '15%' }}>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(node.status)}`}>
                       {getStatusText(node.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400" style={{ width: '20%' }}>
+                  <td className="px-4 py-4 text-sm text-center text-gray-500 dark:text-gray-400" style={{ width: '20%' }}>
                     {node.lastSeen ? new Date(node.lastSeen).toLocaleDateString('zh-CN') : '未知'}
                   </td>
-                  <td className="px-4 py-4 text-right text-sm font-medium" style={{ width: '10%' }}>
-                    <div className="flex items-center justify-end space-x-2">
+                  <td className="px-4 py-4 text-center text-sm font-medium" style={{ width: '10%' }}>
+                    <div className="inline-flex items-center justify-center space-x-2">
                       <Button
                         variant="ghost"
                         size="sm"

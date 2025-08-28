@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import { ApiResponse } from '../types';
 import { logger } from '../utils/logger';
 import { nodeService } from '../services/NodeService';
@@ -98,19 +99,39 @@ export class ClientLatencyController {
       }, 30000);
       this.testTimeouts.set(clientIP, timeout);
 
-      // 通过Socket.IO向节点发送ping测试请求
-      const testPromises = onlineNodes.map(async (node) => {
+      // 优先使用 HTTP 直接调用各 Agent 的 /api/ping 接口（更简单可靠）
+      const buildAgentEndpoint = (node: any): string | null => {
+        const host = (node?.ipv4 || node?.ipv6 || '').toString();
+        if (!host) return null;
+        // 约定 Agent 监听 3002 端口（与 docker-compose 中示例一致）
+        return `http://${host}:3002`;
+      };
+
+      const httpPromises = onlineNodes.map(async (node) => {
+        const endpoint = buildAgentEndpoint(node);
+        if (!endpoint) {
+          this.updateNodeLatency(clientIP, node.id, null, 'failed', 'No reachable agent endpoint');
+          return;
+        }
         try {
-          await this.requestNodePing(node.id, clientIP);
-          logger.info(`Ping request sent to node ${node.name} (${node.id}) for IP ${clientIP}`);
-        } catch (error) {
-          logger.error(`Failed to send ping request to node ${node.id}:`, error);
-          this.updateNodeLatency(clientIP, node.id, null, 'failed', `Failed to send request: ${error}`);
+          const url = `${endpoint}/api/ping/${encodeURIComponent(clientIP)}?count=4`;
+          const r = await axios.get(url, { timeout: 10000 });
+          // 解析 Agent 返回的平均延迟
+          const avg = Math.round(Number(r.data?.data?.avg ?? NaN));
+          if (Number.isFinite(avg)) {
+            this.updateNodeLatency(clientIP, node.id, avg, 'success');
+          } else {
+            this.updateNodeLatency(clientIP, node.id, null, 'failed', 'Invalid agent ping response');
+          }
+        } catch (e: any) {
+          this.updateNodeLatency(clientIP, node.id, null, 'failed', e?.message || 'Agent ping failed');
         }
       });
 
-      // 等待所有请求发送完成（不等待响应）
-      await Promise.allSettled(testPromises);
+      // 并行执行，不阻塞响应（但向前端返回已启动的信息）
+      Promise.allSettled(httpPromises).then(() => {
+        logger.info(`Latency HTTP polling finished for client ${clientIP}`);
+      }).catch(() => void 0);
 
       const response: ApiResponse = {
         success: true,

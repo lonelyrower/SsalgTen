@@ -64,12 +64,12 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     const scale = (distance / (distance + z2)) * zoom;
 
     return {
-      x: canvas.width / 2 + x2 * scale,
-      y: canvas.height / 2 - y2 * scale,
+      x: canvasSize.width / 2 + x2 * scale,
+      y: canvasSize.height / 2 - y2 * scale,
       scale,
       visible: z2 > -distance
     };
-  }, [rotation, zoom]);
+  }, [rotation, zoom, canvasSize.width, canvasSize.height]);
 
   // 绘制
   const draw = useCallback(() => {
@@ -78,15 +78,17 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     if (!canvas || !ctx) return;
 
     // 星空背景
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvasSize.width;
+    const h = canvasSize.height;
+    ctx.clearRect(0, 0, w, h);
     const starGrad = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+      w / 2, h / 2, 0,
+      w / 2, h / 2, Math.max(w, h) / 2
     );
     starGrad.addColorStop(0, '#0f1419');
     starGrad.addColorStop(1, '#020817');
     ctx.fillStyle = starGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, w, h);
 
     // 添加星星效果
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
@@ -100,8 +102,8 @@ export const Globe3D: React.FC<Globe3DProps> = ({ nodes = [], onNodeClick, selec
     }
 
     // 地球球体（海洋色彩）
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = w / 2;
+    const centerY = h / 2;
     const effectiveRadius = R * zoom;
     
     // 海洋渐变（蓝色基调）

@@ -406,21 +406,19 @@ export const MonitoringPage: React.FC = () => {
               className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 p-6 transition-all duration-200 hover:shadow-lg ${getStatusColor(node.status)}`}
             >
               {/* 节点头部信息 */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    {getStatusIcon(node.status)}
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                      {node.name}
-                    </h3>
-                  </div>
-                  <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                    <CountryFlagSvg country={node.country} size={16} />
-                    <span className="truncate">{node.city}, {node.country}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    {node.provider}
-                  </div>
+              <div className="mb-4">
+                <div className="flex items-center justify-center mb-2">
+                  {getStatusIcon(node.status)}
+                </div>
+                <h3 className="text-lg font-semibold text-center text-gray-900 dark:text-white truncate">
+                  {node.name}
+                </h3>
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <CountryFlagSvg country={node.country} size={16} />
+                  <span className="truncate">{node.city}, {node.country}</span>
+                </div>
+                <div className="text-xs text-center text-gray-500 dark:text-gray-500 mt-1">
+                  {node.provider}
                 </div>
               </div>
 

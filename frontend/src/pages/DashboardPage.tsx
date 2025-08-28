@@ -6,7 +6,7 @@ import { NodeStatusChart } from '@/components/dashboard/NodeStatusChart';
 import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
 import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Activity, Loader2, MapPin, Settings, Shield, BarChart } from 'lucide-react';
+import { Loader2, MapPin, Settings, Shield, BarChart } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -123,49 +123,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 系统监控概览 */}
-          <div className="mb-6">
-            {/* 节点健康状态 */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <Activity className="h-5 w-5 mr-2 text-green-600" />
-                节点健康状态
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">在线率</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${stats?.totalNodes ? Math.round((stats.onlineNodes / stats.totalNodes) * 100) : 0}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {stats?.totalNodes ? Math.round((stats.onlineNodes / stats.totalNodes) * 100) : 0}%
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{stats?.onlineNodes || 0}</div>
-                    <div className="text-xs text-green-700 dark:text-green-300">在线节点</div>
-                  </div>
-                  <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-red-600">
-                      {(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)}
-                    </div>
-                    <div className="text-xs text-red-700 dark:text-red-300">离线节点</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
+          {/* （移除重复的节点健康状态卡片） */}
 
           {/* 快速操作 */}
           <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
