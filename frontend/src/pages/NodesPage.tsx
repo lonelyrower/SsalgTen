@@ -573,12 +573,19 @@ export const NodesPage: React.FC = () => {
                         className="p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center justify-center space-x-2 mb-1">
-                              <div className={`w-2 h-2 rounded-full ${
-                                node.status === 'online' ? 'bg-green-500' : 'bg-red-500'
-                              }`}></div>
-                              <h4 className="font-medium text-gray-900 dark:text-white text-sm text-center">
+                          <div className="flex-1 relative">
+                            {/* 状态指示器在左上角 */}
+                            <div className={`absolute top-0 left-0 w-2 h-2 rounded-full ${
+                              node.status === 'online' ? 'bg-green-500' : 'bg-red-500'
+                            }`}></div>
+                            {/* 国旗在左侧 */}
+                            <div className="flex items-center justify-between mb-2">
+                              <CountryFlagSvg country={node.country} className="w-4 h-4" />
+                              <div className="flex-1"></div>
+                            </div>
+                            {/* 节点名称居中 */}
+                            <div className="text-center mb-1">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-sm">
                                 {node.name}
                               </h4>
                             </div>

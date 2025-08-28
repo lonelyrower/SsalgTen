@@ -489,7 +489,7 @@ export const MonitoringPage: React.FC = () => {
                     <span className="text-gray-600 dark:text-gray-400">运行时间</span>
                   </div>
                   <span className="font-mono text-gray-900 dark:text-white">
-                    {formatUptime(node.uptime)}
+                    {formatUptime(node.lastHeartbeat?.uptime)}
                   </span>
                 </div>
                 {node.lastSeen && (
@@ -625,7 +625,7 @@ export const MonitoringPage: React.FC = () => {
                           <span>运行时间</span>
                         </div>
                         <span className="font-mono text-gray-900 dark:text-white">
-                          {formatUptime(node.uptime)}
+                          {formatUptime(node.lastHeartbeat?.uptime)}
                         </span>
                       </div>
                       {node.lastSeen && (
