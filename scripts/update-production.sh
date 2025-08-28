@@ -182,6 +182,10 @@ check_service_health() {
 # 4. 滚动更新
 log_info "🔄 开始滚动更新..."
 
+# 优先对齐数据库服务（清理孤儿容器，避免端口占用）
+log_info "对齐数据库服务（清理孤儿容器）..."
+$DC up -d --remove-orphans database 2>&1 | tee -a "$LOG_FILE" || log_warn "数据库服务启动失败，将在后端启动阶段重试"
+
 # 更新后端服务
 log_info "更新后端服务..."
 $DC build backend 2>&1 | tee -a "$LOG_FILE" || {
@@ -189,7 +193,7 @@ $DC build backend 2>&1 | tee -a "$LOG_FILE" || {
     exit 1
 }
 
-$DC up -d backend 2>&1 | tee -a "$LOG_FILE" || {
+$DC up -d --remove-orphans backend 2>&1 | tee -a "$LOG_FILE" || {
     log_error "后端启动失败"
     exit 1
 }
@@ -203,7 +207,7 @@ $DC build frontend 2>&1 | tee -a "$LOG_FILE" || {
     exit 1
 }
 
-$DC up -d frontend 2>&1 | tee -a "$LOG_FILE" || {
+$DC up -d --remove-orphans frontend 2>&1 | tee -a "$LOG_FILE" || {
     log_error "前端启动失败"
     exit 1
 }
