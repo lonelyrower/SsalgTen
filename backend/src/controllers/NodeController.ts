@@ -719,11 +719,8 @@ export class NodeController {
           if (proto === 'https') {
             return `${proto}://${hostname}`;
           }
-          const hn = hostname.toLowerCase();
-          if (hn === 'localhost' || hn === '127.0.0.1') {
-            return `${proto}://${hostname}:${backendPort}`;
-          }
-          return `${proto}://${hostname}`; // 域名 http 默认80
+          // http: 对域名也追加后端端口，符合“最初逻辑”（用户期望 http://domain:3001）
+          return `${proto}://${hostname}:${backendPort}`;
         }
         return `${proto}://${hostHdr}`;
       };
@@ -735,10 +732,12 @@ export class NodeController {
           const u = new URL(url);
           if (!u.port) {
             const hn = u.hostname.toLowerCase();
-            // 仅当是本机地址时追加端口，其它场景（域名/HTTPS）保持原样
-            if ((hn === 'localhost' || hn === '127.0.0.1') && backendPort !== '80' && backendPort !== '443') {
-              return `${u.protocol}//${u.hostname}:${backendPort}`;
+            const proto = u.protocol.replace(':', '');
+            if (proto === 'https') {
+              return `${u.protocol}//${u.hostname}`;
             }
+            // http: 对域名也追加后端端口（恢复最初逻辑）
+            return `${u.protocol}//${u.hostname}:${backendPort}`;
           }
           return `${u.protocol}//${u.host}`;
         } catch {
@@ -807,11 +806,7 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
           if (proto === 'https') {
             return `${proto}://${hostname}`;
           }
-          const hn = hostname.toLowerCase();
-          if (hn === 'localhost' || hn === '127.0.0.1') {
-            return `${proto}://${hostname}:${backendPort}`;
-          }
-          return `${proto}://${hostname}`;
+          return `${proto}://${hostname}:${backendPort}`;
         }
         return `${proto}://${hostHdr}`;
       };
@@ -821,10 +816,11 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
         try {
           const u = new URL(url);
           if (!u.port) {
-            const hn = u.hostname.toLowerCase();
-            if ((hn === 'localhost' || hn === '127.0.0.1') && backendPort !== '80' && backendPort !== '443') {
-              return `${u.protocol}//${u.hostname}:${backendPort}`;
+            const proto = u.protocol.replace(':', '');
+            if (proto === 'https') {
+              return `${u.protocol}//${u.hostname}`;
             }
+            return `${u.protocol}//${u.hostname}:${backendPort}`;
           }
           return `${u.protocol}//${u.host}`;
         } catch {
