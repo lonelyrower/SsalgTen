@@ -63,13 +63,13 @@ VERBOSE=false
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
     RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
 else
-    readonly RED='\033[0;31m'
-    readonly GREEN='\033[0;32m'  
-    readonly YELLOW='\033[1;33m'
-    readonly BLUE='\033[0;34m'
-    readonly CYAN='\033[0;36m'
-    readonly PURPLE='\033[0;35m'
-    readonly NC='\033[0m'
+    readonly RED=$'\033[0;31m'
+    readonly GREEN=$'\033[0;32m'  
+    readonly YELLOW=$'\033[1;33m'
+    readonly BLUE=$'\033[0;34m'
+    readonly CYAN=$'\033[0;36m'
+    readonly PURPLE=$'\033[0;35m'
+    readonly NC=$'\033[0m'
 fi
 
 # 日志函数
@@ -1980,9 +1980,13 @@ main() {
         # 如果返回1，说明用户选择临时运行，继续执行
     fi
     
-    # 检查运行环境
+    # 检查运行环境：若 stdin 非 TTY 但 /dev/tty 可读，则仍可交互
     if [[ ! -t 0 ]]; then
-        NON_INTERACTIVE=true
+        if [[ -r /dev/tty ]]; then
+            NON_INTERACTIVE=false
+        else
+            NON_INTERACTIVE=true
+        fi
     fi
     
     # 解析命令行参数
