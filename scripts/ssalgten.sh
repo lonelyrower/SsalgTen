@@ -1213,8 +1213,31 @@ update_system() {
             esac
         fi
         
+        # 统一的完成提示
+        echo
+        log_header "✅ 更新结束"
+        local frontend_hint="http://localhost:${FRONTEND_PORT}/"
+        if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
+        local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
+        echo "  • 前端:   ${frontend_hint} (或使用你的域名)"
+        echo "  • 后端:   ${backend_hint}"
+        echo "  • 状态:   ssalgten status"
+        echo "  • 日志:   ssalgten logs backend -n 200"
+        echo "  • 提示:   浏览器强制刷新 (Ctrl/Cmd + Shift + R)"
+        
     else
         log_warning "更新完成，但核心健康检查未通过，请查看日志"
+        # 即使健康检查失败也输出完成提示，便于用户下一步操作
+        echo
+        log_header "⚠️ 更新结束（存在问题）"
+        local frontend_hint="http://localhost:${FRONTEND_PORT}/"
+        if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
+        local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
+        echo "  • 前端:   ${frontend_hint} (或使用你的域名)"
+        echo "  • 后端:   ${backend_hint}"
+        echo "  • 状态:   ssalgten status"
+        echo "  • 日志:   ssalgten logs backend -n 200"
+        echo "  • 提示:   若问题持续，请提交日志信息"
         return 1
     fi
 }
@@ -1285,6 +1308,17 @@ update_system_from_archive() {
         else
             log_warning "更新完成，但部分服务可能异常"
         fi
+        # 统一的完成提示
+        echo
+        log_header "✅ 更新结束"
+        local frontend_hint="http://localhost:${FRONTEND_PORT}/"
+        if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
+        local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
+        echo "  • 前端:   ${frontend_hint} (或使用你的域名)"
+        echo "  • 后端:   ${backend_hint}"
+        echo "  • 状态:   ssalgten status"
+        echo "  • 日志:   ssalgten logs backend -n 200"
+        echo "  • 提示:   浏览器强制刷新 (Ctrl/Cmd + Shift + R)"
     else
         log_error "服务启动失败，尝试回滚关键文件"
         # 回滚关键文件
