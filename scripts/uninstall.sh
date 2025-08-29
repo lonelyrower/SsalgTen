@@ -5,6 +5,16 @@
 
 set -e
 
+# 解析参数（--force / -y 自动回答“是”）
+FORCE_MODE=false
+for arg in "$@"; do
+    case "$arg" in
+        --force|-y)
+            FORCE_MODE=true
+            ;;
+    esac
+done
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -67,6 +77,12 @@ docker_compose() {
 read_from_tty() {
     local prompt="$1"
     local response=""
+    
+    # 在强制模式下，默认回答 Yes
+    if [[ "$FORCE_MODE" == "true" ]]; then
+        echo "Y"
+        return 0
+    fi
     
     # 尝试从 /dev/tty 读取（直接从终端读取）
     if [[ -r /dev/tty ]]; then
