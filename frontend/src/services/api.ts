@@ -11,14 +11,25 @@ declare global {
   interface Window extends WindowConfig {}
 }
 
-// Get API base URL from runtime config or fallback to env var or default
+// Get API base URL from runtime config or fallback to env var or current origin
 const getApiBaseUrl = (): string => {
-  // Check runtime config first
+  // 1) Runtime config takes highest priority
   if (typeof window !== 'undefined' && window.APP_CONFIG?.API_BASE_URL) {
-    return window.APP_CONFIG.API_BASE_URL;
+    const v = window.APP_CONFIG.API_BASE_URL;
+    // Support relative value like "/api" to stick to current origin
+    return v.startsWith('http') ? v : (v || '/api');
   }
-  // Fallback to build-time env var or default
-  return import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+  // 2) Build-time env vars
+  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    return envUrl.startsWith('http') ? envUrl : (envUrl || '/api');
+  }
+  // 3) Fallback to current origin (production safe)
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/api`;
+  }
+  // 4) Last resort: relative path
+  return '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();

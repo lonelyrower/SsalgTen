@@ -51,14 +51,34 @@ class SocketServiceImpl implements SocketService {
 
     // Get the base URL and extract the server URL (without /api)
     const getServerUrl = (): string => {
-      // Check runtime config first
+      const deriveFromApiBase = (apiUrl: string): string => {
+        if (!apiUrl) return '';
+        // Relative value like "/api" -> use current origin
+        if (!apiUrl.startsWith('http')) {
+          if (typeof window !== 'undefined' && window.location?.origin) {
+            return window.location.origin;
+          }
+          return '';
+        }
+        return apiUrl.replace(/\/?api\/?$/, '');
+      };
+
+      // 1) Runtime config first
       if (typeof window !== 'undefined' && window.APP_CONFIG?.API_BASE_URL) {
         const apiUrl = window.APP_CONFIG.API_BASE_URL;
-        return apiUrl.replace('/api', '');
+        const srv = deriveFromApiBase(apiUrl);
+        if (srv) return srv;
       }
-      // Fallback to build-time env var or default
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      return apiBaseUrl.replace('/api', '');
+      // 2) Build-time env var
+      const apiBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+      const fromEnv = deriveFromApiBase(apiBaseUrl);
+      if (fromEnv) return fromEnv;
+      // 3) Fallback to current origin
+      if (typeof window !== 'undefined' && window.location?.origin) {
+        return window.location.origin;
+      }
+      // 4) Last resort for dev
+      return 'http://localhost:3001';
     };
     
     const serverUrl = getServerUrl();
