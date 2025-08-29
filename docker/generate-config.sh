@@ -9,8 +9,19 @@ echo "  VITE_API_URL: ${VITE_API_URL:-not set}"
 echo "  VITE_API_BASE_URL: ${VITE_API_BASE_URL:-not set}"
 echo "  VITE_APP_NAME: ${VITE_APP_NAME:-not set}"
 
-# Use VITE_API_URL as primary, fallback to VITE_API_BASE_URL, then default to relative /api
-API_URL="${VITE_API_URL:-${VITE_API_BASE_URL:-/api}}"
+# Build API URL with safe defaults
+# Prefer VITE_API_URL, then VITE_API_BASE_URL; but if they point to localhost, force using relative /api
+RAW_API_URL="${VITE_API_URL:-${VITE_API_BASE_URL:-/api}}"
+
+# Normalize: if points to localhost/127.0.0.1/::1, use relative /api so it follows the deployed domain
+case "$RAW_API_URL" in
+  http://localhost*|https://localhost*|http://127.0.0.1*|https://127.0.0.1*|http://::1*|https://::1*)
+    API_URL="/api"
+    ;;
+  *)
+    API_URL="$RAW_API_URL"
+    ;;
+esac
 
 # Ensure the html directory exists
 mkdir -p /usr/share/nginx/html
