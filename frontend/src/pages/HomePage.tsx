@@ -121,7 +121,7 @@ export const HomePage = () => {
             </div>
             
             {/* 地图容器 */}
-            <div className="map-container relative">
+            <div className="map-container relative h-[600px]">
               <EnhancedWorldMap 
                 nodes={nodes} 
                 onNodeClick={handleNodeClick} 
