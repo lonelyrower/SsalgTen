@@ -66,7 +66,11 @@
       "Bash(dos2unix:*)",
       "Bash(sed:*)",
       "Bash(WORKSPACE=/mnt/d/Projects/SsalgTen UPDATE_LOG_DIR=/mnt/d/Projects/SsalgTen/.update/logs UPDATER_TOKEN=secure-updater-token-change-in-production PORT=8765 node scripts/updater-server.mjs)",
-      "Bash(VITE_API_BASE_URL=http://localhost:3001/api npm run dev)"
+      "Bash(VITE_API_BASE_URL=http://localhost:3001/api npm run dev)",
+      "Bash(PORT=3000 npm run preview --prefix frontend)",
+      "Bash(PORT=3000 npm run preview)",
+      "Bash(VITE_API_BASE_URL=http://localhost:3001/api npm run dev:frontend)",
+      "WebSearch"
     ],
     "deny": [],
     "additionalDirectories": [

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
@@ -84,7 +85,7 @@ export const MonitoringPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-blue-50/30 dark:from-gray-900 dark:via-green-900/10 dark:to-blue-900/10">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-center items-center h-64">
@@ -137,7 +138,7 @@ export const MonitoringPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-blue-50/30 dark:from-gray-900 dark:via-green-900/10 dark:to-blue-900/10">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">

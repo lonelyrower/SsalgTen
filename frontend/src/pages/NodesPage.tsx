@@ -9,7 +9,8 @@ import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, Loader2, ChevronDown } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
 import { socketService } from '@/services/socketService';
@@ -211,7 +212,7 @@ export const NodesPage: React.FC = () => {
   // 如果显示诊断界面且有选中节点
   if (showDiagnostics && selectedNode) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10">
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 连接性自检横幅 */}
@@ -227,9 +228,7 @@ export const NodesPage: React.FC = () => {
           isAdmin={hasRole('ADMIN')}
         />
           <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-            </div>
+            <LoadingSpinner text="加载网络工具..." size="md" className="h-64" />
           }>
             <NetworkToolkit 
               selectedNode={selectedNode} 
@@ -242,7 +241,7 @@ export const NodesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
@@ -287,7 +286,7 @@ export const NodesPage: React.FC = () => {
                 className="border-purple-200 text-purple-700 hover:bg-purple-50"
               >
                 {isTestingInProgress ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <LoadingSpinner size="xs" center={false} className="mr-2" />
                 ) : (
                   <Activity className="h-4 w-4 mr-2" />
                 )}
@@ -425,9 +424,7 @@ export const NodesPage: React.FC = () => {
               
               <div className="flex-1 min-h-0">
                 <Suspense fallback={
-                  <div className="flex items-center justify-center h-64">
-                    <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                  </div>
+                  <LoadingSpinner text="加载地图..." size="lg" className="h-64" />
                 }>
                   {mapMode === '2d' ? (
                     <EnhancedWorldMap 
@@ -680,9 +677,8 @@ export const NodesPage: React.FC = () => {
         {selectedNode && showServerDetails && (
           <div className="mt-6 transition-all duration-300 ease-in-out">
             {loadingHeartbeat ? (
-              <div className="flex items-center justify-center h-32 bg-white dark:bg-gray-800 rounded-lg shadow">
-                <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                <span className="ml-2 text-gray-600 dark:text-gray-400">加载详细信息中...</span>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+                <LoadingSpinner text="加载详细信息中..." size="md" center={true} />
               </div>
             ) : (
               <ServerDetailsPanel 

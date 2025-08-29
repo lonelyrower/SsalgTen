@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
-import { WorldMap } from '@/components/map/WorldMap';
+import { EnhancedWorldMap } from '@/components/map/EnhancedWorldMap';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorState } from '@/components/ui/ErrorState';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNodes } from '@/hooks/useNodes';
@@ -31,16 +33,14 @@ export const HomePage = () => {
   // 如果正在加载，显示加载状态
   if (loading && nodes.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-cyan-900/20">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading node data...</p>
-            </div>
-          </div>
-        </main>
+        <LoadingSpinner 
+          fullScreen 
+          text="正在加载节点数据..." 
+          size="xl"
+          variant="elegant"
+        />
       </div>
     );
   }
@@ -48,21 +48,21 @@ export const HomePage = () => {
   // 如果有错误，显示错误状态
   if (error && nodes.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-orange-50 dark:from-gray-900 dark:via-red-900/20 dark:to-orange-900/20">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="text-red-600 dark:text-red-400 text-xl mb-2">⚠️</div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                Failed to Load Data
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                Make sure the backend server is running on http://localhost:3001
-              </p>
-            </div>
-          </div>
+          <ErrorState
+            type="server"
+            title="数据加载失败"
+            message={error.includes('HTTP error') 
+              ? "无法连接到后端服务器，请确保服务器正在运行。" 
+              : error
+            }
+            showRetry={true}
+            showHome={true}
+            onRetry={() => window.location.reload()}
+            size="lg"
+          />
         </main>
       </div>
     );
@@ -70,12 +70,39 @@ export const HomePage = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10">
       <Header />
       
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* 欢迎横幅 */}
+        <div className="mb-8">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 p-8 shadow-2xl">
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+            <div className="relative z-10 text-center text-white">
+              <div className="mb-4">
+                <Globe className="h-16 w-16 mx-auto text-white/90 animate-pulse" />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                SsalgTen 网络监控
+              </h1>
+              <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+                全球分布式网络诊断系统 - 实时监控全球节点状态
+              </p>
+              {user && (
+                <p className="mt-4 text-blue-200">
+                  欢迎回来，{user.name || user.username}！
+                </p>
+              )}
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-300/10 rounded-full blur-2xl"></div>
+          </div>
+        </div>
+        
         {/* 统计卡片 */}
-        <StatsCards {...memoizedStats} />
+        <div className="mb-8">
+          <StatsCards {...memoizedStats} />
+        </div>
         
         {/* 地图区域 */}
         <div className="mb-8">
@@ -118,7 +145,13 @@ export const HomePage = () => {
             
             {/* 地图容器 */}
             <div className="map-container relative">
-              <WorldMap nodes={nodes} onNodeClick={handleNodeClick} hideIPs={!user} />
+              <EnhancedWorldMap 
+                nodes={nodes} 
+                onNodeClick={handleNodeClick} 
+                selectedNode={selectedNode}
+                showHeatmap={false}
+                className="h-full"
+              />
             </div>
           </GlassCard>
         </div>
