@@ -42,47 +42,9 @@ handle_curl_bash_install() {
         self_update --install "$@"
         return $?
     else
-        # 非交互/无TTY时，默认临时运行（最安全）
-        if [[ ! -t 0 ]] && [[ ! -r /dev/tty ]]; then
-            log_info "检测到非交互环境，默认以临时模式运行"
-            return 1
-        fi
-
-        # 显示安装选项（交互模式）
-        echo "选择操作:"
-        echo "  1) 安装到系统 (推荐)"
-        echo "  2) 临时运行 (不安装)"
-        echo "  3) 退出"
-        echo
-
-        local choice=""
-        if [[ -r /dev/tty ]]; then
-            echo -n "请选择 [1-3] (默认 2): " > /dev/tty
-            read -r choice < /dev/tty || choice=""
-        else
-            # 回退读取
-            read -r -p "请选择 [1-3] (默认 2): " choice || choice=""
-        fi
-
-        case "${choice:-2}" in
-            1)
-                log_info "开始安装..."
-                self_update --install
-                return $?
-                ;;
-            2)
-                log_info "以临时模式继续..."
-                return 1  # 继续执行脚本
-                ;;
-            3)
-                log_info "安装已取消"
-                exit 0
-                ;;
-            *)
-                log_info "未选择有效选项，默认以临时模式继续..."
-                return 1
-                ;;
-        esac
+        # 在 curl|bash 模式下，默认以临时模式继续运行；如需安装，请追加 --install
+        log_info "检测到 curl|bash 运行，默认以临时模式继续 (如需安装请使用 --install)"
+        return 1
     fi
 }
 
