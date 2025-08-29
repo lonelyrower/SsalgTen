@@ -146,6 +146,8 @@ services:
       context: .
       dockerfile: Dockerfile.agent
     container_name: ssalgten-agent-nyc
+    profiles:
+      - agent
     restart: unless-stopped
     depends_on:
       backend:
@@ -179,8 +181,9 @@ services:
       MAX_CONCURRENT_TESTS: ${MAX_CONCURRENT_TESTS:-5}
     volumes:
       - agent_nyc_logs:/app/logs
-    ports:
-      - "${AGENT_NYC_PORT:-3002}:3002"
+    # 默认不对外发布宿主端口，避免与本机 Agent 冲突；如需对外暴露，请通过 override 文件增加 ports
+    expose:
+      - "3002"
     networks:
       - ssalgten-network
     healthcheck:
