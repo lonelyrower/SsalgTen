@@ -428,8 +428,8 @@ export const EnhancedWorldMap = memo(({
         </div>
       </div>
 
-      {/* 地图容器 */}
-      <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+      {/* 地图容器：撑满父容器高度，保底 600px */}
+      <div className="h-full min-h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
         <MapContainer
           center={[20, 0]}
           zoom={2}
