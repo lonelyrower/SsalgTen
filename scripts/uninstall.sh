@@ -228,7 +228,7 @@ remove_ssl_certificates() {
     
     # 删除 Let's Encrypt 证书目录
     if [[ -d "/etc/letsencrypt" ]]; then
-        cleanup_certs=$(read_from_tty "是否删除 Let's Encrypt 证书目录？[y/N]: ")
+        cleanup_certs=$(read_from_tty "是否删除 Let's Encrypt 证书目录？[Y/N]: ")
         if [[ "$cleanup_certs" =~ ^[Yy]$ ]]; then
             run_as_root rm -rf /etc/letsencrypt
             log_success "SSL 证书已删除"
@@ -247,7 +247,7 @@ remove_ssl_certificates() {
 cleanup_firewall() {
     log_info "清理防火墙规则..."
     
-    cleanup_fw=$(read_from_tty "是否删除 SsalgTen 相关防火墙规则（端口 80,443,3001,3002,3003）？[y/N]: ")
+    cleanup_fw=$(read_from_tty "是否删除 SsalgTen 相关防火墙规则（端口 80,443,3001,3002,3003）？[Y/N]: ")
     if [[ "$cleanup_fw" =~ ^[Yy]$ ]]; then
         # UFW
         if command -v ufw >/dev/null 2>&1; then
@@ -276,7 +276,7 @@ cleanup_cron_jobs() {
     
     # 清理 root 用户的定时任务
     if run_as_root crontab -l 2>/dev/null | grep -q "ssalgten"; then
-        cleanup_cron=$(read_from_tty "发现 SsalgTen 相关定时任务，是否删除？[y/N]: ")
+        cleanup_cron=$(read_from_tty "发现 SsalgTen 相关定时任务，是否删除？[Y/N]: ")
         if [[ "$cleanup_cron" =~ ^[Yy]$ ]]; then
             run_as_root crontab -l 2>/dev/null | grep -v "ssalgten" | run_as_root crontab -
             log_success "定时任务已清理"
@@ -290,7 +290,7 @@ cleanup_cron_jobs() {
 cleanup_system_packages() {
     log_info "系统包清理选项..."
     
-    cleanup_docker=$(read_from_tty "是否同时卸载 Docker？（不推荐，可能影响其他应用）[y/N]: ")
+    cleanup_docker=$(read_from_tty "是否同时卸载 Docker？（不推荐，可能影响其他应用）[Y/N]: ")
     if [[ "$cleanup_docker" =~ ^[Yy]$ ]]; then
         log_info "卸载 Docker..."
         
@@ -352,7 +352,7 @@ main() {
     show_uninstall_warning
     
     # 确认卸载
-    confirm=$(read_from_tty "确认要完全卸载 SsalgTen 系统吗？这个操作不可逆！[y/N]: ")
+    confirm=$(read_from_tty "确认要完全卸载 SsalgTen 系统吗？这个操作不可逆！[Y/N]: ")
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         log_info "已取消卸载"
         exit 0
