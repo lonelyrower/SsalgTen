@@ -1,4 +1,4 @@
-import { useRef, memo, useMemo, useState } from 'react';
+import React, { useRef, memo, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
@@ -274,7 +274,7 @@ export const EnhancedWorldMap = memo(({
 
   // 生成标记组件
   const markers = useMemo(() => {
-    const markerElements: JSX.Element[] = [];
+    const markerElements: React.ReactElement[] = [];
     
     clusteredItems.forEach((item) => {
       // 检查是否为聚合节点
