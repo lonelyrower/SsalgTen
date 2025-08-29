@@ -74,30 +74,7 @@ export const HomePage = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* 欢迎横幅 */}
-        <div className="mb-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 p-8 shadow-2xl">
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-            <div className="relative z-10 text-center text-white">
-              <div className="mb-4">
-                <Globe className="h-16 w-16 mx-auto text-white/90 animate-pulse" />
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                SsalgTen 网络监控
-              </h1>
-              <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
-                全球分布式网络诊断系统 - 实时监控全球节点状态
-              </p>
-              {user && (
-                <p className="mt-4 text-blue-200">
-                  欢迎回来，{user.name || user.username}！
-                </p>
-              )}
-            </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-300/10 rounded-full blur-2xl"></div>
-          </div>
-        </div>
+        {/* 移除了首页横幅以减少占用空间 */}
         
         {/* 统计卡片 */}
         <div className="mb-8">
