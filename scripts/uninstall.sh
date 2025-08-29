@@ -133,46 +133,79 @@ check_permissions() {
 # 检查并清理Web服务器
 cleanup_web_servers() {
     log_info "检查并清理Web服务器..."
-    
-    # 检查端口占用情况
-    local ports_in_use=$(netstat -tlnp 2>/dev/null | grep -E ':(80|443) ' | awk '{print $4}' | cut -d: -f2 | sort -u)
-    
-    if [[ -n "$ports_in_use" ]]; then
-        log_warning "发现端口 80/443 被占用，检查相关服务..."
-        
-        # 停止并禁用常见的Web服务器
-        local web_servers=("nginx" "apache2" "httpd" "caddy" "lighttpd")
-        
-        for service in "${web_servers[@]}"; do
-            if run_as_root systemctl is-active --quiet "$service" 2>/dev/null; then
-                log_info "发现 $service 服务正在运行，准备停止..."
-                
-                cleanup_service=$(read_from_tty "是否停止并删除 $service 服务？[Y/N]: ")
-                if [[ "$cleanup_service" =~ ^[Yy]$ ]]; then
-                    run_as_root systemctl stop "$service" 2>/dev/null || true
-                    run_as_root systemctl disable "$service" 2>/dev/null || true
-                    log_success "$service 服务已停止并禁用"
-                else
-                    log_info "保留 $service 服务"
-                fi
+
+    # 更稳健的端口检测：ss > netstat > lsof 三重回退
+    local ports_in_use=""
+    if command -v ss >/dev/null 2>&1; then
+        ports_in_use=$(ss -ltn 2>/dev/null | awk '$4 ~ /:(80|443)$/ {print $4}' | sed 's/.*://g' | sort -u)
+    elif command -v netstat >/dev/null 2>&1; then
+        ports_in_use=$(netstat -tln 2>/dev/null | awk '$4 ~ /:(80|443)$/ {print $4}' | sed 's/.*://g' | sort -u)
+    elif command -v lsof >/dev/null 2>&1; then
+        ports_in_use=$(lsof -nP -iTCP:80,443 -sTCP:LISTEN 2>/dev/null | awk '{print $9}' | sed -n 's/.*:\([0-9]\+\)$/\1/p' | sort -u)
+    else
+        ports_in_use="unknown"
+    fi
+
+    # 无论是否检测到端口占用，都检查常见Web服务器的运行状态，避免因缺少netstat导致漏清理
+    local web_servers=("nginx" "apache2" "httpd" "caddy" "lighttpd")
+    local any_web_running=false
+    for service in "${web_servers[@]}"; do
+        if run_as_root systemctl is-active --quiet "$service" 2>/dev/null; then
+            any_web_running=true
+            log_info "检测到 $service 服务正在运行"
+            cleanup_service=$(read_from_tty "是否停止并禁用 $service 服务？[Y/N]: ")
+            if [[ "$cleanup_service" =~ ^[Yy]$ ]]; then
+                run_as_root systemctl stop "$service" 2>/dev/null || true
+                run_as_root systemctl disable "$service" 2>/dev/null || true
+                log_success "$service 服务已停止并禁用"
+            else
+                log_info "保留 $service 服务"
             fi
-        done
-        
-        # 检查是否还有进程占用端口
-        local remaining_processes=$(lsof -ti:80,443 2>/dev/null || true)
-        if [[ -n "$remaining_processes" ]]; then
-            log_warning "仍有进程占用端口 80/443"
-            echo "占用端口的进程："
-            lsof -i:80,443 2>/dev/null || true
-            
-            force_kill=$(read_from_tty "是否强制终止这些进程？[Y/N]: ")
+        fi
+    done
+
+    # 如果端口被占用或有Web服务在运行，则尝试列出并清理占用80/443的进程
+    if [[ -n "$ports_in_use" && "$ports_in_use" != "unknown" ]] || [[ "$any_web_running" == true ]]; then
+        # 收集占用80/443的PID（lsof优先，其次ss解析）
+        local remaining_pids=""
+        if command -v lsof >/dev/null 2>&1; then
+            remaining_pids=$(lsof -ti:80,443 2>/dev/null | sort -u || true)
+        elif command -v ss >/dev/null 2>&1; then
+            remaining_pids=$(ss -ltnp 2>/dev/null | awk '$4 ~ /:(80|443)$/ {print $7}' | sed -n 's/.*pid=\([0-9]\+\).*/\1/p' | sort -u)
+        else
+            remaining_pids=""
+        fi
+
+        if [[ -n "$remaining_pids" ]]; then
+            log_warning "仍有进程占用端口 80/443："
+            if command -v lsof >/dev/null 2>&1; then
+                lsof -nP -i:80,443 2>/dev/null || true
+            else
+                ss -ltnp 2>/dev/null | grep -E ":(80|443)\s" || true
+            fi
+            force_kill=$(read_from_tty "是否强制终止上述进程？[Y/N]: ")
             if [[ "$force_kill" =~ ^[Yy]$ ]]; then
-                echo "$remaining_processes" | xargs -r kill -9 2>/dev/null || true
+                echo "$remaining_pids" | xargs -r -n1 sh -c 'kill -9 "$0" 2>/dev/null || true'
                 log_success "已强制终止占用端口的进程"
             fi
         fi
+    fi
+
+    # 最终确认
+    if command -v ss >/dev/null 2>&1; then
+        if ss -ltn 2>/dev/null | grep -qE ":(80|443)\s"; then
+            log_warning "端口 80/443 可能仍被占用，请稍后重试或手动检查"
+        else
+            log_success "端口 80/443 未被占用"
+        fi
+    elif command -v lsof >/dev/null 2>&1; then
+        if lsof -ti:80,443 2>/dev/null | grep -q .; then
+            log_warning "端口 80/443 可能仍被占用，请稍后重试或手动检查"
+        else
+            log_success "端口 80/443 未被占用"
+        fi
     else
-        log_success "端口 80/443 未被占用"
+        log_info "无法确认端口占用（缺少 ss/lsof），请手动验证"
     fi
 }
 
@@ -312,6 +345,7 @@ remove_app_directory() {
     local config_files=(
         "/etc/nginx/sites-available/ssalgten"
         "/etc/nginx/sites-enabled/ssalgten"
+        "/etc/nginx/conf.d/ssalgten.conf"
         "/etc/apache2/sites-available/ssalgten.conf"
         "/etc/apache2/sites-enabled/ssalgten.conf"
         "/etc/caddy/Caddyfile"
@@ -328,6 +362,39 @@ remove_app_directory() {
             fi
         fi
     done
+
+    # 如果Nginx仍在运行，尝试重载或停止以释放端口
+    if run_as_root systemctl is-active --quiet nginx 2>/dev/null; then
+        if run_as_root nginx -t >/dev/null 2>&1; then
+            run_as_root systemctl reload nginx 2>/dev/null || true
+            log_info "已重载 Nginx 配置"
+        else
+            run_as_root systemctl stop nginx 2>/dev/null || true
+            run_as_root systemctl disable nginx 2>/dev/null || true
+            log_info "已停止并禁用 Nginx 服务"
+        fi
+    fi
+}
+
+# 卸载流程结束前的最终端口校验，确保无残留占用
+final_port_check() {
+    log_info "执行最终端口校验 (80/443)..."
+    local still_in_use=""
+    if command -v ss >/dev/null 2>&1; then
+        still_in_use=$(ss -ltnp 2>/dev/null | grep -E ":(80|443)\s" || true)
+    elif command -v lsof >/dev/null 2>&1; then
+        still_in_use=$(lsof -nP -i:80,443 2>/dev/null || true)
+    else
+        still_in_use="unknown"
+    fi
+
+    if [[ -n "$still_in_use" && "$still_in_use" != "unknown" ]]; then
+        log_warning "检测到仍有进程监听 80/443："
+        echo "$still_in_use"
+        echo "如需彻底清理，请手动确认后终止相关进程。"
+    else
+        log_success "80/443 端口已释放"
+    fi
 }
 
 # 删除SSL证书
@@ -478,6 +545,7 @@ main() {
     cleanup_firewall
     cleanup_cron_jobs
     cleanup_system_packages
+    final_port_check
     
     show_completion_message
 }
