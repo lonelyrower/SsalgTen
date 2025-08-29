@@ -1038,9 +1038,11 @@ update_system() {
     
     cd "$APP_DIR"
     
-    # 检查 Git 状态
+    # 如果不是 Git 仓库，走归档包更新流程
     if ! git rev-parse --git-dir &> /dev/null; then
-        die "当前目录不是Git仓库"
+        log_warning "当前目录不是Git仓库，切换为归档包更新模式"
+        update_system_from_archive
+        return $?
     fi
     
     # 检查未提交的更改
@@ -1220,6 +1222,88 @@ update_system() {
         log_info "建议: 运行 'logs' 查看错误日志，或运行 'clean --docker-cache' 清理后重试"
         return 1
     fi
+}
+
+# 非Git环境：通过GitHub归档包更新
+update_system_from_archive() {
+    log_info "使用归档包进行更新..."
+
+    # 工具检测
+    if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+        die "缺少下载工具（curl 或 wget），无法进行更新"
+    fi
+
+    # 创建备份
+    local backup_dir=".backup/update_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    log_info "备份关键文件到: $backup_dir"
+    for f in .env docker-compose.yml docker-compose.*.yml Dockerfile.* Dockerfile; do
+        [[ -e "$f" ]] && cp -a "$f" "$backup_dir/" 2>/dev/null || true
+    done
+
+    # 停止服务
+    log_info "停止服务..."
+    docker_compose down --remove-orphans >/dev/null 2>&1 || true
+
+    # 下载归档
+    local tmp_dir="/tmp/ssalgten_update_$$"
+    local archive_tar="$tmp_dir/main.tar.gz"
+    mkdir -p "$tmp_dir"
+    local url_tar="https://github.com/lonelyrower/SsalgTen/archive/refs/heads/main.tar.gz"
+    log_info "下载归档包: $url_tar"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "$url_tar" -o "$archive_tar" || die "下载归档包失败"
+    else
+        wget -q "$url_tar" -O "$archive_tar" || die "下载归档包失败"
+    fi
+
+    # 解压
+    tar -xzf "$archive_tar" -C "$tmp_dir" || die "解压归档包失败"
+    local src_dir
+    src_dir="$(find "$tmp_dir" -maxdepth 1 -type d -name 'SsalgTen-*' | head -1)"
+    [[ -d "$src_dir" ]] || die "未找到解压目录"
+
+    # 覆盖更新（保留 .env 与数据卷）
+    log_info "同步最新代码到 $APP_DIR"
+    # 同步这些目录/文件：backend frontend agent scripts docker-compose*.yml Dockerfile*
+    for item in backend frontend agent scripts docker-compose.yml docker-compose.https.yml docker-compose.production.yml Dockerfile*; do
+        if [[ -e "$src_dir/$item" ]]; then
+            if [[ -d "$src_dir/$item" ]]; then
+                rm -rf "$APP_DIR/$item" 2>/dev/null || true
+                cp -a "$src_dir/$item" "$APP_DIR/" || die "复制 $item 失败"
+            else
+                cp -a "$src_dir/$item" "$APP_DIR/" || die "复制 $item 失败"
+            fi
+        fi
+    done
+
+    # 重新启动服务
+    log_info "重新构建并启动服务..."
+    if docker_compose up -d --build --remove-orphans; then
+        # 动态检测端口并健康检查
+        detect_ports
+        local healthy=true
+        FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 20 3 10 || healthy=false
+        health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 12 3 8 || healthy=false
+        if [[ "$healthy" == "true" ]]; then
+            log_success "🎉 系统更新完成! (归档包模式)"
+        else
+            log_warning "更新完成，但部分服务可能异常"
+        fi
+    else
+        log_error "服务启动失败，尝试回滚关键文件"
+        # 回滚关键文件
+        for f in $(ls -1 "$backup_dir" 2>/dev/null); do
+            cp -a "$backup_dir/$f" "$APP_DIR/" 2>/dev/null || true
+        done
+        docker_compose up -d --remove-orphans || true
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    # 清理临时文件
+    rm -rf "$tmp_dir"
+    return 0
 }
 
 # 备份数据
