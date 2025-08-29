@@ -730,8 +730,10 @@ export class NodeController {
         if (!url) return '';
         try {
           const u = new URL(url);
+          const hn = u.hostname.toLowerCase();
+          // 如果是 localhost/127.0.0.1/::1，则忽略环境变量，改用请求推导
+          if (hn === 'localhost' || hn === '127.0.0.1' || hn === '::1') return '';
           if (!u.port) {
-            const hn = u.hostname.toLowerCase();
             const proto = u.protocol.replace(':', '');
             if (proto === 'https') {
               return `${u.protocol}//${u.hostname}`;
@@ -741,7 +743,7 @@ export class NodeController {
           }
           return `${u.protocol}//${u.host}`;
         } catch {
-          return url;
+          return '';
         }
       };
 
