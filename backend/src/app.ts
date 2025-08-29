@@ -14,11 +14,22 @@ dotenv.config();
 const app = express();
 
 // 当服务位于反向代理或容器网络后面时，信任代理以正确解析 IP（配合 express-rate-limit）
-// 可通过环境变量 TRUST_PROXY=false 关闭
-if ((process.env.TRUST_PROXY || 'true').toLowerCase() === 'true') {
-  // 等价于 app.set('trust proxy', 1)；这里用 true 表示信任第一层代理
-  app.set('trust proxy', true);
-}
+// 建议设置为精确的跳数或受信网段，避免 express-rate-limit 警告/异常
+// TRUST_PROXY 可设置为：数字（跳数），或逗号分隔的受信代理列表
+(() => {
+  const tp = (process.env.TRUST_PROXY || '1').trim();
+  if (/^\d+$/.test(tp)) {
+    app.set('trust proxy', parseInt(tp, 10));
+  } else if (tp.toLowerCase() === 'false') {
+    app.set('trust proxy', false);
+  } else if (tp.toLowerCase() === 'true') {
+    // 为避免 express-rate-limit 的安全告警，不使用 true（信任所有代理）
+    app.set('trust proxy', 1);
+  } else {
+    // 自定义受信代理列表（如 'loopback, linklocal, uniquelocal' 或具体IP段）
+    app.set('trust proxy', tp);
+  }
+})();
 
 // 安全中间件
 app.use(helmet({
