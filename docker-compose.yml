@@ -90,6 +90,8 @@ services:
       REPO_NAME: ${REPO_NAME:-SsalgTen}
       REPO_BRANCH: ${REPO_BRANCH:-main}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      # Diagnostics Proxy (enable backend proxy endpoints for diagnostics tools)
+      DIAGNOSTICS_PROXY_ENABLED: ${DIAGNOSTICS_PROXY_ENABLED:-true}
       
       # Redis (optional)
       REDIS_URL: redis://:${REDIS_PASSWORD:-ssalgten_redis}@redis:6379

@@ -43,7 +43,8 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
   const [loadingVisitorInfo, setLoadingVisitorInfo] = useState(false);
   const [customTarget, setCustomTarget] = useState<string>('');
   const [preferIPv6, setPreferIPv6] = useState<boolean>(false);
-  const [useProxy, setUseProxy] = useState<boolean>(false);
+  // 默认通过主控后端代理执行诊断，更可靠（浏览器无需直连 Agent 端口）
+  const [useProxy, setUseProxy] = useState<boolean>(true);
   const [pingCount, setPingCount] = useState<number>(4);
   const [trMaxHops, setTrMaxHops] = useState<number>(30);
 
