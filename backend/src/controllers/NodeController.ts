@@ -703,51 +703,38 @@ export class NodeController {
   // 获取Agent安装脚本 - 重定向到GitHub
   async getInstallScript(req: Request, res: Response): Promise<void> {
     try {
-      // 获取服务器对外可访问的基础URL（优先使用环境变量）
-      const rawOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      // 获取服务器对外可访问的基础URL
       const backendPort = `${process.env.PORT || '3001'}`;
+      const rawOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
 
-      // 从代理头推断外部访问URL
+      // 1) 优先从请求头推断（反向代理会设置 X-Forwarded-*）
       const deriveFromRequest = (): string => {
         const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
-        const hostHdr = (req.headers['x-forwarded-host'] as string) || req.get('host') || '';
-        if (!hostHdr) return `${proto}://localhost:${backendPort}`;
-        // hostHdr 可能不含端口；对于 https 不追加端口；对于 http 仅在 localhost/127.0.0.1 时追加后端端口
-        const hasPort = hostHdr.includes(':');
-        const hostname = hasPort ? hostHdr.split(':')[0] : hostHdr;
-        if (!hasPort) {
-          if (proto === 'https') {
-            return `${proto}://${hostname}`;
-          }
-          // http: 对域名也追加后端端口，符合“最初逻辑”（用户期望 http://domain:3001）
-          return `${proto}://${hostname}:${backendPort}`;
+        const hostHdr = ((req.headers['x-forwarded-host'] as string) || req.get('host') || '').trim();
+        if (!hostHdr) return '';
+        const hostname = hostHdr.split(':')[0].toLowerCase();
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+          return '';
         }
+        // 保留转发的端口（如有），不强加 3001
         return `${proto}://${hostHdr}`;
       };
 
-      // 如果设置了 FRONTEND_URL/CORS_ORIGIN，优先信任该值；当其为 https 或域名时不要附加后台端口
+      // 2) 其次使用环境变量（当其不是本地域名时）
       const normalizeEnvUrl = (url: string): string => {
         if (!url) return '';
         try {
           const u = new URL(url);
           const hn = u.hostname.toLowerCase();
-          // 如果是 localhost/127.0.0.1/::1，则忽略环境变量，改用请求推导
           if (hn === 'localhost' || hn === '127.0.0.1' || hn === '::1') return '';
-          if (!u.port) {
-            const proto = u.protocol.replace(':', '');
-            if (proto === 'https') {
-              return `${u.protocol}//${u.hostname}`;
-            }
-            // http: 对域名也追加后端端口（恢复最初逻辑）
-            return `${u.protocol}//${u.hostname}:${backendPort}`;
-          }
+          // 返回规范化的 origin（包含端口如果已指定）
           return `${u.protocol}//${u.host}`;
         } catch {
           return '';
         }
       };
 
-      const serverUrl = normalizeEnvUrl(rawOrigin) || deriveFromRequest();
+      const serverUrl = deriveFromRequest() || normalizeEnvUrl(rawOrigin) || `http://localhost:${backendPort}`;
       const apiKey = process.env.DEFAULT_AGENT_API_KEY || 'default-agent-api-key';
       
       // 生成带参数的安装命令脚本
@@ -794,43 +781,36 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
   // 获取Agent安装命令数据（JSON格式）
   async getInstallCommand(req: Request, res: Response): Promise<void> {
     try {
-      // 获取服务器对外可访问的基础URL（优先使用环境变量）
-      const rawOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
+      // 获取服务器对外可访问的基础URL
       const backendPort = `${process.env.PORT || '3001'}`;
+      const rawOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '').replace(/\/$/, '');
 
+      // 1) 优先从请求头推断（反向代理会设置 X-Forwarded-*）
       const deriveFromRequest = (): string => {
         const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
-        const hostHdr = (req.headers['x-forwarded-host'] as string) || req.get('host') || '';
-        if (!hostHdr) return `${proto}://localhost:${backendPort}`;
-        const hasPort = hostHdr.includes(':');
-        const hostname = hasPort ? hostHdr.split(':')[0] : hostHdr;
-        if (!hasPort) {
-          if (proto === 'https') {
-            return `${proto}://${hostname}`;
-          }
-          return `${proto}://${hostname}:${backendPort}`;
+        const hostHdr = ((req.headers['x-forwarded-host'] as string) || req.get('host') || '').trim();
+        if (!hostHdr) return '';
+        const hostname = hostHdr.split(':')[0].toLowerCase();
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+          return '';
         }
         return `${proto}://${hostHdr}`;
       };
 
+      // 2) 其次使用环境变量（当其不是本地域名时）
       const normalizeEnvUrl = (url: string): string => {
         if (!url) return '';
         try {
           const u = new URL(url);
-          if (!u.port) {
-            const proto = u.protocol.replace(':', '');
-            if (proto === 'https') {
-              return `${u.protocol}//${u.hostname}`;
-            }
-            return `${u.protocol}//${u.hostname}:${backendPort}`;
-          }
+          const hn = u.hostname.toLowerCase();
+          if (hn === 'localhost' || hn === '127.0.0.1' || hn === '::1') return '';
           return `${u.protocol}//${u.host}`;
         } catch {
-          return url;
+          return '';
         }
       };
 
-      const serverUrl = normalizeEnvUrl(rawOrigin) || deriveFromRequest();
+      const serverUrl = deriveFromRequest() || normalizeEnvUrl(rawOrigin) || `http://localhost:${backendPort}`;
       
       const apiKey = await apiKeyService.getSystemApiKey();
       
