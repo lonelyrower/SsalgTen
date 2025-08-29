@@ -1963,23 +1963,17 @@ parse_arguments() {
 
 # 主函数
 main() {
+    local IN_CURL_BASH=false
     # 首先检查是否为curl|bash模式
     if detect_curl_bash_mode; then
-        # 在curl|bash模式下，需要重新定义日志函数（因为可能还没加载）
-        if ! declare -f log_info &>/dev/null; then
-            log_info() { echo -e "\\033[0;34m[INFO]\\033[0m $*"; }
-            log_success() { echo -e "\\033[0;32m[SUCCESS]\\033[0m $*"; }
-            log_warning() { echo -e "\\033[1;33m[WARNING]\\033[0m $*"; }
-            log_error() { echo -e "\\033[0;31m[ERROR]\\033[0m $*" >&2; }
-        fi
-        
+        IN_CURL_BASH=true
         # 处理curl|bash安装
         if handle_curl_bash_install "$@"; then
             exit 0  # 安装成功，退出
         fi
         # 如果返回1，说明用户选择临时运行，继续执行
     fi
-    
+
     # 检查运行环境：若 stdin 非 TTY 但 /dev/tty 可读，则仍可交互
     if [[ ! -t 0 ]]; then
         if [[ -r /dev/tty ]]; then
@@ -2023,16 +2017,32 @@ main() {
             *) die "未知命令: $COMMAND" ;;
         esac
     else
-        # 交互式菜单
-        if [[ "$NON_INTERACTIVE" == "true" ]]; then
-            log_error "非交互模式下需要指定子命令"
-            show_help
-            exit 1
+        # 交互式菜单逻辑
+        if [[ "$IN_CURL_BASH" == "true" ]]; then
+            # 在curl|bash下优先尝试使用 /dev/tty 交互
+            if [[ -r /dev/tty ]]; then
+                while true; do
+                    show_interactive_menu
+                done
+            else
+                # 无法交互时给出明确指引
+                log_error "当前环境不支持交互输入。请使用以下任一方式："
+                echo "  1) 临时保存后运行: curl -fsSL .../ssalgten.sh -o /tmp/ss && bash /tmp/ss"
+                echo "  2) 指定子命令运行: curl -fsSL .../ssalgten.sh | bash -s -- status"
+                echo "  3) 安装后运行: curl -fsSL .../ssalgten.sh | bash -s -- --install && ssalgten"
+                exit 1
+            fi
+        else
+            # 常规环境：仅在交互模式下显示菜单
+            if [[ "$NON_INTERACTIVE" == "true" ]]; then
+                log_error "非交互模式下需要指定子命令"
+                show_help
+                exit 1
+            fi
+            while true; do
+                show_interactive_menu
+            done
         fi
-        
-        while true; do
-            show_interactive_menu
-        done
     fi
 }
 
