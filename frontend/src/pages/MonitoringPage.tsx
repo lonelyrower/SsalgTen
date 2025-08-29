@@ -523,13 +523,8 @@ export const MonitoringPage: React.FC = () => {
                       <div className="col-span-2 flex items-center justify-center">
                         <div className="flex items-center space-x-2">
                           <CountryFlagSvg country={node.country} size={16} />
-                          <div className="min-w-0 text-center">
-                            <div className="text-sm text-gray-900 dark:text-white truncate">
-                              {node.city}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                              {node.country}
-                            </div>
+                          <div className="text-sm text-gray-900 dark:text-white truncate">
+                            {node.city}, {node.country}
                           </div>
                         </div>
                       </div>

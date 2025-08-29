@@ -358,17 +358,6 @@ export const NodesPage: React.FC = () => {
                     </button>
                   </div>
                   
-                  {/* 在线/离线状态指示 */}
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span>在线</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span>离线</span>
-                    </div>
-                  </div>
                 </div>
               </div>
               
