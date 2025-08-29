@@ -198,6 +198,11 @@ ensure_cmd() {
 docker_compose() {
     local base_args=()
     [[ -n "$COMPOSE_FILE" ]] && base_args+=(-f "$COMPOSE_FILE")
+    # 自动合并本地覆盖文件（例如禁用/调整端口映射），避免 up 时忽略 override
+    local override_file="$APP_DIR/docker-compose.override.yml"
+    if [[ -f "$override_file" ]]; then
+        base_args+=(-f "$override_file")
+    fi
     local proj=(--project-name "${COMPOSE_PROJECT_NAME:-ssalgten}")
     
     if docker compose version &> /dev/null; then
