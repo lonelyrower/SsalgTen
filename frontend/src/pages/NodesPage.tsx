@@ -32,7 +32,7 @@ export const NodesPage: React.FC = () => {
   const [eventFilter, setEventFilter] = useState<'all' | string>('all');
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
-  const { nodes, stats, connected, refreshData } = useRealTime();
+  const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
   const [mapMode, setMapMode] = useState<'2d' | '3d'>('2d');
   
