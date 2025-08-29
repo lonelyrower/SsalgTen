@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Globe, Lock, User, Eye, EyeOff, Shield } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Shield } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -171,19 +170,20 @@ export const LoginPage: React.FC = () => {
           </Button>
         </form>
 
-        {/* 默认账户提示 */}
-        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
-            <strong>默认管理员账户：</strong>
-          </p>
-          <p className="text-sm text-blue-600 dark:text-blue-400 text-center mt-1">
-            用户名: admin | 密码: admin123
-          </p>
-          <p className="text-xs text-blue-500 dark:text-blue-500 text-center mt-2">
-            ⚠️ 首次登录后请立即更改密码
-          </p>
+          {/* 默认账户提示 */}
+          <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
+              <strong>默认管理员账户：</strong>
+            </p>
+            <p className="text-sm text-blue-600 dark:text-blue-400 text-center mt-1">
+              用户名: admin | 密码: admin123
+            </p>
+            <p className="text-xs text-blue-500 dark:text-blue-500 text-center mt-2">
+              ⚠️ 首次登录后请立即更改密码
+            </p>
+          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
