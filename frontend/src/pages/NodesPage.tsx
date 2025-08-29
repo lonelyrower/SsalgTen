@@ -296,56 +296,6 @@ export const NodesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 统计信息 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">总节点数</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalNodes || 0}</p>
-              </div>
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                <Activity className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">在线节点</p>
-                <p className="text-2xl font-bold text-green-600">{stats?.onlineNodes || 0}</p>
-              </div>
-              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <div className="w-6 h-6 rounded-full bg-green-500"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">离线节点</p>
-                <p className="text-2xl font-bold text-red-600">{(stats?.totalNodes || 0) - (stats?.onlineNodes || 0)}</p>
-              </div>
-              <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                <div className="w-6 h-6 rounded-full bg-red-500"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">覆盖国家</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalCountries || 0}</p>
-              </div>
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500"></div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* 搜索和过滤 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">

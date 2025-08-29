@@ -235,5 +235,99 @@ Default admin credentials: admin/admin123 (change immediately in production)
 - `scripts/test-update-system.sh` - Update system validation
 - `Dockerfile.updater` - Updater service container definition
 - `scripts/updater-server.mjs` - Updater service implementation
+- `scripts/uninstall.sh` - Comprehensive system uninstall script with web server cleanup
+- `scripts/deploy-production.sh` - Production deployment script with interactive setup
 - `UPDATE_SYSTEM.md` - System update user guide
 - `docs/PRODUCTION_UPDATE.md` - Detailed production update documentation
+
+## Frontend Architecture
+
+### Component Organization
+- **Admin Components** (`frontend/src/components/admin/`):
+  - `SystemOverview.tsx` - Comprehensive system statistics and health monitoring
+  - `ApiKeyManagement.tsx` - API key management with security features
+  - `NodeManagement.tsx` - Node lifecycle and configuration management
+  - `UserManagement.tsx` - User account and role management
+- **Map Components** (`frontend/src/components/map/`): Interactive world map with real-time node status
+- **UI Components** (`frontend/src/components/ui/`): Reusable shadcn/ui components
+
+### Admin Page Structure
+The admin interface uses a tabbed layout with clear separation of concerns:
+- **System Overview**: Real-time system statistics, node health, and diagnostic metrics
+- **Statistics**: Visitor analytics and activity logs
+- **System Configuration**: Application settings and parameters
+- **Node Management**: Monitoring node deployment and management
+- **User Management**: User accounts and role-based permissions
+- **API Keys**: Secure API key management for agent authentication
+
+### State Management
+- JWT token management with automatic refresh
+- Real-time data updates via WebSocket connections
+- Local storage for user preferences and session persistence
+
+## Backend Architecture
+
+### API Controller Structure
+- **AuthController**: JWT authentication and session management
+- **AdminController**: Administrative operations and system management
+- **NodeController**: Node registration, status tracking, and management
+- **DiagnosticsProxyController**: Network diagnostic operations proxy
+- **SystemConfigController**: System configuration and settings management
+- **UpdateController**: Zero-downtime system updates
+- **VisitorController**: Usage analytics and visitor tracking
+
+### Authentication & Security
+- JWT-based authentication with refresh token rotation
+- Role-based access control (ADMIN/OPERATOR/VIEWER)
+- API key authentication for agent communication
+- Comprehensive input validation and sanitization
+
+## Agent Architecture
+
+The agent system provides distributed network monitoring capabilities:
+- **Auto-registration**: Agents automatically register with the backend server
+- **Network Diagnostics**: Ping, traceroute, MTR, and speedtest operations
+- **System Monitoring**: CPU, memory, disk, and network resource tracking
+- **Heartbeat Service**: Regular status updates with configurable intervals
+- **Secure Communication**: API key-based authentication with the backend
+
+## Production Deployment Scripts
+
+### One-Click Deployment
+```bash
+# Interactive production deployment with SSL setup
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh | bash
+```
+
+### System Management
+```bash
+# Complete system uninstall with cleanup
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash
+
+# Force uninstall mode (auto-answer yes to all prompts)
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/uninstall.sh | bash -s -- --force
+```
+
+## Development Environment
+
+### Node.js Requirements
+- **Minimum**: Node.js 20.0.0+, npm 10.0.0+
+- **Recommended**: Node.js 20+ LTS with latest npm
+
+### Hot Reload Development
+```bash
+# Start all services with hot reload
+npm run dev
+
+# Start database only for development
+npm run dev:db
+
+# Setup development environment with database migration and seeding
+npm run dev:setup
+```
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

@@ -482,12 +482,12 @@ export const MonitoringPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                 <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                  <div className="col-span-3">节点信息</div>
-                  <div className="col-span-2">位置</div>
-                  <div className="col-span-1">状态</div>
-                  <div className="col-span-2">CPU</div>
-                  <div className="col-span-2">内存</div>
-                  <div className="col-span-2">磁盘</div>
+                  <div className="col-span-3 flex items-center">节点信息</div>
+                  <div className="col-span-2 flex items-center">位置</div>
+                  <div className="col-span-1 flex items-center">状态</div>
+                  <div className="col-span-2 flex items-center">CPU</div>
+                  <div className="col-span-2 flex items-center">内存</div>
+                  <div className="col-span-2 flex items-center">磁盘</div>
                 </div>
               </div>
               <div className="divide-y divide-gray-200 dark:divide-gray-600">
@@ -502,8 +502,8 @@ export const MonitoringPage: React.FC = () => {
                   >
                     <div className="grid grid-cols-12 gap-4 items-center">
                       {/* 节点信息 */}
-                      <div className="col-span-3">
-                        <div className="flex items-center space-x-3">
+                      <div className="col-span-3 flex items-center">
+                        <div className="flex items-center space-x-3 w-full">
                           {getStatusIcon(node.status)}
                           <div className="min-w-0 flex-1">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
@@ -517,10 +517,10 @@ export const MonitoringPage: React.FC = () => {
                       </div>
                       
                       {/* 位置 */}
-                      <div className="col-span-2">
-                        <div className="flex items-center space-x-2">
+                      <div className="col-span-2 flex items-center">
+                        <div className="flex items-center space-x-2 w-full">
                           <CountryFlagSvg country={node.country} size={16} />
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="text-sm text-gray-900 dark:text-white truncate">
                               {node.city}
                             </div>
@@ -532,7 +532,7 @@ export const MonitoringPage: React.FC = () => {
                       </div>
                       
                       {/* 状态 */}
-                      <div className="col-span-1">
+                      <div className="col-span-1 flex items-center">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           node.status.toLowerCase() === 'online' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
                           node.status.toLowerCase() === 'offline' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
@@ -544,8 +544,8 @@ export const MonitoringPage: React.FC = () => {
                       </div>
                       
                       {/* CPU */}
-                      <div className="col-span-2">
-                        <div className="flex items-center space-x-2">
+                      <div className="col-span-2 flex items-center">
+                        <div className="flex items-center space-x-2 w-full">
                           <Cpu className="h-4 w-4 text-blue-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between mb-1">
@@ -560,8 +560,8 @@ export const MonitoringPage: React.FC = () => {
                       </div>
                       
                       {/* 内存 */}
-                      <div className="col-span-2">
-                        <div className="flex items-center space-x-2">
+                      <div className="col-span-2 flex items-center">
+                        <div className="flex items-center space-x-2 w-full">
                           <Activity className="h-4 w-4 text-green-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between mb-1">
@@ -576,8 +576,8 @@ export const MonitoringPage: React.FC = () => {
                       </div>
                       
                       {/* 磁盘 */}
-                      <div className="col-span-2">
-                        <div className="flex items-center space-x-2">
+                      <div className="col-span-2 flex items-center">
+                        <div className="flex items-center space-x-2 w-full">
                           <HardDrive className="h-4 w-4 text-purple-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between mb-1">

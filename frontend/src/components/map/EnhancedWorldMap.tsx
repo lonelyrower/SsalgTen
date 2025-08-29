@@ -14,7 +14,6 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
-import 'leaflet/dist/leaflet.css';
 
 // 修复 Leaflet 默认图标问题
 delete (Icon.Default.prototype as any)._getIconUrl;

@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import type { NodeData } from '@/services/api';
-import 'leaflet/dist/leaflet.css';
 
 // 修复 Leaflet 默认图标问题
 delete (Icon.Default.prototype as any)._getIconUrl;
