@@ -37,6 +37,12 @@ npm run type-check
 
 # Run smoke tests
 npm run smoke:test
+
+# Setup development environment with database migration and seeding
+npm run dev:setup
+
+# Start database only for development
+npm run dev:db
 ```
 
 ### Individual Service Commands
@@ -116,10 +122,11 @@ curl -X POST http://localhost:8765/update \
 ## Key Technologies
 
 - **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT with refresh tokens, bcrypt password hashing
-- **Frontend**: React 18, TailwindCSS, shadcn/ui, Leaflet maps, Recharts
-- **Backend**: Express, Socket.IO for real-time updates, helmet for security
-- **Agent**: Cross-platform network diagnostics (ping, traceroute, MTR, speedtest)
+- **Authentication**: JWT with refresh tokens, bcrypt password hashing  
+- **Frontend**: React 18, TypeScript, Vite, TailwindCSS, shadcn/ui, Leaflet maps, Recharts
+- **Backend**: Node.js, Express, TypeScript, Socket.IO for real-time updates, helmet for security
+- **Agent**: Node.js, TypeScript, cross-platform network diagnostics (ping, traceroute, MTR, speedtest)
+- **Deployment**: Docker Compose, Redis caching, HTTPS with Caddy reverse proxy
 
 ## Database Schema
 
@@ -248,7 +255,14 @@ Default admin credentials: admin/admin123 (change immediately in production)
   - `ApiKeyManagement.tsx` - API key management with security features
   - `NodeManagement.tsx` - Node lifecycle and configuration management
   - `UserManagement.tsx` - User account and role management
-- **Map Components** (`frontend/src/components/map/`): Interactive world map with real-time node status
+- **Map Components** (`frontend/src/components/map/`): 
+  - `EnhancedWorldMap.tsx` - Advanced map with clustering, expand/collapse functionality
+  - `WorldMap.tsx` - Basic map component for simple displays
+- **Pages** (`frontend/src/pages/`):
+  - `HomePage.tsx` - Landing page with global network overview
+  - `MonitoringPage.tsx` - Real-time monitoring dashboard with list/grid views
+  - `NodesPage.tsx` - Node management with 2D/3D map integration
+  - `AdminPage.tsx` - Complete admin interface with tabbed layout
 - **UI Components** (`frontend/src/components/ui/`): Reusable shadcn/ui components
 
 ### Admin Page Structure
@@ -261,9 +275,16 @@ The admin interface uses a tabbed layout with clear separation of concerns:
 - **API Keys**: Secure API key management for agent authentication
 
 ### State Management
-- JWT token management with automatic refresh
-- Real-time data updates via WebSocket connections
+- JWT token management with automatic refresh (`frontend/src/contexts/AuthContext.tsx`)
+- Real-time data updates via WebSocket connections (`frontend/src/services/socketService.ts`)
+- Custom hooks for data fetching (`frontend/src/hooks/useRealTime.ts`, `frontend/src/hooks/useNodes.ts`)
 - Local storage for user preferences and session persistence
+
+### Key Patterns
+- **Map Clustering**: `EnhancedWorldMap.tsx` implements distance-based node clustering with expand/collapse
+- **Real-time Updates**: WebSocket integration provides live node status and heartbeat data
+- **Responsive Design**: All components adapt to mobile/tablet/desktop with TailwindCSS breakpoints
+- **Error Handling**: Comprehensive error boundaries and loading states throughout the UI
 
 ## Backend Architecture
 
@@ -277,10 +298,12 @@ The admin interface uses a tabbed layout with clear separation of concerns:
 - **VisitorController**: Usage analytics and visitor tracking
 
 ### Authentication & Security
-- JWT-based authentication with refresh token rotation
-- Role-based access control (ADMIN/OPERATOR/VIEWER)
-- API key authentication for agent communication
+- JWT-based authentication with refresh token rotation (`backend/src/services/RefreshTokenService.ts`)
+- Role-based access control (ADMIN/OPERATOR/VIEWER) via `AuthController`
+- API key authentication for agent communication (`backend/src/middlewares/apiKeyAuth.ts`)
 - Comprehensive input validation and sanitization
+- bcrypt password hashing with salt rounds
+- CORS and helmet security middleware
 
 ## Agent Architecture
 
@@ -325,6 +348,28 @@ npm run dev:db
 # Setup development environment with database migration and seeding
 npm run dev:setup
 ```
+
+## Important Development Notes
+
+### TypeScript Configuration
+- All services use strict TypeScript with comprehensive type checking
+- React components must import `React` explicitly for JSX namespace support
+- Use `React.ReactElement[]` instead of `JSX.Element[]` for array types
+
+### Map Components
+- `EnhancedWorldMap.tsx` provides advanced clustering with fan-out expansion on click
+- Clustering distance varies by zoom level (500km at zoom 3, 20km at zoom 12+)
+- Leaflet CSS is imported globally in `frontend/src/index.css` - avoid duplicate imports
+
+### Database Operations
+- Always run `npx prisma generate` after schema changes
+- Use `npm run dev:setup` for complete environment setup with seeding
+- Database migrations are in `backend/prisma/migrations/`
+
+### Real-time Features
+- WebSocket connections managed via `socketService.ts`
+- Agent heartbeats every 30 seconds update node status
+- All real-time data uses optimized hooks to prevent unnecessary re-renders
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
