@@ -238,11 +238,20 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
+      // 尝试携带登录令牌（后端代理端点需要鉴权）
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (url.startsWith('/api/')) {
+        try {
+          const token = localStorage.getItem('ssalgten_auth_token');
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+        } catch {}
+      }
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
+        credentials: 'include', // 尽量携带会话信息
         signal: controller.signal,
       });
       
