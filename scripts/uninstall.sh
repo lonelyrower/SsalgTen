@@ -130,6 +130,52 @@ check_permissions() {
     fi
 }
 
+# 检查并清理Web服务器
+cleanup_web_servers() {
+    log_info "检查并清理Web服务器..."
+    
+    # 检查端口占用情况
+    local ports_in_use=$(netstat -tlnp 2>/dev/null | grep -E ':(80|443) ' | awk '{print $4}' | cut -d: -f2 | sort -u)
+    
+    if [[ -n "$ports_in_use" ]]; then
+        log_warning "发现端口 80/443 被占用，检查相关服务..."
+        
+        # 停止并禁用常见的Web服务器
+        local web_servers=("nginx" "apache2" "httpd" "caddy" "lighttpd")
+        
+        for service in "${web_servers[@]}"; do
+            if run_as_root systemctl is-active --quiet "$service" 2>/dev/null; then
+                log_info "发现 $service 服务正在运行，准备停止..."
+                
+                cleanup_service=$(read_from_tty "是否停止并删除 $service 服务？[Y/N]: ")
+                if [[ "$cleanup_service" =~ ^[Yy]$ ]]; then
+                    run_as_root systemctl stop "$service" 2>/dev/null || true
+                    run_as_root systemctl disable "$service" 2>/dev/null || true
+                    log_success "$service 服务已停止并禁用"
+                else
+                    log_info "保留 $service 服务"
+                fi
+            fi
+        done
+        
+        # 检查是否还有进程占用端口
+        local remaining_processes=$(lsof -ti:80,443 2>/dev/null || true)
+        if [[ -n "$remaining_processes" ]]; then
+            log_warning "仍有进程占用端口 80/443"
+            echo "占用端口的进程："
+            lsof -i:80,443 2>/dev/null || true
+            
+            force_kill=$(read_from_tty "是否强制终止这些进程？[Y/N]: ")
+            if [[ "$force_kill" =~ ^[Yy]$ ]]; then
+                echo "$remaining_processes" | xargs -r kill -9 2>/dev/null || true
+                log_success "已强制终止占用端口的进程"
+            fi
+        fi
+    else
+        log_success "端口 80/443 未被占用"
+    fi
+}
+
 # 停止所有服务
 stop_services() {
     log_info "停止 SsalgTen 服务..."
@@ -149,16 +195,35 @@ stop_services() {
             log_success "Docker 容器已停止"
         fi
     fi
+    
+    # 清理Web服务器
+    cleanup_web_servers
 }
 
 # 删除系统服务
 remove_system_service() {
     log_info "删除系统服务..."
     
-    # 禁用并删除服务
-    run_as_root systemctl disable ssalgten.service 2>/dev/null || true
-    run_as_root rm -f /etc/systemd/system/ssalgten.service
+    # 删除 SsalgTen 相关服务
+    local ssalgten_services=("ssalgten" "ssalgten-agent" "ssalgten-backend" "ssalgten-frontend")
+    
+    for service in "${ssalgten_services[@]}"; do
+        if run_as_root systemctl is-enabled "$service.service" 2>/dev/null; then
+            run_as_root systemctl stop "$service.service" 2>/dev/null || true
+            run_as_root systemctl disable "$service.service" 2>/dev/null || true
+            log_info "已停止并禁用 $service.service"
+        fi
+        
+        # 删除服务文件
+        if [[ -f "/etc/systemd/system/$service.service" ]]; then
+            run_as_root rm -f "/etc/systemd/system/$service.service"
+            log_info "已删除服务文件: $service.service"
+        fi
+    done
+    
+    # 重新加载systemd
     run_as_root systemctl daemon-reload
+    run_as_root systemctl reset-failed 2>/dev/null || true
     
     log_success "系统服务已删除"
 }
@@ -210,16 +275,59 @@ remove_docker_resources() {
     log_success "Docker 资源清理完成"
 }
 
-# 删除应用目录
+# 删除应用目录和配置文件
 remove_app_directory() {
-    log_info "删除应用目录..."
+    log_info "删除应用目录和配置文件..."
     
+    # 删除主应用目录
     if [[ -d "$APP_DIR" ]]; then
         run_as_root rm -rf "$APP_DIR"
         log_success "应用目录已删除: $APP_DIR"
     else
         log_info "应用目录不存在，跳过删除"
     fi
+    
+    # 删除可能的其他目录
+    local other_dirs=(
+        "/opt/ssalgten-agent"
+        "/var/lib/ssalgten"
+        "/var/log/ssalgten"
+        "/etc/ssalgten"
+        "/home/ssalgten"
+    )
+    
+    for dir in "${other_dirs[@]}"; do
+        if [[ -d "$dir" ]]; then
+            cleanup_dir=$(read_from_tty "发现目录 $dir，是否删除？[Y/N]: ")
+            if [[ "$cleanup_dir" =~ ^[Yy]$ ]]; then
+                run_as_root rm -rf "$dir"
+                log_success "已删除目录: $dir"
+            else
+                log_info "保留目录: $dir"
+            fi
+        fi
+    done
+    
+    # 删除可能的配置文件
+    local config_files=(
+        "/etc/nginx/sites-available/ssalgten"
+        "/etc/nginx/sites-enabled/ssalgten"
+        "/etc/apache2/sites-available/ssalgten.conf"
+        "/etc/apache2/sites-enabled/ssalgten.conf"
+        "/etc/caddy/Caddyfile"
+    )
+    
+    for file in "${config_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            cleanup_file=$(read_from_tty "发现配置文件 $file，是否删除？[Y/N]: ")
+            if [[ "$cleanup_file" =~ ^[Yy]$ ]]; then
+                run_as_root rm -f "$file"
+                log_success "已删除配置文件: $file"
+            else
+                log_info "保留配置文件: $file"
+            fi
+        fi
+    done
 }
 
 # 删除SSL证书
