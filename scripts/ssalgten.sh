@@ -595,27 +595,33 @@ start_system() {
     cd "$APP_DIR"
     
     log_info "启动所有服务..."
-    if docker_compose up -d --remove-orphans; then
-        log_info "等待服务启动..."
-        sleep 10
-        
-        # 动态检测端口
-        detect_ports
-        
-        # 健康检查 (backend: 更多重试, frontend: 更快检查)
-        local healthy=true
-        FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 15 2 8 || healthy=false
-        health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 8 2 5 || healthy=false
-        
-        if [[ "$healthy" == "true" ]]; then
-            log_success "🎉 系统启动成功!"
-            echo -e "${GREEN}访问地址: http://localhost:${FRONTEND_PORT}${NC}"
-        else
-            log_warning "系统已启动，但部分服务可能异常"
-            log_info "使用 'logs' 命令查看详细日志"
-        fi
+    if ! docker_compose up -d --remove-orphans; then
+        log_warning "整体启动失败，尝试仅启动核心服务 (database/redis/backend/frontend/updater)..."
+        local core_services=(database redis backend frontend updater)
+        for s in "${core_services[@]}"; do
+            docker_compose up -d --build --no-deps "$s" 2>/dev/null || true
+        done
+        # 尝试启动 agent（忽略失败）
+        docker_compose up -d --no-deps agent-nyc 2>/dev/null || log_warning "agent-nyc 启动失败，已忽略（可能端口冲突）"
+    fi
+
+    log_info "等待服务启动..."
+    sleep 10
+    
+    # 动态检测端口
+    detect_ports
+    
+    # 健康检查 (backend: 更多重试, frontend: 更快检查)
+    local healthy=true
+    FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 15 2 8 || healthy=false
+    health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 8 2 5 || healthy=false
+    
+    if [[ "$healthy" == "true" ]]; then
+        log_success "🎉 核心服务启动成功!（忽略非核心服务失败）"
+        echo -e "${GREEN}访问地址: http://localhost:${FRONTEND_PORT}${NC}"
     else
-        die "系统启动失败"
+        log_error "核心服务启动失败，请查看日志"
+        return 1
     fi
 }
 
@@ -1139,92 +1145,76 @@ update_system() {
     
     # 重新构建并启动
     log_info "重新构建并启动服务..."
-    if docker_compose up -d --build --remove-orphans; then
-        sleep 15
+    if ! docker_compose up -d --build --remove-orphans; then
+        log_warning "整体启动失败，尝试仅启动核心服务 (database/redis/backend/frontend/updater)..."
+        local core_services=(database redis backend frontend updater)
+        for s in "${core_services[@]}"; do
+            docker_compose up -d --build --no-deps "$s" 2>/dev/null || true
+        done
+        # 尝试启动 agent（忽略失败）
+        docker_compose up -d --no-deps agent-nyc 2>/dev/null || log_warning "agent-nyc 启动失败，已忽略（可能端口冲突）"
+    fi
+
+    sleep 15
+    
+    # 动态检测端口
+    detect_ports
+    
+    # 健康检查 (更新后需要更长时间启动)
+    local healthy=true
+    FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 20 3 10 || healthy=false
+    health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 12 3 8 || healthy=false
+    
+    if [[ "$healthy" == "true" ]]; then
+        log_success "🎉 系统更新完成!（忽略非核心服务失败）"
         
-        # 动态检测端口
-        detect_ports
-        
-        # 健康检查 (更新后需要更长时间启动)
-        local healthy=true
-        FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 20 3 10 || healthy=false
-        health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 12 3 8 || healthy=false
-        
-        if [[ "$healthy" == "true" ]]; then
-            log_success "🎉 系统更新完成!"
-            
-            # 处理 stash 恢复
-            if [[ "$stash_created" == "true" ]]; then
-                echo
-                log_info "检测到已暂存的更改 (${stash_hash:0:7})"
-                echo "恢复选项:"
-                echo "  1) 立即恢复更改 (可能有冲突)"
-                echo "  2) 手动恢复 (稍后执行 git stash pop)"
-                echo "  3) 放弃暂存的更改"
-                echo
-                
-                local stash_choice
-                read_from_tty "请选择 [1/2/3]:" stash_choice
-                
-                case "$stash_choice" in
-                    1)
-                        log_info "尝试恢复暂存的更改..."
-                        if git stash pop; then
-                            log_success "更改已成功恢复"
-                        else
-                            log_warning "恢复时出现冲突，请手动解决"
-                            echo "解决冲突后运行:"
-                            echo "  git add <resolved-files>"
-                            echo "  git reset --soft HEAD~1  # 如需撤销merge"
-                        fi
-                        ;;
-                    2)
-                        log_info "更改仍在stash中，稍后可运行:"
-                        echo "  git stash pop    # 恢复并删除stash"
-                        echo "  git stash apply  # 恢复但保留stash"
-                        echo "  git stash list   # 查看所有stash"
-                        ;;
-                    3)
-                        if confirm "确认放弃暂存的更改?" "N"; then
-                            git stash drop stash@{0} 2>/dev/null
-                            log_info "暂存的更改已放弃"
-                        else
-                            log_info "暂存保留在 stash@{0}"
-                        fi
-                        ;;
-                    *)
-                        log_info "暂存的更改保留在 stash@{0}，稍后可手动处理"
-                        ;;
-                esac
-            fi
-            
-        else
-            log_warning "更新完成，但部分服务可能异常"
-            
-            # 如果有 stash，在更新失败时提醒用户
-            if [[ "$stash_created" == "true" ]]; then
-                log_info "注意: 你的更改仍暂存在 stash@{0} (${stash_hash:0:7})"
-                echo "可使用 'git stash pop' 恢复"
-            fi
-        fi
-    else
-        log_error "服务启动失败"
-        
-        # 如果启动失败且有 stash，询问是否回滚
+        # 处理 stash 恢复
         if [[ "$stash_created" == "true" ]]; then
             echo
-            log_warning "更新可能导致服务异常"
-            if confirm "是否恢复之前的更改并回滚?" "N"; then
-                log_info "回滚到更新前状态..."
-                git reset --hard HEAD~1 2>/dev/null || true
-                git stash pop 2>/dev/null || true
-                log_info "已尝试回滚，建议重新启动服务"
-            else
-                log_info "你的更改仍在 stash@{0} (${stash_hash:0:7})"
-            fi
+            log_info "检测到已暂存的更改 (${stash_hash:0:7})"
+            echo "恢复选项:"
+            echo "  1) 立即恢复更改 (可能有冲突)"
+            echo "  2) 手动恢复 (稍后执行 git stash pop)"
+            echo "  3) 放弃暂存的更改"
+            echo
+            
+            local stash_choice
+            read_from_tty "请选择 [1/2/3]:" stash_choice
+            
+            case "$stash_choice" in
+                1)
+                    log_info "尝试恢复暂存的更改..."
+                    if git stash pop; then
+                        log_success "更改已成功恢复"
+                    else
+                        log_warning "恢复时出现冲突，请手动解决"
+                        echo "解决冲突后运行:"
+                        echo "  git add <resolved-files>"
+                        echo "  git reset --soft HEAD~1  # 如需撤销merge"
+                    fi
+                    ;;
+                2)
+                    log_info "更改仍在stash中，稍后可运行:"
+                    echo "  git stash pop    # 恢复并删除stash"
+                    echo "  git stash apply  # 恢复但保留stash"
+                    echo "  git stash list   # 查看所有stash"
+                    ;;
+                3)
+                    if confirm "确认放弃暂存的更改?" "N"; then
+                        git stash drop stash@{0} 2>/dev/null
+                        log_info "暂存的更改已放弃"
+                    else
+                        log_info "暂存保留在 stash@{0}"
+                    fi
+                    ;;
+                *)
+                    log_info "暂存的更改保留在 stash@{0}，稍后可手动处理"
+                    ;;
+            esac
         fi
         
-        log_info "建议: 运行 'logs' 查看错误日志，或运行 'clean --docker-cache' 清理后重试"
+    else
+        log_warning "更新完成，但核心健康检查未通过，请查看日志"
         return 1
     fi
 }
