@@ -335,7 +335,7 @@ export const EnhancedWorldMap = memo(({
   }, [nodes, showHeatmap]);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative flex flex-col ${className}`}>
       {/* 地图控制面板 */}
       <div className="absolute top-4 right-4 z-40 space-y-3">
         {/* 统计信息卡片 */}
@@ -428,8 +428,8 @@ export const EnhancedWorldMap = memo(({
         </div>
       </div>
 
-      {/* 地图容器：撑满父容器高度，保底 600px */}
-      <div className="h-full min-h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+      {/* 地图容器：占满可用空间，保底高度避免过小 */}
+      <div className="flex-1 min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
         <MapContainer
           center={[20, 0]}
           zoom={2}
@@ -456,8 +456,8 @@ export const EnhancedWorldMap = memo(({
         </MapContainer>
       </div>
 
-      {/* 底部信息栏 */}
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+      {/* 底部信息栏（固定高度不参与伸缩） */}
+      <div className="mt-4 flex items-center justify-between text-sm text-gray-500 shrink-0">
         <div className="flex items-center space-x-4">
           <span>共 {nodes.length} 个节点</span>
           {selectedNode && (
