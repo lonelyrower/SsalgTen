@@ -58,7 +58,8 @@ services:
       APP_VERSION: ${APP_VERSION:-0.1.0}
       
       # Database Configuration
-      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten
+      # Increase Prisma pool for ~150 agents; extend wait time to reduce timeouts
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=30&pool_timeout=30
       
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
@@ -95,6 +96,12 @@ services:
       
       # Redis (optional)
       REDIS_URL: redis://:${REDIS_PASSWORD:-ssalgten_redis}@redis:6379
+      
+      # Backend performance tuning
+      BROADCAST_MIN_INTERVAL_MS: ${BROADCAST_MIN_INTERVAL_MS:-2000}
+      NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS: ${NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS:-3000}
+      AGENT_KEY_CACHE_TTL_SECONDS: ${AGENT_KEY_CACHE_TTL_SECONDS:-120}
+      API_KEY_USAGE_MIN_INTERVAL_MS: ${API_KEY_USAGE_MIN_INTERVAL_MS:-60000}
     volumes:
       - backend_logs:/app/logs
       - backend_data:/app/data

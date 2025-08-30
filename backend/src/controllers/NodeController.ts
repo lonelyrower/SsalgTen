@@ -10,6 +10,64 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { sanitizeNode, sanitizeNodes } from '../utils/serialize';
 
+// ---- Broadcast throttling helpers ----
+const BROADCAST_MIN_INTERVAL_MS = parseInt(process.env.BROADCAST_MIN_INTERVAL_MS || '2000');
+const NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS = parseInt(process.env.NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS || '3000');
+
+let lastNodesBroadcastAt = 0;
+let pendingNodesBroadcast = false;
+const lastNodeDetailBroadcast: Map<string, number> = new Map(); // nodeId -> last ts
+
+async function doNodesBroadcast(io: any) {
+  try {
+    const nodes = await (await import('../services/NodeService')).nodeService.getAllNodes();
+    const safeNodes = sanitizeNodes(nodes as any[]);
+    const stats = (await import('../services/NodeService')).NodeService.calculateStats(nodes as any);
+    io.to('nodes_updates').emit('nodes_status_update', {
+      nodes: safeNodes,
+      stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    // 非致命
+  }
+}
+
+function scheduleNodesBroadcast(io: any) {
+  if (!io) return;
+  const now = Date.now();
+  const since = now - lastNodesBroadcastAt;
+  if (pendingNodesBroadcast) return;
+  const delay = Math.max(0, BROADCAST_MIN_INTERVAL_MS - since);
+  pendingNodesBroadcast = true;
+  setTimeout(async () => {
+    try { await doNodesBroadcast(io); } finally {
+      lastNodesBroadcastAt = Date.now();
+      pendingNodesBroadcast = false;
+    }
+  }, delay);
+}
+
+async function scheduleNodeDetailBroadcastByAgent(agentId: string, io: any) {
+  if (!io) return;
+  try {
+    const node = await (await import('../services/NodeService')).nodeService.getNodeByAgentId(agentId);
+    if (!node) return;
+    const last = lastNodeDetailBroadcast.get(node.id) || 0;
+    const now = Date.now();
+    if (now - last < NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS) return;
+    lastNodeDetailBroadcast.set(node.id, now);
+    const detail = await (await import('../services/NodeService')).nodeService.getLatestHeartbeatData(node.id);
+    io.to(`node_heartbeat_${node.id}`).emit('node_heartbeat', {
+      nodeId: node.id,
+      data: detail,
+      timestamp: new Date().toISOString()
+    });
+  } catch {
+    // 非致命
+  }
+}
+
 export class NodeController {
 
   // 获取所有节点
@@ -439,22 +497,9 @@ export class NodeController {
         message: 'Agent registered successfully'
       };
       
-      // 即时广播最新节点数据，提升前端可见性
-      try {
-        const io = req.app.get('io');
-        if (io) {
-          const nodes = await nodeService.getAllNodes();
-          const safeNodes = sanitizeNodes(nodes as any[]);
-          const stats = (await import('../services/NodeService')).NodeService.calculateStats(nodes);
-          io.to('nodes_updates').emit('nodes_status_update', {
-            nodes: safeNodes,
-            stats,
-            timestamp: new Date().toISOString()
-          });
-        }
-      } catch (e) {
-        logger.debug('Broadcast after register failed (non-fatal):', e);
-      }
+      // 异步节流广播，避免阻塞请求
+      const io = req.app.get('io');
+      scheduleNodesBroadcast(io);
       
       res.json(response);
     } catch (error) {
@@ -590,37 +635,10 @@ export class NodeController {
         message: 'Heartbeat recorded'
       };
       
-      // 即时广播心跳后的最新节点数据
-      try {
-        const io = req.app.get('io');
-        if (io) {
-          const nodes = await nodeService.getAllNodes();
-          const safeNodes = sanitizeNodes(nodes as any[]);
-          const stats = (await import('../services/NodeService')).NodeService.calculateStats(nodes);
-          io.to('nodes_updates').emit('nodes_status_update', {
-            nodes: safeNodes,
-            stats,
-            timestamp: new Date().toISOString()
-          });
-
-          // 向订阅了该节点心跳详情的客户端推送最新心跳详情
-          try {
-            const node = await nodeService.getNodeByAgentId(agentId);
-            if (node) {
-              const detail = await nodeService.getLatestHeartbeatData(node.id);
-              io.to(`node_heartbeat_${node.id}`).emit('node_heartbeat', {
-                nodeId: node.id,
-                data: detail,
-                timestamp: new Date().toISOString()
-              });
-            }
-          } catch (e) {
-            logger.debug('Broadcast node heartbeat detail failed (non-fatal):', e);
-          }
-        }
-      } catch (e) {
-        logger.debug('Broadcast after heartbeat failed (non-fatal):', e);
-      }
+      // 异步节流广播，避免阻塞请求
+      const io = req.app.get('io');
+      scheduleNodesBroadcast(io);
+      scheduleNodeDetailBroadcastByAgent(agentId, io);
       
       res.json(response);
     } catch (error) {

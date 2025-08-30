@@ -17,6 +17,19 @@ export class ApiKeyService {
   private nonceCache: Map<string, number> = new Map();
   private signatureTtlSec = parseInt(process.env.AGENT_SIGNATURE_TTL_SECONDS || '300');
   private requireSignature = (process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true';
+  
+  // 内存缓存：系统密钥/旧密钥（减少 Setting 表查询）
+  private keyCache: {
+    systemKey?: string;
+    previousKey?: string;
+    previousKeyExpires?: string;
+    fetchedAt?: number;
+  } = {};
+  private keyCacheTtlMs = parseInt(process.env.AGENT_KEY_CACHE_TTL_SECONDS || '120') * 1000;
+  
+  // 使用统计写入节流（避免心跳高频写 DB）
+  private lastUsageUpdateMs = 0;
+  private usageUpdateMinIntervalMs = parseInt(process.env.API_KEY_USAGE_MIN_INTERVAL_MS || '60000');
   // 旧密钥宽限期（小时）
   private previousKeyGraceHours = parseInt(process.env.PREVIOUS_API_KEY_GRACE_HOURS || '24');
   // 生成安全的API密钥
@@ -113,16 +126,13 @@ export class ApiKeyService {
   // 获取系统API密钥
   async getSystemApiKey(): Promise<string> {
     try {
-      const setting = await prisma.setting.findUnique({
-        where: { key: 'SYSTEM_AGENT_API_KEY' }
-      });
-
-      if (setting) {
-        return setting.value;
-      }
-
+      const keys = await this.fetchSystemKeys();
+      if (keys.systemKey) return keys.systemKey;
       // 如果没有找到，初始化一个新的
-      return await this.initializeSystemApiKey();
+      const created = await this.initializeSystemApiKey();
+      // 刷新缓存
+      this.keyCache = { systemKey: created, fetchedAt: Date.now() };
+      return created;
     } catch (error) {
       logger.error('获取系统API密钥失败:', error);
       // 回退到环境变量
@@ -145,7 +155,7 @@ export class ApiKeyService {
     }
 
     try {
-      const systemKey = await this.getSystemApiKey();
+      const { systemKey, previousKey, previousKeyExpires } = await this.fetchSystemKeys();
       logger.info(`[ApiKeyService] 系统密钥: ${systemKey ? systemKey.substring(0, 10) + '...' : 'null/undefined'}`);
       
       let matches = key === systemKey;
@@ -154,14 +164,10 @@ export class ApiKeyService {
       // 如果不匹配当前密钥，检查是否匹配仍在宽限期的旧密钥
       if (!matches) {
         logger.info(`[ApiKeyService] 检查旧密钥宽限期...`);
-        const previousKeyRecord = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } });
-        const previousKeyExpires = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } });
-        
-        if (previousKeyRecord && previousKeyExpires) {
-          const expiresAt = new Date(previousKeyExpires.value);
+        if (previousKey && previousKeyExpires) {
+          const expiresAt = new Date(previousKeyExpires);
           logger.info(`[ApiKeyService] 找到旧密钥，过期时间: ${expiresAt.toISOString()}`);
-          
-          if (new Date() < expiresAt && key === previousKeyRecord.value) {
+          if (new Date() < expiresAt && key === previousKey) {
             matches = true;
             logger.info('[ApiKeyService] 使用处于宽限期的旧API密钥');
           }
@@ -189,6 +195,12 @@ export class ApiKeyService {
   // 更新API密钥使用统计
   private async updateApiKeyUsage(key: string): Promise<void> {
     try {
+      // 节流：限制最小写入间隔
+      const now = Date.now();
+      if (now - this.lastUsageUpdateMs < this.usageUpdateMinIntervalMs) {
+        return;
+      }
+      this.lastUsageUpdateMs = now;
       // 更新最后使用时间
       await prisma.setting.upsert({
         where: { key: 'SYSTEM_AGENT_API_KEY_LAST_USED' },
@@ -413,13 +425,11 @@ export class ApiKeyService {
     }
 
     try {
-      // 使用当前或处于宽限期的旧系统密钥
-      const systemKey = await this.getSystemApiKey();
-      const previousKeyRecord = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } });
-      const previousKeyExpires = await prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } });
-      const candidates = [systemKey];
-      if (previousKeyRecord && previousKeyExpires && new Date() < new Date(previousKeyExpires.value)) {
-        candidates.push(previousKeyRecord.value);
+      // 使用当前或处于宽限期的旧系统密钥（缓存化）
+      const { systemKey, previousKey, previousKeyExpires } = await this.fetchSystemKeys();
+      const candidates = [systemKey].filter(Boolean) as string[];
+      if (previousKey && previousKeyExpires && new Date() < new Date(previousKeyExpires)) {
+        candidates.push(previousKey);
       }
 
       const payload = `${timestamp}.${JSON.stringify(body ?? {})}`;
@@ -437,6 +447,34 @@ export class ApiKeyService {
       logger.warn('[ApiKeyService] Signature validation error:', e);
       return { ok: false, reason: 'internal_error' };
     }
+  }
+
+  // 缓存化读取系统密钥及旧密钥
+  private async fetchSystemKeys(): Promise<{ systemKey?: string; previousKey?: string; previousKeyExpires?: string }>{
+    const now = Date.now();
+    if (this.keyCache.fetchedAt && now - (this.keyCache.fetchedAt || 0) < this.keyCacheTtlMs) {
+      return {
+        systemKey: this.keyCache.systemKey,
+        previousKey: this.keyCache.previousKey,
+        previousKeyExpires: this.keyCache.previousKeyExpires,
+      };
+    }
+    const [keyRec, prevRec, prevExpRec] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY' } }),
+      prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS' } }),
+      prisma.setting.findUnique({ where: { key: 'SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES' } }),
+    ]);
+    this.keyCache = {
+      systemKey: keyRec?.value,
+      previousKey: prevRec?.value,
+      previousKeyExpires: prevExpRec?.value,
+      fetchedAt: now,
+    };
+    return {
+      systemKey: keyRec?.value,
+      previousKey: prevRec?.value,
+      previousKeyExpires: prevExpRec?.value,
+    };
   }
 }
 
