@@ -184,7 +184,7 @@ export class ApiKeyService {
         return true;
       }
 
-      logger.warn(`[ApiKeyService] API密钥不匹配 - 提供的密钥: ${key.substring(0, 10)}..., 系统密钥: ${systemKey.substring(0, 10)}...`);
+      logger.warn(`[ApiKeyService] API密钥不匹配 - 提供的密钥: ${key.substring(0, 10)}..., 系统密钥: ${systemKey ? (systemKey as string).substring(0, 10) : 'unknown'}...`);
       return false;
     } catch (error) {
       logger.error('[ApiKeyService] 验证API密钥时出错:', error);
