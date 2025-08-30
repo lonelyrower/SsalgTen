@@ -13,15 +13,25 @@ declare global {
 
 // Get API base URL from runtime config or fallback to env var or current origin
 const getApiBaseUrl = (): string => {
+  const isLocalHost = (u: string) => /^(https?:\/\/)?(localhost|127\.0\.0\.1|\[?::1\]?)/i.test(u);
+
   // 1) Runtime config takes highest priority
   if (typeof window !== 'undefined' && window.APP_CONFIG?.API_BASE_URL) {
     const v = window.APP_CONFIG.API_BASE_URL;
+    // If runtime config points to localhost but we are not on localhost, prefer relative /api
+    if (typeof window !== 'undefined' && v && v.startsWith('http') && isLocalHost(v) && !isLocalHost(window.location.origin)) {
+      return '/api';
+    }
     // Support relative value like "/api" to stick to current origin
-    return v.startsWith('http') ? v : (v || '/api');
+    return v && !v.startsWith('http') ? (v || '/api') : (v || '/api');
   }
   // 2) Build-time env vars
   const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
+    // If points to localhost but app is not running on localhost, use relative /api for safety
+    if (typeof window !== 'undefined' && envUrl.startsWith('http') && isLocalHost(envUrl) && !isLocalHost(window.location.origin)) {
+      return '/api';
+    }
     return envUrl.startsWith('http') ? envUrl : (envUrl || '/api');
   }
   // 3) Fallback to current origin (production safe)
@@ -350,13 +360,16 @@ class ApiService {
   // 通用请求方法
   private async request<T>(endpoint: string, options: RequestInit = {}, requireAuth: boolean = false): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
+    // Build headers, only set Content-Type automatically when sending a body
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
+    if (!('Content-Type' in headers) && options.body) {
+      headers['Content-Type'] = 'application/json';
+    }
 
-    // 添加认证头
+    // 添加认证头（不抛异常，统一返回结构化错误，避免被上层当作网络错误处理）
     if (requireAuth) {
       const token = TokenManager.getToken();
       if (token && !TokenManager.isTokenExpired(token)) {
@@ -367,15 +380,14 @@ class ApiService {
         if (refreshed && refreshed.token) {
           headers.Authorization = `Bearer ${refreshed.token}`;
         } else {
-          // 刷新失败，清除令牌
           TokenManager.removeTokens();
-          throw new Error('Authentication required');
+          return { success: false, error: 'Authentication required' };
         }
       } else {
-        throw new Error('Authentication required');
+        return { success: false, error: 'Authentication required' };
       }
     }
-    
+
     try {
       const response = await fetch(url, {
         headers,
@@ -384,11 +396,12 @@ class ApiService {
 
       if (response.status === 401) {
         TokenManager.removeTokens();
-        throw new Error('Authentication failed');
+        // 统一返回而非抛异常，便于上层展示更友好的提示
+        return { success: false, error: 'Authentication failed' };
       }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return { success: false, error: `HTTP error! status: ${response.status}` } as ApiResponse<T>;
       }
 
       const data = await response.json();
