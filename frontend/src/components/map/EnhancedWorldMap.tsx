@@ -29,6 +29,8 @@ interface EnhancedWorldMapProps {
   showHeatmap?: boolean;
   selectedNode?: NodeData | null;
   className?: string;
+  // 是否显示右上角的控制面板（节点统计与显示模式）
+  showControlPanels?: boolean;
 }
 
 // 聚合节点类型
@@ -250,6 +252,8 @@ interface EnhancedWorldMapProps {
   selectedNode?: NodeData | null;
   showHeatmap?: boolean;
   className?: string;
+  // 是否显示右上角的控制面板（节点统计与显示模式）
+  showControlPanels?: boolean;
 }
 
 export const EnhancedWorldMap = memo(({ 
@@ -257,7 +261,8 @@ export const EnhancedWorldMap = memo(({
   onNodeClick, 
   showHeatmap = false,
   selectedNode,
-  className = ''
+  className = '',
+  showControlPanels = true
 }: EnhancedWorldMapProps) => {
   const mapRef = useRef<any>(null);
   const [viewMode, setViewMode] = useState<'markers' | 'heatmap' | 'connections'>('markers');
@@ -405,6 +410,7 @@ export const EnhancedWorldMap = memo(({
   return (
     <div className={`relative flex flex-col ${className}`}>
       {/* 地图控制面板 */}
+      {showControlPanels && (
       <div className="absolute top-4 right-4 z-40 space-y-3">
         {/* 统计信息卡片 */}
         {showStats && (
@@ -495,6 +501,7 @@ export const EnhancedWorldMap = memo(({
           </div>
         </div>
       </div>
+      )}
 
       {/* 地图容器：占满可用空间，保底高度避免过小 */}
       <div className="flex-1 min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
