@@ -134,37 +134,56 @@ export class NodeService {
   // 获取所有节点
   async getAllNodes(): Promise<NodeWithStats[]> {
     try {
+      // 1) 一次性取所有节点（按创建时间倒序）
       const nodes = await prisma.node.findMany({
-        include: {
-          _count: {
-            select: {
-              diagnosticRecords: true,
-              heartbeatLogs: true
-            }
-          },
-          heartbeatLogs: {
-            orderBy: { timestamp: 'desc' },
-            take: 1
-          }
-        },
         orderBy: { createdAt: 'desc' }
       });
 
-      // 转换数据格式以匹配NodeWithStats接口
-      return nodes.map(node => ({
-        ...node,
-        // 如果存在ASN名称，使用ASN名称作为服务商显示，否则使用原始provider字段
-        provider: node.asnName || node.provider,
-        lastHeartbeat: node.heartbeatLogs[0] ? {
-          timestamp: node.heartbeatLogs[0].timestamp,
-          status: node.heartbeatLogs[0].status,
-          uptime: node.heartbeatLogs[0].uptime
-        } : undefined,
-        cpuUsage: node.heartbeatLogs[0]?.cpuUsage ?? null,
-        memoryUsage: node.heartbeatLogs[0]?.memoryUsage ?? null,
-        diskUsage: node.heartbeatLogs[0]?.diskUsage ?? null,
-        heartbeatLogs: undefined // 移除原始heartbeatLogs数组
-      })) as NodeWithStats[];
+      if (nodes.length === 0) return [] as unknown as NodeWithStats[];
+
+      // 2) 使用原生SQL一次性获取每个节点的最新心跳（避免 N+1 查询）
+      // 注意：列名为 camelCase，需使用双引号；表名为映射后的 heartbeat_logs
+      const latestRows = await prisma.$queryRawUnsafe<Array<{
+        nodeId: string;
+        timestamp: Date;
+        status: string;
+        uptime: number | null;
+        cpuUsage: number | null;
+        memoryUsage: number | null;
+        diskUsage: number | null;
+      }>>(`
+        SELECT DISTINCT ON ("nodeId")
+          "nodeId",
+          "timestamp",
+          "status",
+          "uptime",
+          "cpuUsage",
+          "memoryUsage",
+          "diskUsage"
+        FROM "heartbeat_logs"
+        ORDER BY "nodeId", "timestamp" DESC
+      `);
+
+      const latestMap = new Map<string, typeof latestRows[number]>();
+      for (const r of latestRows) {
+        latestMap.set(r.nodeId, r);
+      }
+
+      // 3) 组装返回（不再 include 关系，显著降低查询负载）
+      return nodes.map((node) => {
+        const lh = latestMap.get(node.id);
+        const out: any = {
+          ...node,
+          provider: node.asnName || node.provider,
+          lastHeartbeat: lh
+            ? { timestamp: lh.timestamp, status: lh.status, uptime: lh.uptime ?? null }
+            : undefined,
+          cpuUsage: lh?.cpuUsage ?? null,
+          memoryUsage: lh?.memoryUsage ?? null,
+          diskUsage: lh?.diskUsage ?? null,
+        };
+        return out as NodeWithStats;
+      });
     } catch (error) {
       logger.error('Failed to fetch nodes:', error);
       throw new Error('Failed to fetch nodes');
