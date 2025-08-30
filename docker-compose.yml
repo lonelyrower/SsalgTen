@@ -58,7 +58,7 @@ services:
       APP_VERSION: ${APP_VERSION:-0.1.0}
       
       # Database Configuration
-      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten
+      DATABASE_URL: "postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=30&pool_timeout=30"
       
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
