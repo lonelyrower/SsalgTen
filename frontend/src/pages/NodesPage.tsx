@@ -17,7 +17,6 @@ import { socketService } from '@/services/socketService';
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
-const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const NodesPage: React.FC = () => {
@@ -34,7 +33,8 @@ export const NodesPage: React.FC = () => {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
-  const [mapMode, setMapMode] = useState<'2d' | '3d'>('2d');
+  // 只保留 2D 地图模式
+  const [visibleCount, setVisibleCount] = useState(60);
   
   // 延迟测试功能
   const { 
@@ -209,6 +209,11 @@ export const NodesPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // 当筛选结果变化时，校正可见数量，避免越界
+  useEffect(() => {
+    setVisibleCount(c => Math.min(c, Math.max(60, filteredNodes.length)));
+  }, [filteredNodes.length]);
+
   // 如果显示诊断界面且有选中节点
   if (showDiagnostics && selectedNode) {
   return (
@@ -339,50 +344,23 @@ export const NodesPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col min-h-[700px] xl:sticky xl:top-4 xl:h-[calc(100vh-160px)]">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  节点分布{mapMode === '3d' ? '（3D 地球）' : '（2D 地图）'}
+                  节点分布（2D 地图）
                 </h2>
-                <div className="flex items-center space-x-4">
-                  {/* 地图模式切换按钮 */}
-                  <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
-                    <button
-                      className={`px-3 py-2 text-sm transition-colors ${mapMode === '2d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                      onClick={() => setMapMode('2d')}
-                    >
-                      2D 地图
-                    </button>
-                    <button
-                      className={`px-3 py-2 text-sm transition-colors ${mapMode === '3d' ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                      onClick={() => setMapMode('3d')}
-                    >
-                      3D 地球
-                    </button>
-                  </div>
-                  
-                </div>
+                <div className="flex items-center space-x-4"></div>
               </div>
               
               <div className="flex-1 min-h-0">
                 <Suspense fallback={
                   <LoadingSpinner text="加载地图..." size="lg" className="h-64" />
                 }>
-                  {mapMode === '2d' ? (
-                    <EnhancedWorldMap 
-                      nodes={filteredNodes} 
-                      onNodeClick={handleNodeClick} 
-                      selectedNode={selectedNode}
-                      showHeatmap={false}
-                      showControlPanels={false}
-                      className="h-full"
-                    />
-                  ) : (
-                    <div className="h-full">
-                      <Globe3D 
-                        nodes={filteredNodes}
-                        onNodeClick={handleNodeClick}
-                        selectedNode={selectedNode}
-                      />
-                    </div>
-                  )}
+                  <EnhancedWorldMap 
+                    nodes={filteredNodes} 
+                    onNodeClick={handleNodeClick} 
+                    selectedNode={selectedNode}
+                    showHeatmap={false}
+                    showControlPanels={false}
+                    className="h-full"
+                  />
                 </Suspense>
               </div>
             </div>
@@ -537,8 +515,9 @@ export const NodesPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     节点列表
                   </h3>
+                  {/* 简易虚拟化：初始仅渲染部分节点，支持加载更多 */}
                   <div className="space-y-3 flex-1 overflow-y-auto min-h-0">
-                    {filteredNodes.map((node) => (
+                    {filteredNodes.slice(0, Math.min(filteredNodes.length, visibleCount)).map((node) => (
                       <div
                         key={node.id}
                         onClick={() => handleNodeClick(node)}
@@ -608,6 +587,14 @@ export const NodesPage: React.FC = () => {
                         </div>
                       </div>
                     ))}
+                    {filteredNodes.length > visibleCount && (
+                      <button
+                        className="w-full py-2 mt-2 text-sm rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        onClick={() => setVisibleCount((c) => Math.min(c + 60, filteredNodes.length))}
+                      >
+                        加载更多
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

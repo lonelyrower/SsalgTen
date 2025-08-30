@@ -34,9 +34,10 @@ export default defineConfig({
             './src/components/admin/UserModal'
           ],
           
-          // Map chunk
+          // Map chunk（包含新版增强地图）
           'map': [
-            './src/components/map/WorldMap'
+            './src/components/map/WorldMap',
+            './src/components/map/EnhancedWorldMap'
           ],
           
           // Dashboard components chunk

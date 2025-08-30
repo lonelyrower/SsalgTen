@@ -1,6 +1,6 @@
-import React, { useRef, memo, useMemo, useState } from 'react';
+import React, { useRef, memo, useMemo, useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 'react-leaflet';
-import { Icon, DivIcon } from 'leaflet';
+import { DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -15,13 +15,7 @@ import {
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
-// 修复 Leaflet 默认图标问题
-delete (Icon.Default.prototype as any)._getIconUrl;
-Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+// 说明：标记均使用 DivIcon，自定义样式，不再依赖 Leaflet 默认图标
 
 interface EnhancedWorldMapProps {
   nodes?: NodeData[];
@@ -45,82 +39,46 @@ interface NodeCluster {
   maintenanceCount: number;
 }
 
-// 聚合距离计算（基于缩放级别）
-const getClusterDistance = (zoom: number): number => {
-  // 缩放级别越低，聚合距离越大
-  if (zoom <= 3) return 500; // 国家级别
-  if (zoom <= 6) return 200; // 州/省级别  
-  if (zoom <= 9) return 100; // 城市级别
-  if (zoom <= 12) return 50;  // 区域级别
-  return 20; // 街道级别
+// 网格单元角度（基于缩放级别），近似 looking.house 聚合风格：低缩放大聚合，高缩放细化
+const getCellSizeDeg = (zoom: number): number => {
+  if (zoom <= 2) return 6;
+  if (zoom <= 3) return 3;
+  if (zoom <= 5) return 1.5;
+  if (zoom <= 7) return 0.7;
+  if (zoom <= 9) return 0.35;
+  if (zoom <= 12) return 0.18;
+  return 0.1;
 };
 
-// 计算两点之间的距离（公里）
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371; // 地球半径
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-};
 
-// 节点聚合算法
+// 基于网格的 O(n) 聚合（按缩放选择单元大小），相比两两距离判断更高效
 const clusterNodes = (nodes: NodeData[], zoom: number): (NodeData | NodeCluster)[] => {
   if (!nodes.length) return [];
-  
-  const clusterDistance = getClusterDistance(zoom);
-  const clusters: (NodeData | NodeCluster)[] = [];
-  const processed = new Set<string>();
-  
-  nodes.forEach((node, index) => {
-    if (processed.has(node.id)) return;
-    
-    const nearbyNodes: NodeData[] = [node];
-    processed.add(node.id);
-    
-    // 寻找附近的节点
-    nodes.slice(index + 1).forEach(otherNode => {
-      if (processed.has(otherNode.id)) return;
-      
-      const distance = calculateDistance(
-        node.latitude, node.longitude,
-        otherNode.latitude, otherNode.longitude
-      );
-      
-      if (distance <= clusterDistance) {
-        nearbyNodes.push(otherNode);
-        processed.add(otherNode.id);
-      }
-    });
-    
-    if (nearbyNodes.length === 1) {
-      // 单个节点
-      clusters.push(nearbyNodes[0]);
-    } else {
-      // 创建聚合节点
-      const avgLat = nearbyNodes.reduce((sum, n) => sum + n.latitude, 0) / nearbyNodes.length;
-      const avgLon = nearbyNodes.reduce((sum, n) => sum + n.longitude, 0) / nearbyNodes.length;
-      
-      const cluster: NodeCluster = {
-        id: `cluster-${nearbyNodes.map(n => n.id).join('-')}`,
-        latitude: avgLat,
-        longitude: avgLon,
-        nodes: nearbyNodes,
-        count: nearbyNodes.length,
-        onlineCount: nearbyNodes.filter(n => n.status.toLowerCase() === 'online').length,
-        offlineCount: nearbyNodes.filter(n => n.status.toLowerCase() === 'offline').length,
-        maintenanceCount: nearbyNodes.filter(n => n.status.toLowerCase() === 'maintenance').length,
-      };
-      
-      clusters.push(cluster);
-    }
+  const cell = getCellSizeDeg(zoom);
+  const buckets = new Map<string, NodeData[]>();
+  for (const n of nodes) {
+    const key = `${Math.floor(n.latitude / cell)}_${Math.floor(n.longitude / cell)}`;
+    const arr = buckets.get(key);
+    if (arr) arr.push(n); else buckets.set(key, [n]);
+  }
+  const result: (NodeData | NodeCluster)[] = [];
+  buckets.forEach((arr, key) => {
+    if (arr.length === 1) { result.push(arr[0]); return; }
+    const avgLat = arr.reduce((s, n) => s + n.latitude, 0) / arr.length;
+    const avgLon = arr.reduce((s, n) => s + n.longitude, 0) / arr.length;
+    const cluster: NodeCluster = {
+      id: `cluster-${key}-${arr.length}`,
+      latitude: avgLat,
+      longitude: avgLon,
+      nodes: arr,
+      count: arr.length,
+      onlineCount: arr.filter(n => n.status.toLowerCase() === 'online').length,
+      offlineCount: arr.filter(n => n.status.toLowerCase() === 'offline').length,
+      maintenanceCount: arr.filter(n => n.status.toLowerCase() === 'maintenance').length,
+    };
+    result.push(cluster);
   });
-  
-  return clusters;
+  return result;
 };
 
 // 状态对应的颜色和图标
@@ -187,21 +145,16 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
 
 // 创建聚合节点图标
 const createClusterIcon = (cluster: NodeCluster) => {
-  const size = Math.min(24 + Math.log2(cluster.count) * 4, 36); // 更小的动态大小
-  const primaryColor = cluster.onlineCount > cluster.offlineCount ? '#22c55e' : 
-                       cluster.offlineCount > 0 ? '#ef4444' : '#6b7280';
-  
+  const size = Math.min(28 + Math.log2(cluster.count + 1) * 4, 44);
+  const primaryColor = cluster.offlineCount > 0 ? '#ef4444' : '#2563eb'; // 离线偏红，否则蓝调
+  const fontSize = Math.max(11, size / 3.2);
   return new DivIcon({
     html: `
-      <div class="flex items-center justify-center" style="width: ${size}px; height: ${size}px;">
-        <div class="w-full h-full rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-bold" 
-             style="background-color: ${primaryColor}; font-size: ${Math.max(10, size / 3)}px;">
+      <div class="relative flex items-center justify-center" style="width: ${size}px; height: ${size}px;">
+        <div class="w-full h-full rounded-full shadow-md flex items-center justify-center text-white font-semibold"
+             style="background: radial-gradient(100% 100% at 50% 0%, ${primaryColor}, ${primaryColor}CC); border: 2px solid rgba(255,255,255,0.8); font-size: ${fontSize}px;">
           ${cluster.count}
         </div>
-        ${cluster.onlineCount > 0 && cluster.offlineCount > 0 ? `
-          <div class="absolute -bottom-1 -right-1 w-2 h-2 rounded-full border-1 border-white" 
-               style="background-color: #ef4444;"></div>
-        ` : ''}
       </div>
     `,
     className: 'custom-cluster-marker',
@@ -268,14 +221,21 @@ export const EnhancedWorldMap = memo(({
   const [viewMode, setViewMode] = useState<'markers' | 'heatmap' | 'connections'>('markers');
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
+  const [debouncedZoom, setDebouncedZoom] = useState(3);
   const [expandedCluster, setExpandedCluster] = useState<string | null>(null);
   
   const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
 
+  // 防抖缩放级别，避免频繁重算聚合
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedZoom(currentZoom), 200);
+    return () => clearTimeout(t);
+  }, [currentZoom]);
+
   // 聚合节点
   const clusteredItems = useMemo(() => {
-    return clusterNodes(nodes, currentZoom);
-  }, [nodes, currentZoom]);
+    return clusterNodes(nodes, debouncedZoom);
+  }, [nodes, debouncedZoom]);
 
   // 生成标记组件
   const markers = useMemo(() => {
@@ -297,11 +257,16 @@ export const EnhancedWorldMap = memo(({
               icon={createClusterIcon(cluster)}
               eventHandlers={{
                 click: () => {
-                  // 点击聚合节点时展开显示各个节点
-                  setExpandedCluster(cluster.id);
+                  // 低缩放优先引导放大查看，较高缩放再展开子节点
+                  const z = debouncedZoom;
+                  if (z < 6 && mapRef.current?.setView) {
+                    try { mapRef.current.setView([cluster.latitude, cluster.longitude], Math.min(z + 2, 12), { animate: true }); } catch {}
+                  } else {
+                    setExpandedCluster(cluster.id);
+                  }
                 },
-              }}
-            >
+            }}
+          >
               <Popup className="custom-popup" maxWidth={300}>
                 <div className="p-3">
                   <h3 className="font-bold text-base text-gray-900 mb-2">
