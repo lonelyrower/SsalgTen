@@ -16,6 +16,40 @@ import {
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
+// 读取运行时地图配置
+const getMapConfig = () => {
+  const w: any = typeof window !== 'undefined' ? (window as any) : {};
+  const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
+  const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+
+  // 支持多种底图源，默认 OSM。如需更快的瓦片，可在生产设置 MAP_PROVIDER。
+  // 选项：
+  // - openstreetmap（默认）
+  // - carto（Carto light_all，无需密钥，速度通常更快）
+  // - maptiler（需要 MAP_API_KEY）
+  switch (provider) {
+    case 'carto':
+      return {
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
+        subdomains: ['a', 'b', 'c', 'd'] as string[],
+      };
+    case 'maptiler':
+      return {
+        url: `https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${apiKey}`,
+        attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; OSM contributors',
+        subdomains: undefined as unknown as string[],
+      };
+    case 'openstreetmap':
+    default:
+      return {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: ['a', 'b', 'c'] as string[],
+      };
+  }
+};
+
 // 说明：标记均使用 DivIcon，自定义样式，不再依赖 Leaflet 默认图标
 
 interface EnhancedWorldMapProps {
@@ -447,14 +481,19 @@ export const EnhancedWorldMap = memo(({
           {/* 设置 mapRef，供点击聚合时 setView 使用 */}
           <MapRefSetter setRef={(m) => { (mapRef as any).current = m; }} />
           <BoundsHandler onBoundsChange={setBounds} />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            className="grayscale-[20%] contrast-[110%]"
-            updateWhenIdle={true}
-            updateWhenZooming={false}
-            keepBuffer={4}
-          />
+          {(() => {
+            const cfg = getMapConfig();
+            return (
+              <TileLayer
+                attribution={cfg.attribution}
+                url={cfg.url}
+                className="grayscale-[20%] contrast-[110%]"
+                updateWhenIdle={true}
+                updateWhenZooming={false}
+                keepBuffer={2}
+              />
+            );
+          })()}
           
           {/* 缩放监听组件 */}
           <ZoomHandler onZoomChange={setCurrentZoom} />

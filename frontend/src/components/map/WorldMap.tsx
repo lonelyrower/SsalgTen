@@ -4,6 +4,31 @@ import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import type { NodeData } from '@/services/api';
 
+// 运行时地图配置（与 EnhancedWorldMap 保持一致）
+const getMapConfig = () => {
+  const w: any = typeof window !== 'undefined' ? (window as any) : {};
+  const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
+  const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+  switch (provider) {
+    case 'carto':
+      return {
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
+      };
+    case 'maptiler':
+      return {
+        url: `https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${apiKey}`,
+        attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; OSM contributors',
+      };
+    case 'openstreetmap':
+    default:
+      return {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      };
+  }
+};
+
 // 修复 Leaflet 默认图标问题
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
@@ -102,10 +127,9 @@ export const WorldMap = memo(({ nodes = [], onNodeClick, hideIPs = false }: Worl
         maxBounds={[[-90, -180], [90, 180]]}
         maxBoundsViscosity={0.5}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        {(() => { const cfg = getMapConfig(); return (
+          <TileLayer attribution={cfg.attribution} url={cfg.url} />
+        ); })()}
         
         {markers}
       </MapContainer>
