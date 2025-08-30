@@ -184,6 +184,19 @@ const ZoomHandler = ({ onZoomChange }: { onZoomChange: (zoom: number) => void })
   return null;
 };
 
+// 监听地图边界变化
+const BoundsHandler = ({ onBoundsChange }: { onBoundsChange: (b: any) => void }) => {
+  const map = useMapEvents({
+    moveend: () => onBoundsChange(map.getBounds()),
+    zoomend: () => onBoundsChange(map.getBounds()),
+  });
+  useEffect(() => {
+    try { onBoundsChange(map.getBounds()); } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+};
+
 // 将 Leaflet Map 实例写入外部 ref，便于在点击聚合时主动缩放
 const MapRefSetter = ({ setRef }: { setRef: (map: any) => void }) => {
   const map = useMap();
@@ -230,6 +243,8 @@ export const EnhancedWorldMap = memo(({
   const [currentZoom, setCurrentZoom] = useState(3);
   const [debouncedZoom, setDebouncedZoom] = useState(3);
   const [expandedCluster, setExpandedCluster] = useState<string | null>(null);
+  const [bounds, setBounds] = useState<any | null>(null);
+  const [debouncedBounds, setDebouncedBounds] = useState<any | null>(null);
   
   const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
 
@@ -239,10 +254,35 @@ export const EnhancedWorldMap = memo(({
     return () => clearTimeout(t);
   }, [currentZoom]);
 
-  // 聚合节点
+  // 防抖边界变更
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedBounds(bounds), 200);
+    return () => clearTimeout(t);
+  }, [bounds]);
+
+  // 计算可视区（含20%边距）内的节点
+  const visibleNodes = useMemo(() => {
+    if (!debouncedBounds) return nodes;
+    const north = debouncedBounds.getNorth ? debouncedBounds.getNorth() : debouncedBounds._northEast?.lat;
+    const south = debouncedBounds.getSouth ? debouncedBounds.getSouth() : debouncedBounds._southWest?.lat;
+    const east = debouncedBounds.getEast ? debouncedBounds.getEast() : debouncedBounds._northEast?.lng;
+    const west = debouncedBounds.getWest ? debouncedBounds.getWest() : debouncedBounds._southWest?.lng;
+    if ([north, south, east, west].some(v => typeof v !== 'number')) return nodes;
+    const latSpan = Math.max(0.0001, Math.abs(north - south));
+    const lonSpan = Math.max(0.0001, Math.abs(east - west));
+    const padLat = latSpan * 0.2;
+    const padLon = lonSpan * 0.2;
+    const maxN = Math.min(90, north + padLat);
+    const minS = Math.max(-90, south - padLat);
+    const maxE = Math.min(180, east + padLon);
+    const minW = Math.max(-180, west - padLon);
+    return nodes.filter(n => n.latitude <= maxN && n.latitude >= minS && n.longitude <= maxE && n.longitude >= minW);
+  }, [nodes, debouncedBounds]);
+
+  // 聚合节点（仅对可视区子集）
   const clusteredItems = useMemo(() => {
-    return clusterNodes(nodes, debouncedZoom);
-  }, [nodes, debouncedZoom]);
+    return clusterNodes(visibleNodes, debouncedZoom);
+  }, [visibleNodes, debouncedZoom]);
 
   // 生成标记组件
   const markers = useMemo(() => {
@@ -356,13 +396,13 @@ export const EnhancedWorldMap = memo(({
     });
     
     return markerElements;
-  }, [nodes, onNodeClick, selectedNode, expandedCluster]);
+  }, [clusteredItems, onNodeClick, selectedNode, expandedCluster, debouncedZoom]);
 
   // 生成覆盖圈（显示节点覆盖范围）
   const coverageCircles = useMemo(() => {
     if (!showHeatmap) return [];
 
-    return nodes.map((node) => {
+    return visibleNodes.map((node) => {
       const style = getNodeStyle(node.status);
       return (
         <Circle
@@ -377,7 +417,7 @@ export const EnhancedWorldMap = memo(({
         />
       );
     });
-  }, [nodes, showHeatmap]);
+  }, [visibleNodes, showHeatmap]);
 
   return (
     <div className={`relative flex flex-col ${className}`}>
@@ -490,10 +530,14 @@ export const EnhancedWorldMap = memo(({
         >
           {/* 设置 mapRef，供点击聚合时 setView 使用 */}
           <MapRefSetter setRef={(m) => { (mapRef as any).current = m; }} />
+          <BoundsHandler onBoundsChange={setBounds} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             className="grayscale-[20%] contrast-[110%]"
+            updateWhenIdle={true}
+            updateWhenZooming={false}
+            keepBuffer={4}
           />
           
           {/* 缩放监听组件 */}
