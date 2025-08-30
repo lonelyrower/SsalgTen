@@ -1,6 +1,7 @@
 import React, { useRef, memo, useMemo, useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
+import Supercluster from 'supercluster';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -28,57 +29,22 @@ interface EnhancedWorldMapProps {
 }
 
 // 聚合节点类型
-interface NodeCluster {
-  id: string;
-  latitude: number;
-  longitude: number;
-  nodes: NodeData[];
-  count: number;
-  onlineCount: number;
-  offlineCount: number;
-  maintenanceCount: number;
-}
+// 旧的手写聚合类型已移除，改用 supercluster
 
-// 网格单元角度（基于缩放级别），近似 looking.house 聚合风格：低缩放大聚合，高缩放细化
-const getCellSizeDeg = (zoom: number): number => {
-  if (zoom <= 2) return 6;
-  if (zoom <= 3) return 3;
-  if (zoom <= 5) return 1.5;
-  if (zoom <= 7) return 0.7;
-  if (zoom <= 9) return 0.35;
-  if (zoom <= 12) return 0.18;
-  return 0.1;
+// supercluster 属性定义
+type ClusterExtra = {
+  online?: number;
+  offline?: number;
+  maintenance?: number;
+  status?: string;
+  id?: string;
+  node?: NodeData;
 };
 
-
-// 基于网格的 O(n) 聚合（按缩放选择单元大小），相比两两距离判断更高效
-const clusterNodes = (nodes: NodeData[], zoom: number): (NodeData | NodeCluster)[] => {
-  if (!nodes.length) return [];
-  const cell = getCellSizeDeg(zoom);
-  const buckets = new Map<string, NodeData[]>();
-  for (const n of nodes) {
-    const key = `${Math.floor(n.latitude / cell)}_${Math.floor(n.longitude / cell)}`;
-    const arr = buckets.get(key);
-    if (arr) arr.push(n); else buckets.set(key, [n]);
-  }
-  const result: (NodeData | NodeCluster)[] = [];
-  buckets.forEach((arr, key) => {
-    if (arr.length === 1) { result.push(arr[0]); return; }
-    const avgLat = arr.reduce((s, n) => s + n.latitude, 0) / arr.length;
-    const avgLon = arr.reduce((s, n) => s + n.longitude, 0) / arr.length;
-    const cluster: NodeCluster = {
-      id: `cluster-${key}-${arr.length}`,
-      latitude: avgLat,
-      longitude: avgLon,
-      nodes: arr,
-      count: arr.length,
-      onlineCount: arr.filter(n => n.status.toLowerCase() === 'online').length,
-      offlineCount: arr.filter(n => n.status.toLowerCase() === 'offline').length,
-      maintenanceCount: arr.filter(n => n.status.toLowerCase() === 'maintenance').length,
-    };
-    result.push(cluster);
-  });
-  return result;
+// 从 supercluster 聚合特征中提取是否为聚合
+type AggregatedClusterProps = { cluster: true; cluster_id: number; point_count: number; online?: number; offline?: number; maintenance?: number };
+const isSuperCluster = (props: any): props is AggregatedClusterProps => {
+  return !!props && props.cluster === true && typeof props.cluster_id === 'number';
 };
 
 // 状态对应的颜色和图标
@@ -143,17 +109,17 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
   });
 };
 
-// 创建聚合节点图标
-const createClusterIcon = (cluster: NodeCluster) => {
-  const size = Math.min(28 + Math.log2(cluster.count + 1) * 4, 44);
-  const primaryColor = cluster.offlineCount > 0 ? '#ef4444' : '#2563eb'; // 离线偏红，否则蓝调
+// 创建聚合节点图标（基于 supercluster 返回的统计）
+const createClusterIcon = (count: number, offline: number = 0) => {
+  const size = Math.min(28 + Math.log2(count + 1) * 4, 44);
+  const primaryColor = offline > 0 ? '#ef4444' : '#2563eb';
   const fontSize = Math.max(11, size / 3.2);
   return new DivIcon({
     html: `
       <div class="relative flex items-center justify-center" style="width: ${size}px; height: ${size}px;">
         <div class="w-full h-full rounded-full shadow-md flex items-center justify-center text-white font-semibold"
              style="background: radial-gradient(100% 100% at 50% 0%, ${primaryColor}, ${primaryColor}CC); border: 2px solid rgba(255,255,255,0.8); font-size: ${fontSize}px;">
-          ${cluster.count}
+          ${count}
         </div>
       </div>
     `,
@@ -204,20 +170,7 @@ const MapRefSetter = ({ setRef }: { setRef: (map: any) => void }) => {
   return null;
 };
 
-// 生成扇形展开的节点位置
-const generateExpandedPositions = (centerLat: number, centerLng: number, nodeCount: number) => {
-  const radius = 0.05; // 展开半径（度）
-  const positions: Array<{lat: number; lng: number}> = [];
-  
-  for (let i = 0; i < nodeCount; i++) {
-    const angle = (2 * Math.PI * i) / nodeCount;
-    const lat = centerLat + radius * Math.cos(angle);
-    const lng = centerLng + radius * Math.sin(angle);
-    positions.push({ lat, lng });
-  }
-  
-  return positions;
-};
+// 旧的扇形展开方案已移除，改为点击聚合平滑缩放到展开级别
 
 interface EnhancedWorldMapProps {
   nodes?: NodeData[];
@@ -242,7 +195,7 @@ export const EnhancedWorldMap = memo(({
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
   const [debouncedZoom, setDebouncedZoom] = useState(3);
-  const [expandedCluster, setExpandedCluster] = useState<string | null>(null);
+  // 不再使用手动展开聚合
   const [bounds, setBounds] = useState<any | null>(null);
   const [debouncedBounds, setDebouncedBounds] = useState<any | null>(null);
   
@@ -260,149 +213,112 @@ export const EnhancedWorldMap = memo(({
     return () => clearTimeout(t);
   }, [bounds]);
 
-  // 计算可视区（含20%边距）内的节点
-  const visibleNodes = useMemo(() => {
-    if (!debouncedBounds) return nodes;
+  // supercluster 索引（随节点变化重建）
+  const clusterIndex = useMemo(() => {
+    const idx: any = new (Supercluster as any)({
+      radius: 60,
+      maxZoom: 18,
+      minPoints: 2,
+      // 映射每个点的聚合贡献
+      map: (props: ClusterExtra) => ({
+        online: props.status?.toLowerCase() === 'online' ? 1 : 0,
+        offline: props.status?.toLowerCase() === 'offline' ? 1 : 0,
+        maintenance: props.status?.toLowerCase() === 'maintenance' ? 1 : 0,
+      }),
+      // 聚合统计
+      reduce: (acc: ClusterExtra, props: ClusterExtra) => {
+        acc.online = (acc.online || 0) + (props.online || 0);
+        acc.offline = (acc.offline || 0) + (props.offline || 0);
+        acc.maintenance = (acc.maintenance || 0) + (props.maintenance || 0);
+      },
+    });
+    const features = nodes.map(n => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [n.longitude, n.latitude] },
+      properties: { id: n.id, status: n.status, node: n } as ClusterExtra,
+    }));
+    idx.load(features);
+    return idx;
+  }, [nodes]);
+
+  // 计算当前视口聚合结果
+  const clusteredItems = useMemo(() => {
+    if (!debouncedBounds) return [] as any[];
     const north = debouncedBounds.getNorth ? debouncedBounds.getNorth() : debouncedBounds._northEast?.lat;
     const south = debouncedBounds.getSouth ? debouncedBounds.getSouth() : debouncedBounds._southWest?.lat;
     const east = debouncedBounds.getEast ? debouncedBounds.getEast() : debouncedBounds._northEast?.lng;
     const west = debouncedBounds.getWest ? debouncedBounds.getWest() : debouncedBounds._southWest?.lng;
-    if ([north, south, east, west].some(v => typeof v !== 'number')) return nodes;
-    const latSpan = Math.max(0.0001, Math.abs(north - south));
-    const lonSpan = Math.max(0.0001, Math.abs(east - west));
-    const padLat = latSpan * 0.2;
-    const padLon = lonSpan * 0.2;
-    const maxN = Math.min(90, north + padLat);
-    const minS = Math.max(-90, south - padLat);
-    const maxE = Math.min(180, east + padLon);
-    const minW = Math.max(-180, west - padLon);
-    return nodes.filter(n => n.latitude <= maxN && n.latitude >= minS && n.longitude <= maxE && n.longitude >= minW);
-  }, [nodes, debouncedBounds]);
-
-  // 聚合节点（仅对可视区子集）
-  const clusteredItems = useMemo(() => {
-    return clusterNodes(visibleNodes, debouncedZoom);
-  }, [visibleNodes, debouncedZoom]);
+    if ([north, south, east, west].some(v => typeof v !== 'number')) return [] as any[];
+    const bbox: [number, number, number, number] = [west, south, east, north];
+    const z = Math.max(0, Math.floor(debouncedZoom));
+    return (clusterIndex as any).getClusters(bbox, z) as any[];
+  }, [clusterIndex, debouncedBounds, debouncedZoom]);
 
   // 生成标记组件
   const markers = useMemo(() => {
-    const markerElements: React.ReactElement[] = [];
-    
-    clusteredItems.forEach((item) => {
-      // 检查是否为聚合节点
-      if ('count' in item) {
-        // 聚合节点
-        const cluster = item as NodeCluster;
-        const isExpanded = expandedCluster === cluster.id;
-        
-        if (!isExpanded) {
-          // 显示聚合节点
-          markerElements.push(
-            <Marker
-              key={cluster.id}
-              position={[cluster.latitude, cluster.longitude]}
-              icon={createClusterIcon(cluster)}
-              eventHandlers={{
-                click: () => {
-                  // 低缩放优先引导放大查看，较高缩放再展开子节点
-                  const z = debouncedZoom;
-                  if (z < 6 && mapRef.current?.setView) {
-                    try { mapRef.current.setView([cluster.latitude, cluster.longitude], Math.min(z + 2, 12), { animate: true }); } catch {}
-                  } else {
-                    setExpandedCluster(cluster.id);
-                  }
-                },
+    const els: React.ReactElement[] = [];
+    clusteredItems.forEach((feature: any) => {
+      const [lng, lat] = feature.geometry.coordinates as [number, number];
+      const props = feature.properties as any;
+      if (isSuperCluster(props)) {
+        const count = props.point_count as number;
+        const offline = (props.offline as number) || 0;
+        els.push(
+          <Marker
+            key={`cluster-${props.cluster_id}-${count}`}
+            position={[lat, lng]}
+            icon={createClusterIcon(count, offline)}
+            eventHandlers={{
+              click: () => {
+                try {
+                  const targetZoom = Math.min((clusterIndex as any).getClusterExpansionZoom(props.cluster_id), 18);
+                  mapRef.current?.setView([lat, lng], targetZoom, { animate: true });
+                } catch {}
+              },
             }}
           >
-              <Popup className="custom-popup" maxWidth={300}>
-                <div className="p-3">
-                  <h3 className="font-bold text-base text-gray-900 mb-2">
-                    集群节点 ({cluster.count})
-                  </h3>
-                  <div className="text-sm text-gray-600 mb-2">
-                    在线: {cluster.onlineCount} | 离线: {cluster.offlineCount}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    点击展开查看各个节点
-                  </p>
+            <Popup className="custom-popup" maxWidth={300}>
+              <div className="p-3">
+                <h3 className="font-bold text-base text-gray-900 mb-2">集群节点 ({count})</h3>
+                <div className="text-sm text-gray-600 mb-2">
+                  在线: {props.online || 0} | 离线: {props.offline || 0}
                 </div>
-              </Popup>
-            </Marker>
-          );
-        } else {
-          // 显示展开的各个节点
-          const expandedPositions = generateExpandedPositions(cluster.latitude, cluster.longitude, cluster.count);
-          
-          cluster.nodes.forEach((node, index) => {
-            const expandedPos = expandedPositions[index];
-            const isSelected = selectedNode?.id === node.id;
-            
-            markerElements.push(
-              <Marker
-                key={`expanded-${node.id}`}
-                position={[expandedPos.lat, expandedPos.lng]}
-                icon={createEnhancedIcon(node.status, isSelected)}
-                eventHandlers={{
-                  click: () => onNodeClick?.(node),
-                }}
-              />
-            );
-          });
-          
-          // 添加中心点用于收起
-          const centerIcon = new DivIcon({
-            html: `
-              <div class="flex items-center justify-center" style="width: 20px; height: 20px;">
-                <div class="w-full h-full rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-bold" 
-                     style="background-color: #6b7280; font-size: 10px;">
-                  ×
-                </div>
+                <p className="text-xs text-gray-500">点击放大以查看详情</p>
               </div>
-            `,
-            className: 'custom-center-marker',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-          });
-          
-          markerElements.push(
-            <Marker
-              key={`center-${cluster.id}`}
-              position={[cluster.latitude, cluster.longitude]}
-              icon={centerIcon}
-              eventHandlers={{
-                click: () => {
-                  setExpandedCluster(null);
-                },
-              }}
-            />
-          );
-        }
+            </Popup>
+          </Marker>
+        );
       } else {
-        // 单个节点
-        const node = item as NodeData;
+        const node: NodeData | undefined = props.node as NodeData | undefined;
+        if (!node) return;
         const isSelected = selectedNode?.id === node.id;
-
-        markerElements.push(
+        els.push(
           <Marker
-            key={`${node.id}-${node.status}-${isSelected}`}
+            key={`node-${node.id}-${node.status}-${isSelected}`}
             position={[node.latitude, node.longitude]}
             icon={createEnhancedIcon(node.status, isSelected)}
-            eventHandlers={{
-              click: () => onNodeClick?.(node),
-            }}
+            eventHandlers={{ click: () => onNodeClick?.(node) }}
           />
         );
       }
     });
-    
-    return markerElements;
-  }, [clusteredItems, onNodeClick, selectedNode, expandedCluster, debouncedZoom]);
+    return els;
+  }, [clusteredItems, clusterIndex, onNodeClick, selectedNode]);
 
   // 生成覆盖圈（显示节点覆盖范围）
   const coverageCircles = useMemo(() => {
     if (!showHeatmap) return [];
 
-    return visibleNodes.map((node) => {
+    // 仅对可视区内的真实节点绘制覆盖圈
+    const north = debouncedBounds?.getNorth ? debouncedBounds.getNorth() : debouncedBounds?._northEast?.lat;
+    const south = debouncedBounds?.getSouth ? debouncedBounds.getSouth() : debouncedBounds?._southWest?.lat;
+    const east = debouncedBounds?.getEast ? debouncedBounds.getEast() : debouncedBounds?._northEast?.lng;
+    const west = debouncedBounds?.getWest ? debouncedBounds.getWest() : debouncedBounds?._southWest?.lng;
+    const inView = (n: NodeData) => {
+      if ([north, south, east, west].some(v => typeof v !== 'number')) return true;
+      return n.latitude <= north && n.latitude >= south && n.longitude <= east && n.longitude >= west;
+    };
+    return nodes.filter(inView).map((node) => {
       const style = getNodeStyle(node.status);
       return (
         <Circle
@@ -417,7 +333,7 @@ export const EnhancedWorldMap = memo(({
         />
       );
     });
-  }, [visibleNodes, showHeatmap]);
+  }, [nodes, debouncedBounds, showHeatmap]);
 
   return (
     <div className={`relative flex flex-col ${className}`}>
