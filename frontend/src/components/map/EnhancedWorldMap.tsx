@@ -1,5 +1,5 @@
 import React, { useRef, memo, useMemo, useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -181,6 +181,13 @@ const ZoomHandler = ({ onZoomChange }: { onZoomChange: (zoom: number) => void })
       onZoomChange(map.getZoom());
     },
   });
+  return null;
+};
+
+// 将 Leaflet Map 实例写入外部 ref，便于在点击聚合时主动缩放
+const MapRefSetter = ({ setRef }: { setRef: (map: any) => void }) => {
+  const map = useMap();
+  useEffect(() => { setRef(map); }, [map, setRef]);
   return null;
 };
 
@@ -481,6 +488,8 @@ export const EnhancedWorldMap = memo(({
           maxBounds={[[-90, -180], [90, 180]]}
           maxBoundsViscosity={0.5}
         >
+          {/* 设置 mapRef，供点击聚合时 setView 使用 */}
+          <MapRefSetter setRef={(m) => { (mapRef as any).current = m; }} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
