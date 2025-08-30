@@ -76,6 +76,12 @@ export class NodeService {
   private heartbeatLogCounter: Record<string, number> = {};
   private heartbeatLogInterval = 5; // 每5次详细记录一次
   
+  // 简易内存缓存，降低高频请求带来的数据库压力
+  private nodesCache: { data: NodeWithStats[]; ts: number } | null = null;
+  private statsCache: { data: { totalNodes: number; onlineNodes: number; offlineNodes: number; unknownNodes: number; totalCountries: number; totalProviders: number; }; ts: number } | null = null;
+  private nodesCacheTtlMs = parseInt(process.env.NODES_CACHE_TTL_MS || '2000');
+  private statsCacheTtlMs = parseInt(process.env.STATS_CACHE_TTL_MS || '2000');
+  
   // 创建新节点
   async createNode(input: CreateNodeInput): Promise<Node> {
     try {
@@ -134,6 +140,10 @@ export class NodeService {
   // 获取所有节点
   async getAllNodes(): Promise<NodeWithStats[]> {
     try {
+      // 命中缓存
+      if (this.nodesCache && Date.now() - this.nodesCache.ts < this.nodesCacheTtlMs) {
+        return this.nodesCache.data;
+      }
       // 1) 一次性取所有节点（按创建时间倒序）
       const nodes = await prisma.node.findMany({
         orderBy: { createdAt: 'desc' }
@@ -170,7 +180,7 @@ export class NodeService {
       }
 
       // 3) 组装返回（不再 include 关系，显著降低查询负载）
-      return nodes.map((node) => {
+      const result = nodes.map((node) => {
         const lh = latestMap.get(node.id);
         const out: any = {
           ...node,
@@ -184,6 +194,8 @@ export class NodeService {
         };
         return out as NodeWithStats;
       });
+      this.nodesCache = { data: result, ts: Date.now() };
+      return result;
     } catch (error) {
       logger.error('Failed to fetch nodes:', error);
       throw new Error('Failed to fetch nodes');
@@ -442,6 +454,9 @@ export class NodeService {
     totalProviders: number;
   }> {
     try {
+      if (this.statsCache && Date.now() - this.statsCache.ts < this.statsCacheTtlMs) {
+        return this.statsCache.data;
+      }
       const [
         totalNodes,
         statusCounts,
@@ -468,7 +483,7 @@ export class NodeService {
         return acc;
       }, {} as Record<string, number>);
 
-      return {
+      const data = {
         totalNodes,
         onlineNodes: statusMap[NodeStatus.ONLINE] || 0,
         offlineNodes: statusMap[NodeStatus.OFFLINE] || 0,
@@ -476,6 +491,8 @@ export class NodeService {
         totalCountries: countries.length,
         totalProviders: providers.length
       };
+      this.statsCache = { data, ts: Date.now() };
+      return data;
     } catch (error) {
       logger.error('Failed to fetch node stats:', error);
       throw new Error('Failed to fetch node stats');
