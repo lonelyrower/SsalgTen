@@ -28,6 +28,7 @@ export const HomePage = () => {
     if (mapInView) return;
     const el = mapHolderRef.current;
     if (!el) return;
+    // 视口懒加载 + 兜底定时器（防止个别环境下 IntersectionObserver 不触发）
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {
@@ -38,7 +39,12 @@ export const HomePage = () => {
       }
     }, { rootMargin: '200px' });
     io.observe(el);
-    return () => io.disconnect();
+    const fallback = setTimeout(() => {
+      // 若 1.5s 内仍未触发可视，则直接渲染地图，避免“地图准备中”长时间不消失
+      setMapInView(true);
+      try { io.disconnect(); } catch {}
+    }, 1500);
+    return () => { try { io.disconnect(); } catch {}; clearTimeout(fallback); };
   }, [mapInView]);
 
 
