@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { EnhancedWorldMap } from '@/components/map/EnhancedWorldMap';
