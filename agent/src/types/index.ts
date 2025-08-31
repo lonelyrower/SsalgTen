@@ -11,6 +11,7 @@ export interface AgentConfig {
   masterUrl: string;
   apiKey: string;
   heartbeatInterval: number;
+  tlsInsecure: boolean;
 }
 
 export interface DiagnosticRequest {
