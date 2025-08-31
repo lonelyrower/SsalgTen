@@ -28,6 +28,14 @@ export const HomePage = () => {
     if (mapInView) return;
     const el = mapHolderRef.current;
     if (!el) return;
+    
+    // 立即检查元素是否已经在视口内
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 300 && rect.bottom > -300) {
+      setMapInView(true);
+      return;
+    }
+    
     // 视口懒加载 + 兜底定时器（防止个别环境下 IntersectionObserver 不触发）
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
@@ -37,14 +45,20 @@ export const HomePage = () => {
           break;
         }
       }
-    }, { rootMargin: '200px' });
+    }, { rootMargin: '300px' }); // 增加预加载距离
+    
     io.observe(el);
+    
+    // 减少兜底定时器时间，快速显示地图
     const fallback = setTimeout(() => {
-      // 若 1.5s 内仍未触发可视，则直接渲染地图，避免“地图准备中”长时间不消失
       setMapInView(true);
       try { io.disconnect(); } catch {}
-    }, 1500);
-    return () => { try { io.disconnect(); } catch {}; clearTimeout(fallback); };
+    }, 800); // 从1500ms减少到800ms
+    
+    return () => { 
+      try { io.disconnect(); } catch {}
+      clearTimeout(fallback); 
+    };
   }, [mapInView]);
 
 
@@ -157,7 +171,9 @@ export const HomePage = () => {
                   className="h-full"
                 />
               ) : (
-                <LoadingSpinner text="地图准备中..." size="lg" className="h-full" />
+                <div className="flex items-center justify-center h-full">
+                  <LoadingSpinner text="地图准备中..." size="lg" />
+                </div>
               )}
             </div>
           </GlassCard>
