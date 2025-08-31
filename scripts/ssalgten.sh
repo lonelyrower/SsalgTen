@@ -195,6 +195,14 @@ ensure_cmd() {
     fi
 }
 
+# 强制刷新输出缓冲区（解决SSH终端输出截断问题）
+flush_output() {
+    sync
+    # 强制刷新标准输出和标准错误
+    exec 1>&1 2>&2
+    sleep 2
+}
+
 # Docker Compose 兼容性检查和包装函数
 docker_compose() {
     local base_args=()
@@ -1160,7 +1168,12 @@ update_system() {
     
     # 重新构建并启动
     log_info "重新构建并启动服务..."
+    # 强制刷新输出缓冲区，确保SSH终端显示完整输出
+    flush_output
     if ! docker_compose up -d --build --remove-orphans; then
+        # 强制刷新输出并等待
+        flush_output
+        echo "⚠️ Docker服务构建遇到问题，尝试分步启动"
         log_warning "整体启动失败，尝试仅启动核心服务 (database/redis/backend/frontend/updater)..."
         local core_services=(database redis backend frontend updater)
         for s in "${core_services[@]}"; do
@@ -1168,6 +1181,10 @@ update_system() {
         done
         # 尝试启动 agent（忽略失败）
         docker_compose up -d --no-deps agent-nyc 2>/dev/null || log_warning "agent-nyc 启动失败，已忽略（可能端口冲突）"
+    else
+        # 强制刷新输出并等待，确保Docker输出完全显示
+        flush_output
+        echo "✅ Docker服务构建和启动完成"
     fi
 
     sleep 15
@@ -1322,7 +1339,12 @@ update_system_from_archive() {
 
     # 重新启动服务
     log_info "重新构建并启动服务..."
+    # 强制刷新输出缓冲区，确保SSH终端显示完整输出
+    flush_output
     if docker_compose up -d --build --remove-orphans; then
+        # 强制刷新输出并等待，确保Docker输出完全显示
+        flush_output
+        echo "✅ Docker服务构建和启动完成"
         # 动态检测端口并健康检查
         detect_ports
         
