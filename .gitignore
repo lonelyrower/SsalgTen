@@ -38,6 +38,11 @@ agent/.env
 # Claude Code local settings
 .claude/
 
+# Build logs and temporary files
+*.tsbuild*.log
+*.vitebuild*.log
+*.build.log
+
 # Logs
 logs
 *.log
