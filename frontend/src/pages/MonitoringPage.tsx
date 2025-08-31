@@ -111,6 +111,7 @@ export const MonitoringPage: React.FC = () => {
   const topCountries = Object.entries(countryStats)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 5);
+  const maxCountryCount = topCountries.length > 0 ? topCountries[0][1] : 0;
 
   // 计算服务商分布
   const providerStats = nodes.reduce((acc, node) => {
@@ -261,18 +262,25 @@ export const MonitoringPage: React.FC = () => {
                 </h3>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {topCountries.slice(0, 4).map(([country, count]) => (
-                <div key={country} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <CountryFlagSvg country={country} size={16} />
-                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                      {country}
+                <div key={country} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <CountryFlagSvg country={country} size={16} />
+                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        {country}
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {count}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {count}
-                  </span>
+                  <ProgressBar
+                    value={maxCountryCount ? (count / maxCountryCount) * 100 : 0}
+                    color="blue"
+                    size="sm"
+                  />
                 </div>
               ))}
               {Object.keys(countryStats).length > 4 && (
