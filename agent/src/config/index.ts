@@ -25,6 +25,9 @@ export const config: AgentConfig = {
   masterUrl: process.env.MASTER_URL || 'http://localhost:3001',
   apiKey: process.env.AGENT_API_KEY || 'default-api-key',
   heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL || '30000'),
+  // When true, the agent will skip TLS verification for HTTPS requests to the master.
+  // Useful as a temporary workaround if the server's certificate chain is misconfigured.
+  tlsInsecure: ((process.env.AGENT_TLS_INSECURE || 'false').toLowerCase() === 'true') || (process.env.AGENT_TLS_INSECURE === '1'),
 };
 
 export const serverConfig = {

@@ -3,12 +3,10 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
 import Supercluster from 'supercluster';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Activity, 
   Server, 
-  MapPin, 
   Clock, 
   Eye,
   TrendingUp,

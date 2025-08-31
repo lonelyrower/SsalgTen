@@ -4,6 +4,7 @@ import { getSystemInfo } from '../utils/system';
 import { logger } from '../utils/logger';
 import { HeartbeatData } from '../types';
 import { buildSignedHeaders } from '../utils/signing';
+import { http } from '../utils/http';
 
 export class HeartbeatService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -45,12 +46,11 @@ export class HeartbeatService {
         version: '0.1.0'
       };
 
-      const response = await axios.post(
+      const response = await http.post(
         `${config.masterUrl}/api/agents/heartbeat`,
         heartbeatData,
         {
           headers: {
-            'Content-Type': 'application/json',
             ...buildSignedHeaders(config.apiKey, heartbeatData)
           },
           timeout: 10000

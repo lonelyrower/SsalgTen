@@ -12,6 +12,13 @@ dotenv.config();
 
 const app = express();
 
+// Allow insecure TLS for outbound requests when explicitly enabled.
+// Temporary workaround for environments with incomplete cert chains.
+if ((process.env.AGENT_TLS_INSECURE || '').toLowerCase() === 'true' || process.env.AGENT_TLS_INSECURE === '1') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  logger.warn('AGENT_TLS_INSECURE is enabled; TLS certificate verification is disabled for outbound requests');
+}
+
 // 启动前安全检查：禁止使用默认API Key
 if (!process.env.AGENT_API_KEY || process.env.AGENT_API_KEY === 'default-api-key') {
   logger.error('AGENT_API_KEY 未设置或仍为默认值，请设置一个安全的随机密钥后再启动 (env AGENT_API_KEY)');

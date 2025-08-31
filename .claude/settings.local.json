@@ -70,7 +70,9 @@
       "Bash(PORT=3000 npm run preview --prefix frontend)",
       "Bash(PORT=3000 npm run preview)",
       "Bash(VITE_API_BASE_URL=http://localhost:3001/api npm run dev:frontend)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx typescript/bin/tsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)"
     ],
     "deny": [],
     "additionalDirectories": [
