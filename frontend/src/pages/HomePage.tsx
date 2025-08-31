@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
-const EnhancedWorldMapLazy = lazy(() => import('@/components/map/EnhancedWorldMap').then(m => ({ default: m.EnhancedWorldMap })));
+import { EnhancedWorldMap } from '@/components/map/EnhancedWorldMap';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -149,15 +149,13 @@ export const HomePage = () => {
             {/* 地图容器 */}
             <div className="map-container relative h-[600px]">
               {mapInView ? (
-                <Suspense fallback={<LoadingSpinner text="地图准备中..." size="lg" className="h-full" />}>
-                  <EnhancedWorldMapLazy
-                    nodes={nodes}
-                    onNodeClick={handleNodeClick}
-                    selectedNode={selectedNode}
-                    showHeatmap={false}
-                    className="h-full"
-                  />
-                </Suspense>
+                <EnhancedWorldMap
+                  nodes={nodes}
+                  onNodeClick={handleNodeClick}
+                  selectedNode={selectedNode}
+                  showHeatmap={false}
+                  className="h-full"
+                />
               ) : (
                 <LoadingSpinner text="地图准备中..." size="lg" className="h-full" />
               )}

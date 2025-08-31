@@ -1,4 +1,5 @@
 import React, { useRef, memo, useMemo, useState, useEffect } from 'react';
+import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
 import Supercluster from 'supercluster';
