@@ -27,7 +27,13 @@ build/
 .env.local
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
+
+# Service-specific environment files
+backend/.env
+frontend/.env
+agent/.env
 
 # Logs
 logs
