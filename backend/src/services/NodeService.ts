@@ -290,6 +290,10 @@ export class NodeService {
     try {
       // 读取旧状态
       const old = await prisma.node.findUnique({ where: { agentId } });
+      if (!old) {
+        throw new Error(`Node with agentId ${agentId} not found`);
+      }
+
       const node = await prisma.node.update({
         where: { agentId },
         data: {
@@ -298,11 +302,24 @@ export class NodeService {
         }
       });
 
-      logger.debug(`Node status updated: ${node.name} -> ${status}`);
-      // 记录状态变更事件
-      if (old && old.status !== status) {
-        await eventService.createEvent(node.id, 'STATUS_CHANGED', `${old.status} -> ${status}`, { from: old.status, to: status });
+      // 增强日志输出，记录所有状态更新（包括相同状态的刷新）
+      const statusChanged = old.status !== status;
+      if (statusChanged) {
+        logger.info(`Node status changed: ${node.name} (${agentId}) ${old.status} -> ${status}`);
+        // 记录状态变更事件
+        await eventService.createEvent(node.id, 'STATUS_CHANGED', `${old.status} -> ${status}`, { 
+          from: old.status, 
+          to: status,
+          lastSeen: old.lastSeen,
+          newLastSeen: node.lastSeen
+        });
+      } else {
+        logger.debug(`Node heartbeat: ${node.name} (${agentId}) remains ${status}, lastSeen updated`);
       }
+      
+      // 清理相关缓存，确保前端能获取最新状态
+      this.nodesCache = null;
+      this.statsCache = null;
       
       // 如果存在ASN名称，使用ASN名称作为服务商显示
       return {
@@ -645,6 +662,78 @@ export class NodeService {
     }
   }
 
+  // 手动恢复节点在线状态（用于修复卡在离线状态的节点）
+  async forceRecoveryOnlineNodes(): Promise<void> {
+    try {
+      const currentTime = new Date();
+      const recentThreshold = new Date(currentTime.getTime() - 5 * 60 * 1000); // 5分钟内有心跳的节点
+
+      // 查找状态为OFFLINE但最近有心跳记录的节点
+      const offlineNodes = await prisma.node.findMany({
+        where: {
+          status: NodeStatus.OFFLINE
+        },
+        select: {
+          id: true,
+          agentId: true,
+          name: true,
+          status: true,
+          lastSeen: true
+        }
+      });
+
+      if (offlineNodes.length === 0) {
+        logger.debug('No offline nodes found for recovery check');
+        return;
+      }
+
+      // 检查这些节点最近是否有心跳
+      for (const node of offlineNodes) {
+        try {
+          const recentHeartbeat = await prisma.heartbeatLog.findFirst({
+            where: {
+              nodeId: node.id,
+              timestamp: {
+                gte: recentThreshold
+              }
+            },
+            orderBy: {
+              timestamp: 'desc'
+            }
+          });
+
+          if (recentHeartbeat) {
+            // 节点最近有心跳但状态是离线，恢复为在线
+            await prisma.node.update({
+              where: { id: node.id },
+              data: { 
+                status: NodeStatus.ONLINE,
+                lastSeen: recentHeartbeat.timestamp
+              }
+            });
+
+            await eventService.createEvent(node.id, 'STATUS_CHANGED', `${NodeStatus.OFFLINE} -> ${NodeStatus.ONLINE}`, {
+              from: NodeStatus.OFFLINE,
+              to: NodeStatus.ONLINE,
+              reason: 'Recovered: Recent heartbeat detected while marked offline',
+              heartbeatTimestamp: recentHeartbeat.timestamp
+            });
+
+            logger.info(`Recovered node to online: ${node.name} (${node.agentId}) - recent heartbeat: ${recentHeartbeat.timestamp}`);
+          }
+        } catch (error) {
+          logger.error(`Failed to check recovery for node ${node.name}:`, error);
+        }
+      }
+
+      // 清理缓存
+      this.nodesCache = null;
+      this.statsCache = null;
+    } catch (error) {
+      logger.error('Failed to recover online nodes:', error);
+    }
+  }
+
   // 检查并更新长时间未发送心跳的节点状态
   async checkOfflineNodes(offlineThresholdMinutes = 30): Promise<void> {
     try {
@@ -688,11 +777,15 @@ export class NodeService {
               lastSeen: node.lastSeen
             });
 
-            logger.debug(`Node marked as offline: ${node.name} (${node.agentId}) - last seen: ${node.lastSeen}`);
+            logger.info(`Node marked as offline: ${node.name} (${node.agentId}) - last seen: ${node.lastSeen}`);
           } catch (error) {
             logger.error(`Failed to mark node ${node.name} as offline:`, error);
           }
         }
+
+        // 清理缓存，确保前端能获取最新状态
+        this.nodesCache = null;
+        this.statsCache = null;
 
         logger.info(`Successfully marked ${onlineNodes.length} nodes as offline`);
       }

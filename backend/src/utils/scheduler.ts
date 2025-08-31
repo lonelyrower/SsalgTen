@@ -28,9 +28,12 @@ export const startSchedulers = () => {
   // 检查离线节点的定时任务
   setInterval(async () => {
     try {
+      // 先尝试恢复卡在离线状态的节点
+      await nodeService.forceRecoveryOnlineNodes();
+      // 然后检查真正需要离线的节点
       await nodeService.checkOfflineNodes(OFFLINE_THRESHOLD_MINUTES);
     } catch (e) {
-      logger.warn('[Scheduler] 离线节点检查失败', e);
+      logger.warn('[Scheduler] 节点状态检查失败', e);
     }
   }, OFFLINE_CHECK_INTERVAL_MINUTES * 60 * 1000).unref();
 };
