@@ -92,12 +92,12 @@ graph TB
 - **状态管理**: Context + Hooks 架构，优化渲染性能
 
 ### ⚙️ 后端 (Node.js + Express)
-- **现代化 API**: RESTful + GraphQL 设计，完整 OpenAPI 文档
+- **现代化 API**: RESTful 设计，完整的接口规范
 - **数据库**: Prisma ORM + PostgreSQL，自动迁移和种子数据
 - **认证授权**: JWT + Refresh Token 机制，安全会话管理
 - **实时推送**: Socket.IO 服务端，支持房间和命名空间
 - **缓存策略**: Redis 多级缓存，优化数据库查询性能
-- **监控告警**: 结构化日志，Prometheus 指标支持
+- **监控日志**: 结构化日志记录和健康检查
 
 ### 🤖 代理系统 (Node.js)
 - **跨平台兼容**: Linux/Windows/macOS 统一部署
@@ -141,7 +141,7 @@ graph TB
   "security": "helmet + cors + rate-limiter",
   "realtime": "Socket.IO Server v4 + 适配器",
   "monitoring": "winston + morgan + 健康检查",
-  "docs": "Swagger/OpenAPI 3.0 + 自动生成",
+  "docs": "RESTful API + 标准化响应",
   "testing": "Jest + Supertest + 工厂模式"
 }
 ```
@@ -159,7 +159,7 @@ Redis 7+ + 持久化 + 集群支持
 # 监控运维
 结构化日志 + 日志轮转
 健康检查 + 优雅关闭
-Prometheus metrics + Grafana
+系统指标监控 + 状态追踪
 ```
 
 ## 🚀 快速开始
@@ -242,7 +242,7 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/s
 
 - **🖥️ 主界面**: http://localhost:3000 - 实时监控地图
 - **🛡️ 管理后台**: http://localhost:3000/admin - 系统管理
-- **📊 API 文档**: http://localhost:3001/api - OpenAPI 文档  
+- **📊 API 接口**: http://localhost:3001/api - RESTful API  
 - **⚙️ 代理接口**: http://localhost:3002 - 代理节点状态
 
 **默认管理员账号:**
@@ -672,7 +672,7 @@ SMTP_USER="noreply@yourdomain.com"
 SMTP_PASS="your-email-password"
 
 # 监控配置 (可选)
-PROMETHEUS_ENABLED=true
+ENABLE_SYSTEM_METRICS=true
 HEALTH_CHECK_INTERVAL=30
 ```
 
@@ -711,9 +711,9 @@ server {
 ### 📊 监控和告警
 
 ```bash
-# Prometheus 指标暴露
-GET /metrics  # 系统指标
-GET /api/metrics  # API 指标
+# 系统监控端点
+GET /api/system/info     # 系统信息
+GET /api/system/version  # 版本信息
 
 # 健康检查端点
 GET /health      # 基础健康检查
@@ -724,22 +724,10 @@ GET /ready       # 就绪检查
 # ELK Stack: Elasticsearch + Logstash + Kibana
 # 或 Loki + Promtail + Grafana
 
-# 告警规则示例 (Prometheus)
-- alert: HighErrorRate
-  expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
-  for: 5m
-  labels:
-    severity: warning
-  annotations:
-    summary: "High error rate detected"
-    
-- alert: NodeOffline  
-  expr: up{job="ssalgten-agents"} == 0
-  for: 2m
-  labels:
-    severity: critical
-  annotations:
-    summary: "SsalgTen agent is offline"
+# 监控告警示例
+- 错误率监控: API 5xx 错误超过阈值时告警
+- 节点离线监控: Agent 超过设定时间未心跳时告警
+- 系统资源监控: CPU/内存使用率过高时告警
 ```
 
 ## 🔧 故障排除
