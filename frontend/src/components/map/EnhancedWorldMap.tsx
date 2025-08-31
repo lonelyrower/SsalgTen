@@ -14,6 +14,12 @@ import {
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
+// 扩展节点数据类型，支持微调坐标
+interface ExtendedNodeData extends NodeData {
+  _originalLat?: number;
+  _originalLng?: number;
+}
+
 // 读取运行时地图配置
 const getMapConfig = () => {
   const w: any = typeof window !== 'undefined' ? (window as any) : {};
@@ -204,7 +210,50 @@ const MapRefSetter = ({ setRef }: { setRef: (map: any) => void }) => {
   return null;
 };
 
-// 旧的扇形展开方案已移除，改为点击聚合平滑缩放到展开级别
+// 处理相同坐标的节点重叠问题：坐标微调(jittering)
+const jitterCoordinates = (nodes: NodeData[]): ExtendedNodeData[] => {
+  const coordinateGroups = new Map<string, NodeData[]>();
+  
+  // 按坐标分组
+  nodes.forEach(node => {
+    const key = `${node.latitude.toFixed(6)},${node.longitude.toFixed(6)}`;
+    if (!coordinateGroups.has(key)) {
+      coordinateGroups.set(key, []);
+    }
+    coordinateGroups.get(key)!.push(node);
+  });
+  
+  // 为重叠节点添加微调
+  const jitteredNodes: ExtendedNodeData[] = [];
+  coordinateGroups.forEach((groupNodes, coordKey) => {
+    if (groupNodes.length === 1) {
+      // 单个节点直接添加
+      jitteredNodes.push(groupNodes[0]);
+    } else {
+      // 多个节点需要微调坐标
+      groupNodes.forEach((node, index) => {
+        const jitterRadius = 0.0003; // 约30米的偏移半径
+        const angle = (index * 2 * Math.PI) / groupNodes.length; // 均匀分布角度
+        const distance = jitterRadius * (0.5 + 0.5 * (index / groupNodes.length)); // 渐变距离
+        
+        const latOffset = distance * Math.cos(angle);
+        const lngOffset = distance * Math.sin(angle);
+        
+        jitteredNodes.push({
+          ...node,
+          // 保存原始坐标用于显示
+          _originalLat: node.latitude,
+          _originalLng: node.longitude,
+          // 使用微调后的坐标用于地图显示
+          latitude: node.latitude + latOffset,
+          longitude: node.longitude + lngOffset,
+        });
+      });
+    }
+  });
+  
+  return jitteredNodes;
+};
 
 interface EnhancedWorldMapProps {
   nodes?: NodeData[];
@@ -229,6 +278,9 @@ export const EnhancedWorldMap = memo(({
   const [bounds, setBounds] = useState<any | null>(null);
   const [debouncedBounds, setDebouncedBounds] = useState<any | null>(null);
   
+  // 处理坐标重叠的节点
+  const processedNodes = useMemo(() => jitterCoordinates(nodes), [nodes]);
+  
   const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
 
   // 防抖缩放级别，避免频繁重算聚合
@@ -247,7 +299,7 @@ export const EnhancedWorldMap = memo(({
   const clusterIndex = useMemo(() => {
     const idx: any = new (Supercluster as any)({
       radius: 60,
-      maxZoom: 18,
+      maxZoom: 20, // 提高最大缩放级别，确保在最大放大时能展开所有节点
       minPoints: 2,
       // 映射每个点的聚合贡献
       map: (props: ClusterExtra) => ({
@@ -262,14 +314,14 @@ export const EnhancedWorldMap = memo(({
         acc.maintenance = (acc.maintenance || 0) + (props.maintenance || 0);
       },
     });
-    const features = nodes.map(n => ({
+    const features = processedNodes.map(n => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [n.longitude, n.latitude] },
       properties: { id: n.id, status: n.status, node: n } as ClusterExtra,
     }));
     idx.load(features);
     return idx;
-  }, [nodes]);
+  }, [processedNodes]);
 
   // 计算当前视口聚合结果
   const clusteredItems = useMemo(() => {
@@ -301,7 +353,7 @@ export const EnhancedWorldMap = memo(({
             eventHandlers={{
               click: () => {
                 try {
-                  const targetZoom = Math.min((clusterIndex as any).getClusterExpansionZoom(props.cluster_id), 18);
+                  const targetZoom = Math.min((clusterIndex as any).getClusterExpansionZoom(props.cluster_id), 20);
                   mapRef.current?.setView([lat, lng], targetZoom, { animate: true });
                 } catch {}
               },
@@ -319,16 +371,39 @@ export const EnhancedWorldMap = memo(({
           </Marker>
         );
       } else {
-        const node: NodeData | undefined = props.node as NodeData | undefined;
+        const node: ExtendedNodeData | undefined = props.node as ExtendedNodeData | undefined;
         if (!node) return;
         const isSelected = selectedNode?.id === node.id;
+        const hasOriginalCoords = node._originalLat !== undefined && node._originalLng !== undefined;
+        
         els.push(
           <Marker
             key={`node-${node.id}-${node.status}-${isSelected}`}
             position={[node.latitude, node.longitude]}
             icon={createEnhancedIcon(node.status, isSelected)}
             eventHandlers={{ click: () => onNodeClick?.(node) }}
-          />
+          >
+            <Popup className="custom-popup" maxWidth={300}>
+              <div className="p-3">
+                <h3 className="font-bold text-base text-gray-900 mb-2">{node.name}</h3>
+                <div className="text-sm text-gray-600 mb-2 space-y-1">
+                  <div>状态: <span className={`font-semibold ${
+                    node.status === 'online' ? 'text-green-600' : 
+                    node.status === 'offline' ? 'text-red-600' : 'text-yellow-600'
+                  }`}>{node.status.toUpperCase()}</span></div>
+                  <div>位置: {node.city}, {node.country}</div>
+                  <div>提供商: {node.provider}</div>
+                  {hasOriginalCoords && (
+                    <div className="text-xs text-orange-600 mt-2 p-2 bg-orange-50 rounded">
+                      <div className="font-medium">⚠️ 坐标已微调</div>
+                      <div>原始坐标: {node._originalLat?.toFixed(6)}, {node._originalLng?.toFixed(6)}</div>
+                      <div className="text-gray-500">多节点位于相同位置，已自动分散显示</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Popup>
+          </Marker>
         );
       }
     });
