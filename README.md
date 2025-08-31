@@ -9,7 +9,7 @@
 [![Auth](https://img.shields.io/badge/Auth-JWT-orange.svg)](https://jwt.io/)
 [![Deployment](https://img.shields.io/badge/Deploy-Docker%20Compose-2496ED.svg)](https://docs.docker.com/compose/)
 
-**SsalgTen** 是一个生产就绪的分布式网络监控诊断系统，受 Looking Glass 网络启发。提供全球网络实时监控、全面诊断工具和交互式可视化，通过分布式代理架构和企业级管理功能，为网络运维提供专业解决方案。
+**SsalgTen** 是一个生产就绪的分布式网络监控诊断系统。提供全球网络实时监控、全面诊断工具和交互式可视化，通过分布式代理架构和企业级管理功能，为网络运维提供专业解决方案。
 
 ## 🌟 核心特性
 
@@ -980,7 +980,7 @@ perf(database): 优化节点查询性能
 
 ## 🙏 致谢
 
-- 🌍 灵感来源: [Looking Glass](https://looking.house) 和类似的网络监控服务
+- 🌍 网络监控: 专业的全球分布式网络诊断服务
 - 🛠️ 技术栈: React, Node.js, TypeScript, PostgreSQL 等开源项目
 - 🎨 UI 设计: TailwindCSS, shadcn/ui, Lucide Icons
 - 🗺️ 地图服务: OpenStreetMap, Leaflet

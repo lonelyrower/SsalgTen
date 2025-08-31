@@ -1,11 +1,11 @@
 {
   "name": "ssalgten",
   "version": "0.1.0",
-  "description": "Multi-node network diagnostic aggregation system like looking.house",
+  "description": "Multi-node network diagnostic aggregation system for global network monitoring",
   "keywords": [
     "network",
     "diagnostic",
-    "looking-glass",
+    "network-monitoring",
     "vps",
     "monitoring"
   ],

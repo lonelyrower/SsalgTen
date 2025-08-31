@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-SsalgTen is a production-ready distributed network monitoring system inspired by Looking Glass networks. It consists of four main components:
+SsalgTen is a production-ready distributed network monitoring system for global network visibility. It consists of four main components:
 
 - **Frontend** (React + TypeScript + Vite): Modern web interface with real-time map visualization, dashboard, and admin panels
 - **Backend** (Node.js + Express + TypeScript): REST API server with JWT authentication, PostgreSQL database, and WebSocket support
