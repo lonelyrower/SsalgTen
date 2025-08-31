@@ -243,11 +243,25 @@ read_from_tty() {
     # 尝试从 /dev/tty 读取
     if [[ -r /dev/tty ]]; then
         echo -n "$prompt" > /dev/tty
+        # 读入失败不可终止整个脚本（set -e 安全处理）
+        set +e
         read -r response < /dev/tty
+        local rc=$?
+        set -e
+        if [[ $rc -ne 0 ]]; then
+            # 无法读取输入时回退到默认值
+            response="$default"
+        fi
     else
         # 回退到标准输入
         echo -n "$prompt"
+        set +e
         read -r response
+        local rc=$?
+        set -e
+        if [[ $rc -ne 0 ]]; then
+            response="$default"
+        fi
     fi
     
     # 如果为空，使用默认值
@@ -1890,7 +1904,12 @@ show_interactive_menu() {
         *) status_color="${RED}✗ $status${NC}" ;;
     esac
     
-    clear
+    # 避免在上一轮操作后立刻清屏导致结果信息被"秒清"
+    if [[ "${SKIP_CLEAR_ONCE:-false}" != "true" ]]; then
+        clear
+    else
+        SKIP_CLEAR_ONCE=false
+    fi
     echo -e "${PURPLE}"
     cat << 'EOF'
    _____ _____ ____  _      _____ _______ ______ _   _ 
@@ -1960,7 +1979,10 @@ EOF
     
     if [[ "$choice" != "0" ]]; then
         echo
+        # 在 curl|bash 环境下也尽量停留，避免信息被清掉
         read_from_tty "按回车键继续..." ""
+        # 下一次进入菜单时跳过 clear，一次性保留上一轮输出
+        SKIP_CLEAR_ONCE=true
     fi
 }
 

@@ -320,7 +320,20 @@ export class NodeService {
       // 清理相关缓存，确保前端能获取最新状态
       this.nodesCache = null;
       this.statsCache = null;
-      
+
+      // 实时广播状态变化（即使状态未变化也刷新 lastSeen 的前端显示）
+      try {
+        const { getIO } = await import('../sockets/ioRegistry');
+        const io = getIO();
+        if (io) {
+          io.to('nodes_updates').emit('node_status_changed', {
+            nodeId: node.id,
+            status: String(status).toLowerCase(),
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch {}
+
       // 如果存在ASN名称，使用ASN名称作为服务商显示
       return {
         ...node,
@@ -720,6 +733,19 @@ export class NodeService {
             });
 
             logger.info(`Recovered node to online: ${node.name} (${node.agentId}) - recent heartbeat: ${recentHeartbeat.timestamp}`);
+
+            // 广播单节点状态变更，确保前端及时刷新
+            try {
+              const { getIO } = await import('../sockets/ioRegistry');
+              const io = getIO();
+              if (io) {
+                io.to('nodes_updates').emit('node_status_changed', {
+                  nodeId: node.id,
+                  status: 'online',
+                  timestamp: new Date().toISOString()
+                });
+              }
+            } catch {}
           }
         } catch (error) {
           logger.error(`Failed to check recovery for node ${node.name}:`, error);
@@ -778,6 +804,19 @@ export class NodeService {
             });
 
             logger.info(`Node marked as offline: ${node.name} (${node.agentId}) - last seen: ${node.lastSeen}`);
+
+            // 广播单节点状态变更，确保前端及时刷新
+            try {
+              const { getIO } = await import('../sockets/ioRegistry');
+              const io = getIO();
+              if (io) {
+                io.to('nodes_updates').emit('node_status_changed', {
+                  nodeId: node.id,
+                  status: 'offline',
+                  timestamp: new Date().toISOString()
+                });
+              }
+            } catch {}
           } catch (error) {
             logger.error(`Failed to mark node ${node.name} as offline:`, error);
           }
