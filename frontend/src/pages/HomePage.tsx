@@ -127,6 +127,7 @@ export const HomePage = () => {
                 onNodeClick={handleNodeClick}
                 selectedNode={selectedNode}
                 className="h-full"
+                showControlPanels={false}
               />
             </div>
           </GlassCard>
