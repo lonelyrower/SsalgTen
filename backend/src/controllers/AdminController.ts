@@ -107,9 +107,12 @@ export class AdminController {
         }
       });
 
+      // Return node data without sensitive apiKey
+      const { apiKey: _, ...nodeWithoutApiKey } = node;
+      
       const response: ApiResponse = {
         success: true,
-        data: node,
+        data: nodeWithoutApiKey,
         message: 'Node created successfully'
       };
 
@@ -165,9 +168,12 @@ export class AdminController {
         data: updateDataFormatted
       });
 
+      // Return node data without sensitive apiKey
+      const { apiKey: _, ...nodeWithoutApiKey } = updatedNode;
+      
       const response: ApiResponse = {
         success: true,
-        data: updatedNode,
+        data: nodeWithoutApiKey,
         message: 'Node updated successfully'
       };
 
@@ -179,6 +185,63 @@ export class AdminController {
       const response: ApiResponse = {
         success: false,
         error: 'Failed to update node'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // View API Key for a node (one-time secure access)
+  async viewNodeApiKey(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Node ID is required'
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      // Check if node exists and get API key
+      const node = await prisma.node.findUnique({
+        where: { id },
+        select: { 
+          id: true,
+          name: true,
+          apiKey: true 
+        }
+      });
+
+      if (!node) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Node not found'
+        };
+        res.status(404).json(response);
+        return;
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          nodeId: node.id,
+          nodeName: node.name,
+          apiKey: node.apiKey
+        },
+        message: 'API Key retrieved successfully'
+      };
+
+      // Log this sensitive operation for auditing
+      logger.warn(`Admin viewed API key for node: ${node.name} (${id}) by user: ${req.user?.username}`);
+      res.json(response);
+
+    } catch (error) {
+      logger.error('Admin view node API key error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to retrieve API key'
       };
       res.status(500).json(response);
     }

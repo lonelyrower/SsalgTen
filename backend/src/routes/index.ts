@@ -125,6 +125,7 @@ router.put('/auth/password', authenticateToken, validateBody(ChangePasswordSchem
 router.get('/admin/nodes', authenticateToken, requireAdmin, nodeController.getAllNodes.bind(nodeController));
 router.post('/admin/nodes', authenticateToken, requireAdmin, validateBody(CreateNodeSchema), adminController.createNode.bind(adminController));
 router.put('/admin/nodes/:id', authenticateToken, requireAdmin, validateBody(UpdateNodeSchema), adminController.updateNode.bind(adminController));
+router.get('/admin/nodes/:id/api-key', authenticateToken, requireAdmin, adminController.viewNodeApiKey.bind(adminController));
 router.delete('/admin/nodes/:id', authenticateToken, requireAdmin, adminController.deleteNode.bind(adminController));
 
 // 用户管理
