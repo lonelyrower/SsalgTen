@@ -47,15 +47,18 @@ export const SystemOverview: React.FC = () => {
   useEffect(() => {
     fetchStats();
     
-    // 每5分钟自动刷新
-    const interval = setInterval(fetchStats, 5 * 60 * 1000);
+    // 调整为每1分钟自动刷新，使运行时间更贴近实际
+    const interval = setInterval(fetchStats, 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   const formatUptime = (seconds: number) => {
     const days = Math.floor(seconds / (24 * 3600));
     const hours = Math.floor((seconds % (24 * 3600)) / 3600);
-    return `${days} 天 ${hours} 小时`;
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return `${days} 天 ${hours} 小时`;
+    if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;
+    return `${minutes} 分钟`;
   };
 
   const getHealthStatus = () => {
