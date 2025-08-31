@@ -148,6 +148,7 @@ export interface NodeStats {
   unknownNodes: number;
   totalCountries: number;
   totalProviders: number;
+  totalTests?: number; // 网络检测总数，可选字段，后端未实现时默认为0
 }
 
 // 诊断记录接口

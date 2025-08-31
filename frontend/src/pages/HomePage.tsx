@@ -26,8 +26,9 @@ export const HomePage = () => {
     totalNodes: stats?.totalNodes || 0,
     onlineNodes: stats?.onlineNodes || 0,
     totalCountries: stats?.totalCountries || 0,
-    totalProviders: stats?.totalProviders || 0
-  }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders]);
+    totalProviders: stats?.totalProviders || 0,
+    totalTests: stats?.totalTests || 0 // 网络检测数据，后端暂未实现时默认为0
+  }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders, stats?.totalTests]);
 
   // 如果正在加载，显示加载状态
   if (loading && nodes.length === 0) {
@@ -125,7 +126,7 @@ export const HomePage = () => {
                 nodes={nodes}
                 onNodeClick={handleNodeClick}
                 selectedNode={selectedNode}
-                showHeatmap={false}
+                showHeatmap={true}
                 className="h-full"
               />
             </div>
