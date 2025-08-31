@@ -146,9 +146,11 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
 
 // 创建聚合节点图标（基于 supercluster 返回的统计）
 const createClusterIcon = (count: number, offline: number = 0) => {
-  const size = Math.min(28 + Math.log2(count + 1) * 4, 44);
+  // 调整聚合点大小，使其更接近常规点大小
+  // 基础大小22px，根据节点数量略微增大，最大不超过32px
+  const size = Math.min(22 + Math.log2(count + 1) * 2, 32);
   const primaryColor = offline > 0 ? '#ef4444' : '#2563eb';
-  const fontSize = Math.max(11, size / 3.2);
+  const fontSize = Math.max(10, size / 2.8);
   return new DivIcon({
     html: `
       <div class="relative flex items-center justify-center" style="width: ${size}px; height: ${size}px;">
