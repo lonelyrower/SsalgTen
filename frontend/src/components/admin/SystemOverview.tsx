@@ -178,7 +178,9 @@ export const SystemOverview: React.FC = () => {
           </div>
           <div className="text-right">
             <div className="text-sm opacity-80">系统运行时间</div>
-            <div className="text-lg font-semibold">{formatUptime(stats.system.uptime)}</div>
+            <div className="text-lg font-semibold">
+              {formatUptime((stats.system.dbUptime ?? stats.system.uptime) || 0)}
+            </div>
           </div>
         </div>
       </Card>

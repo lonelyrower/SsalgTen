@@ -219,6 +219,7 @@ export interface SystemOverviewData {
   };
   system: {
     uptime: number;
+    dbUptime?: number;
     version: string;
     environment: string;
   };

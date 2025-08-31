@@ -658,7 +658,18 @@ export class AdminController {
       const avgPerHour = heartbeat24h > 0 ? Math.round(heartbeat24h / 24) : 0;
 
       // 系统信息
-      const startTime = process.uptime();
+      const startTime = process.uptime(); // 后端进程运行时间（秒）
+      // 数据库实例运行时间（更能代表系统整体持续运行时长，不受后端重启影响）
+      let dbUptimeSec = 0;
+      try {
+        const rows = await prisma.$queryRawUnsafe<any[]>(
+          "SELECT EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time())) AS seconds"
+        );
+        const sec = rows && rows[0] && (rows[0].seconds as any);
+        dbUptimeSec = Math.max(0, Math.floor(typeof sec === 'string' ? parseFloat(sec) : Number(sec)));
+      } catch (e) {
+        // 忽略错误，回退为0
+      }
       const version = process.env.APP_VERSION || '0.1.0';
       const environment = process.env.NODE_ENV || 'development';
 
@@ -682,6 +693,7 @@ export class AdminController {
           },
           system: {
             uptime: Math.floor(startTime),
+            dbUptime: dbUptimeSec,
             version: version,
             environment: environment
           }
