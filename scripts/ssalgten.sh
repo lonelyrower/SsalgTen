@@ -1308,9 +1308,17 @@ update_system_from_archive() {
     if docker_compose up -d --build --remove-orphans; then
         # 动态检测端口并健康检查
         detect_ports
+        
+        # 等待服务启动
+        sleep 15
+        
+        echo
+        log_info "正在进行快速健康检查（归档包模式）..."
+        
         local healthy=true
-        FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 20 3 10 || healthy=false
-        health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 12 3 8 || healthy=false
+        # 快速健康检查，减少等待时间
+        health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 6 3 5 || healthy=false
+        health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 4 3 5 || healthy=false
         if [[ "$healthy" == "true" ]]; then
             log_success "🎉 系统更新完成! (归档包模式)"
         else
