@@ -1191,23 +1191,28 @@ update_system() {
     
     # 动态检测端口
     detect_ports
+    flush_output
     
     # 健康检查 (更新后需要更长时间启动)
     echo
     log_info "正在进行健康检查..."
     echo "  这可能需要几分钟时间，请耐心等待..."
     echo
+    flush_output
     
     local healthy=true
     FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 20 3 10 || healthy=false
     health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 12 3 8 || healthy=false
+    flush_output
     
     echo
     log_info "健康检查完成，正在显示最终结果..."
+    flush_output
     
     if [[ "$healthy" == "true" ]]; then
         log_success "🎉 系统更新完成!（忽略非核心服务失败）"
         LAST_RESULT_MSG="更新完成 ✅"
+        flush_output
         
         # 处理 stash 恢复
         if [[ "$stash_created" == "true" ]]; then
@@ -1257,6 +1262,7 @@ update_system() {
         # 统一的完成提示
         echo
         log_header "✅ 更新结束"
+        flush_output
         local frontend_hint="http://localhost:${FRONTEND_PORT}/"
         if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
         local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
@@ -1265,13 +1271,16 @@ update_system() {
         echo "  • 状态:   ssalgten status"
         echo "  • 日志:   ssalgten logs backend -n 200"
         echo "  • 提示:   浏览器强制刷新 (Ctrl/Cmd + Shift + R)"
+        flush_output
         
     else
         log_warning "更新完成，但核心健康检查未通过，请查看日志"
         LAST_RESULT_MSG="更新完成但健康检查未通过 ⚠️"
+        flush_output
         # 即使健康检查失败也输出完成提示，便于用户下一步操作
         echo
         log_header "⚠️ 更新结束（存在问题）"
+        flush_output
         local frontend_hint="http://localhost:${FRONTEND_PORT}/"
         if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
         local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
@@ -1280,6 +1289,7 @@ update_system() {
         echo "  • 状态:   ssalgten status"
         echo "  • 日志:   ssalgten logs backend -n 200"
         echo "  • 提示:   若问题持续，请提交日志信息"
+        flush_output
         return 1
     fi
 }
@@ -1347,17 +1357,21 @@ update_system_from_archive() {
         echo "✅ Docker服务构建和启动完成"
         # 动态检测端口并健康检查
         detect_ports
+        flush_output
         
         # 等待服务启动
         sleep 15
         
         echo
         log_info "正在进行快速健康检查（归档包模式）..."
+        flush_output
         
         local healthy=true
         # 快速健康检查，减少等待时间
         health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 6 3 5 || healthy=false
         health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 4 3 5 || healthy=false
+        flush_output
+        
         if [[ "$healthy" == "true" ]]; then
             log_success "🎉 系统更新完成! (归档包模式)"
             LAST_RESULT_MSG="更新完成 ✅"
@@ -1365,9 +1379,12 @@ update_system_from_archive() {
             log_warning "更新完成，但部分服务可能异常"
             LAST_RESULT_MSG="更新完成但健康检查未通过 ⚠️"
         fi
+        flush_output
+        
         # 统一的完成提示
         echo
         log_header "✅ 更新结束"
+        flush_output
         local frontend_hint="http://localhost:${FRONTEND_PORT}/"
         if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
         local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
@@ -1376,6 +1393,7 @@ update_system_from_archive() {
         echo "  • 状态:   ssalgten status"
         echo "  • 日志:   ssalgten logs backend -n 200"
         echo "  • 提示:   浏览器强制刷新 (Ctrl/Cmd + Shift + R)"
+        flush_output
     else
         log_error "服务启动失败，尝试回滚关键文件"
         # 回滚关键文件
