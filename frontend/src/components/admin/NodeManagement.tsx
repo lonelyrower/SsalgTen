@@ -43,7 +43,12 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       setLoading(true);
       const response = await apiService.getNodes();
       if (response.success && response.data) {
-        setNodes(response.data);
+        // 规范化状态为小写，避免统计/筛选误差
+        const normalized = response.data.map((n: any) => ({
+          ...n,
+          status: typeof n.status === 'string' ? (n.status as string).toLowerCase() : n.status
+        }));
+        setNodes(normalized);
       } else {
         setError(response.error || 'Failed to load nodes');
       }
@@ -110,7 +115,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       node.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (node.ipv4 && node.ipv4.includes(searchTerm));
     
-    const matchesStatus = filterStatus === 'all' || node.status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || (node.status || '').toLowerCase() === filterStatus;
     
     return matchesSearch && matchesStatus;
   });

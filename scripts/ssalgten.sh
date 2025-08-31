@@ -58,6 +58,7 @@ COMPOSE_FILE=""
 FORCE_MODE=false
 NON_INTERACTIVE=false
 VERBOSE=false
+LAST_RESULT_MSG=""
 
 # 颜色定义（可通过环境变量禁用）
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
@@ -1189,6 +1190,7 @@ update_system() {
     
     if [[ "$healthy" == "true" ]]; then
         log_success "🎉 系统更新完成!（忽略非核心服务失败）"
+        LAST_RESULT_MSG="更新完成 ✅"
         
         # 处理 stash 恢复
         if [[ "$stash_created" == "true" ]]; then
@@ -1249,6 +1251,7 @@ update_system() {
         
     else
         log_warning "更新完成，但核心健康检查未通过，请查看日志"
+        LAST_RESULT_MSG="更新完成但健康检查未通过 ⚠️"
         # 即使健康检查失败也输出完成提示，便于用户下一步操作
         echo
         log_header "⚠️ 更新结束（存在问题）"
@@ -1335,8 +1338,10 @@ update_system_from_archive() {
         health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 4 3 5 || healthy=false
         if [[ "$healthy" == "true" ]]; then
             log_success "🎉 系统更新完成! (归档包模式)"
+            LAST_RESULT_MSG="更新完成 ✅"
         else
             log_warning "更新完成，但部分服务可能异常"
+            LAST_RESULT_MSG="更新完成但健康检查未通过 ⚠️"
         fi
         # 统一的完成提示
         echo
@@ -1909,6 +1914,13 @@ show_interactive_menu() {
         clear
     else
         SKIP_CLEAR_ONCE=false
+    fi
+
+    # 若存在上一次操作结果，优先展示
+    if [[ -n "$LAST_RESULT_MSG" ]]; then
+        echo -e "${YELLOW}上次操作结果:${NC} $LAST_RESULT_MSG"
+        echo
+        LAST_RESULT_MSG=""
     fi
     echo -e "${PURPLE}"
     cat << 'EOF'
