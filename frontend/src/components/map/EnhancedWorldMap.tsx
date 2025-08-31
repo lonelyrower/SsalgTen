@@ -225,7 +225,7 @@ const jitterCoordinates = (nodes: NodeData[]): ExtendedNodeData[] => {
   
   // 为重叠节点添加微调
   const jitteredNodes: ExtendedNodeData[] = [];
-  coordinateGroups.forEach((groupNodes, coordKey) => {
+  coordinateGroups.forEach((groupNodes) => {
     if (groupNodes.length === 1) {
       // 单个节点直接添加
       jitteredNodes.push(groupNodes[0]);
