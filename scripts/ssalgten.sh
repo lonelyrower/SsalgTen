@@ -336,7 +336,7 @@ health_check() {
     local delay="${4:-3}"          # 可配置延迟间隔，默认3秒
     local timeout="${5:-10}"       # 可配置超时时间，默认10秒
     
-    log_info "检查 $service 健康状态... (超时: ${timeout}s, 重试: ${max_attempts}次)"
+    log_info "检查 $service 健康状态... (超时: ${timeout}s, 重试: ${max_attempts}次, 最大等待: $((max_attempts * delay))s)"
     
     local attempt=1
     while [[ $attempt -le $max_attempts ]]; do
@@ -364,8 +364,8 @@ health_check() {
         fi
         
         if [[ $attempt -lt $max_attempts ]]; then
-            if [[ "$VERBOSE" == "true" ]]; then
-                log_warning "第 $attempt 次检查失败，${delay}s 后重试..."
+            if [[ "$VERBOSE" == "true" ]] || [[ "${FORCE_VERBOSE:-false}" == "true" ]]; then
+                log_warning "第 $attempt 次检查失败，${delay}s 后重试... (剩余 $((max_attempts - attempt)) 次)"
             else
                 printf "."  # 简洁进度指示
             fi
@@ -1161,9 +1161,17 @@ update_system() {
     detect_ports
     
     # 健康检查 (更新后需要更长时间启动)
+    echo
+    log_info "正在进行健康检查..."
+    echo "  这可能需要几分钟时间，请耐心等待..."
+    echo
+    
     local healthy=true
     FORCE_VERBOSE=true health_check "backend" "http://localhost:${BACKEND_PORT}/api/health" 20 3 10 || healthy=false
     health_check "frontend" "http://localhost:${FRONTEND_PORT}/" 12 3 8 || healthy=false
+    
+    echo
+    log_info "健康检查完成，正在显示最终结果..."
     
     if [[ "$healthy" == "true" ]]; then
         log_success "🎉 系统更新完成!（忽略非核心服务失败）"
