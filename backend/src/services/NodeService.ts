@@ -645,6 +645,62 @@ export class NodeService {
     }
   }
 
+  // 检查并更新长时间未发送心跳的节点状态
+  async checkOfflineNodes(offlineThresholdMinutes = 30): Promise<void> {
+    try {
+      const thresholdTime = new Date();
+      thresholdTime.setMinutes(thresholdTime.getMinutes() - offlineThresholdMinutes);
+
+      // 查找所有状态为ONLINE但lastSeen时间超过阈值的节点
+      const onlineNodes = await prisma.node.findMany({
+        where: {
+          status: NodeStatus.ONLINE,
+          lastSeen: {
+            lt: thresholdTime
+          }
+        },
+        select: {
+          id: true,
+          agentId: true,
+          name: true,
+          lastSeen: true,
+          status: true
+        }
+      });
+
+      if (onlineNodes.length > 0) {
+        logger.info(`Found ${onlineNodes.length} nodes to mark as offline (no heartbeat for ${offlineThresholdMinutes} minutes)`);
+
+        // 批量更新节点状态为OFFLINE
+        for (const node of onlineNodes) {
+          try {
+            const oldStatus = node.status;
+            await prisma.node.update({
+              where: { id: node.id },
+              data: { status: NodeStatus.OFFLINE }
+            });
+
+            // 记录状态变更事件
+            await eventService.createEvent(node.id, 'STATUS_CHANGED', `${oldStatus} -> ${NodeStatus.OFFLINE}`, { 
+              from: oldStatus, 
+              to: NodeStatus.OFFLINE,
+              reason: `No heartbeat for ${offlineThresholdMinutes} minutes`,
+              lastSeen: node.lastSeen
+            });
+
+            logger.debug(`Node marked as offline: ${node.name} (${node.agentId}) - last seen: ${node.lastSeen}`);
+          } catch (error) {
+            logger.error(`Failed to mark node ${node.name} as offline:`, error);
+          }
+        }
+
+        logger.info(`Successfully marked ${onlineNodes.length} nodes as offline`);
+      }
+    } catch (error) {
+      logger.error('Failed to check offline nodes:', error);
+    }
+  }
+
   // 清理旧的心跳和诊断记录
   async cleanupOldRecords(daysToKeep = 30): Promise<void> {
     try {
