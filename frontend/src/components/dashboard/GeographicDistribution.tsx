@@ -14,7 +14,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   className = ''
 }) => {
   // 计算国家分布数据
-  const countryStats = useMemo(() => {
+  const { countryStats, totalCountries } = useMemo(() => {
     const countryMap = new Map<string, { online: number; offline: number; total: number }>();
     
     nodes.forEach(node => {
@@ -31,15 +31,19 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
       countryMap.set(country, current);
     });
 
-    return Array.from(countryMap.entries())
+    const allCountryStats = Array.from(countryMap.entries())
       .map(([country, stats]) => ({
         country,
         online: stats.online,
         offline: stats.offline,
         total: stats.total
       }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 10); // 取前10个国家
+      .sort((a, b) => b.total - a.total);
+    
+    return {
+      countryStats: allCountryStats.slice(0, 10), // 图表显示前10个国家
+      totalCountries: allCountryStats.length // 实际覆盖的国家总数
+    };
   }, [nodes]);
 
 
@@ -67,7 +71,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
           国家/地区分布
         </h3>
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          覆盖 {countryStats.length} 个国家/地区
+          覆盖 {totalCountries} 个国家/地区
         </div>
       </div>
 
