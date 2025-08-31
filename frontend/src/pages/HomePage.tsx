@@ -126,7 +126,6 @@ export const HomePage = () => {
                 nodes={nodes}
                 onNodeClick={handleNodeClick}
                 selectedNode={selectedNode}
-                showHeatmap={true}
                 className="h-full"
               />
             </div>

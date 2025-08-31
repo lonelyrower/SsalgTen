@@ -1,6 +1,6 @@
 import React, { useRef, memo, useMemo, useState, useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
 import Supercluster from 'supercluster';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,6 @@ import {
   Server, 
   MapPin, 
   Clock, 
-  Zap,
   Eye,
   TrendingUp,
   AlertTriangle
@@ -213,26 +212,22 @@ interface EnhancedWorldMapProps {
   nodes?: NodeData[];
   onNodeClick?: (node: NodeData) => void;
   selectedNode?: NodeData | null;
-  showHeatmap?: boolean;
   className?: string;
-  // 是否显示右上角的控制面板（节点统计与显示模式）
+  // 是否显示右上角的控制面板（节点统计）
   showControlPanels?: boolean;
 }
 
 export const EnhancedWorldMap = memo(({ 
   nodes = [], 
   onNodeClick, 
-  showHeatmap = false,
   selectedNode,
   className = '',
   showControlPanels = true
 }: EnhancedWorldMapProps) => {
   const mapRef = useRef<any>(null);
-  const [viewMode, setViewMode] = useState<'markers' | 'heatmap' | 'connections'>('markers');
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
   const [debouncedZoom, setDebouncedZoom] = useState(3);
-  // 不再使用手动展开聚合
   const [bounds, setBounds] = useState<any | null>(null);
   const [debouncedBounds, setDebouncedBounds] = useState<any | null>(null);
   
@@ -342,35 +337,6 @@ export const EnhancedWorldMap = memo(({
     return els;
   }, [clusteredItems, clusterIndex, onNodeClick, selectedNode]);
 
-  // 生成覆盖圈（显示节点覆盖范围）
-  const coverageCircles = useMemo(() => {
-    if (!showHeatmap) return [];
-
-    // 仅对可视区内的真实节点绘制覆盖圈
-    const north = debouncedBounds?.getNorth ? debouncedBounds.getNorth() : debouncedBounds?._northEast?.lat;
-    const south = debouncedBounds?.getSouth ? debouncedBounds.getSouth() : debouncedBounds?._southWest?.lat;
-    const east = debouncedBounds?.getEast ? debouncedBounds.getEast() : debouncedBounds?._northEast?.lng;
-    const west = debouncedBounds?.getWest ? debouncedBounds.getWest() : debouncedBounds?._southWest?.lng;
-    const inView = (n: NodeData) => {
-      if ([north, south, east, west].some(v => typeof v !== 'number')) return true;
-      return n.latitude <= north && n.latitude >= south && n.longitude <= east && n.longitude >= west;
-    };
-    return nodes.filter(inView).map((node) => {
-      const style = getNodeStyle(node.status);
-      return (
-        <Circle
-          key={`coverage-${node.id}`}
-          center={[node.latitude, node.longitude]}
-          radius={50000} // 50km 覆盖半径
-          fillColor={style.color}
-          fillOpacity={0.1}
-          color={style.color}
-          weight={1}
-          opacity={0.3}
-        />
-      );
-    });
-  }, [nodes, debouncedBounds, showHeatmap]);
 
   return (
     <div className={`relative flex flex-col ${className}`}>
@@ -426,34 +392,9 @@ export const EnhancedWorldMap = memo(({
           </div>
         )}
 
-        {/* 视图控制 */}
+        {/* 快速操作 */}
         <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg p-3 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl shadow-lg">
-          <div className="flex flex-col space-y-2">
-            <div className="text-xs text-gray-700 dark:text-gray-300 mb-1 font-medium">显示模式</div>
-            <Button
-              variant={viewMode === 'markers' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('markers')}
-              className="justify-start text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-            >
-              <MapPin className="h-3 w-3 mr-2" />
-              节点标记
-            </Button>
-            <Button
-              variant={viewMode === 'heatmap' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                setViewMode('heatmap');
-              }}
-              className="justify-start text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-            >
-              <Zap className="h-3 w-3 mr-2" />
-              覆盖热图
-            </Button>
-          </div>
-          
-          {/* 快速操作 */}
-          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 space-y-1">
+          <div className="space-y-1">
             <Button
               variant="ghost"
               size="sm"
@@ -501,9 +442,8 @@ export const EnhancedWorldMap = memo(({
           {/* 缩放监听组件 */}
           <ZoomHandler onZoomChange={setCurrentZoom} />
           
-          {/* 根据视图模式渲染不同内容 */}
-          {viewMode === 'markers' && markers}
-          {viewMode === 'heatmap' && [...markers, ...coverageCircles]}
+          {/* 渲染节点标记 */}
+          {markers}
         </MapContainer>
       </div>
 
@@ -516,12 +456,6 @@ export const EnhancedWorldMap = memo(({
               已选择: {selectedNode.name}
             </span>
           )}
-        </div>
-        <div className="flex items-center space-x-2">
-          <span>视图模式:</span>
-          <Badge variant="secondary" className="text-xs">
-            {viewMode === 'markers' ? '标记模式' : '热图模式'}
-          </Badge>
         </div>
       </div>
 
