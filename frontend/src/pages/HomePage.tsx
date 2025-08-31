@@ -15,51 +15,10 @@ export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const { nodes, stats, loading, error } = useNodes();
   const { user } = useAuth();
-  const mapHolderRef = useRef<HTMLDivElement | null>(null);
-  const [mapInView, setMapInView] = useState(false);
-
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
     console.log('Node clicked:', node);
   }, []);
-
-  // 视口懒加载地图：仅当地图容器进入视口时才渲染地图，提升首页首屏性能
-  useEffect(() => {
-    if (mapInView) return;
-    const el = mapHolderRef.current;
-    if (!el) return;
-    
-    // 立即检查元素是否已经在视口内
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 300 && rect.bottom > -300) {
-      setMapInView(true);
-      return;
-    }
-    
-    // 视口懒加载 + 兜底定时器（防止个别环境下 IntersectionObserver 不触发）
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          setMapInView(true);
-          io.disconnect();
-          break;
-        }
-      }
-    }, { rootMargin: '300px' }); // 增加预加载距离
-    
-    io.observe(el);
-    
-    // 减少兜底定时器时间，快速显示地图
-    const fallback = setTimeout(() => {
-      setMapInView(true);
-      try { io.disconnect(); } catch {}
-    }, 800); // 从1500ms减少到800ms
-    
-    return () => { 
-      try { io.disconnect(); } catch {}
-      clearTimeout(fallback); 
-    };
-  }, [mapInView]);
 
 
   // 缓存统计数据以防止不必要的重新渲染
@@ -121,8 +80,8 @@ export const HomePage = () => {
           <StatsCards {...memoizedStats} />
         </div>
         
-        {/* 地图区域（视口懒加载） */}
-        <div className="mb-8" ref={mapHolderRef}>
+        {/* 地图区域 */}
+        <div className="mb-8">
           <GlassCard variant="gradient" animated={true} className="p-6">
             {/* 标题区域 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
@@ -162,19 +121,13 @@ export const HomePage = () => {
             
             {/* 地图容器 */}
             <div className="map-container relative h-[600px]">
-              {mapInView ? (
-                <EnhancedWorldMap
-                  nodes={nodes}
-                  onNodeClick={handleNodeClick}
-                  selectedNode={selectedNode}
-                  showHeatmap={false}
-                  className="h-full"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <LoadingSpinner text="地图准备中..." size="lg" />
-                </div>
-              )}
+              <EnhancedWorldMap
+                nodes={nodes}
+                onNodeClick={handleNodeClick}
+                selectedNode={selectedNode}
+                showHeatmap={false}
+                className="h-full"
+              />
             </div>
           </GlassCard>
         </div>

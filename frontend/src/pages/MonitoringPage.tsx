@@ -258,8 +258,11 @@ export const MonitoringPage: React.FC = () => {
                   <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                  地理分布
+                  国家/地区分布
                 </h3>
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                覆盖 {Object.keys(countryStats).length} 个国家/地区
               </div>
             </div>
             <div className="space-y-3">
