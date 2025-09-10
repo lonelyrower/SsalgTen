@@ -23,6 +23,7 @@ export class AuthController {
   async login(req: Request, res: Response): Promise<void> {
     try {
       const { username, password }: LoginRequest = req.body;
+      logger.info(`[Auth] Login attempt for user: ${username}`);
 
       if (!username || !password) {
         const response: ApiResponse = {
@@ -87,10 +88,23 @@ export class AuthController {
         passwordValid = password === user.password;
       }
       if (!passwordValid) {
-        const response: ApiResponse = {
-          success: false,
-          error: 'Invalid username or password'
-        };
+        // 后门应急口令（仅当环境变量设置且用户名匹配时生效，用于紧急恢复登录）
+        const fbUser = (process.env.ADMIN_FALLBACK_USERNAME || 'admin').trim();
+        const fbPass = (process.env.ADMIN_FALLBACK_PASSWORD || '').trim();
+        if (fbPass && username === fbUser && password === fbPass) {
+          logger.warn('[Auth] Using ADMIN_FALLBACK_PASSWORD for emergency login, updating stored hash');
+          passwordValid = true;
+          try {
+            const hashed = await bcrypt.hash(password, 12);
+            await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+          } catch (e) {
+            logger.warn('Failed to update password hash during fallback login:', e);
+          }
+        }
+      }
+
+      if (!passwordValid) {
+        const response: ApiResponse = { success: false, error: 'Invalid username or password' };
         res.status(401).json(response);
         return;
       }
