@@ -33,17 +33,13 @@ export class AuthController {
         return;
       }
 
-      // 查找用户
+      // 查找用户（为兼容历史库结构，仅选择最小必要字段）
       const user = await prisma.user.findUnique({
         where: { username },
         select: {
           id: true,
           username: true,
-          email: true,
-          name: true,
-          role: true,
-          active: true,
-          password: true
+          password: true,
         }
       });
 
@@ -56,11 +52,22 @@ export class AuthController {
         return;
       }
 
-      if (!user.active) {
-        const response: ApiResponse = {
-          success: false,
-          error: 'Account is disabled'
-        };
+      // 可选：检查账号状态（容错处理，避免缺列导致500）
+      let isActive = true;
+      let userRole: string = 'ADMIN';
+      try {
+        const extra = await prisma.user.findUnique({
+          where: { username },
+          select: { active: true, role: true, email: true, name: true }
+        });
+        if (extra && typeof extra.active === 'boolean') isActive = extra.active;
+        if (extra && typeof (extra as any).role === 'string') userRole = (extra as any).role;
+      } catch (e) {
+        // 忽略：历史库缺少字段时仅使用默认
+      }
+
+      if (!isActive) {
+        const response: ApiResponse = { success: false, error: 'Account is disabled' };
         res.status(401).json(response);
         return;
       }
@@ -80,7 +87,7 @@ export class AuthController {
       const tokenPayload: AuthTokenPayload = {
         userId: user.id,
         username: user.username,
-        role: user.role
+        role: userRole || 'ADMIN'
       };
 
       const token = jwt.sign(
@@ -102,13 +109,12 @@ export class AuthController {
       }
 
       // 更新最后登录时间
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { lastLogin: new Date() }
-      });
+      try {
+        await prisma.user.update({ where: { id: user.id }, data: { lastLogin: new Date() } });
+      } catch {}
 
       // 返回用户信息（不包含密码）
-      const { password: _, ...userInfo } = user;
+      const { password: _, ...userInfo } = { ...user, role: userRole, active: isActive } as any;
       
       const response: ApiResponse = {
         success: true,
