@@ -489,6 +489,29 @@ GET    /api/statistics/trends     # 趋势分析
 
 ## 🔧 开发指南
 
+### 📦 占位节点导入示例（纪念/冻结）
+
+通过管理员接口可批量导入“占位节点”，用于记录已过期或不会再上线的 VPS 资产，并在列表中以离线状态展示。对这类“纪念”资产，建议设置 `neverAdopt: true`，阻止它们被后续相同 IP 的新 Agent 自动收编。
+
+请求示例：
+
+```http
+POST /api/admin/nodes/placeholders/import
+Authorization: Bearer <ADMIN_JWT>
+Content-Type: application/json
+
+{
+  "items": [
+    { "ip": "203.0.113.10", "name": "Expired-TYO-1", "notes": "2023 活动机", "tags": ["expired","promo"], "neverAdopt": true },
+    { "ip": "2001:db8::1234", "neverAdopt": true }
+  ]
+}
+```
+
+说明：
+- `neverAdopt=true` 表示“冻结占位”，即使未来该 IP 上有新的 Agent 上报，也不会自动合并升级为正式节点。
+- 未设置 `neverAdopt` 时默认保持可被收编（便于先占位、后安装的场景）。
+
 ### 🛠️ 开发环境搭建
 
 ```bash

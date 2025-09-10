@@ -290,7 +290,7 @@ export class NodeService {
   }
 
   // 基于IP创建占位节点（未安装Agent的VPS资产）
-  async createPlaceholderFromIP(ip: string, options?: { name?: string; notes?: string; tags?: string[] }): Promise<Node> {
+  async createPlaceholderFromIP(ip: string, options?: { name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }): Promise<Node> {
     const isIPv6 = ip.includes(':');
     try {
       // 先查找是否已有同IP的节点
@@ -308,6 +308,7 @@ export class NodeService {
               name: options?.name || existing.name,
               description: options?.notes ?? existing.description,
               tags: options?.tags ? JSON.stringify(options.tags) : existing.tags,
+              ...(typeof options?.neverAdopt === 'boolean' ? { neverAdopt: options.neverAdopt } : {}),
             }
           });
           return { ...updated, provider: (updated as any).asnName || updated.provider } as any;
@@ -357,6 +358,7 @@ export class NodeService {
           description: options?.notes || null,
           tags: options?.tags ? JSON.stringify(options.tags) : null,
           isPlaceholder: true,
+          neverAdopt: options?.neverAdopt === true,
           asnNumber: (asn.asn as string) || null,
           asnName: (asn.name as string) || null,
           asnOrg: (asn.org as string) || null,
@@ -371,7 +373,7 @@ export class NodeService {
     }
   }
 
-  async createPlaceholdersFromIPs(items: Array<{ ip: string; name?: string; notes?: string; tags?: string[] }>): Promise<{ created: number; updated: number; skipped: number; results: Node[] }>{
+  async createPlaceholdersFromIPs(items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }>): Promise<{ created: number; updated: number; skipped: number; results: Node[] }>{
     let created = 0, updated = 0, skipped = 0;
     const results: Node[] = [] as any;
     for (const item of items) {
@@ -380,7 +382,7 @@ export class NodeService {
       try {
         // 试着调用创建（内部会处理已存在时的更新/返回）
         const before = await prisma.node.findFirst({ where: { OR: ip.includes(':') ? [{ ipv6: ip }] : [{ ipv4: ip }] } });
-        const n = await this.createPlaceholderFromIP(ip, { name: item.name, notes: item.notes, tags: item.tags });
+        const n = await this.createPlaceholderFromIP(ip, { name: item.name, notes: item.notes, tags: item.tags, neverAdopt: item.neverAdopt });
         const after = await prisma.node.findUnique({ where: { id: (n as any).id } });
         if (!before && after) created++; else if (before && (before as any).isPlaceholder) updated++; else skipped++;
         results.push(n);
@@ -402,6 +404,10 @@ export class NodeService {
     if (isIPv6) orConds.push({ ipv6: ip }); else orConds.push({ ipv4: ip });
     const placeholder = await prisma.node.findFirst({ where: { AND: [{ isPlaceholder: true }, { OR: orConds }] } });
     if (!placeholder) return null;
+    if ((placeholder as any).neverAdopt === true) {
+      // 纪念/冻结占位：不自动收编
+      return null;
+    }
     // 升级为正式节点
     const updated = await prisma.node.update({
       where: { id: placeholder.id },

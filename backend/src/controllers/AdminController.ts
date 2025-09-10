@@ -309,7 +309,7 @@ export class AdminController {
   async importPlaceholderNodes(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const payload = req.body;
-      const items: Array<{ ip: string; name?: string; notes?: string; tags?: string[] }> = Array.isArray(payload?.items) ? payload.items : [];
+      const items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }> = Array.isArray(payload?.items) ? payload.items : [];
       if (items.length === 0) {
         const response: ApiResponse = { success: false, error: 'items is required (non-empty array)' };
         res.status(400).json(response);
