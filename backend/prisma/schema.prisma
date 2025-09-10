@@ -40,6 +40,10 @@ model Node {
   // Agent信息
   agentId     String   @unique // Agent唯一标识
   apiKey      String   // API密钥用于认证
+  // 资产占位/库存标记（为未安装Agent的VPS创建占位记录）
+  isPlaceholder Boolean @default(false)
+  // 纪念/冻结占位：不允许被自动“收编”升级为正式节点
+  neverAdopt   Boolean  @default(false)
   
   // 状态信息
   status      NodeStatus @default(UNKNOWN)
@@ -61,8 +65,12 @@ model Node {
   diagnosticRecords DiagnosticRecord[]
   heartbeatLogs     HeartbeatLog[]
   eventLogs         EventLog[]
-  
+
   @@map("nodes")
+  @@index([isPlaceholder])
+  @@index([ipv4])
+  @@index([ipv6])
+  @@index([isPlaceholder, neverAdopt])
 }
 
 // 网络诊断记录

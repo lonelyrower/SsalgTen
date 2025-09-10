@@ -142,7 +142,7 @@ export class ApiKeyService {
 
   // 验证API密钥
   async validateApiKey(key: string): Promise<boolean> {
-    logger.info(`[ApiKeyService] 开始验证API密钥: ${key ? key.substring(0, 10) + '...' : 'null/undefined'}`);
+    logger.debug(`[ApiKeyService] 开始验证API密钥: ${key ? key.substring(0, 10) + '...' : 'null/undefined'}`);
     
     if (!key) {
       logger.warn(`[ApiKeyService] API密钥为空或未定义`);
@@ -156,30 +156,30 @@ export class ApiKeyService {
 
     try {
       const { systemKey, previousKey, previousKeyExpires } = await this.fetchSystemKeys();
-      logger.info(`[ApiKeyService] 系统密钥: ${systemKey ? systemKey.substring(0, 10) + '...' : 'null/undefined'}`);
+      logger.debug(`[ApiKeyService] 已加载系统API密钥(截断显示)`);
       
       let matches = key === systemKey;
-      logger.info(`[ApiKeyService] 与当前系统密钥比较结果: ${matches}`);
+      logger.debug(`[ApiKeyService] 与当前系统密钥比较结果: ${matches}`);
 
       // 如果不匹配当前密钥，检查是否匹配仍在宽限期的旧密钥
       if (!matches) {
-        logger.info(`[ApiKeyService] 检查旧密钥宽限期...`);
+        logger.debug(`[ApiKeyService] 检查旧密钥宽限期...`);
         if (previousKey && previousKeyExpires) {
           const expiresAt = new Date(previousKeyExpires);
-          logger.info(`[ApiKeyService] 找到旧密钥，过期时间: ${expiresAt.toISOString()}`);
+          logger.debug(`[ApiKeyService] 找到旧密钥，过期时间: ${expiresAt.toISOString()}`);
           if (new Date() < expiresAt && key === previousKey) {
             matches = true;
-            logger.info('[ApiKeyService] 使用处于宽限期的旧API密钥');
+            logger.debug('[ApiKeyService] 使用处于宽限期的旧API密钥');
           }
         } else {
-          logger.info(`[ApiKeyService] 未找到旧密钥记录`);
+          logger.debug(`[ApiKeyService] 未找到旧密钥记录`);
         }
       }
 
-      logger.info(`[ApiKeyService] 最终密钥匹配结果: ${matches}`);
+      logger.debug(`[ApiKeyService] 最终密钥匹配结果: ${matches}`);
 
       if (matches) {
-        logger.info(`[ApiKeyService] API密钥验证成功，更新使用统计`);
+        logger.debug(`[ApiKeyService] API密钥验证成功，更新使用统计(节流)`);
         await this.updateApiKeyUsage(key);
         return true;
       }

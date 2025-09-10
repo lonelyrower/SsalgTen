@@ -54,6 +54,10 @@ export interface UpdateNodeInput {
   asnOrg?: string;
   asnRoute?: string;
   asnType?: string;
+  // 占位/资产管理
+  isPlaceholder?: boolean;
+  // 允许在占位升级时写入真实 agentId
+  agentId?: string;
 }
 
 export interface NodeWithStats extends Node {
@@ -283,6 +287,144 @@ export class NodeService {
       logger.error(`Failed to delete node ${id}:`, error);
       throw new Error('Failed to delete node');
     }
+  }
+
+  // 基于IP创建占位节点（未安装Agent的VPS资产）
+  async createPlaceholderFromIP(ip: string, options?: { name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }): Promise<Node> {
+    const isIPv6 = ip.includes(':');
+    try {
+      // 先查找是否已有同IP的节点
+      const orConds: any[] = [];
+      if (!isIPv6) orConds.push({ ipv4: ip });
+      else orConds.push({ ipv6: ip });
+
+      const existing = await prisma.node.findFirst({ where: { OR: orConds } });
+      if (existing) {
+        if (existing as any && (existing as any).isPlaceholder) {
+          // 更新占位信息（名称/标签/描述）
+          const updated = await prisma.node.update({
+            where: { id: existing.id },
+            data: {
+              name: options?.name || existing.name,
+              description: options?.notes ?? existing.description,
+              tags: options?.tags ? JSON.stringify(options.tags) : existing.tags,
+              ...(typeof options?.neverAdopt === 'boolean' ? { neverAdopt: options.neverAdopt } : {}),
+            }
+          });
+          return { ...updated, provider: (updated as any).asnName || updated.provider } as any;
+        }
+        // 已存在非占位节点，直接返回（不覆盖）
+        return { ...existing, provider: (existing as any).asnName || existing.provider } as any;
+      }
+
+      // 查询IP信息，填充地理/ASN
+      let country = 'Unknown';
+      let city = 'Unknown';
+      let latitude = 0;
+      let longitude = 0;
+      let provider = 'Unknown';
+      let asn: { asn?: string; name?: string; org?: string; route?: string; type?: string } = {};
+      try {
+        const info = await ipInfoService.getIPInfo(ip);
+        if (info) {
+          country = info.country || country;
+          city = info.city || city;
+          if (info.loc && info.loc.includes(',')) {
+            const [lat, lon] = info.loc.split(',');
+            latitude = parseFloat(lat) || 0;
+            longitude = parseFloat(lon) || 0;
+          }
+          provider = (info.asn?.name || info.company?.name || provider) as string;
+          asn = info.asn || {};
+        }
+      } catch {}
+
+      const placeholderAgentId = `placeholder_${crypto.createHash('sha1').update(ip).digest('hex').slice(0, 12)}`;
+      const apiKey = crypto.randomBytes(32).toString('hex');
+
+      const node = await prisma.node.create({
+        data: {
+          name: options?.name || `Expired VPS ${ip}`,
+          country,
+          city,
+          latitude,
+          longitude,
+          ipv4: isIPv6 ? null : ip,
+          ipv6: isIPv6 ? ip : null,
+          provider,
+          agentId: placeholderAgentId,
+          apiKey,
+          status: NodeStatus.OFFLINE,
+          description: options?.notes || null,
+          tags: options?.tags ? JSON.stringify(options.tags) : null,
+          isPlaceholder: true,
+          neverAdopt: options?.neverAdopt === true,
+          asnNumber: (asn.asn as string) || null,
+          asnName: (asn.name as string) || null,
+          asnOrg: (asn.org as string) || null,
+          asnRoute: (asn.route as string) || null,
+          asnType: (asn.type as string) || null,
+        }
+      });
+      return { ...node, provider: (node as any).asnName || node.provider } as any;
+    } catch (error) {
+      logger.error('Failed to create placeholder node:', error);
+      throw new Error('Failed to create placeholder node');
+    }
+  }
+
+  async createPlaceholdersFromIPs(items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }>): Promise<{ created: number; updated: number; skipped: number; results: Node[] }>{
+    let created = 0, updated = 0, skipped = 0;
+    const results: Node[] = [] as any;
+    for (const item of items) {
+      const ip = (item.ip || '').trim();
+      if (!ip) { skipped++; continue; }
+      try {
+        // 试着调用创建（内部会处理已存在时的更新/返回）
+        const before = await prisma.node.findFirst({ where: { OR: ip.includes(':') ? [{ ipv6: ip }] : [{ ipv4: ip }] } });
+        const n = await this.createPlaceholderFromIP(ip, { name: item.name, notes: item.notes, tags: item.tags, neverAdopt: item.neverAdopt });
+        const after = await prisma.node.findUnique({ where: { id: (n as any).id } });
+        if (!before && after) created++; else if (before && (before as any).isPlaceholder) updated++; else skipped++;
+        results.push(n);
+        // 避免外部数据源限频
+        await new Promise(r => setTimeout(r, 200));
+      } catch (e) {
+        logger.warn('Placeholder import failed for ip:', item.ip, e);
+        skipped++;
+      }
+    }
+    return { created, updated, skipped, results };
+  }
+
+  // 尝试将真实 Agent 绑定到占位节点（按IP匹配），并升级为正式节点
+  async tryAdoptAgentToPlaceholder(agentId: string, ip?: string | null, nodeInfo?: any, systemInfo?: any): Promise<Node | null> {
+    if (!ip) return null;
+    const isIPv6 = ip.includes(':');
+    const orConds: any[] = [];
+    if (isIPv6) orConds.push({ ipv6: ip }); else orConds.push({ ipv4: ip });
+    const placeholder = await prisma.node.findFirst({ where: { AND: [{ isPlaceholder: true }, { OR: orConds }] } });
+    if (!placeholder) return null;
+    if ((placeholder as any).neverAdopt === true) {
+      // 纪念/冻结占位：不自动收编
+      return null;
+    }
+    // 升级为正式节点
+    const updated = await prisma.node.update({
+      where: { id: placeholder.id },
+      data: {
+        agentId,
+        isPlaceholder: false,
+        status: NodeStatus.ONLINE,
+        lastSeen: new Date(),
+        name: nodeInfo?.name || placeholder.name,
+        ipv4: isIPv6 ? placeholder.ipv4 : (ip || placeholder.ipv4),
+        ipv6: isIPv6 ? (ip || placeholder.ipv6) : placeholder.ipv6,
+        osType: systemInfo?.platform || placeholder.osType,
+        osVersion: systemInfo?.version || placeholder.osVersion,
+      }
+    });
+    logger.info(`Adopted agent ${agentId} into placeholder node ${placeholder.id} (${placeholder.name})`);
+    return { ...updated, provider: (updated as any).asnName || updated.provider } as any;
   }
 
   // 更新节点状态

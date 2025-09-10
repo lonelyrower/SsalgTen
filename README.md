@@ -19,6 +19,7 @@
 - **🗺️ 智能地图展示** - 交互式世界地图，实时显示节点状态和网络拓扑
 - **⚡ 实时数据更新** - WebSocket 实时推送，毫秒级状态更新
 - **🎯 同位置节点分散** - 智能坐标微调，完美解决节点重叠显示问题
+ - **📦 资产占位节点** - 未安装/已过期 VPS 也可纳入清单并显示为离线（自动按 IP 填充地理/ASN，后续安装 Agent 会自动“升级”为正式节点）
 
 ### 🛡️ 企业级安全管理
 - **🔐 完整权限体系** - 基于 JWT 的三级权限管理 (Admin/Operator/Viewer)
@@ -468,10 +469,13 @@ GET    /api/admin/logs      # 操作日志 (Admin)
 ### 🔑 API 密钥管理
 ```http
 GET    /api/admin/api-keys  # 密钥列表 (Admin)
-POST   /api/admin/api-keys  # 生成密钥 (Admin)
+POST   /api/admin/api-keys  # 生成密钥 (Admin)  
 PUT    /api/admin/api-keys/:id # 更新密钥 (Admin)  
 DELETE /api/admin/api-keys/:id # 删除密钥 (Admin)
 POST   /api/admin/api-keys/batch # 批量生成 (Admin)
+
+# 资产占位（未安装 Agent 的 VPS 资产）
+POST   /api/admin/nodes/placeholders/import  # 批量导入占位节点（Admin）
 ```
 
 ### 📈 统计接口
@@ -484,6 +488,29 @@ GET    /api/statistics/trends     # 趋势分析
 ```
 
 ## 🔧 开发指南
+
+### 📦 占位节点导入示例（纪念/冻结）
+
+通过管理员接口可批量导入“占位节点”，用于记录已过期或不会再上线的 VPS 资产，并在列表中以离线状态展示。对这类“纪念”资产，建议设置 `neverAdopt: true`，阻止它们被后续相同 IP 的新 Agent 自动收编。
+
+请求示例：
+
+```http
+POST /api/admin/nodes/placeholders/import
+Authorization: Bearer <ADMIN_JWT>
+Content-Type: application/json
+
+{
+  "items": [
+    { "ip": "203.0.113.10", "name": "Expired-TYO-1", "notes": "2023 活动机", "tags": ["expired","promo"], "neverAdopt": true },
+    { "ip": "2001:db8::1234", "neverAdopt": true }
+  ]
+}
+```
+
+说明：
+- `neverAdopt=true` 表示“冻结占位”，即使未来该 IP 上有新的 Agent 上报，也不会自动合并升级为正式节点。
+- 未设置 `neverAdopt` 时默认保持可被收编（便于先占位、后安装的场景）。
 
 ### 🛠️ 开发环境搭建
 

@@ -127,6 +127,8 @@ router.post('/admin/nodes', authenticateToken, requireAdmin, validateBody(Create
 router.put('/admin/nodes/:id', authenticateToken, requireAdmin, validateBody(UpdateNodeSchema), adminController.updateNode.bind(adminController));
 router.get('/admin/nodes/:id/api-key', authenticateToken, requireAdmin, adminController.viewNodeApiKey.bind(adminController));
 router.delete('/admin/nodes/:id', authenticateToken, requireAdmin, adminController.deleteNode.bind(adminController));
+// 批量导入占位节点（资产）
+router.post('/admin/nodes/placeholders/import', authenticateToken, requireAdmin, adminController.importPlaceholderNodes.bind(adminController));
 
 // 用户管理
 router.get('/admin/users', authenticateToken, requireAdmin, adminController.getAllUsers.bind(adminController));
