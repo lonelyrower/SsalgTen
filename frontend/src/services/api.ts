@@ -500,10 +500,29 @@ class ApiService {
 
   // 认证相关 API
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    const response = await this.request<LoginResponse>('/auth/login', {
+    // Primary path via API_BASE_URL (e.g. /api/auth/login)
+    let response = await this.request<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+
+    // Fallback: if 5xx/502/network error, try root-mapped path (/auth/login) which we proxy to backend in nginx
+    if (!response.success) {
+      const err = response.error || '';
+      const likelyGateway = /HTTP error! status: 5\d\d|502|Bad Gateway|Failed to fetch/i.test(err);
+      try {
+        if (likelyGateway && typeof window !== 'undefined') {
+          const r = await fetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
+          });
+          if (r.ok) {
+            response = await r.json();
+          }
+        }
+      } catch {}
+    }
 
     if (response.success && response.data) {
       TokenManager.setToken(response.data.token);
