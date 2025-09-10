@@ -613,15 +613,9 @@ export class NodeController {
       const signCheck = await apiKeyService.validateSignedRequest({ providedApiKey: apiKey, timestamp: ts, signature: sig, nonce, body: req.body });
       if (!signCheck.ok) {
         logger.warn(`[NodeController] 心跳签名校验失败: ${signCheck.reason}`);
-        // 如果提供了签名但校验失败，直接拒绝（即使未强制要求），以避免滥用导致的写入压力
-        if (sig) {
-          const response: ApiResponse = { success: false, error: 'Invalid signature' };
-          res.status(401).json(response);
-          return;
-        }
-        // 未提供签名时，仅在开启强制校验时拒绝
+        // 仅当强制要求签名时才拒绝；否则放行（即使客户端带了签名也不拒绝）
         if ((process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true') {
-          const response: ApiResponse = { success: false, error: 'Signature required' };
+          const response: ApiResponse = { success: false, error: 'Invalid signature' };
           res.status(401).json(response);
           return;
         }
