@@ -80,6 +80,11 @@ services:
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-info}
       ENABLE_MORGAN: ${ENABLE_MORGAN:-true}
+
+      # Admin emergency fallback login (optional, remove after use)
+      # Set these only temporarily to regain access, then delete and restart backend
+      ADMIN_FALLBACK_USERNAME: ${ADMIN_FALLBACK_USERNAME:-}
+      ADMIN_FALLBACK_PASSWORD: ${ADMIN_FALLBACK_PASSWORD:-}
       
       # External Services
       SPEEDTEST_SERVER_ID: ${SPEEDTEST_SERVER_ID:-auto}
