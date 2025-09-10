@@ -278,7 +278,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">导入过期 VPS</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                支持两种方式：1) 选择文件（.txt 每行一个 IP；或 .json，数组为 {"ip":...} 对象）；2) 直接在文本框中粘贴 IP（每行一个）。
+                支持两种方式：1) 选择文件（.txt 每行一个 IP；或 .json，数组为包含 ip 字段的对象）；2) 直接在文本框中粘贴 IP（每行一个）。
                 这些节点将以“离线”状态显示；默认设置为“纪念/冻结”，不会被后续相同 IP 的新 Agent 自动合并。
               </p>
 
