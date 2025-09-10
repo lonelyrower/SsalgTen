@@ -19,29 +19,24 @@ const getCorsOrigins = (): string | string[] => {
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = getCorsOrigins();
-    
-    // 开发模式允许所有源（当NODE_ENV不是production时）
-    if (process.env.NODE_ENV !== 'production' && !origin) {
+
+    // 对于非浏览器/无 Origin 的请求（如健康检查、服务间调用），统一允许
+    if (!origin) {
       return callback(null, true);
     }
-    
-    // 如果没有origin（比如直接访问API），在开发模式下允许
-    if (!origin && process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    
+
     // 检查允许的源
     if (typeof allowedOrigins === 'string') {
       if (allowedOrigins === '*' || allowedOrigins === origin) {
         return callback(null, true);
       }
     } else {
-      if (allowedOrigins.includes('*') || (origin && allowedOrigins.includes(origin))) {
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
     }
-    
-    // 生产环境下，不在允许列表中的源会被拒绝
+
+    // 不在允许列表中的源被拒绝
     callback(new Error(`Origin ${origin} not allowed by CORS policy`));
   },
   credentials: true,
