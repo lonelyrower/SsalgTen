@@ -30,6 +30,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showDeployModal, setShowDeployModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importNeverAdopt, setImportNeverAdopt] = useState(true);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<null | { created: number; updated: number; skipped: number; total: number }>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showRenameModal, setShowRenameModal] = useState<string | null>(null);
   const [newNodeName, setNewNodeName] = useState('');
@@ -203,6 +208,15 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               刷新
             </Button>
             <Button
+              onClick={() => setShowImportModal(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              size="sm"
+              title="导入过期/未安装Agent的 VPS（作为离线节点）"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              导入过期VPS
+            </Button>
+            <Button
               onClick={() => setShowDeployModal(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white"
               size="sm"
@@ -255,6 +269,123 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             </div>
           </div>
         </Card>
+      )}
+
+      {/* 导入过期VPS（占位节点）对话框 */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-2xl w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">导入过期 VPS</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                支持两种方式：1) 选择文件（.txt 每行一个 IP；或 .json，数组为 {"ip":...} 对象）；2) 直接在文本框中粘贴 IP（每行一个）。
+                这些节点将以“离线”状态显示；默认设置为“纪念/冻结”，不会被后续相同 IP 的新 Agent 自动合并。
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">选择文件（可选）</label>
+                  <input
+                    type="file"
+                    accept=".txt,.json"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const text = await file.text();
+                        setImportText((prev) => prev ? (prev + '\n' + text) : text);
+                      } catch (err) {
+                        setError('读取文件失败');
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-700 dark:text-gray-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">IP 列表（每行一个）或 JSON</label>
+                  <textarea
+                    value={importText}
+                    onChange={(e) => setImportText(e.target.value)}
+                    rows={10}
+                    placeholder={"示例:\n203.0.113.10\n2001:db8::1234\n或 JSON:\n[{\"ip\":\"203.0.113.10\",\"name\":\"Expired-1\"}]"}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                  />
+                </div>
+
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={importNeverAdopt} onChange={(e) => setImportNeverAdopt(e.target.checked)} />
+                  <span className="text-gray-700 dark:text-gray-300">设置为“纪念/冻结”（neverAdopt）</span>
+                </label>
+
+                {importResult && (
+                  <div className="text-sm text-gray-700 dark:text-gray-200 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded">
+                    导入完成：新增 {importResult.created}，更新 {importResult.updated}，跳过 {importResult.skipped}，共 {importResult.total}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowImportModal(false); setImportText(''); setImportResult(null); }}
+                  className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={async () => {
+                    // 解析 importText 为 items
+                    const raw = importText.trim();
+                    if (!raw) { setError('请输入或选择包含 IP 的内容'); return; }
+                    let items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }> = [];
+                    try {
+                      if (raw.startsWith('[') || raw.startsWith('{')) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) items = parsed;
+                        else if (Array.isArray(parsed.items)) items = parsed.items;
+                      }
+                    } catch {}
+                    if (items.length === 0) {
+                      // 逐行解析 IP
+                      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                      items = lines.map(ip => ({ ip }));
+                    }
+                    // 填充 neverAdopt 默认值
+                    items = items.map(it => ({ ...it, neverAdopt: typeof it.neverAdopt === 'boolean' ? it.neverAdopt : importNeverAdopt }));
+
+                    setImporting(true);
+                    setError('');
+                    setImportResult(null);
+                    try {
+                      const resp = await apiService.importPlaceholderNodes(items);
+                      if (resp.success && resp.data) {
+                        setImportResult(resp.data as any);
+                        // 刷新节点
+                        await loadNodes();
+                      } else {
+                        setError(resp.error || '导入失败');
+                      }
+                    } catch (e: any) {
+                      const msg = (e && e.message) ? String(e.message) : '';
+                      if (msg.includes('Placeholder feature not available') || msg.includes('501')) {
+                        setError('占位功能不可用：请先在后端执行数据库迁移（prisma migrate deploy）后重试。');
+                      } else {
+                        setError('导入失败');
+                      }
+                    } finally {
+                      setImporting(false);
+                    }
+                  }}
+                  disabled={importing || !importText.trim()}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[120px] disabled:opacity-50"
+                >
+                  {importing ? '正在导入…' : '开始导入'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* 节点表格 */}

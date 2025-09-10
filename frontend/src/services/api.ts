@@ -737,6 +737,14 @@ class ApiService {
     }, true);
   }
 
+  // 占位节点导入（管理员专用）
+  async importPlaceholderNodes(items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }>): Promise<ApiResponse<{ created: number; updated: number; skipped: number; total: number }>> {
+    return this.request('/admin/nodes/placeholders/import', {
+      method: 'POST',
+      body: JSON.stringify({ items })
+    }, true);
+  }
+
   // 获取Agent安装命令（公开接口）
   async getInstallCommand(): Promise<ApiResponse<InstallCommandData>> {
     // 该接口需要管理员权限
