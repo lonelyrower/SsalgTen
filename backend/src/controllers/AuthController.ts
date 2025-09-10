@@ -72,8 +72,20 @@ export class AuthController {
         return;
       }
 
-      // 验证密码
-      const passwordValid = await bcrypt.compare(password, user.password);
+      // 验证密码（兼容旧库：如果存的是明文或非bcrypt格式，允许一次性迁移为bcrypt）
+      let passwordValid = false;
+      const looksBcrypt = typeof user.password === 'string' && /^\$2[aby]?\$\d{2}\$/.test(user.password);
+      try {
+        if (looksBcrypt) {
+          passwordValid = await bcrypt.compare(password, user.password);
+        } else {
+          // 回退为明文比较（不安全，仅为兼容历史数据；登录成功后立即升级为bcrypt）
+          passwordValid = password === user.password;
+        }
+      } catch (e) {
+        // bcrypt解析失败时，尝试明文比较
+        passwordValid = password === user.password;
+      }
       if (!passwordValid) {
         const response: ApiResponse = {
           success: false,
@@ -81,6 +93,16 @@ export class AuthController {
         };
         res.status(401).json(response);
         return;
+      }
+
+      // 如为明文密码且验证通过，升级为bcrypt存储
+      if (passwordValid && !looksBcrypt) {
+        try {
+          const hashed = await bcrypt.hash(password, 12);
+          await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+        } catch (e) {
+          logger.warn('Password upgrade to bcrypt failed (continuing):', e);
+        }
       }
 
       // 生成JWT access token
