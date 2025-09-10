@@ -4,7 +4,8 @@ import cors from 'cors';
 const getCorsOrigins = (): string | string[] => {
   const corsOrigin = process.env.CORS_ORIGIN;
   if (!corsOrigin) {
-    return 'http://localhost:3000';
+    // 默认放行（反向代理内网环境，通常与前端同域）。如需收紧，请设置 CORS_ORIGIN。
+    return '*';
   }
   
   // 支持多种分隔符：逗号、分号、管道符
@@ -22,6 +23,11 @@ const corsOptions: cors.CorsOptions = {
 
     // 对于非浏览器/无 Origin 的请求（如健康检查、服务间调用），统一允许
     if (!origin) {
+      return callback(null, true);
+    }
+
+    // 通配：显式允许所有来源
+    if (allowedOrigins === '*') {
       return callback(null, true);
     }
 
