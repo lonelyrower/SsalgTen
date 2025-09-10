@@ -88,6 +88,26 @@ export class AdminController {
       const apiKey = require('crypto').randomBytes(32).toString('hex');
 
       const node = await prisma.node.create({
+        select: {
+          id: true,
+          name: true,
+          hostname: true,
+          country: true,
+          city: true,
+          latitude: true,
+          longitude: true,
+          ipv4: true,
+          ipv6: true,
+          provider: true,
+          datacenter: true,
+          agentId: true,
+          apiKey: true,
+          description: true,
+          tags: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
         data: {
           name,
           hostname,
@@ -145,7 +165,8 @@ export class AdminController {
 
       // 检查节点是否存在
       const existingNode = await prisma.node.findUnique({
-        where: { id }
+        where: { id },
+        select: { id: true }
       });
 
       if (!existingNode) {
@@ -165,7 +186,27 @@ export class AdminController {
 
       const updatedNode = await prisma.node.update({
         where: { id },
-        data: updateDataFormatted
+        data: updateDataFormatted,
+        select: {
+          id: true,
+          name: true,
+          hostname: true,
+          country: true,
+          city: true,
+          latitude: true,
+          longitude: true,
+          ipv4: true,
+          ipv6: true,
+          provider: true,
+          datacenter: true,
+          agentId: true,
+          apiKey: true,
+          description: true,
+          tags: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        }
       });
 
       // Return node data without sensitive apiKey
@@ -262,7 +303,8 @@ export class AdminController {
 
       // 检查节点是否存在
       const existingNode = await prisma.node.findUnique({
-        where: { id }
+        where: { id },
+        select: { id: true, name: true }
       });
 
       if (!existingNode) {
@@ -283,7 +325,8 @@ export class AdminController {
           where: { nodeId: id }
         });
         await tx.node.delete({
-          where: { id }
+          where: { id },
+          select: { id: true }
         });
       });
 
@@ -324,7 +367,17 @@ export class AdminController {
       }
 
       const { nodeService } = await import('../services/NodeService');
-      const result = await nodeService.createPlaceholdersFromIPs(filtered);
+      let result;
+      try {
+        result = await nodeService.createPlaceholdersFromIPs(filtered);
+      } catch (e: any) {
+        const msg = (e && e.message) ? String(e.message) : '';
+        if (msg.includes('Placeholder feature not available')) {
+          res.status(501).json({ success: false, error: 'Placeholder feature not available: please apply database migrations (prisma migrate deploy) and retry.' });
+          return;
+        }
+        throw e;
+      }
       const response: ApiResponse = {
         success: true,
         data: {

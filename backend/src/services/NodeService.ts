@@ -86,6 +86,55 @@ export class NodeService {
   private nodesCacheTtlMs = parseInt(process.env.NODES_CACHE_TTL_MS || '2000');
   private statsCacheTtlMs = parseInt(process.env.STATS_CACHE_TTL_MS || '2000');
   
+  // 兼容性：数据库是否已添加占位相关列（isPlaceholder、neverAdopt）
+  private placeholderSupport: boolean | null = null;
+  
+  private BASE_NODE_SELECT: Prisma.NodeSelect = {
+    id: true,
+    name: true,
+    hostname: true,
+    country: true,
+    city: true,
+    latitude: true,
+    longitude: true,
+    ipv4: true,
+    ipv6: true,
+    asnNumber: true,
+    asnName: true,
+    asnOrg: true,
+    asnRoute: true,
+    asnType: true,
+    provider: true,
+    datacenter: true,
+    agentId: true,
+    apiKey: true,
+    status: true,
+    lastSeen: true,
+    tags: true,
+    description: true,
+    osType: true,
+    osVersion: true,
+    createdAt: true,
+    updatedAt: true,
+  };
+
+  private async ensurePlaceholderSupport(): Promise<boolean> {
+    if (this.placeholderSupport !== null) return this.placeholderSupport;
+    try {
+      const rows = await prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+        `SELECT EXISTS (
+           SELECT 1 FROM information_schema.columns 
+           WHERE table_schema = 'public' AND table_name = 'nodes' 
+             AND column_name IN ('isPlaceholder','neverAdopt')
+         ) AS exists`
+      );
+      this.placeholderSupport = !!rows?.[0]?.exists;
+    } catch {
+      this.placeholderSupport = false;
+    }
+    return this.placeholderSupport;
+  }
+  
   // 创建新节点
   async createNode(input: CreateNodeInput): Promise<Node> {
     try {
@@ -124,6 +173,7 @@ export class NodeService {
       }
 
       const node = await prisma.node.create({
+        select: this.BASE_NODE_SELECT,
         data: {
           ...input,
           ...asnInfo,
@@ -150,6 +200,7 @@ export class NodeService {
       }
       // 1) 一次性取所有节点（按创建时间倒序）
       const nodes = await prisma.node.findMany({
+        select: this.BASE_NODE_SELECT,
         orderBy: { createdAt: 'desc' }
       });
 
@@ -210,7 +261,8 @@ export class NodeService {
   async getNodeById(id: string): Promise<Node | null> {
     try {
       const node = await prisma.node.findUnique({
-        where: { id }
+        where: { id },
+        select: this.BASE_NODE_SELECT,
       });
       
       if (!node) return null;
@@ -230,7 +282,8 @@ export class NodeService {
   async getNodeByAgentId(agentId: string): Promise<Node | null> {
     try {
       const node = await prisma.node.findUnique({
-        where: { agentId }
+        where: { agentId },
+        select: this.BASE_NODE_SELECT,
       });
       
       if (!node) return null;
@@ -254,7 +307,8 @@ export class NodeService {
         data: {
           ...input,
           updatedAt: new Date()
-        }
+        },
+        select: this.BASE_NODE_SELECT,
       });
 
       logger.info(`Node updated: ${node.name} (${node.id})`);
@@ -277,7 +331,8 @@ export class NodeService {
   async deleteNode(id: string): Promise<void> {
     try {
       await prisma.node.delete({
-        where: { id }
+        where: { id },
+        select: { id: true }
       });
       logger.info(`Node deleted: ${id}`);
     } catch (error) {
@@ -291,6 +346,9 @@ export class NodeService {
 
   // 基于IP创建占位节点（未安装Agent的VPS资产）
   async createPlaceholderFromIP(ip: string, options?: { name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }): Promise<Node> {
+    if (!(await this.ensurePlaceholderSupport())) {
+      throw new Error('Placeholder feature not available: please apply database migrations');
+    }
     const isIPv6 = ip.includes(':');
     try {
       // 先查找是否已有同IP的节点
@@ -298,7 +356,7 @@ export class NodeService {
       if (!isIPv6) orConds.push({ ipv4: ip });
       else orConds.push({ ipv6: ip });
 
-      const existing = await prisma.node.findFirst({ where: { OR: orConds } });
+      const existing = await prisma.node.findFirst({ where: { OR: orConds }, select: this.BASE_NODE_SELECT });
       if (existing) {
         if (existing as any && (existing as any).isPlaceholder) {
           // 更新占位信息（名称/标签/描述）
@@ -309,7 +367,8 @@ export class NodeService {
               description: options?.notes ?? existing.description,
               tags: options?.tags ? JSON.stringify(options.tags) : existing.tags,
               ...(typeof options?.neverAdopt === 'boolean' ? { neverAdopt: options.neverAdopt } : {}),
-            }
+            },
+            select: this.BASE_NODE_SELECT,
           });
           return { ...updated, provider: (updated as any).asnName || updated.provider } as any;
         }
@@ -364,7 +423,8 @@ export class NodeService {
           asnOrg: (asn.org as string) || null,
           asnRoute: (asn.route as string) || null,
           asnType: (asn.type as string) || null,
-        }
+        },
+        select: this.BASE_NODE_SELECT,
       });
       return { ...node, provider: (node as any).asnName || node.provider } as any;
     } catch (error) {
@@ -374,6 +434,9 @@ export class NodeService {
   }
 
   async createPlaceholdersFromIPs(items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }>): Promise<{ created: number; updated: number; skipped: number; results: Node[] }>{
+    if (!(await this.ensurePlaceholderSupport())) {
+      throw new Error('Placeholder feature not available: please apply database migrations');
+    }
     let created = 0, updated = 0, skipped = 0;
     const results: Node[] = [] as any;
     for (const item of items) {
@@ -381,9 +444,9 @@ export class NodeService {
       if (!ip) { skipped++; continue; }
       try {
         // 试着调用创建（内部会处理已存在时的更新/返回）
-        const before = await prisma.node.findFirst({ where: { OR: ip.includes(':') ? [{ ipv6: ip }] : [{ ipv4: ip }] } });
+        const before = await prisma.node.findFirst({ where: { OR: ip.includes(':') ? [{ ipv6: ip }] : [{ ipv4: ip }] }, select: this.BASE_NODE_SELECT });
         const n = await this.createPlaceholderFromIP(ip, { name: item.name, notes: item.notes, tags: item.tags, neverAdopt: item.neverAdopt });
-        const after = await prisma.node.findUnique({ where: { id: (n as any).id } });
+        const after = await prisma.node.findUnique({ where: { id: (n as any).id }, select: this.BASE_NODE_SELECT });
         if (!before && after) created++; else if (before && (before as any).isPlaceholder) updated++; else skipped++;
         results.push(n);
         // 避免外部数据源限频
@@ -398,11 +461,12 @@ export class NodeService {
 
   // 尝试将真实 Agent 绑定到占位节点（按IP匹配），并升级为正式节点
   async tryAdoptAgentToPlaceholder(agentId: string, ip?: string | null, nodeInfo?: any, systemInfo?: any): Promise<Node | null> {
+    if (!(await this.ensurePlaceholderSupport())) return null;
     if (!ip) return null;
     const isIPv6 = ip.includes(':');
     const orConds: any[] = [];
     if (isIPv6) orConds.push({ ipv6: ip }); else orConds.push({ ipv4: ip });
-    const placeholder = await prisma.node.findFirst({ where: { AND: [{ isPlaceholder: true }, { OR: orConds }] } });
+    const placeholder = await prisma.node.findFirst({ where: { AND: [{ isPlaceholder: true }, { OR: orConds }] }, select: this.BASE_NODE_SELECT });
     if (!placeholder) return null;
     if ((placeholder as any).neverAdopt === true) {
       // 纪念/冻结占位：不自动收编
@@ -421,7 +485,8 @@ export class NodeService {
         ipv6: isIPv6 ? (ip || placeholder.ipv6) : placeholder.ipv6,
         osType: systemInfo?.platform || placeholder.osType,
         osVersion: systemInfo?.version || placeholder.osVersion,
-      }
+      },
+      select: this.BASE_NODE_SELECT,
     });
     logger.info(`Adopted agent ${agentId} into placeholder node ${placeholder.id} (${placeholder.name})`);
     return { ...updated, provider: (updated as any).asnName || updated.provider } as any;
@@ -431,7 +496,7 @@ export class NodeService {
   async updateNodeStatus(agentId: string, status: NodeStatus): Promise<Node> {
     try {
       // 读取旧状态
-      const old = await prisma.node.findUnique({ where: { agentId } });
+      const old = await prisma.node.findUnique({ where: { agentId }, select: this.BASE_NODE_SELECT });
       if (!old) {
         throw new Error(`Node with agentId ${agentId} not found`);
       }
@@ -441,7 +506,8 @@ export class NodeService {
         data: {
           status,
           lastSeen: new Date()
-        }
+        },
+        select: this.BASE_NODE_SELECT,
       });
 
       // 增强日志输出，记录所有状态更新（包括相同状态的刷新）
