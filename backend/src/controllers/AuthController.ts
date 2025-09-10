@@ -92,7 +92,14 @@ export class AuthController {
       // 创建 refresh token
       const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || (req.socket as any).remoteAddress;
       const userAgent = req.headers['user-agent'];
-      const { token: refreshToken, expiresAt } = await refreshTokenService.create(user.id, clientIp, userAgent);
+      // 创建 refresh token（容错：若表未迁移或写入失败，不影响主登录流程）
+      let refreshToken: string | undefined;
+      try {
+        const created = await refreshTokenService.create(user.id, clientIp, userAgent);
+        refreshToken = created.token;
+      } catch (e) {
+        logger.warn('Refresh token creation failed (continuing login without refresh):', e);
+      }
 
       // 更新最后登录时间
       await prisma.user.update({
@@ -108,7 +115,7 @@ export class AuthController {
         data: {
           user: userInfo,
           token,
-          refreshToken,
+          ...(refreshToken ? { refreshToken } : {}),
           expiresIn: process.env.JWT_EXPIRES_IN || '7d'
         },
         message: 'Login successful'
