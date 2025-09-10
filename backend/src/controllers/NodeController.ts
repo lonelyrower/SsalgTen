@@ -408,8 +408,16 @@ export class NodeController {
       let node = await nodeService.getNodeByAgentId(agentId);
       
       if (!node) {
-        // 如果节点不存在且提供了节点信息，自动创建新节点
-        if (nodeInfo) {
+        // 如果节点不存在，尝试将Agent“收编”到同IP的占位节点
+        if (nodeInfo && (nodeInfo.ipv4 || nodeInfo.ipv6)) {
+          const adopted = await nodeService.tryAdoptAgentToPlaceholder(agentId, nodeInfo.ipv4 || nodeInfo.ipv6, nodeInfo, systemInfo);
+          if (adopted) {
+            node = adopted;
+          }
+        }
+
+        // 若仍不存在且提供了节点信息，自动创建新节点
+        if (!node && nodeInfo) {
           logger.info(`Creating new node for agent: ${agentId}`);
           
           node = await nodeService.createNode({
@@ -428,7 +436,7 @@ export class NodeController {
           });
           
           logger.info(`New node created: ${node.name} (${node.id})`);
-        } else {
+        } else if (!node) {
           const response: ApiResponse = {
             success: false,
             error: 'Agent not registered and insufficient information to auto-register. Please contact administrator.'
@@ -524,7 +532,7 @@ export class NodeController {
       const sig = (req.headers['x-signature'] as string) || undefined;
       const nonce = (req.headers['x-nonce'] as string) || undefined;
       
-  logger.info(`[NodeController] Agent心跳请求 - AgentId: ${agentId}`);
+  logger.debug(`[NodeController] Agent心跳请求 - AgentId: ${agentId}`);
   logger.debug(`[NodeController] Header API Key: ${headerApiKey ? headerApiKey.substring(0, 4) + '...' : 'null'}`);
   logger.debug(`[NodeController] Body API Key: ${bodyApiKey ? bodyApiKey.substring(0, 4) + '...' : 'null'}`);
       
@@ -605,8 +613,15 @@ export class NodeController {
       const signCheck = await apiKeyService.validateSignedRequest({ providedApiKey: apiKey, timestamp: ts, signature: sig, nonce, body: req.body });
       if (!signCheck.ok) {
         logger.warn(`[NodeController] 心跳签名校验失败: ${signCheck.reason}`);
-        if ((process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true') {
+        // 如果提供了签名但校验失败，直接拒绝（即使未强制要求），以避免滥用导致的写入压力
+        if (sig) {
           const response: ApiResponse = { success: false, error: 'Invalid signature' };
+          res.status(401).json(response);
+          return;
+        }
+        // 未提供签名时，仅在开启强制校验时拒绝
+        if ((process.env.AGENT_REQUIRE_SIGNATURE || 'false').toLowerCase() === 'true') {
+          const response: ApiResponse = { success: false, error: 'Signature required' };
           res.status(401).json(response);
           return;
         }

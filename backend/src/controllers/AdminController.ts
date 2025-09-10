@@ -305,6 +305,45 @@ export class AdminController {
     }
   }
 
+  // 批量导入占位节点（未安装Agent的VPS资产）
+  async importPlaceholderNodes(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const payload = req.body;
+      const items: Array<{ ip: string; name?: string; notes?: string; tags?: string[] }> = Array.isArray(payload?.items) ? payload.items : [];
+      if (items.length === 0) {
+        const response: ApiResponse = { success: false, error: 'items is required (non-empty array)' };
+        res.status(400).json(response);
+        return;
+      }
+
+      // 基础IP格式过滤（简单校验）
+      const filtered = items.filter(it => typeof it.ip === 'string' && it.ip.trim().length > 0);
+      if (filtered.length === 0) {
+        res.status(400).json({ success: false, error: 'No valid ip in items' });
+        return;
+      }
+
+      const { nodeService } = await import('../services/NodeService');
+      const result = await nodeService.createPlaceholdersFromIPs(filtered);
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          created: result.created,
+          updated: result.updated,
+          skipped: result.skipped,
+          total: filtered.length,
+        },
+        message: `Placeholders imported: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`
+      };
+      logger.info(`Admin imported placeholder nodes by ${req.user?.username}: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`);
+      res.status(201).json(response);
+    } catch (error) {
+      logger.error('Admin import placeholder nodes error:', error);
+      const response: ApiResponse = { success: false, error: 'Failed to import placeholder nodes' };
+      res.status(500).json(response);
+    }
+  }
+
   // 用户管理
   async getAllUsers(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
