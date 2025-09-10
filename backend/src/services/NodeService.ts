@@ -930,7 +930,8 @@ export class NodeService {
               data: { 
                 status: NodeStatus.ONLINE,
                 lastSeen: recentHeartbeat.timestamp
-              }
+              },
+              select: { id: true }
             });
 
             await eventService.createEvent(node.id, 'STATUS_CHANGED', `${NodeStatus.OFFLINE} -> ${NodeStatus.ONLINE}`, {
@@ -1000,7 +1001,8 @@ export class NodeService {
             const oldStatus = node.status;
             await prisma.node.update({
               where: { id: node.id },
-              data: { status: NodeStatus.OFFLINE }
+              data: { status: NodeStatus.OFFLINE },
+              select: { id: true }
             });
 
             // 记录状态变更事件
