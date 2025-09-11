@@ -8,8 +8,8 @@ const getCorsOrigins = (): string | string[] => {
   if (!corsOrigin) {
     const nodeEnv = process.env.NODE_ENV;
     if (nodeEnv === "production") {
-      // 生产环境默认允许同域请求和常见的HTTPS模式
-      return ["https://*", "http://localhost", "http://127.0.0.1"];
+      // 生产环境：允许所有HTTPS + localhost（简化版本）
+      return "*"; // 临时改为允许所有，确保不是CORS问题
     } else {
       // 开发环境默认放行（反向代理内网环境，通常与前端同域）
       return "*";
