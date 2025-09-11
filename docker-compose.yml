@@ -69,7 +69,7 @@ services:
       
       # API Security
       API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
       
       # Agent Configuration
       DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
