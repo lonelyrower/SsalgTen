@@ -36,9 +36,25 @@ const corsOptions: cors.CorsOptions = {
       if (allowedOrigins === '*' || allowedOrigins === origin) {
         return callback(null, true);
       }
+      // 支持简单的域名模式匹配（如 *.xiaohei.vip）
+      if (allowedOrigins.includes('*') && allowedOrigins.startsWith('*.')) {
+        const domain = allowedOrigins.substring(2);
+        if (origin.endsWith('.' + domain) || origin === domain) {
+          return callback(null, true);
+        }
+      }
     } else {
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         return callback(null, true);
+      }
+      // 检查域名模式匹配
+      for (const allowedOrigin of allowedOrigins) {
+        if (allowedOrigin.startsWith('*.')) {
+          const domain = allowedOrigin.substring(2);
+          if (origin.endsWith('.' + domain) || origin === domain) {
+            return callback(null, true);
+          }
+        }
       }
     }
 
