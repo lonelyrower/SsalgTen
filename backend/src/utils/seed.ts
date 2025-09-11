@@ -133,17 +133,40 @@ export async function seedAdminUser() {
     logger.info('👤 Seeding admin user...');
     
     const existingAdmin = await prisma.user.findFirst({
-      where: { role: 'ADMIN' }
+      where: { 
+        OR: [
+          { username: 'admin' },
+          { role: 'ADMIN' }
+        ]
+      }
     });
     
+    const hashedPassword = await bcrypt.hash('admin123', 12);
+    
     if (existingAdmin) {
-      logger.info('👤 Admin user already exists, skipping');
+      logger.info('👤 Admin user already exists, updating password...');
+      
+      const updatedAdmin = await prisma.user.update({
+        where: { id: existingAdmin.id },
+        data: {
+          username: 'admin',
+          email: 'admin@ssalgten.local',
+          password: hashedPassword,
+          name: 'Administrator',
+          role: 'ADMIN',
+          active: true
+        }
+      });
+      
+      logger.info(`✅ Updated admin user: ${updatedAdmin.username} (${updatedAdmin.email})`);
+      logger.info('🔑 Admin password reset to default:');
+      logger.info('   Username: admin');
+      logger.info('   Password: admin123');
+      logger.info('   ⚠️  Please change the password after first login!');
       return;
     }
     
-    // 注意：在生产环境中应该使用bcrypt加密密码
-    const hashedPassword = await bcrypt.hash('admin123', 12);
-    
+    // 创建新的管理员用户
     const adminUser = await prisma.user.create({
       data: {
         username: 'admin',
@@ -163,6 +186,40 @@ export async function seedAdminUser() {
     
   } catch (error) {
     logger.error('❌ Admin user seed failed:', error);
+    throw error;
+  }
+}
+
+// 强制重置管理员密码（用于生产环境密码重置）
+export async function forceResetAdminPassword() {
+  try {
+    logger.info('🔧 Force resetting admin password...');
+    
+    const hashedPassword = await bcrypt.hash('admin123', 12);
+    
+    // 尝试更新所有ADMIN角色用户的密码
+    const updateResult = await prisma.user.updateMany({
+      where: { role: 'ADMIN' },
+      data: {
+        password: hashedPassword,
+        active: true
+      }
+    });
+    
+    if (updateResult.count > 0) {
+      logger.info(`✅ Reset password for ${updateResult.count} admin user(s)`);
+      logger.info('🔑 Admin password reset to:');
+      logger.info('   Username: admin');
+      logger.info('   Password: admin123');
+      return;
+    }
+    
+    // 如果没有ADMIN用户，创建一个
+    logger.info('🆕 No admin users found, creating default admin...');
+    await seedAdminUser();
+    
+  } catch (error) {
+    logger.error('❌ Force reset admin password failed:', error);
     throw error;
   }
 }
