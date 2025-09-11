@@ -432,25 +432,37 @@ collect_deployment_info() {
     
     echo ""
     echo "请选择部署方式："
-    echo "1. 完整部署 (域名 + SSL证书 + HTTPS)"
-    echo "2. 简单部署 (仅HTTP，使用服务器IP)"
+    echo "1. 完整部署 (域名 + Let's Encrypt SSL + HTTPS)"
+    echo "2. Cloudflare部署 (域名 + Cloudflare SSL + HTTPS)"
+    echo "3. 简单部署 (仅HTTP，使用服务器IP)"
     echo ""
     
-    DEPLOY_MODE=$(prompt_input "请选择 (1/2)" "2")
+    DEPLOY_MODE=$(prompt_input "请选择 (1/2/3)" "3")
     case $DEPLOY_MODE in
         1)
-            log_info "选择完整部署模式"
+            log_info "选择完整部署模式 (Let's Encrypt)"
             ENABLE_SSL=true
+            SSL_MODE="letsencrypt"
+            ;;
+        2)
+            log_info "选择Cloudflare部署模式"
+            ENABLE_SSL=true
+            SSL_MODE="cloudflare"
             ;;
         *)
             log_info "选择简单部署模式"
             ENABLE_SSL=false
+            SSL_MODE="none"
             ;;
     esac
     
     if [[ "$ENABLE_SSL" == "true" ]]; then
         echo ""
-        echo "完整部署需要以下信息："
+        if [[ "$SSL_MODE" == "cloudflare" ]]; then
+            echo "Cloudflare部署需要以下信息："
+        else
+            echo "完整部署需要以下信息："
+        fi
         
         # 域名配置
         while true; do
@@ -462,15 +474,25 @@ collect_deployment_info() {
             fi
         done
         
-        # SSL邮箱
-        while true; do
-            SSL_EMAIL=$(prompt_input "SSL证书邮箱")
-            if [[ -n "$SSL_EMAIL" && "$SSL_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-                break
-            else
-                log_error "请输入有效的邮箱地址"
-            fi
-        done
+        # SSL邮箱 (仅Let's Encrypt需要)
+        if [[ "$SSL_MODE" == "letsencrypt" ]]; then
+            while true; do
+                SSL_EMAIL=$(prompt_input "SSL证书邮箱")
+                if [[ -n "$SSL_EMAIL" && "$SSL_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                    break
+                else
+                    log_error "请输入有效的邮箱地址"
+                fi
+            done
+        else
+            # Cloudflare模式不需要邮箱
+            SSL_EMAIL=""
+            echo ""
+            log_info "Cloudflare模式说明："
+            echo "  • 请确保域名在Cloudflare中已启用Proxy（橙色云朵）"
+            echo "  • SSL/TLS模式设置为 'Full' 或 'Flexible'"
+            echo "  • 将自动使用Cloudflare的免费SSL证书"
+        fi
     else
         echo ""
         log_info "简单部署模式，将使用HTTP访问"
@@ -539,7 +561,14 @@ collect_deployment_info() {
     echo ""
     log_info "部署配置信息:"
     echo "  - 域名: $DOMAIN"
-    echo "  - SSL邮箱: $SSL_EMAIL"
+    if [[ "$SSL_MODE" == "letsencrypt" ]]; then
+        echo "  - SSL模式: Let's Encrypt"
+        echo "  - SSL邮箱: $SSL_EMAIL"
+    elif [[ "$SSL_MODE" == "cloudflare" ]]; then
+        echo "  - SSL模式: Cloudflare (自签名后端)"
+    else
+        echo "  - SSL模式: HTTP only"
+    fi
     echo "  - 应用目录: $APP_DIR"
     echo "  - HTTP端口: $HTTP_PORT"
     echo "  - HTTPS端口: $HTTPS_PORT"
@@ -1426,8 +1455,8 @@ EOF
 
 # 安装SSL证书
 install_ssl_certificate() {
-    if [[ "$ENABLE_SSL" == "true" ]]; then
-        log_info "安装SSL证书..."
+    if [[ "$ENABLE_SSL" == "true" && "$SSL_MODE" == "letsencrypt" ]]; then
+        log_info "安装Let's Encrypt SSL证书..."
         
         # 安装Certbot
         if command -v apt >/dev/null 2>&1; then
@@ -1589,6 +1618,106 @@ EOF'
         run_as_root systemctl reload nginx
 
         log_success "SSL证书安装完成，HTTPS已启用并已重新加载Nginx"
+    elif [[ "$ENABLE_SSL" == "true" && "$SSL_MODE" == "cloudflare" ]]; then
+        log_info "配置Cloudflare SSL模式..."
+        
+        # 为Cloudflare模式生成自签名证书供Nginx使用
+        CERT_DIR="/etc/ssl/ssalgten"
+        run_as_root mkdir -p $CERT_DIR
+        
+        # 生成自签名证书
+        run_as_root openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+            -keyout $CERT_DIR/privkey.pem \
+            -out $CERT_DIR/fullchain.pem \
+            -subj "/C=US/ST=State/L=City/O=Organization/CN=$DOMAIN"
+        
+        # 设置证书文件权限
+        run_as_root chmod 600 $CERT_DIR/privkey.pem
+        run_as_root chmod 644 $CERT_DIR/fullchain.pem
+        
+        # 使用自签名证书路径
+        SSL_CERT="$CERT_DIR/fullchain.pem"
+        SSL_KEY="$CERT_DIR/privkey.pem"
+        
+        # 生成Cloudflare HTTPS配置
+        local HTTPS_PORT="443"
+        run_as_root bash -c "cat > /tmp/ssalgten-https-config <<EOF
+server {
+    listen $HTTPS_PORT ssl http2;
+    server_name $DOMAIN;
+    
+    ssl_certificate     $SSL_CERT;
+    ssl_certificate_key $SSL_KEY;
+    
+    # Cloudflare SSL 优化配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    
+    # 安全头（Cloudflare已处理部分，这里添加额外的）
+    add_header Strict-Transport-Security \"max-age=63072000; includeSubDomains; preload\" always;
+    
+    # 代理配置
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \\\$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_cache_bypass \\\$http_upgrade;
+    }
+    
+    # API代理
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+    
+    # WebSocket支持
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3001/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \\\$http_upgrade;
+        proxy_set_header Connection \"upgrade\";
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+    }
+}
+EOF"
+        
+        # 将HTTPS配置添加到现有配置文件
+        if [[ -d "/etc/nginx/sites-available" ]]; then
+            run_as_root bash -c "cat /tmp/ssalgten-https-config >> /etc/nginx/sites-available/ssalgten"
+        else
+            run_as_root bash -c "cat /tmp/ssalgten-https-config >> /etc/nginx/conf.d/ssalgten.conf"
+        fi
+        
+        # 清理临时文件
+        run_as_root rm -f /tmp/ssalgten-https-config
+        
+        # 测试并重新加载Nginx配置
+        run_as_root nginx -t
+        run_as_root systemctl reload nginx
+        
+        log_success "Cloudflare SSL模式配置完成！"
+        echo ""
+        log_info "Cloudflare配置提醒："
+        echo "  • 确保Cloudflare中域名已启用Proxy（橙色云朵）"
+        echo "  • 建议SSL/TLS模式设置为 'Full'"
+        echo "  • Cloudflare将处理外部SSL，服务器使用自签名证书"
     else
         log_info "跳过SSL证书安装 (HTTP模式)"
     fi
