@@ -4,16 +4,9 @@ import cors from "cors";
 const getCorsOrigins = (): string | string[] => {
   const corsOrigin = process.env.CORS_ORIGIN;
   
-  // 生产环境智能默认配置
+  // 如果未设置CORS_ORIGIN，返回空字符串，让后续逻辑处理智能检测
   if (!corsOrigin) {
-    const nodeEnv = process.env.NODE_ENV;
-    if (nodeEnv === "production") {
-      // 生产环境：允许所有HTTPS + localhost（简化版本）
-      return "*"; // 临时改为允许所有，确保不是CORS问题
-    } else {
-      // 开发环境默认放行（反向代理内网环境，通常与前端同域）
-      return "*";
-    }
+    return "";
   }
 
   // 支持多种分隔符：逗号、分号、管道符
@@ -42,7 +35,28 @@ const corsOptions: cors.CorsOptions = {
       return callback(null, true);
     }
 
-    // 检查允许的源
+    // 智能同域检测：如果没有配置CORS_ORIGIN，自动允许同域请求
+    if (!process.env.CORS_ORIGIN) {
+      try {
+        const originUrl = new URL(origin);
+        // 生产环境：只允许HTTPS同域 + localhost
+        if (process.env.NODE_ENV === "production") {
+          if (originUrl.protocol === "https:" || 
+              originUrl.hostname === "localhost" || 
+              originUrl.hostname === "127.0.0.1") {
+            return callback(null, true);
+          }
+        } else {
+          // 开发环境：允许所有
+          return callback(null, true);
+        }
+      } catch (e) {
+        // URL解析失败，拒绝
+        return callback(new Error(`Invalid origin: ${origin}`));
+      }
+    }
+
+    // 用户自定义CORS配置的检查逻辑
     const origins = Array.isArray(allowedOrigins) ? allowedOrigins : [allowedOrigins];
     
     for (const allowedOrigin of origins) {
