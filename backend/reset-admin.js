@@ -1,5 +1,5 @@
-import { forceResetAdminPassword } from './src/utils/seed';
-import { logger } from './src/utils/logger';
+const { forceResetAdminPassword } = require('./dist/utils/seed');
+const { logger } = require('./dist/utils/logger');
 
 async function main() {
   try {
