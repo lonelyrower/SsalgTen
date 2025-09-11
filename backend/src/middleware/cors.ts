@@ -22,8 +22,9 @@ const getCorsOrigins = (): string | string[] => {
   };
 
   pushFromEnv(process.env.CORS_ORIGIN);
-  // 作为补充来源，允许通过 FRONTEND_URL 指定前端地址
+  // 作为补充来源，允许通过 FRONTEND_URL 与 DOMAIN 指定前端地址
   pushFromEnv(process.env.FRONTEND_URL);
+  pushFromEnv(process.env.DOMAIN);
 
   // 如果没有任何显式来源，返回空字符串，让后续逻辑走智能检测
   if (sources.length === 0) return "";
@@ -55,9 +56,10 @@ const corsOptions: cors.CorsOptions = {
         const originUrl = new URL(origin);
         // 生产环境：只允许HTTPS同域 + localhost
         if (process.env.NODE_ENV === "production") {
-          if (originUrl.protocol === "https:" || 
-              originUrl.hostname === "localhost" || 
-              originUrl.hostname === "127.0.0.1") {
+          const host = originUrl.hostname;
+          const isLocal = host === "localhost" || host === "127.0.0.1" || host === "::1";
+          const isPrivateIPv4 = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(host);
+          if (originUrl.protocol === "https:" || isLocal || isPrivateIPv4) {
             return callback(null, true);
           }
         } else {

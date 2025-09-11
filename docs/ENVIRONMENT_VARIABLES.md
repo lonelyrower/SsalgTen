@@ -126,12 +126,25 @@ This document provides a comprehensive reference for all environment variables u
 ### `CORS_ORIGIN`
 - **Description**: Allowed CORS origins (supports multiple formats)
 - **Type**: String
-- **Default**: `http://localhost:3000`
-- **Formats**: 
+- **Formats**:
   - Single origin: `https://example.com`
-  - Multiple origins: `https://example.com,https://api.example.com`
-  - Wildcard: `*` (allows all origins)
+  - Multiple origins: `https://example.com,https://api.example.com` (commas/semicolons/pipes supported)
+  - Domain-only: `example.com` (auto-expanded to `https://example.com` and `http://example.com`)
+  - Wildcards: `*`, `*.example.com`, `https://*.example.com`, `https://*`
+- **Dynamic behavior**:
+  - If `CORS_ORIGIN` is unset, backend auto-allows in production: HTTPS, localhost/127.0.0.1, and private networks (10.x, 192.168.x, 172.16–31.x); in development: all origins.
+  - Unknown origins are not whitelisted but will not cause 500; CORS headers are simply omitted (browser blocks by same-origin policy).
 - **Example**: `CORS_ORIGIN=https://myapp.com,https://admin.myapp.com`
+
+### `FRONTEND_URL`
+- **Description**: Additional frontend origin to allow (also accepts domain-only)
+- **Type**: String
+- **Example**: `FRONTEND_URL=https://st.example.com`
+
+### `DOMAIN`
+- **Description**: Domain name of your deployment; used as an additional allowed origin when present (domain-only accepted)
+- **Type**: String
+- **Example**: `DOMAIN=st.example.com`
 
 ## 🤖 Agent Configuration
 

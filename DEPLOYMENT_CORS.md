@@ -13,13 +13,21 @@ SsalgTen automatically handles CORS (Cross-Origin Resource Sharing) configuratio
 
 ### Production Environment  
 - **When**: `NODE_ENV="production"`
-- **Default**: `["https://*", "http://localhost", "http://127.0.0.1"]`
-- **Behavior**: Allows all HTTPS domains, plus localhost for testing
-- **Suitable for**: Production deployments where you want HTTPS-only external access
+- **Default behavior (when CORS_ORIGIN is unset)**:
+  - Allow all HTTPS origins
+  - Allow localhost/127.0.0.1
+  - Allow private networks (10.x, 192.168.x, 172.16–31.x)
+- **Notes**: `FRONTEND_URL` and `DOMAIN` are also honored as allowed origins if provided (domain-only values are auto-expanded to http/https variants)
+- **Suitable for**: HTTPS-first deployments; avoids 500 errors on unknown origins by omitting CORS headers instead of throwing
 
 ## Manual Configuration
 
-Set the `CORS_ORIGIN` environment variable to override automatic behavior:
+You can refine behavior via environment variables:
+- `CORS_ORIGIN`: primary allowlist (supports multiple separators and wildcards)
+- `FRONTEND_URL`: additional frontend URL to allow
+- `DOMAIN`: domain name; domain-only is accepted and expanded to http/https
+
+Examples:
 
 ### Single Origin
 ```bash
