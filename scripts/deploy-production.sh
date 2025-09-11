@@ -1156,6 +1156,10 @@ REDIS_PORT=$REDIS_PORT
 # 前端配置（使用相对路径，便于IP与域名间切换）
 VITE_API_URL=/api
 
+# CORS/前端来源（由部署脚本显式填充，确保与部署模式一致）
+CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"; else echo "http://$DOMAIN,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"; fi)
+FRONTEND_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
+
 # 数据库配置
 POSTGRES_USER=ssalgten
 POSTGRES_PASSWORD=$DB_PASSWORD
@@ -1163,7 +1167,7 @@ POSTGRES_DB=ssalgten
 DB_PASSWORD=$DB_PASSWORD
 EOF
     
-    # 创建后端环境配置
+    # 创建后端环境配置（供容器内或手动运行参考；Docker Compose 将优先读取根目录 .env）
     cat > backend/.env << EOF
 # 生产环境标识
 NODE_ENV=production
@@ -1179,6 +1183,8 @@ JWT_EXPIRES_IN=7d
 
 # API安全配置
 API_KEY_SECRET=$API_SECRET
+# 注意：运行 docker compose 时将读取根目录 .env 的 CORS_ORIGIN/FRONTEND_URL
+# 这里仍写入一份，便于容器内/手动运行参考
 CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"; else echo "http://$DOMAIN,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"; fi)
 FRONTEND_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
 
