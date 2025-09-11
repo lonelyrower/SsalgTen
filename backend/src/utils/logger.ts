@@ -16,8 +16,11 @@ export const logger: Logger = {
     console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, ...args);
   },
   debug: (message: string, ...args: any[]) => {
-    if (process.env.LOG_LEVEL === 'debug') {
-      console.debug(`[DEBUG] ${new Date().toISOString()} - ${message}`, ...args);
+    if (process.env.LOG_LEVEL === "debug") {
+      console.debug(
+        `[DEBUG] ${new Date().toISOString()} - ${message}`,
+        ...args,
+      );
     }
-  }
+  },
 };

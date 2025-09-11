@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
-import { ApiResponse } from '../types';
-import { logger } from '../utils/logger';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { Request, Response } from "express";
+import { prisma } from "../lib/prisma";
+import { ApiResponse } from "../types";
+import { logger } from "../utils/logger";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export interface SystemConfigData {
   key: string;
@@ -20,166 +20,167 @@ export interface UpdateSystemConfigRequest {
 // 预定义的系统配置项
 export const DEFAULT_SYSTEM_CONFIGS = {
   // 系统基础配置
-  'system.name': {
-    value: 'SsalgTen Network Monitor',
-    category: 'system',
-    description: 'System display name'
+  "system.name": {
+    value: "SsalgTen Network Monitor",
+    category: "system",
+    description: "System display name",
   },
-  'system.version': {
-    value: '1.0.0',
-    category: 'system',
-    description: 'Current system version'
+  "system.version": {
+    value: "1.0.0",
+    category: "system",
+    description: "Current system version",
   },
-  'system.timezone': {
-    value: 'UTC',
-    category: 'system',
-    description: 'System timezone'
+  "system.timezone": {
+    value: "UTC",
+    category: "system",
+    description: "System timezone",
   },
-  'system.maintenance_mode': {
+  "system.maintenance_mode": {
     value: false,
-    category: 'system',
-    description: 'Enable maintenance mode'
+    category: "system",
+    description: "Enable maintenance mode",
   },
 
   // 监控配置
-  'monitoring.heartbeat_interval': {
+  "monitoring.heartbeat_interval": {
     value: 30000,
-    category: 'monitoring',
-    description: 'Agent heartbeat interval in milliseconds'
+    category: "monitoring",
+    description: "Agent heartbeat interval in milliseconds",
   },
-  'monitoring.heartbeat_timeout': {
+  "monitoring.heartbeat_timeout": {
     value: 90000,
-    category: 'monitoring',
-    description: 'Agent heartbeat timeout in milliseconds'
+    category: "monitoring",
+    description: "Agent heartbeat timeout in milliseconds",
   },
-  'monitoring.max_offline_time': {
+  "monitoring.max_offline_time": {
     value: 300000,
-    category: 'monitoring',
-    description: 'Maximum offline time before marking node as offline'
+    category: "monitoring",
+    description: "Maximum offline time before marking node as offline",
   },
-  'monitoring.cleanup_interval': {
+  "monitoring.cleanup_interval": {
     value: 86400000,
-    category: 'monitoring',
-    description: 'Cleanup interval for old records in milliseconds'
+    category: "monitoring",
+    description: "Cleanup interval for old records in milliseconds",
   },
-  'monitoring.retention_days': {
+  "monitoring.retention_days": {
     value: 30,
-    category: 'monitoring',
-    description: 'Data retention period in days'
+    category: "monitoring",
+    description: "Data retention period in days",
   },
 
   // 诊断配置
-  'diagnostics.default_ping_count': {
+  "diagnostics.default_ping_count": {
     value: 4,
-    category: 'diagnostics',
-    description: 'Default ping count for diagnostic tests'
+    category: "diagnostics",
+    description: "Default ping count for diagnostic tests",
   },
-  'diagnostics.default_traceroute_hops': {
+  "diagnostics.default_traceroute_hops": {
     value: 30,
-    category: 'diagnostics',
-    description: 'Default maximum hops for traceroute'
+    category: "diagnostics",
+    description: "Default maximum hops for traceroute",
   },
-  'diagnostics.default_mtr_count': {
+  "diagnostics.default_mtr_count": {
     value: 10,
-    category: 'diagnostics',
-    description: 'Default MTR test count'
+    category: "diagnostics",
+    description: "Default MTR test count",
   },
-  'diagnostics.speedtest_enabled': {
+  "diagnostics.speedtest_enabled": {
     value: true,
-    category: 'diagnostics',
-    description: 'Enable speedtest functionality'
+    category: "diagnostics",
+    description: "Enable speedtest functionality",
   },
-  'diagnostics.max_concurrent_tests': {
+  "diagnostics.max_concurrent_tests": {
     value: 5,
-    category: 'diagnostics',
-    description: 'Maximum concurrent diagnostic tests per agent'
+    category: "diagnostics",
+    description: "Maximum concurrent diagnostic tests per agent",
   },
-  'diagnostics.proxy_enabled': {
+  "diagnostics.proxy_enabled": {
     value: false,
-    category: 'diagnostics',
-    description: 'Enable backend diagnostics proxy endpoints'
+    category: "diagnostics",
+    description: "Enable backend diagnostics proxy endpoints",
   },
 
   // 安全配置
-  'security.jwt_expires_in': {
-    value: '7d',
-    category: 'security',
-    description: 'JWT token expiration time'
+  "security.jwt_expires_in": {
+    value: "7d",
+    category: "security",
+    description: "JWT token expiration time",
   },
-  'security.max_login_attempts': {
+  "security.max_login_attempts": {
     value: 5,
-    category: 'security',
-    description: 'Maximum login attempts before lockout'
+    category: "security",
+    description: "Maximum login attempts before lockout",
   },
-  'security.lockout_duration': {
+  "security.lockout_duration": {
     value: 900000,
-    category: 'security',
-    description: 'Account lockout duration in milliseconds'
+    category: "security",
+    description: "Account lockout duration in milliseconds",
   },
-  'security.require_strong_passwords': {
+  "security.require_strong_passwords": {
     value: true,
-    category: 'security',
-    description: 'Require strong passwords for new users'
+    category: "security",
+    description: "Require strong passwords for new users",
   },
   // SSH 监控默认开关（用于安装指引与模板）
-  'security.ssh_monitor_default_enabled': {
+  "security.ssh_monitor_default_enabled": {
     value: false,
-    category: 'security',
-    description: 'Default enabled state for SSH brute-force monitoring on new agents (for installer templates)'
+    category: "security",
+    description:
+      "Default enabled state for SSH brute-force monitoring on new agents (for installer templates)",
   },
-  'security.ssh_monitor_default_window_min': {
+  "security.ssh_monitor_default_window_min": {
     value: 10,
-    category: 'security',
-    description: 'Default window minutes for SSH monitoring template'
+    category: "security",
+    description: "Default window minutes for SSH monitoring template",
   },
-  'security.ssh_monitor_default_threshold': {
+  "security.ssh_monitor_default_threshold": {
     value: 10,
-    category: 'security',
-    description: 'Default threshold of attempts in window for SSH monitoring template'
+    category: "security",
+    description:
+      "Default threshold of attempts in window for SSH monitoring template",
   },
 
   // API配置
-  'api.rate_limit_requests': {
+  "api.rate_limit_requests": {
     value: 100,
-    category: 'api',
-    description: 'API rate limit requests per window'
+    category: "api",
+    description: "API rate limit requests per window",
   },
-  'api.rate_limit_window': {
+  "api.rate_limit_window": {
     value: 900000,
-    category: 'api',
-    description: 'API rate limit window in milliseconds'
+    category: "api",
+    description: "API rate limit window in milliseconds",
   },
-  'api.cors_enabled': {
+  "api.cors_enabled": {
     value: true,
-    category: 'api',
-    description: 'Enable CORS for API requests'
+    category: "api",
+    description: "Enable CORS for API requests",
   },
-  'api.log_level': {
-    value: 'info',
-    category: 'api',
-    description: 'API logging level (debug, info, warn, error)'
+  "api.log_level": {
+    value: "info",
+    category: "api",
+    description: "API logging level (debug, info, warn, error)",
   },
 
   // 通知配置
-  'notifications.email_enabled': {
+  "notifications.email_enabled": {
     value: false,
-    category: 'notifications',
-    description: 'Enable email notifications'
+    category: "notifications",
+    description: "Enable email notifications",
   },
-  'notifications.webhook_enabled': {
+  "notifications.webhook_enabled": {
     value: false,
-    category: 'notifications',
-    description: 'Enable webhook notifications'
+    category: "notifications",
+    description: "Enable webhook notifications",
   },
-  'notifications.alert_threshold': {
+  "notifications.alert_threshold": {
     value: 3,
-    category: 'notifications',
-    description: 'Number of failures before sending alert'
-  }
+    category: "notifications",
+    description: "Number of failures before sending alert",
+  },
 };
 
 export class SystemConfigController {
-
   // 获取所有系统配置
   async getAllConfigs(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
@@ -189,52 +190,51 @@ export class SystemConfigController {
 
       const configs = await prisma.setting.findMany({
         where,
-        orderBy: [
-          { category: 'asc' },
-          { key: 'asc' }
-        ]
+        orderBy: [{ category: "asc" }, { key: "asc" }],
       });
 
       // 按分类分组配置项
-      const configsByCategory = configs.reduce((acc, config) => {
-        const cat = config.category || 'other';
-        if (!acc[cat]) {
-          acc[cat] = {};
-        }
-        
-        try {
-          acc[cat][config.key] = {
-            value: JSON.parse(config.value),
-            description: config.description,
-            updatedAt: config.updatedAt
-          };
-        } catch (error) {
-          acc[cat][config.key] = {
-            value: config.value,
-            description: config.description,
-            updatedAt: config.updatedAt
-          };
-        }
+      const configsByCategory = configs.reduce(
+        (acc, config) => {
+          const cat = config.category || "other";
+          if (!acc[cat]) {
+            acc[cat] = {};
+          }
 
-        return acc;
-      }, {} as Record<string, any>);
+          try {
+            acc[cat][config.key] = {
+              value: JSON.parse(config.value),
+              description: config.description,
+              updatedAt: config.updatedAt,
+            };
+          } catch (error) {
+            acc[cat][config.key] = {
+              value: config.value,
+              description: config.description,
+              updatedAt: config.updatedAt,
+            };
+          }
+
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
 
       const response: ApiResponse = {
         success: true,
         data: {
           configs: configsByCategory,
-          total: configs.length
+          total: configs.length,
         },
-        message: `Found ${configs.length} configuration items`
+        message: `Found ${configs.length} configuration items`,
       };
 
       res.json(response);
-
     } catch (error) {
-      logger.error('Get all configs error:', error);
+      logger.error("Get all configs error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to get system configurations'
+        error: "Failed to get system configurations",
       };
       res.status(500).json(response);
     }
@@ -248,20 +248,20 @@ export class SystemConfigController {
       if (!key) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration key is required'
+          error: "Configuration key is required",
         };
         res.status(400).json(response);
         return;
       }
 
       const config = await prisma.setting.findUnique({
-        where: { key }
+        where: { key },
       });
 
       if (!config) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration not found'
+          error: "Configuration not found",
         };
         res.status(404).json(response);
         return;
@@ -281,17 +281,16 @@ export class SystemConfigController {
           value: parsedValue,
           category: config.category,
           description: config.description,
-          updatedAt: config.updatedAt
-        }
+          updatedAt: config.updatedAt,
+        },
       };
 
       res.json(response);
-
     } catch (error) {
-      logger.error('Get config error:', error);
+      logger.error("Get config error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to get configuration'
+        error: "Failed to get configuration",
       };
       res.status(500).json(response);
     }
@@ -301,12 +300,13 @@ export class SystemConfigController {
   async updateConfig(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { key } = req.params;
-      const { value, category, description }: UpdateSystemConfigRequest = req.body;
+      const { value, category, description }: UpdateSystemConfigRequest =
+        req.body;
 
       if (!key) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration key is required'
+          error: "Configuration key is required",
         };
         res.status(400).json(response);
         return;
@@ -315,7 +315,7 @@ export class SystemConfigController {
       if (value === undefined) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration value is required'
+          error: "Configuration value is required",
         };
         res.status(400).json(response);
         return;
@@ -329,14 +329,14 @@ export class SystemConfigController {
         update: {
           value: serializedValue,
           ...(category && { category }),
-          ...(description && { description })
+          ...(description && { description }),
         },
         create: {
           key,
           value: serializedValue,
-          category: category || 'other',
-          description
-        }
+          category: category || "other",
+          description,
+        },
       });
 
       let parsedValue;
@@ -353,19 +353,18 @@ export class SystemConfigController {
           value: parsedValue,
           category: updatedConfig.category,
           description: updatedConfig.description,
-          updatedAt: updatedConfig.updatedAt
+          updatedAt: updatedConfig.updatedAt,
         },
-        message: 'Configuration updated successfully'
+        message: "Configuration updated successfully",
       };
 
       logger.info(`Config updated: ${key} by user: ${req.user?.username}`);
       res.json(response);
-
     } catch (error) {
-      logger.error('Update config error:', error);
+      logger.error("Update config error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to update configuration'
+        error: "Failed to update configuration",
       };
       res.status(500).json(response);
     }
@@ -379,7 +378,7 @@ export class SystemConfigController {
       if (!key) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration key is required'
+          error: "Configuration key is required",
         };
         res.status(400).json(response);
         return;
@@ -387,65 +386,67 @@ export class SystemConfigController {
 
       // 检查是否为系统核心配置（不允许删除）
       const coreConfigs = [
-        'system.name',
-        'system.version',
-        'monitoring.heartbeat_interval',
-        'security.jwt_expires_in'
+        "system.name",
+        "system.version",
+        "monitoring.heartbeat_interval",
+        "security.jwt_expires_in",
       ];
 
       if (coreConfigs.includes(key)) {
         const response: ApiResponse = {
           success: false,
-          error: 'Cannot delete core system configuration'
+          error: "Cannot delete core system configuration",
         };
         res.status(400).json(response);
         return;
       }
 
       const existingConfig = await prisma.setting.findUnique({
-        where: { key }
+        where: { key },
       });
 
       if (!existingConfig) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration not found'
+          error: "Configuration not found",
         };
         res.status(404).json(response);
         return;
       }
 
       await prisma.setting.delete({
-        where: { key }
+        where: { key },
       });
 
       const response: ApiResponse = {
         success: true,
-        message: 'Configuration deleted successfully'
+        message: "Configuration deleted successfully",
       };
 
       logger.info(`Config deleted: ${key} by user: ${req.user?.username}`);
       res.json(response);
-
     } catch (error) {
-      logger.error('Delete config error:', error);
+      logger.error("Delete config error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to delete configuration'
+        error: "Failed to delete configuration",
       };
       res.status(500).json(response);
     }
   }
 
   // 批量更新配置
-  async batchUpdateConfigs(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async batchUpdateConfigs(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       const { configs }: { configs: SystemConfigData[] } = req.body;
 
       if (!configs || !Array.isArray(configs) || configs.length === 0) {
         const response: ApiResponse = {
           success: false,
-          error: 'Configuration array is required'
+          error: "Configuration array is required",
         };
         res.status(400).json(response);
         return;
@@ -467,14 +468,14 @@ export class SystemConfigController {
             update: {
               value: serializedValue,
               ...(config.category && { category: config.category }),
-              ...(config.description && { description: config.description })
+              ...(config.description && { description: config.description }),
             },
             create: {
               key: config.key,
               value: serializedValue,
-              category: config.category || 'other',
-              description: config.description
-            }
+              category: config.category || "other",
+              description: config.description,
+            },
           });
 
           results.push({
@@ -482,7 +483,7 @@ export class SystemConfigController {
             value: JSON.parse(updatedConfig.value),
             category: updatedConfig.category,
             description: updatedConfig.description,
-            updatedAt: updatedConfig.updatedAt
+            updatedAt: updatedConfig.updatedAt,
           });
         }
       });
@@ -491,26 +492,30 @@ export class SystemConfigController {
         success: true,
         data: {
           updated: results,
-          count: results.length
+          count: results.length,
         },
-        message: `Successfully updated ${results.length} configurations`
+        message: `Successfully updated ${results.length} configurations`,
       };
 
-      logger.info(`Batch config update: ${results.length} items by user: ${req.user?.username}`);
+      logger.info(
+        `Batch config update: ${results.length} items by user: ${req.user?.username}`,
+      );
       res.json(response);
-
     } catch (error) {
-      logger.error('Batch update configs error:', error);
+      logger.error("Batch update configs error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to batch update configurations'
+        error: "Failed to batch update configurations",
       };
       res.status(500).json(response);
     }
   }
 
   // 重置配置为默认值
-  async resetToDefaults(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async resetToDefaults(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       const { category } = req.body;
 
@@ -520,8 +525,8 @@ export class SystemConfigController {
       if (category) {
         configsToReset = Object.fromEntries(
           Object.entries(DEFAULT_SYSTEM_CONFIGS).filter(
-            ([key, config]) => config.category === category
-          )
+            ([key, config]) => config.category === category,
+          ),
         );
       }
 
@@ -536,14 +541,14 @@ export class SystemConfigController {
             update: {
               value: serializedValue,
               category: defaultConfig.category,
-              description: defaultConfig.description
+              description: defaultConfig.description,
             },
             create: {
               key,
               value: serializedValue,
-              category: defaultConfig.category || 'other',
-              description: defaultConfig.description
-            }
+              category: defaultConfig.category || "other",
+              description: defaultConfig.description,
+            },
           });
 
           results.push({
@@ -551,7 +556,7 @@ export class SystemConfigController {
             value: JSON.parse(updatedConfig.value),
             category: updatedConfig.category,
             description: updatedConfig.description,
-            updatedAt: updatedConfig.updatedAt
+            updatedAt: updatedConfig.updatedAt,
           });
         }
       });
@@ -560,19 +565,20 @@ export class SystemConfigController {
         success: true,
         data: {
           reset: results,
-          count: results.length
+          count: results.length,
         },
-        message: `Successfully reset ${results.length} configurations to defaults`
+        message: `Successfully reset ${results.length} configurations to defaults`,
       };
 
-      logger.info(`Config reset to defaults: ${category || 'all'} by user: ${req.user?.username}`);
+      logger.info(
+        `Config reset to defaults: ${category || "all"} by user: ${req.user?.username}`,
+      );
       res.json(response);
-
     } catch (error) {
-      logger.error('Reset configs error:', error);
+      logger.error("Reset configs error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to reset configurations'
+        error: "Failed to reset configurations",
       };
       res.status(500).json(response);
     }
@@ -582,26 +588,25 @@ export class SystemConfigController {
   async getCategories(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const categories = await prisma.setting.groupBy({
-        by: ['category'],
+        by: ["category"],
         _count: { category: true },
-        orderBy: { category: 'asc' }
+        orderBy: { category: "asc" },
       });
 
       const response: ApiResponse = {
         success: true,
-        data: categories.map(cat => ({
-          name: cat.category || 'other',
-          count: cat._count.category
-        }))
+        data: categories.map((cat) => ({
+          name: cat.category || "other",
+          count: cat._count.category,
+        })),
       };
 
       res.json(response);
-
     } catch (error) {
-      logger.error('Get categories error:', error);
+      logger.error("Get categories error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to get configuration categories'
+        error: "Failed to get configuration categories",
       };
       res.status(500).json(response);
     }

@@ -1,6 +1,6 @@
-import { prisma } from '../lib/prisma';
-import { DEFAULT_SYSTEM_CONFIGS } from '../controllers/SystemConfigController';
-import { logger } from './logger';
+import { prisma } from "../lib/prisma";
+import { DEFAULT_SYSTEM_CONFIGS } from "../controllers/SystemConfigController";
+import { logger } from "./logger";
 
 /**
  * 初始化系统配置
@@ -8,18 +8,18 @@ import { logger } from './logger';
  */
 export async function initSystemConfig(): Promise<void> {
   try {
-    logger.info('Initializing system configurations...');
+    logger.info("Initializing system configurations...");
 
     const results = {
       created: 0,
       updated: 0,
-      skipped: 0
+      skipped: 0,
     };
 
     for (const [key, defaultConfig] of Object.entries(DEFAULT_SYSTEM_CONFIGS)) {
       try {
         const existingConfig = await prisma.setting.findUnique({
-          where: { key }
+          where: { key },
         });
 
         if (!existingConfig) {
@@ -28,15 +28,15 @@ export async function initSystemConfig(): Promise<void> {
             data: {
               key,
               value: JSON.stringify(defaultConfig.value),
-              category: defaultConfig.category || 'other',
-              description: defaultConfig.description
-            }
+              category: defaultConfig.category || "other",
+              description: defaultConfig.description,
+            },
           });
           results.created++;
           logger.debug(`Created config: ${key}`);
         } else {
           // 配置已存在，只更新描述和分类（保留现有值）
-          const needsUpdate = 
+          const needsUpdate =
             existingConfig.description !== defaultConfig.description ||
             existingConfig.category !== defaultConfig.category;
 
@@ -44,9 +44,9 @@ export async function initSystemConfig(): Promise<void> {
             await prisma.setting.update({
               where: { key },
               data: {
-                category: defaultConfig.category || 'other',
-                description: defaultConfig.description
-              }
+                category: defaultConfig.category || "other",
+                description: defaultConfig.description,
+              },
             });
             results.updated++;
             logger.debug(`Updated metadata for config: ${key}`);
@@ -59,10 +59,11 @@ export async function initSystemConfig(): Promise<void> {
       }
     }
 
-    logger.info(`System config initialization completed: ${results.created} created, ${results.updated} updated, ${results.skipped} skipped`);
-
+    logger.info(
+      `System config initialization completed: ${results.created} created, ${results.updated} updated, ${results.skipped} skipped`,
+    );
   } catch (error) {
-    logger.error('System config initialization failed:', error);
+    logger.error("System config initialization failed:", error);
     throw error;
   }
 }
@@ -73,10 +74,13 @@ export async function initSystemConfig(): Promise<void> {
  * @param defaultValue 默认值
  * @returns 配置值
  */
-export async function getSystemConfig<T = any>(key: string, defaultValue?: T): Promise<T | undefined> {
+export async function getSystemConfig<T = any>(
+  key: string,
+  defaultValue?: T,
+): Promise<T | undefined> {
   try {
     const config = await prisma.setting.findUnique({
-      where: { key }
+      where: { key },
     });
 
     if (!config) {
@@ -86,7 +90,9 @@ export async function getSystemConfig<T = any>(key: string, defaultValue?: T): P
     try {
       return JSON.parse(config.value) as T;
     } catch (error) {
-      logger.warn(`Failed to parse config value for ${key}, returning raw value`);
+      logger.warn(
+        `Failed to parse config value for ${key}, returning raw value`,
+      );
       return config.value as T;
     }
   } catch (error) {
@@ -103,10 +109,10 @@ export async function getSystemConfig<T = any>(key: string, defaultValue?: T): P
  * @param description 配置描述
  */
 export async function setSystemConfig(
-  key: string, 
-  value: any, 
-  category?: string, 
-  description?: string
+  key: string,
+  value: any,
+  category?: string,
+  description?: string,
 ): Promise<void> {
   try {
     await prisma.setting.upsert({
@@ -114,14 +120,14 @@ export async function setSystemConfig(
       update: {
         value: JSON.stringify(value),
         ...(category && { category }),
-        ...(description && { description })
+        ...(description && { description }),
       },
       create: {
         key,
         value: JSON.stringify(value),
-        category: category || 'other',
-        description
-      }
+        category: category || "other",
+        description,
+      },
     });
 
     logger.debug(`System config ${key} set to:`, value);
@@ -138,7 +144,7 @@ export async function setSystemConfig(
 export async function deleteSystemConfig(key: string): Promise<boolean> {
   try {
     const deleted = await prisma.setting.delete({
-      where: { key }
+      where: { key },
     });
 
     logger.debug(`System config ${key} deleted`);
@@ -154,10 +160,12 @@ export async function deleteSystemConfig(key: string): Promise<boolean> {
  * @param category 配置分类
  * @returns 配置对象
  */
-export async function getSystemConfigsByCategory(category: string): Promise<Record<string, any>> {
+export async function getSystemConfigsByCategory(
+  category: string,
+): Promise<Record<string, any>> {
   try {
     const configs = await prisma.setting.findMany({
-      where: { category }
+      where: { category },
     });
 
     const result: Record<string, any> = {};
@@ -172,7 +180,10 @@ export async function getSystemConfigsByCategory(category: string): Promise<Reco
 
     return result;
   } catch (error) {
-    logger.error(`Failed to get system configs for category ${category}:`, error);
+    logger.error(
+      `Failed to get system configs for category ${category}:`,
+      error,
+    );
     return {};
   }
 }

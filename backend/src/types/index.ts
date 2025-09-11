@@ -16,7 +16,7 @@ export interface Node {
   asnOrg?: string;
   asnRoute?: string;
   asnType?: string;
-  status: 'online' | 'offline' | 'unknown';
+  status: "online" | "offline" | "unknown";
   lastHeartbeat?: Date;
   apiKey: string;
   createdAt: Date;
@@ -26,10 +26,10 @@ export interface Node {
 export interface DiagnosticResult {
   id: string;
   nodeId: string;
-  tool: 'ping' | 'traceroute' | 'mtr' | 'speedtest' | 'iperf3';
+  tool: "ping" | "traceroute" | "mtr" | "speedtest" | "iperf3";
   target: string;
   result: any;
-  status: 'running' | 'completed' | 'failed';
+  status: "running" | "completed" | "failed";
   createdAt: Date;
   completedAt?: Date;
 }
@@ -43,7 +43,7 @@ export interface ApiResponse<T = any> {
 
 export interface AgentHeartbeat {
   nodeId: string;
-  status: 'online' | 'offline';
+  status: "online" | "offline";
   timestamp: Date;
   systemInfo?: {
     platform: string;

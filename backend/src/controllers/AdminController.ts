@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
-import { ApiResponse } from '../types';
-import { logger } from '../utils/logger';
-import { AuthenticatedRequest } from '../middleware/auth';
-import bcrypt from 'bcryptjs';
+import { Request, Response } from "express";
+import { prisma } from "../lib/prisma";
+import { ApiResponse } from "../types";
+import { logger } from "../utils/logger";
+import { AuthenticatedRequest } from "../middleware/auth";
+import bcrypt from "bcryptjs";
 
 export interface CreateNodeRequest {
   name: string;
@@ -33,7 +33,7 @@ export interface UpdateNodeRequest {
   datacenter?: string;
   description?: string;
   tags?: string[];
-  status?: 'ONLINE' | 'OFFLINE' | 'UNKNOWN';
+  status?: "ONLINE" | "OFFLINE" | "UNKNOWN";
 }
 
 export interface CreateUserRequest {
@@ -41,7 +41,7 @@ export interface CreateUserRequest {
   email: string;
   name: string;
   password: string;
-  role?: 'ADMIN' | 'OPERATOR' | 'VIEWER';
+  role?: "ADMIN" | "OPERATOR" | "VIEWER";
   active?: boolean;
 }
 
@@ -50,12 +50,11 @@ export interface UpdateUserRequest {
   email?: string;
   name?: string;
   avatar?: string;
-  role?: 'ADMIN' | 'OPERATOR' | 'VIEWER';
+  role?: "ADMIN" | "OPERATOR" | "VIEWER";
   active?: boolean;
 }
 
 export class AdminController {
-
   // 节点管理
   async createNode(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
@@ -71,13 +70,14 @@ export class AdminController {
         provider,
         datacenter,
         description,
-        tags
+        tags,
       }: CreateNodeRequest = req.body;
 
       if (!name || !country || !city || !latitude || !longitude || !provider) {
         const response: ApiResponse = {
           success: false,
-          error: 'Required fields: name, country, city, latitude, longitude, provider'
+          error:
+            "Required fields: name, country, city, latitude, longitude, provider",
         };
         res.status(400).json(response);
         return;
@@ -85,7 +85,7 @@ export class AdminController {
 
       // 生成唯一的Agent ID和API Key
       const agentId = `agent-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-      const apiKey = require('crypto').randomBytes(32).toString('hex');
+      const apiKey = require("crypto").randomBytes(32).toString("hex");
 
       const node = await prisma.node.create({
         select: {
@@ -123,27 +123,26 @@ export class AdminController {
           apiKey,
           description,
           tags: tags ? JSON.stringify(tags) : null,
-          status: 'UNKNOWN'
-        }
+          status: "UNKNOWN",
+        },
       });
 
       // Return node data without sensitive apiKey
       const { apiKey: _, ...nodeWithoutApiKey } = node;
-      
+
       const response: ApiResponse = {
         success: true,
         data: nodeWithoutApiKey,
-        message: 'Node created successfully'
+        message: "Node created successfully",
       };
 
       logger.info(`Admin created node: ${name} by user: ${req.user?.username}`);
       res.status(201).json(response);
-
     } catch (error) {
-      logger.error('Admin create node error:', error);
+      logger.error("Admin create node error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to create node'
+        error: "Failed to create node",
       };
       res.status(500).json(response);
     }
@@ -157,7 +156,7 @@ export class AdminController {
       if (!id) {
         const response: ApiResponse = {
           success: false,
-          error: 'Node ID is required'
+          error: "Node ID is required",
         };
         res.status(400).json(response);
         return;
@@ -166,13 +165,13 @@ export class AdminController {
       // 检查节点是否存在
       const existingNode = await prisma.node.findUnique({
         where: { id },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (!existingNode) {
         const response: ApiResponse = {
           success: false,
-          error: 'Node not found'
+          error: "Node not found",
         };
         res.status(404).json(response);
         return;
@@ -181,7 +180,7 @@ export class AdminController {
       // 处理tags数组
       const updateDataFormatted = {
         ...updateData,
-        tags: updateData.tags ? JSON.stringify(updateData.tags) : undefined
+        tags: updateData.tags ? JSON.stringify(updateData.tags) : undefined,
       };
 
       const updatedNode = await prisma.node.update({
@@ -206,40 +205,42 @@ export class AdminController {
           status: true,
           createdAt: true,
           updatedAt: true,
-        }
+        },
       });
 
       // Return node data without sensitive apiKey
       const { apiKey: _, ...nodeWithoutApiKey } = updatedNode;
-      
+
       const response: ApiResponse = {
         success: true,
         data: nodeWithoutApiKey,
-        message: 'Node updated successfully'
+        message: "Node updated successfully",
       };
 
       logger.info(`Admin updated node: ${id} by user: ${req.user?.username}`);
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin update node error:', error);
+      logger.error("Admin update node error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to update node'
+        error: "Failed to update node",
       };
       res.status(500).json(response);
     }
   }
 
   // View API Key for a node (one-time secure access)
-  async viewNodeApiKey(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async viewNodeApiKey(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
 
       if (!id) {
         const response: ApiResponse = {
           success: false,
-          error: 'Node ID is required'
+          error: "Node ID is required",
         };
         res.status(400).json(response);
         return;
@@ -248,17 +249,17 @@ export class AdminController {
       // Check if node exists and get API key
       const node = await prisma.node.findUnique({
         where: { id },
-        select: { 
+        select: {
           id: true,
           name: true,
-          apiKey: true 
-        }
+          apiKey: true,
+        },
       });
 
       if (!node) {
         const response: ApiResponse = {
           success: false,
-          error: 'Node not found'
+          error: "Node not found",
         };
         res.status(404).json(response);
         return;
@@ -269,20 +270,21 @@ export class AdminController {
         data: {
           nodeId: node.id,
           nodeName: node.name,
-          apiKey: node.apiKey
+          apiKey: node.apiKey,
         },
-        message: 'API Key retrieved successfully'
+        message: "API Key retrieved successfully",
       };
 
       // Log this sensitive operation for auditing
-      logger.warn(`Admin viewed API key for node: ${node.name} (${id}) by user: ${req.user?.username}`);
+      logger.warn(
+        `Admin viewed API key for node: ${node.name} (${id}) by user: ${req.user?.username}`,
+      );
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin view node API key error:', error);
+      logger.error("Admin view node API key error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to retrieve API key'
+        error: "Failed to retrieve API key",
       };
       res.status(500).json(response);
     }
@@ -295,7 +297,7 @@ export class AdminController {
       if (!id) {
         const response: ApiResponse = {
           success: false,
-          error: 'Node ID is required'
+          error: "Node ID is required",
         };
         res.status(400).json(response);
         return;
@@ -304,13 +306,13 @@ export class AdminController {
       // 检查节点是否存在
       const existingNode = await prisma.node.findUnique({
         where: { id },
-        select: { id: true, name: true }
+        select: { id: true, name: true },
       });
 
       if (!existingNode) {
         const response: ApiResponse = {
           success: false,
-          error: 'Node not found'
+          error: "Node not found",
         };
         res.status(404).json(response);
         return;
@@ -319,61 +321,80 @@ export class AdminController {
       // 删除相关的诊断记录和心跳日志
       await prisma.$transaction(async (tx) => {
         await tx.diagnosticRecord.deleteMany({
-          where: { nodeId: id }
+          where: { nodeId: id },
         });
         await tx.heartbeatLog.deleteMany({
-          where: { nodeId: id }
+          where: { nodeId: id },
         });
         await tx.node.delete({
           where: { id },
-          select: { id: true }
+          select: { id: true },
         });
       });
 
       const response: ApiResponse = {
         success: true,
-        message: 'Node deleted successfully'
+        message: "Node deleted successfully",
       };
 
-      logger.info(`Admin deleted node: ${existingNode.name} by user: ${req.user?.username}`);
+      logger.info(
+        `Admin deleted node: ${existingNode.name} by user: ${req.user?.username}`,
+      );
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin delete node error:', error);
+      logger.error("Admin delete node error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to delete node'
+        error: "Failed to delete node",
       };
       res.status(500).json(response);
     }
   }
 
   // 批量导入占位节点（未安装Agent的VPS资产）
-  async importPlaceholderNodes(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async importPlaceholderNodes(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       const payload = req.body;
-      const items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }> = Array.isArray(payload?.items) ? payload.items : [];
+      const items: Array<{
+        ip: string;
+        name?: string;
+        notes?: string;
+        tags?: string[];
+        neverAdopt?: boolean;
+      }> = Array.isArray(payload?.items) ? payload.items : [];
       if (items.length === 0) {
-        const response: ApiResponse = { success: false, error: 'items is required (non-empty array)' };
+        const response: ApiResponse = {
+          success: false,
+          error: "items is required (non-empty array)",
+        };
         res.status(400).json(response);
         return;
       }
 
       // 基础IP格式过滤（简单校验）
-      const filtered = items.filter(it => typeof it.ip === 'string' && it.ip.trim().length > 0);
+      const filtered = items.filter(
+        (it) => typeof it.ip === "string" && it.ip.trim().length > 0,
+      );
       if (filtered.length === 0) {
-        res.status(400).json({ success: false, error: 'No valid ip in items' });
+        res.status(400).json({ success: false, error: "No valid ip in items" });
         return;
       }
 
-      const { nodeService } = await import('../services/NodeService');
+      const { nodeService } = await import("../services/NodeService");
       let result;
       try {
         result = await nodeService.createPlaceholdersFromIPs(filtered);
       } catch (e: any) {
-        const msg = (e && e.message) ? String(e.message) : '';
-        if (msg.includes('Placeholder feature not available')) {
-          res.status(501).json({ success: false, error: 'Placeholder feature not available: please apply database migrations (prisma migrate deploy) and retry.' });
+        const msg = e && e.message ? String(e.message) : "";
+        if (msg.includes("Placeholder feature not available")) {
+          res.status(501).json({
+            success: false,
+            error:
+              "Placeholder feature not available: please apply database migrations (prisma migrate deploy) and retry.",
+          });
           return;
         }
         throw e;
@@ -386,13 +407,18 @@ export class AdminController {
           skipped: result.skipped,
           total: filtered.length,
         },
-        message: `Placeholders imported: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`
+        message: `Placeholders imported: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`,
       };
-      logger.info(`Admin imported placeholder nodes by ${req.user?.username}: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`);
+      logger.info(
+        `Admin imported placeholder nodes by ${req.user?.username}: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`,
+      );
       res.status(201).json(response);
     } catch (error) {
-      logger.error('Admin import placeholder nodes error:', error);
-      const response: ApiResponse = { success: false, error: 'Failed to import placeholder nodes' };
+      logger.error("Admin import placeholder nodes error:", error);
+      const response: ApiResponse = {
+        success: false,
+        error: "Failed to import placeholder nodes",
+      };
       res.status(500).json(response);
     }
   }
@@ -410,24 +436,23 @@ export class AdminController {
           role: true,
           active: true,
           createdAt: true,
-          lastLogin: true
+          lastLogin: true,
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       const response: ApiResponse = {
         success: true,
         data: users,
-        message: `Found ${users.length} users`
+        message: `Found ${users.length} users`,
       };
 
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin get users error:', error);
+      logger.error("Admin get users error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to get users'
+        error: "Failed to get users",
       };
       res.status(500).json(response);
     }
@@ -440,14 +465,14 @@ export class AdminController {
         email,
         name,
         password,
-        role = 'VIEWER',
-        active = true
+        role = "VIEWER",
+        active = true,
       }: CreateUserRequest = req.body;
 
       if (!username || !email || !name || !password) {
         const response: ApiResponse = {
           success: false,
-          error: 'Required fields: username, email, name, password'
+          error: "Required fields: username, email, name, password",
         };
         res.status(400).json(response);
         return;
@@ -456,7 +481,7 @@ export class AdminController {
       if (password.length < 6) {
         const response: ApiResponse = {
           success: false,
-          error: 'Password must be at least 6 characters long'
+          error: "Password must be at least 6 characters long",
         };
         res.status(400).json(response);
         return;
@@ -465,17 +490,14 @@ export class AdminController {
       // 检查用户名和邮箱是否已存在
       const existingUser = await prisma.user.findFirst({
         where: {
-          OR: [
-            { username },
-            { email }
-          ]
-        }
+          OR: [{ username }, { email }],
+        },
       });
 
       if (existingUser) {
         const response: ApiResponse = {
           success: false,
-          error: 'Username or email already exists'
+          error: "Username or email already exists",
         };
         res.status(400).json(response);
         return;
@@ -491,7 +513,7 @@ export class AdminController {
           name,
           password: hashedPassword,
           role,
-          active
+          active,
         },
         select: {
           id: true,
@@ -501,24 +523,25 @@ export class AdminController {
           avatar: true,
           role: true,
           active: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       });
 
       const response: ApiResponse = {
         success: true,
         data: user,
-        message: 'User created successfully'
+        message: "User created successfully",
       };
 
-      logger.info(`Admin created user: ${username} by user: ${req.user?.username}`);
+      logger.info(
+        `Admin created user: ${username} by user: ${req.user?.username}`,
+      );
       res.status(201).json(response);
-
     } catch (error) {
-      logger.error('Admin create user error:', error);
+      logger.error("Admin create user error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to create user'
+        error: "Failed to create user",
       };
       res.status(500).json(response);
     }
@@ -532,7 +555,7 @@ export class AdminController {
       if (!id) {
         const response: ApiResponse = {
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required",
         };
         res.status(400).json(response);
         return;
@@ -540,13 +563,13 @@ export class AdminController {
 
       // 检查用户是否存在
       const existingUser = await prisma.user.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existingUser) {
         const response: ApiResponse = {
           success: false,
-          error: 'User not found'
+          error: "User not found",
         };
         res.status(404).json(response);
         return;
@@ -561,17 +584,17 @@ export class AdminController {
               {
                 OR: [
                   updateData.username ? { username: updateData.username } : {},
-                  updateData.email ? { email: updateData.email } : {}
-                ].filter(obj => Object.keys(obj).length > 0)
-              }
-            ]
-          }
+                  updateData.email ? { email: updateData.email } : {},
+                ].filter((obj) => Object.keys(obj).length > 0),
+              },
+            ],
+          },
         });
 
         if (conflictUser) {
           const response: ApiResponse = {
             success: false,
-            error: 'Username or email already exists'
+            error: "Username or email already exists",
           };
           res.status(400).json(response);
           return;
@@ -590,24 +613,23 @@ export class AdminController {
           role: true,
           active: true,
           createdAt: true,
-          lastLogin: true
-        }
+          lastLogin: true,
+        },
       });
 
       const response: ApiResponse = {
         success: true,
         data: updatedUser,
-        message: 'User updated successfully'
+        message: "User updated successfully",
       };
 
       logger.info(`Admin updated user: ${id} by user: ${req.user?.username}`);
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin update user error:', error);
+      logger.error("Admin update user error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to update user'
+        error: "Failed to update user",
       };
       res.status(500).json(response);
     }
@@ -620,7 +642,7 @@ export class AdminController {
       if (!id) {
         const response: ApiResponse = {
           success: false,
-          error: 'User ID is required'
+          error: "User ID is required",
         };
         res.status(400).json(response);
         return;
@@ -628,13 +650,13 @@ export class AdminController {
 
       // 检查用户是否存在
       const existingUser = await prisma.user.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existingUser) {
         const response: ApiResponse = {
           success: false,
-          error: 'User not found'
+          error: "User not found",
         };
         res.status(404).json(response);
         return;
@@ -644,76 +666,82 @@ export class AdminController {
       if (req.user?.userId === id) {
         const response: ApiResponse = {
           success: false,
-          error: 'Cannot delete your own account'
+          error: "Cannot delete your own account",
         };
         res.status(400).json(response);
         return;
       }
 
       await prisma.user.delete({
-        where: { id }
+        where: { id },
       });
 
       const response: ApiResponse = {
         success: true,
-        message: 'User deleted successfully'
+        message: "User deleted successfully",
       };
 
-      logger.info(`Admin deleted user: ${existingUser.username} by user: ${req.user?.username}`);
+      logger.info(
+        `Admin deleted user: ${existingUser.username} by user: ${req.user?.username}`,
+      );
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin delete user error:', error);
+      logger.error("Admin delete user error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to delete user'
+        error: "Failed to delete user",
       };
       res.status(500).json(response);
     }
   }
 
   // 系统统计信息
-  async getSystemStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getSystemStats(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
-      const [
-        nodeStats,
-        userStats,
-        diagnosticStats,
-        heartbeatStats
-      ] = await Promise.all([
-        prisma.node.groupBy({
-          by: ['status'],
-          _count: { status: true }
-        }),
-        prisma.user.groupBy({
-          by: ['role'],
-          _count: { role: true }
-        }),
-        prisma.diagnosticRecord.count(),
-        prisma.heartbeatLog.count()
-      ]);
+      const [nodeStats, userStats, diagnosticStats, heartbeatStats] =
+        await Promise.all([
+          prisma.node.groupBy({
+            by: ["status"],
+            _count: { status: true },
+          }),
+          prisma.user.groupBy({
+            by: ["role"],
+            _count: { role: true },
+          }),
+          prisma.diagnosticRecord.count(),
+          prisma.heartbeatLog.count(),
+        ]);
 
       // 处理节点统计
-      const nodeStatsMap = nodeStats.reduce((acc, stat) => {
-        acc[stat.status.toLowerCase()] = stat._count.status;
-        return acc;
-      }, {} as Record<string, number>);
+      const nodeStatsMap = nodeStats.reduce(
+        (acc, stat) => {
+          acc[stat.status.toLowerCase()] = stat._count.status;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       // 处理用户统计
-      const userStatsMap = userStats.reduce((acc, stat) => {
-        acc[stat.role.toLowerCase()] = stat._count.role;
-        return acc;
-      }, {} as Record<string, number>);
+      const userStatsMap = userStats.reduce(
+        (acc, stat) => {
+          acc[stat.role.toLowerCase()] = stat._count.role;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       // 获取最近活动
       const recentActivity = await prisma.heartbeatLog.findMany({
         take: 10,
-        orderBy: { timestamp: 'desc' },
+        orderBy: { timestamp: "desc" },
         include: {
           node: {
-            select: { name: true, country: true, city: true }
-          }
-        }
+            select: { name: true, country: true, city: true },
+          },
+        },
       });
 
       const response: ApiResponse = {
@@ -723,43 +751,45 @@ export class AdminController {
             total: Object.values(nodeStatsMap).reduce((a, b) => a + b, 0),
             online: nodeStatsMap.online || 0,
             offline: nodeStatsMap.offline || 0,
-            unknown: nodeStatsMap.unknown || 0
+            unknown: nodeStatsMap.unknown || 0,
           },
           users: {
             total: Object.values(userStatsMap).reduce((a, b) => a + b, 0),
             admins: userStatsMap.admin || 0,
             operators: userStatsMap.operator || 0,
-            viewers: userStatsMap.viewer || 0
+            viewers: userStatsMap.viewer || 0,
           },
           diagnostics: {
-            totalRecords: diagnosticStats
+            totalRecords: diagnosticStats,
           },
           heartbeats: {
-            totalLogs: heartbeatStats
+            totalLogs: heartbeatStats,
           },
-          recentActivity: recentActivity.map(activity => ({
+          recentActivity: recentActivity.map((activity) => ({
             nodeId: activity.nodeId,
             nodeName: activity.node.name,
             location: `${activity.node.city}, ${activity.node.country}`,
             status: activity.status,
-            timestamp: activity.timestamp
-          }))
-        }
+            timestamp: activity.timestamp,
+          })),
+        },
       };
 
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin get system stats error:', error);
+      logger.error("Admin get system stats error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to get system statistics'
+        error: "Failed to get system statistics",
       };
       res.status(500).json(response);
     }
   }
 
-  async getSystemOverview(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getSystemOverview(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       const now = new Date();
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -773,41 +803,43 @@ export class AdminController {
         diagnosticLast24h,
         diagnosticSuccess,
         userTotal,
-        activeUsers
+        activeUsers,
       ] = await Promise.all([
         // 节点统计 (复用现有逻辑)
         this.getNodeStats(),
-        
+
         // 心跳统计
         prisma.heartbeatLog.count(),
         prisma.heartbeatLog.count({
-          where: { timestamp: { gte: twentyFourHoursAgo } }
+          where: { timestamp: { gte: twentyFourHoursAgo } },
         }),
-        
+
         // 诊断统计
         prisma.diagnosticRecord.count(),
         prisma.diagnosticRecord.count({
-          where: { timestamp: { gte: twentyFourHoursAgo } }
+          where: { timestamp: { gte: twentyFourHoursAgo } },
         }),
         prisma.diagnosticRecord.count({
-          where: { 
+          where: {
             timestamp: { gte: twentyFourHoursAgo },
-            success: true 
-          }
+            success: true,
+          },
         }),
-        
+
         // 用户统计
         prisma.user.count(),
         prisma.user.count({
           where: {
-            lastLogin: { gte: twentyFourHoursAgo }
-          }
-        })
+            lastLogin: { gte: twentyFourHoursAgo },
+          },
+        }),
       ]);
 
       // 计算诊断成功率
-      const successRate = diagnosticLast24h > 0 ? 
-        Math.round((diagnosticSuccess / diagnosticLast24h) * 100 * 10) / 10 : 0;
+      const successRate =
+        diagnosticLast24h > 0
+          ? Math.round((diagnosticSuccess / diagnosticLast24h) * 100 * 10) / 10
+          : 0;
 
       // 计算平均心跳频率
       const avgPerHour = heartbeat24h > 0 ? Math.round(heartbeat24h / 24) : 0;
@@ -818,15 +850,18 @@ export class AdminController {
       let dbUptimeSec = 0;
       try {
         const rows = await prisma.$queryRawUnsafe<any[]>(
-          "SELECT EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time())) AS seconds"
+          "SELECT EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time())) AS seconds",
         );
         const sec = rows && rows[0] && (rows[0].seconds as any);
-        dbUptimeSec = Math.max(0, Math.floor(typeof sec === 'string' ? parseFloat(sec) : Number(sec)));
+        dbUptimeSec = Math.max(
+          0,
+          Math.floor(typeof sec === "string" ? parseFloat(sec) : Number(sec)),
+        );
       } catch (e) {
         // 忽略错误，回退为0
       }
-      const version = process.env.APP_VERSION || '0.1.0';
-      const environment = process.env.NODE_ENV || 'development';
+      const version = process.env.APP_VERSION || "0.1.0";
+      const environment = process.env.NODE_ENV || "development";
 
       const response: ApiResponse = {
         success: true,
@@ -835,33 +870,32 @@ export class AdminController {
           heartbeats: {
             total: heartbeatTotal,
             last24h: heartbeat24h,
-            avgPerHour: avgPerHour
+            avgPerHour: avgPerHour,
           },
           diagnostics: {
             total: diagnosticTotal,
             last24h: diagnosticLast24h,
-            successRate: successRate
+            successRate: successRate,
           },
           users: {
             total: userTotal,
-            active: activeUsers
+            active: activeUsers,
           },
           system: {
             uptime: Math.floor(startTime),
             dbUptime: dbUptimeSec,
             version: version,
-            environment: environment
-          }
-        }
+            environment: environment,
+          },
+        },
       };
 
       res.json(response);
-
     } catch (error) {
-      logger.error('Admin get system overview error:', error);
+      logger.error("Admin get system overview error:", error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to get system overview'
+        error: "Failed to get system overview",
       };
       res.status(500).json(response);
     }
@@ -869,22 +903,27 @@ export class AdminController {
 
   private async getNodeStats() {
     // 复用现有的节点统计逻辑
-    const [totalNodes, onlineNodes, offlineNodes, unknownNodes] = await Promise.all([
-      prisma.node.count(),
-      prisma.node.count({ where: { status: 'ONLINE' } }),
-      prisma.node.count({ where: { status: 'OFFLINE' } }),
-      prisma.node.count({ where: { status: 'UNKNOWN' } })
-    ]);
+    const [totalNodes, onlineNodes, offlineNodes, unknownNodes] =
+      await Promise.all([
+        prisma.node.count(),
+        prisma.node.count({ where: { status: "ONLINE" } }),
+        prisma.node.count({ where: { status: "OFFLINE" } }),
+        prisma.node.count({ where: { status: "UNKNOWN" } }),
+      ]);
 
     const [totalCountries, totalProviders] = await Promise.all([
-      prisma.node.groupBy({
-        by: ['country'],
-        _count: { country: true }
-      }).then(result => result.length),
-      prisma.node.groupBy({
-        by: ['provider'],
-        _count: { provider: true }
-      }).then(result => result.length)
+      prisma.node
+        .groupBy({
+          by: ["country"],
+          _count: { country: true },
+        })
+        .then((result) => result.length),
+      prisma.node
+        .groupBy({
+          by: ["provider"],
+          _count: { provider: true },
+        })
+        .then((result) => result.length),
     ]);
 
     return {
@@ -893,7 +932,7 @@ export class AdminController {
       offlineNodes,
       unknownNodes,
       totalCountries,
-      totalProviders
+      totalProviders,
     };
   }
 }

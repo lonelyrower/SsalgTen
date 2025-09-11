@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import axios from 'axios';
-import { ApiResponse } from '../types';
-import { logger } from '../utils/logger';
-import { nodeService } from '../services/NodeService';
-import { getIO } from '../sockets/ioRegistry';
+import { Request, Response } from "express";
+import axios from "axios";
+import { ApiResponse } from "../types";
+import { logger } from "../utils/logger";
+import { nodeService } from "../services/NodeService";
+import { getIO } from "../sockets/ioRegistry";
 
 interface ClientLatencyData {
   nodeId: string;
@@ -13,7 +13,7 @@ interface ClientLatencyData {
   city: string;
   ipv4?: string;
   latency: number | null;
-  status: 'testing' | 'success' | 'failed' | 'timeout';
+  status: "testing" | "success" | "failed" | "timeout";
   lastTested: string;
   error?: string;
 }
@@ -36,19 +36,23 @@ export class ClientLatencyController {
   // 获取客户端IP地址
   private getClientIP(req: Request): string {
     // 优先从代理头获取真实IP
-    const forwarded = req.headers['x-forwarded-for'] as string;
-    const realIP = req.headers['x-real-ip'] as string;
-    const cfConnectingIP = req.headers['cf-connecting-ip'] as string; // Cloudflare
-    
+    const forwarded = req.headers["x-forwarded-for"] as string;
+    const realIP = req.headers["x-real-ip"] as string;
+    const cfConnectingIP = req.headers["cf-connecting-ip"] as string; // Cloudflare
+
     if (cfConnectingIP) return cfConnectingIP;
     if (realIP) return realIP;
     if (forwarded) {
       // x-forwarded-for 可能包含多个IP，取第一个
-      return forwarded.split(',')[0].trim();
+      return forwarded.split(",")[0].trim();
     }
-    
-    return req.connection.remoteAddress || req.socket.remoteAddress || 
-           (req.connection as any).socket?.remoteAddress || '127.0.0.1';
+
+    return (
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress ||
+      (req.connection as any).socket?.remoteAddress ||
+      "127.0.0.1"
+    );
   }
 
   // 启动延迟测试
@@ -59,20 +63,20 @@ export class ClientLatencyController {
 
       // 获取所有在线节点
       const nodes = await nodeService.getAllNodes();
-      const onlineNodes = nodes.filter(node => node.status === 'ONLINE');
+      const onlineNodes = nodes.filter((node) => node.status === "ONLINE");
 
       if (onlineNodes.length === 0) {
         const response: ApiResponse = {
           success: false,
-          message: 'No online nodes available for testing',
-          data: { clientIP, nodeCount: 0 }
+          message: "No online nodes available for testing",
+          data: { clientIP, nodeCount: 0 },
         };
         res.json(response);
         return;
       }
 
       // 初始化测试结果
-      const testResults: ClientLatencyData[] = onlineNodes.map(node => ({
+      const testResults: ClientLatencyData[] = onlineNodes.map((node) => ({
         nodeId: node.id,
         nodeName: node.name,
         location: `${node.city}, ${node.country}`,
@@ -80,8 +84,8 @@ export class ClientLatencyController {
         city: node.city,
         ipv4: node.ipv4 || undefined,
         latency: null,
-        status: 'testing' as const,
-        lastTested: new Date().toISOString()
+        status: "testing" as const,
+        lastTested: new Date().toISOString(),
       }));
 
       // 缓存测试结果
@@ -101,7 +105,7 @@ export class ClientLatencyController {
 
       // 优先使用 HTTP 直接调用各 Agent 的 /api/ping 接口（更简单可靠）
       const buildAgentEndpoint = (node: any): string | null => {
-        const host = (node?.ipv4 || node?.ipv6 || '').toString();
+        const host = (node?.ipv4 || node?.ipv6 || "").toString();
         if (!host) return null;
         // 约定 Agent 监听 3002 端口（与 docker-compose 中示例一致）
         return `http://${host}:3002`;
@@ -110,7 +114,13 @@ export class ClientLatencyController {
       const httpPromises = onlineNodes.map(async (node) => {
         const endpoint = buildAgentEndpoint(node);
         if (!endpoint) {
-          this.updateNodeLatency(clientIP, node.id, null, 'failed', 'No reachable agent endpoint');
+          this.updateNodeLatency(
+            clientIP,
+            node.id,
+            null,
+            "failed",
+            "No reachable agent endpoint",
+          );
           return;
         }
         try {
@@ -119,19 +129,33 @@ export class ClientLatencyController {
           // 解析 Agent 返回的平均延迟
           const avg = Math.round(Number(r.data?.data?.avg ?? NaN));
           if (Number.isFinite(avg)) {
-            this.updateNodeLatency(clientIP, node.id, avg, 'success');
+            this.updateNodeLatency(clientIP, node.id, avg, "success");
           } else {
-            this.updateNodeLatency(clientIP, node.id, null, 'failed', 'Invalid agent ping response');
+            this.updateNodeLatency(
+              clientIP,
+              node.id,
+              null,
+              "failed",
+              "Invalid agent ping response",
+            );
           }
         } catch (e: any) {
-          this.updateNodeLatency(clientIP, node.id, null, 'failed', e?.message || 'Agent ping failed');
+          this.updateNodeLatency(
+            clientIP,
+            node.id,
+            null,
+            "failed",
+            e?.message || "Agent ping failed",
+          );
         }
       });
 
       // 并行执行，不阻塞响应（但向前端返回已启动的信息）
-      Promise.allSettled(httpPromises).then(() => {
-        logger.info(`Latency HTTP polling finished for client ${clientIP}`);
-      }).catch(() => void 0);
+      Promise.allSettled(httpPromises)
+        .then(() => {
+          logger.info(`Latency HTTP polling finished for client ${clientIP}`);
+        })
+        .catch(() => void 0);
 
       const response: ApiResponse = {
         success: true,
@@ -140,17 +164,17 @@ export class ClientLatencyController {
           clientIP,
           nodeCount: onlineNodes.length,
           testId: clientIP,
-          estimatedDuration: '15-30 seconds'
-        }
+          estimatedDuration: "15-30 seconds",
+        },
       };
 
       res.json(response);
     } catch (error) {
-      logger.error('Start latency test error:', error);
+      logger.error("Start latency test error:", error);
       const response: ApiResponse = {
         success: false,
-        message: 'Failed to start latency test',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: "Failed to start latency test",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
       res.status(500).json(response);
     }
@@ -165,8 +189,8 @@ export class ClientLatencyController {
       if (!testResults) {
         const response: ApiResponse = {
           success: false,
-          message: 'No latency test found for this client',
-          data: { clientIP }
+          message: "No latency test found for this client",
+          data: { clientIP },
         };
         res.json(response);
         return;
@@ -182,49 +206,60 @@ export class ClientLatencyController {
           clientIP,
           results: testResults,
           stats,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
 
       res.json(response);
     } catch (error) {
-      logger.error('Get latency results error:', error);
+      logger.error("Get latency results error:", error);
       const response: ApiResponse = {
         success: false,
-        message: 'Failed to get latency results',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: "Failed to get latency results",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
       res.status(500).json(response);
     }
   }
 
   // 通过Socket.IO请求节点执行ping测试
-  private async requestNodePing(nodeId: string, targetIP: string): Promise<void> {
+  private async requestNodePing(
+    nodeId: string,
+    targetIP: string,
+  ): Promise<void> {
     const io = getIO();
     if (!io) {
-      throw new Error('Socket.IO not initialized');
+      throw new Error("Socket.IO not initialized");
     }
 
     const message = {
-      type: 'ping_request',
+      type: "ping_request",
       data: {
         targetIP,
         count: 4, // ping 4次取平均值
-        timeout: 10000 // 10秒超时
-      }
+        timeout: 10000, // 10秒超时
+      },
     };
 
     // 通过Socket.IO发送给特定节点房间
-    io.to(`node_${nodeId}`).emit('ping_request', message);
+    io.to(`node_${nodeId}`).emit("ping_request", message);
     logger.info(`Sent ping request to node ${nodeId} for IP ${targetIP}`);
   }
 
   // 更新节点延迟结果
-  updateNodeLatency(clientIP: string, nodeId: string, latency: number | null, status: ClientLatencyData['status'], error?: string): void {
+  updateNodeLatency(
+    clientIP: string,
+    nodeId: string,
+    latency: number | null,
+    status: ClientLatencyData["status"],
+    error?: string,
+  ): void {
     const testResults = this.latencyCache.get(clientIP);
     if (!testResults) return;
 
-    const nodeIndex = testResults.findIndex(result => result.nodeId === nodeId);
+    const nodeIndex = testResults.findIndex(
+      (result) => result.nodeId === nodeId,
+    );
     if (nodeIndex === -1) return;
 
     testResults[nodeIndex] = {
@@ -232,14 +267,17 @@ export class ClientLatencyController {
       latency,
       status,
       lastTested: new Date().toISOString(),
-      error
+      error,
     };
 
     this.latencyCache.set(clientIP, testResults);
 
     // 检查是否所有测试都完成了
-    const allCompleted = testResults.every(result => 
-      result.status === 'success' || result.status === 'failed' || result.status === 'timeout'
+    const allCompleted = testResults.every(
+      (result) =>
+        result.status === "success" ||
+        result.status === "failed" ||
+        result.status === "timeout",
     );
 
     if (allCompleted) {
@@ -250,7 +288,9 @@ export class ClientLatencyController {
       }
     }
 
-    logger.info(`Updated latency for node ${nodeId}, client ${clientIP}: ${latency}ms (${status})`);
+    logger.info(
+      `Updated latency for node ${nodeId}, client ${clientIP}: ${latency}ms (${status})`,
+    );
   }
 
   // 处理测试超时
@@ -259,11 +299,11 @@ export class ClientLatencyController {
     if (!testResults) return;
 
     // 将所有仍在测试中的节点标记为超时
-    testResults.forEach(result => {
-      if (result.status === 'testing') {
-        result.status = 'timeout';
+    testResults.forEach((result) => {
+      if (result.status === "testing") {
+        result.status = "timeout";
         result.lastTested = new Date().toISOString();
-        result.error = 'Test timeout after 30 seconds';
+        result.error = "Test timeout after 30 seconds";
       }
     });
 
@@ -274,8 +314,10 @@ export class ClientLatencyController {
 
   // 计算统计数据
   private calculateStats(results: ClientLatencyData[]): LatencyStats {
-    const successfulResults = results.filter(r => r.status === 'success' && r.latency !== null);
-    const latencies = successfulResults.map(r => r.latency!);
+    const successfulResults = results.filter(
+      (r) => r.status === "success" && r.latency !== null,
+    );
+    const latencies = successfulResults.map((r) => r.latency!);
 
     if (latencies.length === 0) {
       return {
@@ -285,20 +327,28 @@ export class ClientLatencyController {
         tested: results.length,
         total: results.length,
         distribution: [],
-        bestNodes: []
+        bestNodes: [],
       };
     }
 
-    const average = Math.round(latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length);
+    const average = Math.round(
+      latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length,
+    );
     const min = Math.min(...latencies);
     const max = Math.max(...latencies);
 
     // 延迟分布统计
     const distribution = [
-      { range: '<50ms', count: latencies.filter(l => l < 50).length },
-      { range: '50-100ms', count: latencies.filter(l => l >= 50 && l < 100).length },
-      { range: '100-200ms', count: latencies.filter(l => l >= 100 && l < 200).length },
-      { range: '200ms+', count: latencies.filter(l => l >= 200).length }
+      { range: "<50ms", count: latencies.filter((l) => l < 50).length },
+      {
+        range: "50-100ms",
+        count: latencies.filter((l) => l >= 50 && l < 100).length,
+      },
+      {
+        range: "100-200ms",
+        count: latencies.filter((l) => l >= 100 && l < 200).length,
+      },
+      { range: "200ms+", count: latencies.filter((l) => l >= 200).length },
     ];
 
     // 最佳节点（延迟最低的前3个）
@@ -310,17 +360,17 @@ export class ClientLatencyController {
       average,
       min,
       max,
-      tested: results.filter(r => r.status !== 'testing').length,
+      tested: results.filter((r) => r.status !== "testing").length,
       total: results.length,
       distribution,
-      bestNodes
+      bestNodes,
     };
   }
 
   // 清理过期的缓存数据（可以通过定时任务调用）
   cleanupExpiredCache(maxAgeHours: number = 1): void {
     const cutoffTime = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
-    
+
     for (const [clientIP, results] of this.latencyCache.entries()) {
       const lastTested = new Date(results[0]?.lastTested || 0);
       if (lastTested < cutoffTime) {
