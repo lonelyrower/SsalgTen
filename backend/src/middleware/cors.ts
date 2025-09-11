@@ -1,24 +1,38 @@
 import cors from "cors";
 
-// 解析多个CORS来源
+// 解析多个CORS来源（支持 CORS_ORIGIN 与 FRONTEND_URL）
 const getCorsOrigins = (): string | string[] => {
-  const corsOrigin = process.env.CORS_ORIGIN;
-  
-  // 如果未设置CORS_ORIGIN，返回空字符串，让后续逻辑处理智能检测
-  if (!corsOrigin) {
-    return "";
-  }
+  const sources: string[] = [];
 
-  // 支持多种分隔符：逗号、分号、管道符
-  const separators = /[,;|]/;
-  if (separators.test(corsOrigin)) {
-    return corsOrigin
-      .split(separators)
-      .map((origin) => origin.trim())
-      .filter((origin) => origin.length > 0);
-  }
+  const pushFromEnv = (raw?: string) => {
+    if (!raw) return;
+    const parts = raw.split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
+    for (const p of parts) {
+      if (p === "*") { sources.push("*"); continue; }
+      // 规范化：去除末尾斜杠
+      const cleaned = p.replace(/\/$/, "");
+      // 若未包含协议，默认加入 https 与 http 两种形式，提升容错
+      if (!/^https?:\/\//i.test(cleaned)) {
+        sources.push(`https://${cleaned}`);
+        sources.push(`http://${cleaned}`);
+      } else {
+        sources.push(cleaned);
+      }
+    }
+  };
 
-  return corsOrigin;
+  pushFromEnv(process.env.CORS_ORIGIN);
+  // 作为补充来源，允许通过 FRONTEND_URL 指定前端地址
+  pushFromEnv(process.env.FRONTEND_URL);
+
+  // 如果没有任何显式来源，返回空字符串，让后续逻辑走智能检测
+  if (sources.length === 0) return "";
+
+  // 若包含通配符，直接返回 "*"
+  if (sources.includes("*")) return "*";
+
+  // 去重
+  return Array.from(new Set(sources));
 };
 
 const corsOptions: cors.CorsOptions = {
@@ -98,8 +112,9 @@ const corsOptions: cors.CorsOptions = {
       }
     }
 
-    // 不在允许列表中的源被拒绝
-    callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+    // 不在允许列表中的源：禁用本次请求的 CORS（不抛错，避免返回500）
+    // 让浏览器基于缺失的CORS响应头自行阻止跨域请求
+    callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
