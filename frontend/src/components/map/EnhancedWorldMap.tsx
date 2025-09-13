@@ -148,11 +148,31 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
 };
 
 // 创建聚合节点图标（基于 supercluster 返回的统计）
-const createClusterIcon = (count: number, offline: number = 0) => {
+const createClusterIcon = (count: number, offline: number = 0, online: number = 0) => {
   // 调整聚合点大小，使其更接近常规点大小
   // 基础大小22px，根据节点数量略微增大，最大不超过32px
   const size = Math.min(22 + Math.log2(count + 1) * 2, 32);
-  const primaryColor = offline > 0 ? '#ef4444' : '#2563eb';
+  
+  // 计算在线率
+  const total = online + offline;
+  const onlineRate = total > 0 ? online / total : 0;
+  
+  // 根据在线率确定颜色
+  let primaryColor: string;
+  if (onlineRate === 1) {
+    // 全部在线：绿色
+    primaryColor = '#22c55e';
+  } else if (onlineRate >= 0.7) {
+    // 大部分在线（≥70%）：蓝色
+    primaryColor = '#2563eb';
+  } else if (onlineRate >= 0.3) {
+    // 部分在线（30%-70%）：橙色
+    primaryColor = '#f59e0b';
+  } else {
+    // 在线率很低（<30%）或全部离线：红色
+    primaryColor = '#ef4444';
+  }
+  
   const fontSize = Math.max(10, size / 2.8);
   return new DivIcon({
     html: `
@@ -349,7 +369,7 @@ export const EnhancedWorldMap = memo(({
           <Marker
             key={`cluster-${props.cluster_id}-${count}`}
             position={[lat, lng]}
-            icon={createClusterIcon(count, offline)}
+            icon={createClusterIcon(count, offline, props.online)}
             eventHandlers={{
               click: () => {
                 try {
@@ -364,6 +384,19 @@ export const EnhancedWorldMap = memo(({
                 <h3 className="font-bold text-base text-gray-900 mb-2">集群节点 ({count})</h3>
                 <div className="text-sm text-gray-600 mb-2">
                   在线: {props.online || 0} | 离线: {props.offline || 0}
+                  {(() => {
+                    const total = (props.online || 0) + (props.offline || 0);
+                    const rate = total > 0 ? Math.round(((props.online || 0) / total) * 100) : 0;
+                    return (
+                      <div className="text-xs mt-1">
+                        在线率: <span className={`font-semibold ${
+                          rate === 100 ? 'text-green-600' :
+                          rate >= 70 ? 'text-blue-600' :
+                          rate >= 30 ? 'text-orange-600' : 'text-red-600'
+                        }`}>{rate}%</span>
+                      </div>
+                    );
+                  })()} 
                 </div>
                 <p className="text-xs text-gray-500">点击放大以查看详情</p>
               </div>
