@@ -577,7 +577,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                   <p className="text-sm font-medium mb-1">ASN 信息</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">ASN 号</span>
+                      <span className="text-gray-600 dark:text-gray-400">ASN</span>
                       <p className="font-medium">{(node as any).asnNumber}</p>
                     </div>
                     {(node as any).asnName && (

@@ -413,7 +413,7 @@ export const NodesPage: React.FC = () => {
                             </span>
                             {selectedNode.asnNumber && (
                               <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-mono">
-                                AS{selectedNode.asnNumber}
+                                {selectedNode.asnNumber}
                               </span>
                             )}
                           </div>
@@ -549,7 +549,7 @@ export const NodesPage: React.FC = () => {
                             </p>
                             {node.asnNumber && (
                               <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">
-                                AS{node.asnNumber}
+                                {node.asnNumber}
                               </p>
                             )}
                             {/* 延迟信息 */}
