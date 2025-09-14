@@ -392,31 +392,35 @@ export const NodesPage: React.FC = () => {
                   {/* 节点基本信息 */}
                   <div className="space-y-4">
                     {/* 节点标题卡片 */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-lg p-4">
-                      <div className="flex items-start space-x-3">
-                        <div className={`w-3 h-3 rounded-full mt-2 ${
-                          selectedNode.status === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-                        }`}></div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-2">
-                            {selectedNode.name}
-                          </h4>
-                          <div className="flex items-center space-x-2 mb-2">
-                            <CountryFlagSvg country={selectedNode.country} />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {selectedNode.city}, {selectedNode.country}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-lg p-4 relative">
+                      {/* 状态指示器在左上角 */}
+                      <div className={`absolute top-3 left-3 w-3 h-3 rounded-full ${
+                        selectedNode.status === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                      }`}></div>
+                      
+                      {/* 居中的内容区域 */}
+                      <div className="text-center space-y-2">
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg">
+                          {selectedNode.name}
+                        </h4>
+                        
+                        {selectedNode.asnNumber && (
+                          <div className="flex justify-center">
+                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-mono">
+                              {selectedNode.asnNumber}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {selectedNode.provider}
-                            </span>
-                            {selectedNode.asnNumber && (
-                              <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-mono">
-                                {selectedNode.asnNumber}
-                              </span>
-                            )}
-                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-center space-x-2">
+                          <CountryFlagSvg country={selectedNode.country} />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {selectedNode.city}, {selectedNode.country}
+                          </span>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {selectedNode.provider}
                         </div>
                       </div>
                     </div>
