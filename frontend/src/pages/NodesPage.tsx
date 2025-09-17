@@ -590,6 +590,11 @@ export const NodesPage: React.FC = () => {
                                 {node.ipv4}
                               </p>
                             )}
+                            {node.ipv6 && node.ipv6 !== node.ipv4 && (
+                              <p className="text-[10px] text-indigo-500 dark:text-indigo-300 font-mono mb-1 text-center break-all">
+                                {node.ipv6}
+                              </p>
+                            )}
                             <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
                               {node.provider}
                             </p>
