@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
 import Supercluster from 'supercluster';
+const ICON_CACHE = new Map<string, DivIcon>();
 import { Button } from '@/components/ui/button';
 import { 
   Activity, 
@@ -126,12 +127,19 @@ const getNodeStyle = (status: string) => {
 
 // 创建增强的自定义图标
 const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
-  const style = getNodeStyle(status);
+  const normalizedStatus = (status || 'unknown').toLowerCase();
+  const cacheKey = `${normalizedStatus}-${isSelected ? 'selected' : 'default'}`;
+  const cached = ICON_CACHE.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const style = getNodeStyle(normalizedStatus);
   const size = isSelected ? 24 : 18;
   const pulseClass = style.pulse ? 'animate-pulse' : '';
   const selectedClass = isSelected ? 'transform scale-125' : '';
-  
-  return new DivIcon({
+
+  const icon = new DivIcon({
     html: `
       <div class="flex items-center justify-center ${selectedClass} ${pulseClass}" 
            style="width: ${size}px; height: ${size}px;">
@@ -145,6 +153,9 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
+
+  ICON_CACHE.set(cacheKey, icon);
+  return icon;
 };
 
 // 创建聚合节点图标（基于 supercluster 返回的统计）

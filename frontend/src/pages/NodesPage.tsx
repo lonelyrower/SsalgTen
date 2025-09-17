@@ -9,7 +9,7 @@ import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -31,6 +31,7 @@ export const NodesPage: React.FC = () => {
   const [eventFilter, setEventFilter] = useState<'all' | string>('all');
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
+  const [exportingNodes, setExportingNodes] = useState(false);
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
   // 只保留 2D 地图模式
@@ -65,6 +66,31 @@ export const NodesPage: React.FC = () => {
   const handleRefresh = () => {
     refreshData();
   };
+  const handleExportNodes = async (format: 'json' | 'csv' = 'csv') => {
+    try {
+      setExportingNodes(true);
+      const result = await apiService.exportNodes(format);
+      if (result.success && result.data) {
+        const url = window.URL.createObjectURL(result.data);
+        const link = document.createElement('a');
+        link.href = url;
+        const fallbackName = `ssalgten-nodes-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`;
+        link.download = result.fileName || fallbackName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        window.alert(`节点导出失败：${result.error || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('Export nodes failed:', error);
+      window.alert('节点导出失败，请稍后重试。');
+    } finally {
+      setExportingNodes(false);
+    }
+  };
+
 
   const handleAddNode = () => {
     setShowDeployModal(true);
@@ -278,6 +304,22 @@ export const NodesPage: React.FC = () => {
                   部署节点
                 </Button>
               )}
+              {hasRole('ADMIN') && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleExportNodes('csv')}
+                  disabled={exportingNodes}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                >
+                  {exportingNodes ? (
+                    <LoadingSpinner size="xs" center={false} className="mr-2" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  {exportingNodes ? '导出中...' : '导出节点'}
+                </Button>
+              )}
+
               
               <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />

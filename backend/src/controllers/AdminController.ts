@@ -73,7 +73,16 @@ export class AdminController {
         tags,
       }: CreateNodeRequest = req.body;
 
-      if (!name || !country || !city || !latitude || !longitude || !provider) {
+      if (
+        !name ||
+        !country ||
+        !city ||
+        latitude === undefined ||
+        latitude === null ||
+        longitude === undefined ||
+        longitude === null ||
+        !provider
+      ) {
         const response: ApiResponse = {
           success: false,
           error:

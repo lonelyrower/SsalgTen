@@ -125,7 +125,7 @@ export class VisitorController {
           }),
 
           // 唯一IP数量 (优化性能)
-          prisma.$queryRaw`SELECT COUNT(DISTINCT ip) as count FROM visitorLog WHERE createdAt >= ${cutoffDate}` as Promise<
+          prisma.$queryRaw`SELECT COUNT(DISTINCT ip) as count FROM visitor_logs WHERE createdAt >= ${cutoffDate}` as Promise<
             [{ count: bigint }]
           >,
 

@@ -418,6 +418,59 @@ class ApiService {
   }
 
   // 节点管理 API
+  private async download(endpoint: string, options: RequestInit = {}, requireAuth: boolean = false): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+    const url = API_BASE_URL + endpoint;
+    const headers = new Headers(options.headers as HeadersInit | undefined);
+
+    if (!headers.has('Accept')) {
+      headers.set('Accept', 'application/octet-stream');
+    }
+
+    if (requireAuth) {
+      const token = TokenManager.getToken();
+      if (!token || TokenManager.isTokenExpired(token)) {
+        return { success: false, error: 'Authentication required' };
+      }
+      headers.set('Authorization', 'Bearer ' + token);
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        return { success: false, error: errorText || ('HTTP error! status: ' + response.status) };
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+      let fileName: string | undefined;
+      if (disposition) {
+        const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const quotedMatch = disposition.match(/filename="?([^";]+)"?/i);
+        const rawName = (utf8Match && utf8Match[1]) || (quotedMatch && quotedMatch[1]);
+        if (rawName) {
+          try {
+            fileName = decodeURIComponent(rawName.trim());
+          } catch {
+            fileName = rawName.trim();
+          }
+        }
+      }
+
+      return { success: true, data: blob, fileName };
+    } catch (error) {
+      console.error('API download failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
   async getNodes(): Promise<ApiResponse<NodeData[]>> {
     return this.request<NodeData[]>('/nodes');
   }
@@ -444,6 +497,10 @@ class ApiService {
     return this.request<void>(`/admin/nodes/${id}`, {
       method: 'DELETE',
     }, true);
+  }
+
+  async exportNodes(format: 'json' | 'csv' = 'csv'): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+    return this.download('/admin/nodes/export?format=' + format, {}, true);
   }
 
   // 统计信息 API

@@ -179,9 +179,9 @@ export const HomePage = () => {
                       <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
-                    <div className="glass rounded-lg p-4 border border-white/20 relative group">
+                    <div className="glass rounded-lg p-4 border border-white/20 relative group text-center">
                       <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">运行状态</div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-center space-x-2">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           selectedNode.status === 'online' 
                             ? 'bg-green-500/20 text-green-300 border border-green-500/30' 

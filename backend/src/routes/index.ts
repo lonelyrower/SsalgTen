@@ -423,6 +423,13 @@ router.post(
 
 // API密钥管理（管理员专用）
 router.get(
+  "/admin/nodes/export",
+  authenticateToken,
+  requireAdmin,
+  nodeController.exportNodes.bind(nodeController),
+);
+
+router.get(
   "/admin/api-key/info",
   authenticateToken,
   requireAdmin,

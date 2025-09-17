@@ -105,9 +105,10 @@ export class ClientLatencyController {
 
       // 优先使用 HTTP 直接调用各 Agent 的 /api/ping 接口（更简单可靠）
       const buildAgentEndpoint = (node: any): string | null => {
-        const host = (node?.ipv4 || node?.ipv6 || "").toString();
-        if (!host) return null;
-        // 约定 Agent 监听 3002 端口（与 docker-compose 中示例一致）
+        const rawHost = (node?.ipv4 || node?.ipv6 || "").toString().trim();
+        if (!rawHost) return null;
+        // 默认 Agent 监听 3002 端口，与 docker-compose 保持一致；
+        const host = rawHost.includes(':') ? `[${rawHost}]` : rawHost;
         return `http://${host}:3002`;
       };
 

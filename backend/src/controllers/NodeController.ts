@@ -1091,6 +1091,153 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
     }
   }
 
+  // 导出节点数据（管理员）
+  async exportNodes(req: Request, res: Response): Promise<void> {
+    try {
+      const format = ((req.query.format as string) || 'csv').toLowerCase();
+      const rawNodes = await nodeService.getAllNodes();
+      const parsedNodes = (rawNodes as any[]).map((node) => {
+        const { apiKey, ...rest } = node;
+        const parseTags = (value: any): string[] => {
+          if (!value) return [];
+          if (Array.isArray(value)) return value.map((v) => String(v));
+          if (typeof value === 'string') {
+            try {
+              const parsed = JSON.parse(value);
+              if (Array.isArray(parsed)) return parsed.map((v: any) => String(v));
+              if (parsed) return [String(parsed)];
+            } catch {
+              // ignore json parse errors and fall back to raw
+            }
+            return value.split(',').map((v) => v.trim()).filter(Boolean);
+          }
+          return [String(value)];
+        };
+
+        const toIso = (value?: Date | string | null) => {
+          if (!value) return '';
+          const dt = typeof value === 'string' ? new Date(value) : value;
+          return Number.isNaN(dt?.getTime?.()) ? '' : dt.toISOString();
+        };
+
+        const safeNumber = (value: any) => (value === null || value === undefined ? '' : value);
+
+        const tags = parseTags(rest.tags);
+        return {
+          id: rest.id,
+          name: rest.name,
+          agentId: rest.agentId,
+          status: rest.status,
+          country: rest.country,
+          city: rest.city,
+          latitude: rest.latitude,
+          longitude: rest.longitude,
+          provider: rest.provider,
+          datacenter: rest.datacenter || '',
+          ipv4: rest.ipv4 || '',
+          ipv6: rest.ipv6 || '',
+          asnNumber: rest.asnNumber || '',
+          asnName: rest.asnName || '',
+          asnOrg: rest.asnOrg || '',
+          asnRoute: rest.asnRoute || '',
+          asnType: rest.asnType || '',
+          osType: rest.osType || '',
+          osVersion: rest.osVersion || '',
+          description: rest.description || '',
+          lastSeen: toIso(rest.lastSeen),
+          lastHeartbeatStatus: rest.lastHeartbeat?.status || '',
+          lastHeartbeatAt: toIso(rest.lastHeartbeat?.timestamp),
+          cpuUsage: safeNumber(rest.cpuUsage),
+          memoryUsage: safeNumber(rest.memoryUsage),
+          diskUsage: safeNumber(rest.diskUsage),
+          tags: tags,
+          createdAt: toIso(rest.createdAt),
+          updatedAt: toIso(rest.updatedAt),
+        };
+      });
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+      if (format === 'csv') {
+        const headers = [
+          'id',
+          'name',
+          'agentId',
+          'status',
+          'country',
+          'city',
+          'latitude',
+          'longitude',
+          'provider',
+          'datacenter',
+          'ipv4',
+          'ipv6',
+          'asnNumber',
+          'asnName',
+          'asnOrg',
+          'asnRoute',
+          'asnType',
+          'osType',
+          'osVersion',
+          'description',
+          'lastSeen',
+          'lastHeartbeatStatus',
+          'lastHeartbeatAt',
+          'cpuUsage',
+          'memoryUsage',
+          'diskUsage',
+          'tags',
+          'createdAt',
+          'updatedAt',
+        ];
+
+        const escapeCsv = (value: any) => {
+          if (Array.isArray(value)) {
+            return escapeCsv(value.join(';'));
+          }
+          const str = value === null || value === undefined ? '' : String(value);
+          if (/[",\n]/.test(str)) {
+            return '"' + str.replace(/"/g, '""') + '"';
+          }
+          return str;
+        };
+
+        const rows = parsedNodes.map((node) =>
+          headers
+            .map((key) => escapeCsv((node as Record<string, unknown>)[key]))
+            .join(','),
+        );
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="ssalgten-nodes-${timestamp}.csv"`,
+        );
+        res.status(200).send(`\ufeff${csv}`);
+        return;
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        data: parsedNodes,
+        message: `Exported ${parsedNodes.length} nodes`,
+      };
+
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="ssalgten-nodes-${timestamp}.json"`,
+      );
+      res.json(response);
+    } catch (error) {
+      logger.error('Export nodes error:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to export nodes',
+      };
+      res.status(500).json(response);
+    }
+  }
   // 获取全局活动日志
   async getGlobalActivities(req: Request, res: Response): Promise<void> {
     try {
