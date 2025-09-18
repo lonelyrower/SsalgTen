@@ -485,7 +485,7 @@ export const NodesPage: React.FC = () => {
                         </div>
                       )}
                       
-                      {selectedNode.ipv6 && selectedNode.ipv6 !== selectedNode.ipv4 && (
+                      {selectedNode.ipv6 && selectedNode.ipv6.trim() && selectedNode.ipv6 !== selectedNode.ipv4 && (
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600 dark:text-gray-400">IPv6:</span>
                           <span className="text-xs font-mono text-blue-600 break-all">{selectedNode.ipv6}</span>
@@ -590,7 +590,7 @@ export const NodesPage: React.FC = () => {
                                 {node.ipv4}
                               </p>
                             )}
-                            {node.ipv6 && node.ipv6 !== node.ipv4 && (
+                            {node.ipv6 && node.ipv6.trim() && node.ipv6 !== node.ipv4 && (
                               <p className="text-[10px] text-indigo-500 dark:text-indigo-300 font-mono mb-1 text-center break-all">
                                 {node.ipv6}
                               </p>

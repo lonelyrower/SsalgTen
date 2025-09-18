@@ -649,7 +649,7 @@ export const EnhancedWorldMap = memo(({
                           {node.ipv4}
                         </div>
                       )}
-                      {node.ipv6 && node.ipv6 !== node.ipv4 && node.ipv6.includes(':') && (
+                      {node.ipv6 && node.ipv6.trim() && node.ipv6 !== node.ipv4 && node.ipv6.includes(':') && (
                         <div className="font-mono text-indigo-500 dark:text-indigo-300 break-all">
                           {node.ipv6}
                         </div>
