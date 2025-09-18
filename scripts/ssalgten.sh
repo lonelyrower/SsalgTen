@@ -1263,6 +1263,8 @@ update_system() {
         echo
         log_header "✅ 更新结束"
         flush_output
+        log_success "🎉 更新流程已顺利完成，欢迎继续使用 SsalgTen!"
+        flush_output
         local frontend_hint="http://localhost:${FRONTEND_PORT}/"
         if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
         local backend_hint="http://localhost:${BACKEND_PORT}/api/health"
@@ -1384,6 +1386,8 @@ update_system_from_archive() {
         # 统一的完成提示
         echo
         log_header "✅ 更新结束"
+        flush_output
+        log_success "🎉 更新流程已顺利完成，欢迎继续使用 SsalgTen!"
         flush_output
         local frontend_hint="http://localhost:${FRONTEND_PORT}/"
         if [[ "${FRONTEND_PORT}" == "80" ]]; then frontend_hint="http://localhost/"; fi
