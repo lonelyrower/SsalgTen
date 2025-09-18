@@ -612,34 +612,54 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
   const result: { ipv4?: string; ipv6?: string } = {};
   const timeout = 2000;
 
+  // Helper function to validate IPv6
+  const isValidIPv6 = (ip: string): boolean => {
+    return ip.includes(':') && ip.length > 7; // Basic IPv6 validation
+  };
+
+  // Helper function to validate IPv4
+  const isValidIPv4 = (ip: string): boolean => {
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    return ipv4Regex.test(ip);
+  };
+
   try {
     // 优先 json 接口
     const v4 = await axios.get('https://api.ipify.org?format=json', { timeout });
-    if (v4?.data?.ip) result.ipv4 = v4.data.ip;
+    const ipv4 = v4?.data?.ip;
+    if (ipv4 && isValidIPv4(ipv4)) result.ipv4 = ipv4;
   } catch {}
   if (!result.ipv4) {
     try {
       const v4alt = await axios.get('https://ipv4.icanhazip.com', { timeout });
       const ip = (v4alt?.data || '').toString().trim();
-      if (ip) result.ipv4 = ip;
+      if (ip && isValidIPv4(ip)) result.ipv4 = ip;
     } catch {}
   }
 
   try {
     const v6 = await axios.get('https://api64.ipify.org?format=json', { timeout });
-    if (v6?.data?.ip) result.ipv6 = v6.data.ip;
+    const ipv6 = v6?.data?.ip;
+    if (ipv6 && isValidIPv6(ipv6)) result.ipv6 = ipv6;
   } catch {}
   if (!result.ipv6) {
     try {
       const v6alt = await axios.get('https://ipv6.icanhazip.com', { timeout });
       const ip = (v6alt?.data || '').toString().trim();
-      if (ip) result.ipv6 = ip;
+      if (ip && isValidIPv6(ip)) result.ipv6 = ip;
     } catch {}
   }
+
+  // 额外安全检查：确保IPv6字段不包含IPv4地址
+  if (result.ipv6 && isValidIPv4(result.ipv6)) {
+    delete (result as any).ipv6;
+  }
+
   // 若错误配置导致 v4/v6 返回相同字符串，避免在UI中重复显示
   if (result.ipv4 && result.ipv6 && result.ipv4 === result.ipv6) {
     delete (result as any).ipv6;
   }
+
   return result;
 };
 
