@@ -18,6 +18,14 @@ export const HomePage = () => {
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
     console.log('Node clicked:', node);
+    console.log('IPv6 data debug:', {
+      ipv6: node.ipv6,
+      ipv6_type: typeof node.ipv6,
+      ipv6_length: node.ipv6?.length,
+      includes_colon: node.ipv6?.includes(':'),
+      ipv4: node.ipv4,
+      shouldShowIPv6: node.ipv6 && node.ipv6.includes(':')
+    });
   }, []);
 
 

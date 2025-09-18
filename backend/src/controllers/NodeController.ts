@@ -92,6 +92,19 @@ export class NodeController {
     try {
       const nodes = await nodeService.getAllNodes();
 
+      // Debug: 检查IPv6数据
+      console.log('DEBUG: Node IPv6 data check:');
+      nodes.slice(0, 3).forEach((node: any, index: number) => {
+        console.log(`Node ${index + 1}:`, {
+          name: node.name,
+          ipv4: node.ipv4,
+          ipv6: node.ipv6,
+          ipv6_type: typeof node.ipv6,
+          ipv6_length: node.ipv6?.length,
+          has_ipv6: !!node.ipv6
+        });
+      });
+
       const response: ApiResponse = {
         success: true,
         data: sanitizeNodes(nodes as any[]),
