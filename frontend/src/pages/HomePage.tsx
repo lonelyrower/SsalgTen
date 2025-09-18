@@ -205,7 +205,7 @@ export const HomePage = () => {
                       </div>
                     )}
 
-                    {user && selectedNode.ipv6 && selectedNode.ipv6.trim() && selectedNode.ipv6 !== selectedNode.ipv4 && (
+                    {user && selectedNode.ipv6 && selectedNode.ipv6.includes(':') && (
                       <div className="glass rounded-lg p-4 border border-white/20 relative group">
                         <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">IPv6 地址</div>
                         <div className="font-mono text-sm text-indigo-300 font-bold break-all">

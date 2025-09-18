@@ -363,7 +363,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
                 <span className="font-mono text-blue-600">{selectedNode.ipv4}</span>
               </div>
             )}
-            {selectedNode.ipv6 && selectedNode.ipv6.trim() && selectedNode.ipv6 !== selectedNode.ipv4 && (
+            {selectedNode.ipv6 && selectedNode.ipv6.includes(':') && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">IPv6:</span>
                 <span className="font-mono text-blue-600">{selectedNode.ipv6}</span>
