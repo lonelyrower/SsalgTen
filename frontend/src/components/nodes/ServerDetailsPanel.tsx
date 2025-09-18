@@ -566,7 +566,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                   <p className="font-medium font-mono">{node.ipv4}</p>
                 </div>
               )}
-              {node.ipv6 && node.ipv6.includes(':') && (
+              {node.ipv6 && node.ipv6.includes(':') && node.ipv6 !== node.ipv4 && (
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">IPv6</p>
                   <p className="font-medium font-mono text-xs">{node.ipv6}</p>

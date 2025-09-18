@@ -17,15 +17,6 @@ export const HomePage = () => {
   const { user } = useAuth();
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
-    console.log('Node clicked:', node);
-    console.log('IPv6 data debug:', {
-      ipv6: node.ipv6,
-      ipv6_type: typeof node.ipv6,
-      ipv6_length: node.ipv6?.length,
-      includes_colon: node.ipv6?.includes(':'),
-      ipv4: node.ipv4,
-      shouldShowIPv6: node.ipv6 && node.ipv6.includes(':')
-    });
   }, []);
 
 
@@ -213,7 +204,7 @@ export const HomePage = () => {
                       </div>
                     )}
 
-                    {user && selectedNode.ipv6 && selectedNode.ipv6.includes(':') && (
+                    {user && selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6 !== selectedNode.ipv4 && (
                       <div className="glass rounded-lg p-4 border border-white/20 relative group">
                         <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">IPv6 地址</div>
                         <div className="font-mono text-sm text-indigo-300 font-bold break-all">
