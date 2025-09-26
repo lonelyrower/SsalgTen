@@ -27,8 +27,8 @@ export const Header = () => {
         }}
       />
       
-      <div className="relative z-10 px-4 py-3">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="relative z-10 mobile-container py-3">
+        <div className="flex items-center justify-between max-w-7xl mx-auto mobile-safe">
           {/* Logo - 科技感3D效果 */}
           <Link to="/" className="flex items-center space-x-4 group">
             <div className="relative">
@@ -45,16 +45,15 @@ export const Header = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div>
-                <h1 className="text-3xl font-bold gradient-text drop-shadow-sm">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text drop-shadow-sm">
                   SsalgTen
                 </h1>
-                <p className="text-xs text-blue-200/80 font-medium tracking-wider">
+                <p className="text-xs text-blue-200/80 font-medium tracking-wider hidden sm:block">
                   GLOBAL NETWORK MONITOR
                 </p>
               </div>
-              
             </div>
           </Link>
 
@@ -91,7 +90,7 @@ export const Header = () => {
         </nav>
 
         {/* Actions - 科技感操作区 */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           {/* 主题切换器 */}
           <div className="hidden sm:block">
             <div className="glass rounded-lg p-1">
@@ -101,16 +100,15 @@ export const Header = () => {
 
           {/* 如果已认证，显示简化的用户操作 */}
           {isAuthenticated && user ? (
-            <div className="flex items-center space-x-3">
-
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {/* 退出按钮 */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="relative overflow-hidden bg-transparent border-red-500/50 text-red-400 hover:text-white hover:border-red-500 group transition-all duration-300"
+                className="relative overflow-hidden bg-transparent border-red-500/50 text-red-400 hover:text-white hover:border-red-500 group transition-all duration-300 mobile-touch-target"
               >
-                <LogOut className="h-4 w-4 mr-2 relative z-10" />
+                <LogOut className="h-4 w-4 sm:mr-2 relative z-10" />
                 <span className="hidden sm:inline relative z-10">退出</span>
               </Button>
             </div>
@@ -118,9 +116,9 @@ export const Header = () => {
             /* 如果未认证，显示登录按钮 */
             <div className="flex items-center space-x-2">
               <Link to="/login">
-                <Button className="gradient-btn">
-                  <Activity className="h-4 w-4 mr-2" />
-                  登录
+                <Button className="gradient-btn mobile-touch-target">
+                  <Activity className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">登录</span>
                 </Button>
               </Link>
             </div>
