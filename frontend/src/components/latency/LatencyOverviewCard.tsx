@@ -202,7 +202,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               </span>
             </div>
             
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {stats.distribution.map((dist, index) => (
                 <div key={index} className="text-center">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">

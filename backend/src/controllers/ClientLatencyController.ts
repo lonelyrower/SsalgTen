@@ -338,6 +338,10 @@ export class ClientLatencyController {
     const min = Math.min(...latencies);
     const max = Math.max(...latencies);
 
+    // 计算所有完成测试的节点（包括成功、失败、超时）
+    const completedResults = results.filter((r) => r.status !== "testing");
+    const failedCount = completedResults.filter((r) => r.status !== "success" || r.latency === null).length;
+
     // 延迟分布统计
     const distribution = [
       { range: "<50ms", count: latencies.filter((l) => l < 50).length },
@@ -350,6 +354,7 @@ export class ClientLatencyController {
         count: latencies.filter((l) => l >= 100 && l < 200).length,
       },
       { range: "200ms+", count: latencies.filter((l) => l >= 200).length },
+      { range: "失败/超时", count: failedCount },
     ];
 
     // 最佳节点（延迟最低的前6个）
