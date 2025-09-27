@@ -166,9 +166,9 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
       />
       
       <StatsCard
-        title="覆盖国家"
+        title="覆盖国家/地区"
         value={totalCountries}
-        subValue={`分布在 ${totalCountries} 个国家地区`}
+        subValue={`分布在 ${totalCountries} 个国家/地区`}
         icon={<Globe className="h-6 w-6" />}
         color="purple"
         trend="stable"
