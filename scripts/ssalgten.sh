@@ -421,25 +421,69 @@ health_check() {
 get_port() {
     local service="$1"
     local container_port="$2"
-    docker_compose port "$service" "$container_port" 2>/dev/null | sed -n 's/.*://p' | tail -1
+    local port_output
+
+    if ! port_output=$(docker_compose port "$service" "$container_port" 2>/dev/null); then
+        return 0
+    fi
+
+    # docker compose port may return multiple lines; take the last mapping
+    port_output=${port_output##*$'\n'}
+    port_output=${port_output##*:}
+
+    [[ -n "$port_output" ]] && printf '%s\n' "$port_output"
 }
 
 # 探测动态端口
 detect_ports() {
-    # 尝试从运行中的服务获取端口，否则使用默认值
+    # 优先从 docker-compose 服务列表中检测可用端口，缺失时使用默认值
+    local services_list=""
+    local agent_service="${AGENT_SERVICE_NAME:-agent}"
+    local fallback_agent=""
+
+    services_list=$(docker_compose ps --services 2>/dev/null || true)
+
+    if [[ -n "$services_list" ]]; then
+        if ! grep -qx "$agent_service" <<<"$services_list"; then
+            while IFS= read -r svc; do
+                case "$svc" in
+                    "$agent_service")
+                        fallback_agent="$svc"
+                        break
+                        ;;
+                    agent|agent-*|agent_*|ssalgten-agent|ssalgten-agent-*|ssalgten-agent_*)
+                        fallback_agent="$svc"
+                        break
+                        ;;
+                esac
+            done <<<"$services_list"
+
+            if [[ -n "$fallback_agent" ]]; then
+                agent_service="$fallback_agent"
+            else
+                agent_service=""
+            fi
+        fi
+    fi
+
     FRONTEND_PORT="${FRONTEND_PORT_OVERRIDE:-$(get_port frontend 80)}"
     BACKEND_PORT="${BACKEND_PORT_OVERRIDE:-$(get_port backend 3001)}"
-    AGENT_PORT="${AGENT_PORT_OVERRIDE:-$(get_port agent 3002)}"
-    
-    # 如果动态获取失败，使用默认值
+
+    if [[ -n "$agent_service" ]]; then
+        AGENT_PORT="${AGENT_PORT_OVERRIDE:-$(get_port "$agent_service" 3002)}"
+    else
+        AGENT_PORT="${AGENT_PORT_OVERRIDE:-}"
+    fi
+
     [[ -z "$FRONTEND_PORT" ]] && FRONTEND_PORT="${FRONTEND_PORT_OVERRIDE:-3000}"
     [[ -z "$BACKEND_PORT" ]] && BACKEND_PORT="${BACKEND_PORT_OVERRIDE:-3001}"
     [[ -z "$AGENT_PORT" ]] && AGENT_PORT="${AGENT_PORT_OVERRIDE:-3002}"
-    
+
     if [[ "$VERBOSE" == "true" ]]; then
-        log_info "检测到端口配置: Frontend($FRONTEND_PORT), Backend($BACKEND_PORT), Agent($AGENT_PORT)"
+        log_info "检测到端口映射: Frontend($FRONTEND_PORT), Backend($BACKEND_PORT), Agent($AGENT_PORT)"
     fi
 }
+
 
 # 检查单个端口是否被占用 (用于脚本内部)
 check_port_occupied() {
