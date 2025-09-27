@@ -99,13 +99,13 @@ export const DashboardPage: React.FC = () => {
           {/* 延迟概览和地理分布 */}
           <div className="mobile-grid-auto gap-4 sm:gap-6 mb-6">
             {/* 延迟概览卡片 */}
-            <div className="h-80">
-              <LatencyOverviewCard className="h-full" />
+            <div>
+              <LatencyOverviewCard />
             </div>
 
             {/* 地理分布 */}
-            <div className="h-80">
-              <GeographicDistribution nodes={nodes} className="h-full" />
+            <div>
+              <GeographicDistribution nodes={nodes} />
             </div>
           </div>
 
