@@ -227,7 +227,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               </div>
               
               <div className="space-y-1">
-                {stats.bestNodes.slice(0, 3).map((node, index) => (
+                {stats.bestNodes.slice(0, 5).map((node, index) => (
                   <div key={node.nodeId} className="flex items-center justify-between text-sm">
                     <div className="flex items-center space-x-2">
                       <span className="w-4 h-4 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">
