@@ -7,14 +7,16 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNodes } from '@/hooks/useNodes';
+import { useRealTime } from '@/hooks/useRealTime';
 import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const { nodes, stats, loading, error } = useNodes();
+  const { nodes, stats, connected } = useRealTime();
   const { user } = useAuth();
+  const loading = false; // useRealTime doesn't have loading state
+  const error = null; // useRealTime handles errors internally
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
   }, []);
@@ -114,7 +116,7 @@ export const HomePage = () => {
                 </div>
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-gray-400" />
-                  <span className="font-medium text-gray-900 dark:text-white/90">未知 {stats?.unknownNodes || 0}</span>
+                  <span className="font-medium text-gray-900 dark:text-white/90">未知 {(stats?.totalNodes || 0) - (stats?.onlineNodes || 0) - (stats?.offlineNodes || 0)}</span>
                 </div>
               </div>
             </div>
