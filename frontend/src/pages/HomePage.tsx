@@ -13,7 +13,7 @@ import type { NodeData } from '@/services/api';
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const { nodes, stats, connected } = useRealTime();
+  const { nodes, stats } = useRealTime();
   const { user } = useAuth();
   const loading = false; // useRealTime doesn't have loading state
   const error = null; // useRealTime handles errors internally
@@ -55,9 +55,9 @@ export const HomePage = () => {
           <ErrorState
             type="server"
             title="数据加载失败"
-            message={error.includes('HTTP error') 
-              ? "无法连接到后端服务器，请确保服务器正在运行。" 
-              : error
+            message={error && error.includes('HTTP error')
+              ? "无法连接到后端服务器，请确保服务器正在运行。"
+              : error || "未知错误"
             }
             showRetry={true}
             showHome={true}
