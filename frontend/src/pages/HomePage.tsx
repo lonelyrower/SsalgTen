@@ -55,10 +55,7 @@ export const HomePage = () => {
           <ErrorState
             type="server"
             title="数据加载失败"
-            message={error && error.includes('HTTP error')
-              ? "无法连接到后端服务器，请确保服务器正在运行。"
-              : error || "未知错误"
-            }
+            message="无法连接到后端服务器，请确保服务器正在运行。"
             showRetry={true}
             showHome={true}
             onRetry={() => window.location.reload()}
