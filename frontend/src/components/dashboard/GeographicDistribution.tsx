@@ -64,8 +64,8 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col ${className}`}>
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
           <Globe className="h-5 w-5 mr-2 text-blue-600" />
           国家/地区分布
@@ -76,18 +76,18 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
       </div>
 
       {countryStats.length > 0 ? (
-        <>
+        <div className="flex-1 flex flex-col min-h-0">
           {/* 柱状图 */}
-          <div className="h-64 mb-4">
+          <div className="flex-1 mb-4 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={countryStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={countryStats} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis 
-                  dataKey="country" 
-                  fontSize={12}
+                <XAxis
+                  dataKey="country"
+                  fontSize={10}
                   tick={{ fill: 'currentColor' }}
                 />
-                <YAxis fontSize={12} tick={{ fill: 'currentColor' }} />
+                <YAxis fontSize={10} tick={{ fill: 'currentColor' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="online" stackId="a" fill="#22c55e" name="在线" />
                 <Bar dataKey="offline" stackId="a" fill="#ef4444" name="离线" />
@@ -95,28 +95,30 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
             </ResponsiveContainer>
           </div>
 
-          {/* 国家列表 */}
-          <div className="grid grid-cols-2 gap-3">
-            {countryStats.slice(0, 6).map((item, index) => (
-              <div key={item.country} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">#{index + 1}</span>
-                  <CountryFlagSvg country={item.country} />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {item.country}
-                  </span>
+          {/* 国家列表 - 使用滚动 */}
+          <div className="flex-shrink-0 max-h-20 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-2">
+              {countryStats.slice(0, 4).map((item, index) => (
+                <div key={item.country} className="flex items-center justify-between p-1.5 bg-gray-50 dark:bg-gray-700/50 rounded text-xs">
+                  <div className="flex items-center space-x-1 min-w-0">
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">#{index + 1}</span>
+                    <CountryFlagSvg country={item.country} size={12} />
+                    <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                      {item.country}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1 flex-shrink-0">
+                    <span className="text-xs text-green-600">{item.online}</span>
+                    <span className="text-xs text-gray-400">/</span>
+                    <span className="text-xs text-red-600">{item.offline}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-green-600">{item.online}</span>
-                  <span className="text-xs text-gray-400">/</span>
-                  <span className="text-xs text-red-600">{item.offline}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </>
+        </div>
       ) : (
-        <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">暂无地理分布数据</p>
