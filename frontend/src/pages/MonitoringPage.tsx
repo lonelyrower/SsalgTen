@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3 } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 
@@ -101,7 +101,6 @@ export const MonitoringPage: React.FC = () => {
   const totalNodes = nodes.length;
   const onlineNodes = nodes.filter(node => node.status.toLowerCase() === 'online').length;
   const offlineNodes = nodes.filter(node => node.status.toLowerCase() === 'offline').length;
-  const unknownNodes = totalNodes - onlineNodes - offlineNodes;
 
 
   // 计算国家/地区分布
