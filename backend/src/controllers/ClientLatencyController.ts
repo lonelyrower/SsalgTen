@@ -352,10 +352,10 @@ export class ClientLatencyController {
       { range: "200ms+", count: latencies.filter((l) => l >= 200).length },
     ];
 
-    // 最佳节点（延迟最低的前3个）
+    // 最佳节点（延迟最低的前6个）
     const bestNodes = successfulResults
       .sort((a, b) => a.latency! - b.latency!)
-      .slice(0, 3);
+      .slice(0, 6);
 
     return {
       average,
