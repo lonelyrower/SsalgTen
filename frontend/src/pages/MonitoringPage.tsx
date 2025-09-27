@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3 } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
-import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 
 // Remove the custom interface since useRealTime provides the data structure we need
 
@@ -101,6 +100,7 @@ export const MonitoringPage: React.FC = () => {
   const totalNodes = nodes.length;
   const onlineNodes = nodes.filter(node => node.status.toLowerCase() === 'online').length;
   const offlineNodes = nodes.filter(node => node.status.toLowerCase() === 'offline').length;
+  const unknownNodes = totalNodes - onlineNodes - offlineNodes;
 
 
   // 计算国家/地区分布
@@ -220,9 +220,35 @@ export const MonitoringPage: React.FC = () => {
 
         {/* 统计信息卡片 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8 max-w-none">
-          {/* 连通性概览 */}
-          <div className="h-80">
-            <LatencyOverviewCard className="h-full" />
+          {/* 节点状态分布 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-80">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <PieChart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  节点状态分布
+                </h3>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-2 rounded bg-green-50 dark:bg-green-900/20">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">在线</div>
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">{onlineNodes}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((onlineNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
+              </div>
+              <div className="p-2 rounded bg-red-50 dark:bg-red-900/20">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">离线</div>
+                <div className="text-lg font-bold text-red-600 dark:text-red-400">{offlineNodes}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((offlineNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
+              </div>
+              <div className="p-2 rounded bg-yellow-50 dark:bg-yellow-900/20">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">未知</div>
+                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">{unknownNodes}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((unknownNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
+              </div>
+            </div>
           </div>
 
           {/* 地理分布 */}
