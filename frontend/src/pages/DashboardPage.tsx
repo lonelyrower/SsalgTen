@@ -97,15 +97,15 @@ export const DashboardPage: React.FC = () => {
           />
 
           {/* 延迟概览和地理分布 */}
-          <div className="mobile-grid-auto gap-4 sm:gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 items-stretch">
             {/* 延迟概览卡片 */}
-            <div>
-              <LatencyOverviewCard />
+            <div className="h-full">
+              <LatencyOverviewCard className="h-full flex flex-col" />
             </div>
 
             {/* 地理分布 */}
-            <div>
-              <GeographicDistribution nodes={nodes} />
+            <div className="h-full">
+              <GeographicDistribution nodes={nodes} className="h-full flex flex-col" />
             </div>
           </div>
 
