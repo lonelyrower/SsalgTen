@@ -253,18 +253,13 @@ export const MonitoringPage: React.FC = () => {
 
           {/* 地理分布 */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-80">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                  国家/地区分布
-                </h3>
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                覆盖 {Object.keys(countryStats).length} 个国家/地区
-              </div>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                国家/地区分布
+              </h3>
             </div>
             <div className="space-y-3">
               {topCountries.slice(0, 4).map(([country, count]) => (
