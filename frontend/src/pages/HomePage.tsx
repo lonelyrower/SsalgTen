@@ -15,8 +15,8 @@ export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const { nodes, stats } = useRealTime();
   const { user } = useAuth();
-  const loading = false; // useRealTime doesn't have loading state
-  const error = null; // useRealTime handles errors internally
+  const loading = nodes.length === 0;
+  const error: string | null = null;
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
   }, []);
