@@ -34,7 +34,7 @@ const StatsCardsComponent = ({
     {
       title: '全球覆盖',
       value: totalCountries.toString(),
-      subtitle: '国际化网络',
+      subtitle: '全球节点分布',
       icon: <Globe className="h-6 w-6 text-emerald-400" />,
       badge: '国际化',
       badgeVariant: 'secondary' as const,
