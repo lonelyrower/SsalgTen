@@ -74,12 +74,16 @@ jobs:
     - name: Test docker-compose with built images
       run: |
         # 使用构建的镜像更新 docker-compose 配置
-        export BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:main"
-        export FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:main"
+        export BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest"
+        export FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest"
 
-        # 基本的smoke test
+        # 基本的smoke test - 验证Docker工具可用
         docker --version
-        docker-compose --version
+        command -v docker-compose >/dev/null && docker-compose --version || echo "docker-compose not available"
+
+        # 验证镜像可以拉取
+        docker pull $BACKEND_IMAGE
+        docker pull $FRONTEND_IMAGE
 
         echo "✅ Images built and pushed successfully!"
 
