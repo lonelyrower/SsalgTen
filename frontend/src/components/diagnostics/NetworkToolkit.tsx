@@ -65,9 +65,9 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     };
 
     fetchVisitorInfo();
-  }, [getBestTestTarget, pingCount, preferIPv6, selectedNode.id, selectedNode.ipv4, selectedNode.ipv6, tools, trMaxHops, useProxy]);
+  }, []);
 
-  const tools = [
+  const tools = useMemo(() => [
     {
       id: 'ping',
       name: 'Ping 测试',
@@ -108,7 +108,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
       color: 'cyan',
       category: '延迟分析'
     }
-  ];
+  ], []);
 
   // 调用真实诊断工具
   const runDiagnostic = useCallback(async (toolId: string) => {

@@ -45,7 +45,7 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
       const okInstall = installRes.status === 'fulfilled' && installRes.value.success && installRes.value.data;
       const okCfg = cfgRes.status === 'fulfilled' && cfgRes.value.success && Array.isArray(cfgRes.value.data);
 
-      const masterUrl = (okInstall ? (installRes as any).value.data.masterUrl : window.location.origin) as string;
+      const masterUrl = (okInstall ? (installRes as { value: { data: { masterUrl: string } } }).value.data.masterUrl : window.location.origin) as string;
       // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
       const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
       const base = {
@@ -108,7 +108,7 @@ sudo systemctl reset-failed`,
 
       let sshEnabled = false, sshWindow = 10, sshThreshold = 10;
       if (okCfg) {
-        const cfgs = (cfgRes as any).value.data as any[];
+        const cfgs = (cfgRes as { value: { data: Array<{key: string, value: unknown}> } }).value.data;
         const getVal = (k: string) => cfgs.find(c => c.key === k)?.value;
         sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
         sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
@@ -117,7 +117,7 @@ sudo systemctl reset-failed`,
       const tpl = sshEnabled ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n` : '';
 
       if (okInstall) {
-        const data = (installRes as any).value.data as InstallCommandData;
+        const data = (installRes as { value: { data: InstallCommandData } }).value.data;
         setInstallData({
           ...data,
           quickCommand: data.quickCommand + tpl,

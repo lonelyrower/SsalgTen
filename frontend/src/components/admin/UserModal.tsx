@@ -163,7 +163,10 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
       if (isEditing && user) {
         response = await apiService.updateUser(user.id, userData);
       } else {
-        response = await apiService.createUser(userData as any);
+        response = await apiService.createUser({
+          ...userData,
+          password: formData.password || ''
+        });
       }
 
       if (response.success) {
@@ -182,7 +185,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
           submit: response.error || `${isEditing ? '更新' : '创建'}用户失败`,
         });
       }
-    } catch (error) {
+    } catch {
       setErrors({
         submit: `${isEditing ? '更新' : '创建'}用户失败`,
       });
