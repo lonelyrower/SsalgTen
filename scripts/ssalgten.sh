@@ -76,44 +76,9 @@ handle_curl_bash_install() {
         perform_installation
         return $?
     else
-        # 在 curl|bash 模式下，提供交互式安装选择
-        log_info "检测到 curl|bash 运行，启动交互式安装向导"
-        echo
-        echo -e "${YELLOW}🚀 欢迎使用SsalgTen终极版安装向导！${NC}"
-        echo
-        echo "选择安装方式："
-        echo -e "${GREEN}1) 镜像模式安装 (推荐)${NC} - 快速部署，2-4分钟"
-        echo -e "${CYAN}2) 源码模式安装${NC} - 可定制，8-12分钟"
-        echo "3) 退出"
-        echo
-
-        while true; do
-            read -p "请选择 (1-3): " choice
-            case $choice in
-                1)
-                    log_info "开始镜像模式安装..."
-                    INSTALL_MODE="image"
-                    perform_installation
-                    return $?
-                    ;;
-                2)
-                    log_info "开始源码模式安装..."
-                    INSTALL_MODE="source"
-                    perform_installation
-                    return $?
-                    ;;
-                3)
-                    log_info "安装已取消"
-                    echo "如需手动安装，请使用："
-                    echo "  镜像模式: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- install --image"
-                    echo "  源码模式: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- install --source"
-                    exit 0
-                    ;;
-                *)
-                    log_error "无效选择，请输入 1-3"
-                    ;;
-            esac
-        done
+        # 在 curl|bash 模式下，默认以临时模式继续运行；如需安装，请追加 --install
+        log_info "检测到 curl|bash 运行，默认以临时模式继续 (如需安装请使用 --install)"
+        return 1
     fi
 }
 
@@ -478,6 +443,80 @@ show_current_mode() {
             ;;
     esac
     echo
+}
+
+# =============================================================================
+# 🔧 原版兼容功能
+# =============================================================================
+
+# 从终端读取输入（兼容管道输入）
+read_from_tty() {
+    local prompt="$1"
+    local default="${2:-}"
+    local response=""
+
+    # 非交互模式或强制模式，使用默认值
+    if [[ "$NON_INTERACTIVE" == "true" ]] || [[ "${FORCE_MODE:-false}" == "true" ]]; then
+        echo "$default"
+        return 0
+    fi
+
+    # 检测交互模式
+    if [[ "$IN_CURL_BASH" == "true" ]]; then
+        # curl|bash 模式下，从 /dev/tty 读取
+        if [[ -r /dev/tty ]]; then
+            printf "%s" "$prompt" >/dev/tty
+            read -r response </dev/tty
+        else
+            echo "$default"
+            return 0
+        fi
+    else
+        # 常规模式
+        printf "%s" "$prompt"
+        read -r response
+    fi
+
+    # 使用默认值
+    if [[ -z "$response" ]]; then
+        echo "$default"
+    else
+        echo "$response"
+    fi
+}
+
+# 获取系统状态（用于菜单显示）
+get_system_status() {
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "docker-unavailable"
+        return 1
+    fi
+
+    cd "$APP_DIR" 2>/dev/null || { echo "dir-not-found"; return 1; }
+
+    local running_services=0
+    local total_services=0
+
+    # 检查服务状态
+    if [[ -f "$COMPOSE_FILE" ]]; then
+        # 获取所有定义的服务
+        total_services=$(docker_compose config --services 2>/dev/null | wc -l)
+
+        # 检查运行中的服务
+        if docker_compose ps --services --filter "status=running" >/dev/null 2>&1; then
+            running_services=$(docker_compose ps --services --filter "status=running" 2>/dev/null | wc -l)
+        fi
+    fi
+
+    if [[ $total_services -eq 0 ]]; then
+        echo "not-configured"
+    elif [[ $running_services -eq $total_services ]]; then
+        echo "running"
+    elif [[ $running_services -gt 0 ]]; then
+        echo "partial"
+    else
+        echo "stopped"
+    fi
 }
 
 # =============================================================================
@@ -1003,24 +1042,129 @@ handle_smart_default() {
     esac
 }
 
-# 显示交互式菜单 (原有功能保持)
+# 显示交互式菜单 (集成原版+终极版功能)
 show_interactive_menu() {
-    # 这里是原有的交互式菜单实现
-    # [原有代码保持不变，但增强显示当前模式信息]
+    local status
+    status=$(get_system_status)
+    local status_color
     local current_mode=$(detect_deployment_mode)
 
-    echo
-    log_header "SsalgTen 管理控制台 v${SCRIPT_VERSION} (模式: $current_mode)"
+    case "$status" in
+        "running") status_color="${GREEN}● 运行中${NC}" ;;
+        "partial") status_color="${YELLOW}◐ 部分运行${NC}" ;;
+        "stopped") status_color="${RED}○ 已停止${NC}" ;;
+        *) status_color="${RED}✗ $status${NC}" ;;
+    esac
+
+    # 避免在上一轮操作后立刻清屏导致结果信息被"秒清"
+    if [[ "${SKIP_CLEAR_ONCE:-false}" != "true" ]]; then
+        clear
+    else
+        SKIP_CLEAR_ONCE=false
+    fi
+
+    # 若存在上一次操作结果，优先展示
+    if [[ -n "$LAST_RESULT_MSG" ]]; then
+        echo -e "${YELLOW}上次操作结果:${NC} $LAST_RESULT_MSG"
+        echo
+        LAST_RESULT_MSG=""
+    fi
+    echo -e "${PURPLE}"
+    cat << 'EOF'
+   _____ _____ ____  _      _____ _______ ______ _   _
+  / ___// __  / __ \| |    / ____|__   __|  ____| \ | |
+  \`--. \`' / /' / \ | |   | |  __   | |  | |__  |  \| |
+   `--. \ / /  | |  | |   | | |_ |  | |  |  __| | . ` |
+  /\__/ ./ /___| |__| |___| |__| |  | |  | |____| |\  |
+  \____/ \_____/____/\_____\_____|  |_|  |______|_| \_|
+
+EOF
+    echo -e "${NC}        ${CYAN}SsalgTen 终极版管理控制台 v${SCRIPT_VERSION}${NC}"
+    echo -e "${CYAN}================================================================${NC}"
+    echo -e "${CYAN}系统状态:${NC} $status_color"
+    echo -e "${CYAN}部署模式:${NC} ${YELLOW}$current_mode${NC}"
+    echo -e "${CYAN}应用目录:${NC} $APP_DIR"
+    echo ""
     echo -e "${YELLOW}📋 主要操作:${NC}"
-    echo "  1) 启动服务    2) 停止服务    3) 重启服务    4) 查看状态"
-    echo "  5) 智能更新    6) 数据备份    7) 系统监控    8) 查看日志"
+    echo -e "  ${GREEN}1.${NC} 🚀 启动系统        ${GREEN}2.${NC} 🛑 停止系统"
+    echo -e "  ${BLUE}3.${NC} 🔄 重启系统        ${PURPLE}4.${NC} ⚡ 智能更新"
+    echo ""
+    echo -e "${YELLOW}📊 监控管理:${NC}"
+    echo -e "  ${CYAN}5.${NC} 📊 系统状态        ${CYAN}6.${NC} 📋 查看日志"
+    echo -e "  ${CYAN}7.${NC} 🔍 容器信息        ${CYAN}8.${NC} 🔍 端口检查"
+    echo ""
+    echo -e "${YELLOW}🔄 模式管理 (终极版新功能):${NC}"
+    if [[ "$current_mode" == "image" ]]; then
+        echo -e "  ${GREEN}9.${NC} 🐳 更新镜像         ${BLUE}10.${NC} 🔧 切换到源码模式"
+    else
+        echo -e "  ${GREEN}9.${NC} 🔧 更新源码         ${BLUE}10.${NC} 🐳 切换到镜像模式"
+    fi
+    echo ""
+    echo -e "${YELLOW}🛠️  维护工具:${NC}"
+    echo -e "  ${YELLOW}11.${NC} 🗂️  数据备份       ${YELLOW}12.${NC} 🧹 系统清理"
+    echo -e "  ${YELLOW}13.${NC} 📊 诊断报告       ${YELLOW}14.${NC} 🔄 脚本更新"
+    echo ""
+    echo -e "  ${GREEN}0.${NC} 🚪 退出程序"
+    echo ""
+    echo -e "${CYAN}================================================================${NC}"
+
+    # 显示当天小贴士 (基于日期随机)
+    local tip_of_day
+    local day_num=$(($(date +%j) % 8))  # 扩展到8个提示
+    case $day_num in
+        0) tip_of_day="💡 小贴士: 镜像模式更新只需1-2分钟，源码模式需要5-8分钟" ;;
+        1) tip_of_day="💡 小贴士: 使用 'logs backend -f' 可以实时跟踪后端日志" ;;
+        2) tip_of_day="💡 小贴士: 'clean --basic' 是日常维护的安全清理选择" ;;
+        3) tip_of_day="💡 小贴士: 可以随时在镜像模式和源码模式间切换" ;;
+        4) tip_of_day="💡 小贴士: 定期运行 'backup' 来保护您的重要数据" ;;
+        5) tip_of_day="💡 小贴士: 'port-check' 可以诊断端口冲突问题" ;;
+        6) tip_of_day="💡 小贴士: 使用 '--verbose' 选项可以看到更详细的操作信息" ;;
+        7) tip_of_day="💡 小贴士: 终极版支持 install 命令进行全系统安装" ;;
+    esac
+    echo -e "${BLUE}$tip_of_day${NC}"
     echo
-    echo -e "${YELLOW}🔄 模式管理:${NC}"
-    echo "  9) 切换到镜像模式    10) 切换到源码模式    11) 查看当前模式"
-    echo
-    echo "  0) 退出"
-    echo
-    # [继续原有的菜单处理逻辑]
+
+    local choice
+    choice=$(read_from_tty "请选择操作 [0-14]: " "0")
+
+    case "$choice" in
+        1) smart_start ;;
+        2) smart_stop ;;
+        3) smart_stop && smart_start ;;
+        4) smart_update ;;
+        5) smart_status ;;
+        6) view_logs ;;
+        7) docker_compose ps ;;
+        8) port_check ;;
+        9)
+            if [[ "$current_mode" == "image" ]]; then
+                smart_update "image"
+            else
+                smart_update "source"
+            fi
+            ;;
+        10)
+            if [[ "$current_mode" == "image" ]]; then
+                switch_to_source_mode
+            else
+                switch_to_image_mode
+            fi
+            ;;
+        11) backup_data ;;
+        12) clean_system ;;
+        13) generate_diagnostic_report ;;
+        14) self_update ;;
+        0) log_success "感谢使用 SsalgTen 终极版管理工具!"; exit 0 ;;
+        *) log_error "无效选择: $choice"; sleep 1 ;;
+    esac
+
+    if [[ "$choice" != "0" ]]; then
+        echo
+        # 在 curl|bash 环境下也尽量停留，避免信息被清掉
+        read_from_tty "按回车键继续..." ""
+        # 下一次进入菜单时跳过 clear，一次性保留上一轮输出
+        SKIP_CLEAR_ONCE=true
+    fi
 }
 
 # 主函数
@@ -1107,9 +1251,32 @@ main() {
                 ;;
         esac
     else
-        # 智能默认行为
-        local env_status=$(detect_environment_status)
-        handle_smart_default "$env_status"
+        # 交互式菜单逻辑（从原版恢复）
+        if [[ "$IN_CURL_BASH" == "true" ]]; then
+            # 在curl|bash下优先尝试使用 /dev/tty 交互
+            if [[ -r /dev/tty ]]; then
+                while true; do
+                    show_interactive_menu
+                done
+            else
+                # 无法交互时给出明确指引
+                log_error "当前环境不支持交互输入。请使用以下任一方式："
+                echo "  1) 临时保存后运行: curl -fsSL .../ssalgten.sh -o /tmp/ss && bash /tmp/ss"
+                echo "  2) 指定子命令运行: curl -fsSL .../ssalgten.sh | bash -s -- status"
+                echo "  3) 安装后运行: curl -fsSL .../ssalgten.sh | bash -s -- install --image && ssalgten"
+                exit 1
+            fi
+        else
+            # 常规环境：仅在交互模式下显示菜单
+            if [[ "$NON_INTERACTIVE" == "true" ]]; then
+                log_error "非交互模式下需要指定子命令"
+                show_enhanced_help
+                exit 1
+            fi
+            while true; do
+                show_interactive_menu
+            done
+        fi
     fi
 }
 
