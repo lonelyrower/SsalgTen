@@ -51,18 +51,7 @@ handle_curl_bash_install() {
         log_info "检测到命令参数，继续执行..."
         return 1  # 让主流程继续处理命令
     else
-        # 在 curl|bash 模式下无命令时，显示提示信息并进入交互模式
-        log_info "检测到 curl|bash 运行，进入临时交互模式"
-        echo ""
-        echo "💡 可用操作模式："
-        echo "  📦 安装到系统: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- --install"
-        echo "  🚀 直接部署: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- deploy"
-        echo "  📊 查看状态: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- status"
-        echo "  🔧 修复节点: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- fix-agent-names"
-        echo ""
-        echo "⬇️ 正在启动交互式管理界面..."
-        echo ""
-        sleep 2  # 短暂等待让用户看到提示
+        # 在 curl|bash 模式下无命令时，直接进入交互模式
         return 1  # 继续进入交互模式
     fi
 }
