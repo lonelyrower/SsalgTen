@@ -130,7 +130,7 @@ run_as_root() {
 prompt_input() {
     local prompt="$1"
     local default="$2"
-    local var_name="$3"
+    local var_name="${3:-}"
     local response
     
     if [[ -n "$default" ]]; then
@@ -142,6 +142,8 @@ prompt_input() {
     
     if [[ -n "$var_name" ]]; then
         eval "$var_name=\"$response\""
+    else
+        echo "$response"
     fi
     echo "$response"
 }
@@ -2929,19 +2931,19 @@ EOF
     echo -e "${CYAN}应用目录:${NC} $APP_DIR"
     echo ""
     echo -e "${YELLOW}🏗️ 系统管理:${NC}"
-    echo -e "  ${PURPLE}1.${NC} � 一键部署        ${PURPLE}2.${NC} ⚡ 系统更新"
+    echo -e "  ${PURPLE}1.${NC} 🚀 一键部署        ${PURPLE}2.${NC} ⚡ 系统更新"
     echo -e "  ${PURPLE}3.${NC} 🔄 脚本更新        ${RED}4.${NC} 🗑️ 卸载系统"
     echo ""
-    echo -e "${YELLOW}� 日常操作:${NC}"
-    echo -e "  ${GREEN}5.${NC} � 启动系统        ${GREEN}6.${NC} � 停止系统"
-    echo -e "  ${BLUE}7.${NC} � 重启系统        ${CYAN}8.${NC} � 系统状态"
+    echo -e "${YELLOW}📋 日常操作:${NC}"
+    echo -e "  ${GREEN}5.${NC} ▶️ 启动系统        ${GREEN}6.${NC} ⏹️ 停止系统"
+    echo -e "  ${BLUE}7.${NC} 🔄 重启系统        ${CYAN}8.${NC} 📊 系统状态"
     echo ""
-    echo -e "${YELLOW}� 监控诊断:${NC}"  
-    echo -e "  ${CYAN}9.${NC} � 查看日志        ${CYAN}10.${NC} 🔍 容器信息"
+    echo -e "${YELLOW}🔍 监控诊断:${NC}"  
+    echo -e "  ${CYAN}9.${NC} 📝 查看日志        ${CYAN}10.${NC} 🔍 容器信息"
     echo -e "  ${CYAN}11.${NC} 🔍 端口检查       ${CYAN}12.${NC} 📊 诊断报告"
     echo ""
     echo -e "${YELLOW}🛠️ 维护工具:${NC}"
-    echo -e "  ${YELLOW}13.${NC} �️ 数据备份       ${YELLOW}14.${NC} 🧹 系统清理"
+    echo -e "  ${YELLOW}13.${NC} 💾 数据备份       ${YELLOW}14.${NC} 🧹 系统清理"
     echo ""
     echo -e "  ${GREEN}0.${NC} 🚪 退出程序"
     echo ""
