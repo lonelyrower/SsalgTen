@@ -2206,6 +2206,10 @@ download_project_files() {
         "docker-compose.production.yml"
         "docker-compose.https.yml"
         ".env.example"
+        "Dockerfile.frontend"
+        "Dockerfile.backend"
+        "Dockerfile.agent"
+        "Dockerfile.updater"
     )
     
     for file in "${files[@]}"; do
@@ -2227,6 +2231,24 @@ download_project_files() {
         log_info "下载 $file..."
         curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file" || true
     done
+    
+    # 下载docker目录的必要文件
+    mkdir -p docker
+    local docker_files=(
+        "docker/custom-entrypoint.sh"
+        "docker/generate-config.sh"
+        "docker/healthcheck.sh"
+        "docker/inject-env.sh"
+        "docker/nginx.conf"
+    )
+    
+    for file in "${docker_files[@]}"; do
+        log_info "下载 $file..."
+        curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file" || true
+    done
+    
+    # 设置执行权限
+    chmod +x docker/*.sh 2>/dev/null || true
     
     log_success "项目文件下载完成"
 }
@@ -2931,15 +2953,15 @@ EOF
     echo -e "${CYAN}应用目录:${NC} $APP_DIR"
     echo ""
     echo -e "${YELLOW}🏗️ 系统管理:${NC}"
-    echo -e "  ${PURPLE}1.${NC} 🚀 一键部署        ${PURPLE}2.${NC} ⚡ 系统更新"
-    echo -e "  ${PURPLE}3.${NC} 🔄 脚本更新        ${RED}4.${NC} 🗑️ 卸载系统"
+    echo -e "  ${PURPLE}1.${NC}  🚀 一键部署        ${PURPLE}2.${NC}  ⚡ 系统更新"
+    echo -e "  ${PURPLE}3.${NC}  🔄 脚本更新        ${RED}4.${NC}  🗑️ 卸载系统"
     echo ""
     echo -e "${YELLOW}📋 日常操作:${NC}"
-    echo -e "  ${GREEN}5.${NC} ▶️ 启动系统        ${GREEN}6.${NC} ⏹️ 停止系统"
-    echo -e "  ${BLUE}7.${NC} 🔄 重启系统        ${CYAN}8.${NC} 📊 系统状态"
+    echo -e "  ${GREEN}5.${NC}  ▶️  启动系统        ${GREEN}6.${NC}  ⏹️  停止系统"
+    echo -e "  ${BLUE}7.${NC}  🔄 重启系统        ${CYAN}8.${NC}  📊 系统状态"
     echo ""
     echo -e "${YELLOW}🔍 监控诊断:${NC}"  
-    echo -e "  ${CYAN}9.${NC} 📝 查看日志        ${CYAN}10.${NC} 🔍 容器信息"
+    echo -e "  ${CYAN}9.${NC}  📝 查看日志        ${CYAN}10.${NC} 🔍 容器信息"
     echo -e "  ${CYAN}11.${NC} 🔍 端口检查       ${CYAN}12.${NC} 📊 诊断报告"
     echo ""
     echo -e "${YELLOW}🛠️ 维护工具:${NC}"
