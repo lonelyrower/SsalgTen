@@ -1,5 +1,121 @@
 #!/usr/bin/env bash
 
+# 严格模式与基础环境
+set -euo pipefail
+IFS=$'\n\t'
+
+# 脚本基本信息
+SCRIPT_VERSION="2.0.0"
+SCRIPT_NAME="SsalgTen Manager"
+
+# 全局变量
+APP_DIR=""
+COMPOSE_FILE=""
+FORCE_MODE=false
+NON_INTERACTIVE=false
+VERBOSE=false
+LAST_RESULT_MSG=""
+
+# 镜像默认值
+DEFAULT_IMAGE_REGISTRY="ghcr.io"
+DEFAULT_IMAGE_NAMESPACE=""
+DEFAULT_IMAGE_TAG="latest"
+
+# 颜色（可通过 LOG_NO_COLOR=true 关闭）
+if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
+    RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
+else
+    RED=$'\033[0;31m'
+    GREEN=$'\033[0;32m'
+    YELLOW=$'\033[1;33m'
+    BLUE=$'\033[0;34m'
+    CYAN=$'\033[0;36m'
+    PURPLE=$'\033[0;35m'
+    NC=$'\033[0m'
+fi
+
+# 日志输出
+log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
+log_warning() { echo -e "${YELLOW}[WARNING]${NC} $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
+log_header() { echo -e "${CYAN}$*${NC}"; }
+
+# 非交互环境（如 curl|bash）下的保护：未指定命令则直接提示退出
+if [[ ! -t 0 ]] && [[ ! -r /dev/tty ]]; then
+    NON_INTERACTIVE=true
+    if [[ $# -eq 0 ]]; then
+        echo "[INFO] 检测到非交互环境。请追加命令使用，例如：" >&2
+        echo "       curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- --install" >&2
+        echo "       curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- status" >&2
+        exit 1
+    fi
+fi
+
+# 镜像命名空间自动推断（git remote > 环境变量 > 默认）
+detect_default_image_namespace() {
+    local git_url
+    git_url=$(git remote get-url origin 2>/dev/null || true)
+    if [[ -n "$git_url" ]]; then
+        local parsed
+        parsed=$(echo "$git_url" | sed -E 's#(git@|https://|http://)?github.com[:/]+##; s#\\.git$##')
+        if [[ "$parsed" == */* ]]; then
+            echo "$parsed"
+            return
+        fi
+    fi
+    echo "${DEFAULT_IMAGE_NAMESPACE:-lonelyrower/ssalgten}"
+}
+
+# 交互输入辅助（在 curl|bash 时避免无限菜单重绘）
+read_from_tty() {
+    local prompt="$1"; local default_value="${2:-}"; local __outvar="${3:-}"
+    local answer=""
+    if [[ -r /dev/tty ]]; then
+        printf "%s" "$prompt" > /dev/tty
+        IFS= read -r answer < /dev/tty || answer=""
+    else
+        # 非交互环境：直接用默认值并标记
+        answer="$default_value"
+        NON_INTERACTIVE=true
+    fi
+    if [[ -n "$__outvar" ]]; then
+        printf -v "$__outvar" "%s" "${answer:-$default_value}"
+    else
+        echo "${answer:-$default_value}"
+    fi
+}
+
+prompt_yes_no() {
+    local prompt="$1"; local default_ans="${2:-Y}"; local ans
+    local hint="[Y/N] (回车默认 ${default_ans^^})"
+    ans=$(read_from_tty "$prompt $hint: " "${default_ans}")
+    if [[ "$ans" =~ ^[Yy]$ ]]; then echo "y"; else echo "n"; fi
+}
+
+prompt_input() {
+    local prompt="$1"; local default_value="${2:-}"; local out
+    out=$(read_from_tty "${prompt}${default_value:+ [默认: $default_value]}: " "$default_value")
+    echo "$out"
+}
+
+prompt_port() {
+    local prompt="$1"; local default_port="${2:-80}"; local port
+    while true; do
+        port=$(read_from_tty "${prompt} [默认: ${default_port}]: " "$default_port")
+        if [[ "$port" =~ ^[0-9]+$ ]] && [[ "$port" -ge 1 ]] && [[ "$port" -le 65535 ]]; then
+            echo "$port"; return 0
+        fi
+        [[ "$NON_INTERACTIVE" == "true" ]] && echo "$default_port" && return 0
+        log_warning "无效端口: $port"
+    done
+}
+
+confirm() {
+    local prompt="$1"; local default_ans="${2:-Y}"; local r
+    r=$(prompt_yes_no "$prompt" "$default_ans")
+    [[ "$r" == "y" ]]
+}
 
 # 统一部署：默认镜像模式，可用 --source 切换源码模式
 random_string() {
