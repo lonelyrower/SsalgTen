@@ -145,7 +145,25 @@ prompt_input() {
     else
         echo "$response"
     fi
-    echo "$response"
+}
+
+# 端口输入函数 - 带验证
+prompt_port() {
+    local prompt="$1"
+    local default="$2"
+    local port
+    
+    while true; do
+        read -p "$prompt [默认: $default]: " port
+        port="${port:-$default}"
+        
+        if [[ "$port" =~ ^[0-9]+$ ]] && [[ "$port" -ge 1 ]] && [[ "$port" -le 65535 ]]; then
+            echo "$port"
+            break
+        else
+            echo "错误: 请输入有效的端口号 (1-65535)"
+        fi
+    done
 }
 
 # Yes/No 提示函数
@@ -2254,6 +2272,17 @@ collect_deployment_info() {
         fi
     fi
     
+    # 端口配置
+    echo ""
+    log_info "端口配置 (回车使用默认值):"
+    
+    HTTP_PORT=$(prompt_port "HTTP端口" "80")
+    HTTPS_PORT=$(prompt_port "HTTPS端口" "443")
+    FRONTEND_PORT=$(prompt_port "前端服务端口" "3000")
+    BACKEND_PORT=$(prompt_port "后端API端口" "3001")
+    DB_PORT=$(prompt_port "数据库端口" "5432")
+    REDIS_PORT=$(prompt_port "Redis端口" "6379")
+    
     # 生成安全密钥
     echo ""
     log_info "生成安全配置..."
@@ -2262,6 +2291,11 @@ collect_deployment_info() {
     JWT_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
     API_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
     AGENT_KEY=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+    
+    # 可选服务配置
+    echo ""
+    log_info "可选服务配置 (可直接回车跳过):"
+    IPINFO_TOKEN=$(prompt_input "IPInfo Token (可选，提升ASN查询精度)" "")
     
     log_success "配置收集完成"
 }
@@ -2429,16 +2463,48 @@ configure_environment() {
 # 基础配置
 NODE_ENV=production
 DOMAIN=$DOMAIN
-PORT=3000
-API_PORT=5000
+
+# 端口配置
+HTTP_PORT=$HTTP_PORT
+HTTPS_PORT=$HTTPS_PORT
+FRONTEND_PORT=$FRONTEND_PORT
+BACKEND_PORT=$BACKEND_PORT
+DB_PORT=$DB_PORT
+REDIS_PORT=$REDIS_PORT
 
 # 数据库配置
+POSTGRES_USER=ssalgten
+POSTGRES_PASSWORD=$DB_PASSWORD
+POSTGRES_DB=ssalgten
 DB_PASSWORD=$DB_PASSWORD
-DATABASE_URL=postgresql://postgres:$DB_PASSWORD@db:5432/ssalgten
+DATABASE_URL=postgresql://ssalgten:$DB_PASSWORD@postgres:5432/ssalgten?schema=public
 
 # 安全配置
 JWT_SECRET=$JWT_SECRET
-API_SECRET=$API_SECRET
+JWT_EXPIRES_IN=7d
+API_KEY_SECRET=$API_SECRET
+AGENT_KEY=$AGENT_KEY
+
+# 前端配置
+VITE_API_URL=/api
+VITE_APP_NAME=SsalgTen Network Monitor
+VITE_APP_VERSION=1.0.0
+VITE_ENABLE_DEBUG=false
+
+# CORS配置
+CORS_ORIGIN=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN,http://localhost:3000,http://localhost:3001"; else echo "http://$DOMAIN,http://localhost:3000,http://localhost:3001"; fi)
+FRONTEND_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
+
+# 日志配置
+LOG_LEVEL=info
+ENABLE_MORGAN=true
+
+# IP信息服务
+IPINFO_TOKEN=${IPINFO_TOKEN:-}
+
+# 代理配置
+DEFAULT_AGENT_API_KEY=$AGENT_KEY
+AGENT_HEARTBEAT_INTERVAL=30000
 AGENT_KEY=$AGENT_KEY
 
 # SSL配置
@@ -2482,7 +2548,7 @@ create_nginx_config() {
     run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
 # SsalgTen Nginx 配置
 server {
-    listen $HTTP_PORT;
+    listen ${HTTP_PORT:-80};
     server_name $DOMAIN www.$DOMAIN;
 
     # 基础安全头
@@ -2503,7 +2569,7 @@ server {
 
     # 前端代理
     location / {
-        proxy_pass http://localhost:$FRONTEND_PORT;
+        proxy_pass http://localhost:${FRONTEND_PORT:-3000};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -2512,7 +2578,7 @@ server {
 
     # API代理
     location /api {
-        proxy_pass http://localhost:$BACKEND_PORT;
+        proxy_pass http://localhost:${BACKEND_PORT:-3001};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
