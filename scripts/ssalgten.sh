@@ -2045,6 +2045,146 @@ install_docker_compose() {
     log_success "Docker Compose 安装完成"
 }
 
+# 清理Docker源（仅适用于APT系统）
+cleanup_docker_sources() {
+    # 只在APT系统上清理Docker源
+    if ! command -v apt >/dev/null 2>&1; then
+        log_info "非APT系统，跳过Docker源清理"
+        return 0
+    fi
+    
+    log_info "彻底清理Docker源残留配置..."
+    
+    # 停止可能运行的apt进程
+    run_as_root pkill -f apt || true
+    sleep 3
+    
+    # 删除所有Docker相关源文件
+    run_as_root rm -f /etc/apt/sources.list.d/docker*.list
+    run_as_root rm -f /etc/apt/sources.list.d/*docker*.list
+    run_as_root rm -f /usr/share/keyrings/docker*.gpg
+    run_as_root rm -f /usr/share/keyrings/*docker*.gpg
+    
+    # 从主源文件中删除docker.com条目
+    if run_as_root grep -q "docker\.com" /etc/apt/sources.list 2>/dev/null; then
+        run_as_root cp /etc/apt/sources.list /etc/apt/sources.list.backup
+        run_as_root sed -i '/docker\.com/d' /etc/apt/sources.list
+    fi
+    
+    # 清理包管理器缓存
+    run_as_root apt clean
+    run_as_root apt autoclean
+    run_as_root rm -rf /var/lib/apt/lists/*
+    
+    log_success "Docker源清理完成"
+}
+
+# 安装系统依赖
+install_system_dependencies() {
+    log_info "安装系统依赖..."
+    
+    # 检测包管理器
+    if command -v apt >/dev/null 2>&1; then
+        log_info "检测到APT包管理器 (Debian/Ubuntu)"
+        
+        # 先彻底清理Docker源
+        cleanup_docker_sources
+        
+        # 更新系统
+        run_as_root apt update
+        run_as_root apt upgrade -y
+        
+        # 安装基础工具
+        run_as_root apt install -y curl wget git vim ufw htop unzip jq
+        
+        # 配置防火墙
+        run_as_root ufw --force reset
+        run_as_root ufw allow ssh
+        run_as_root ufw allow ${HTTP_PORT:-80}
+        run_as_root ufw allow ${HTTPS_PORT:-443}
+        run_as_root ufw --force enable
+        
+    elif command -v yum >/dev/null 2>&1; then
+        log_info "检测到YUM包管理器 (CentOS/RHEL 7)"
+        
+        # 更新系统
+        run_as_root yum update -y
+        
+        # 安装EPEL源
+        run_as_root yum install -y epel-release
+        
+        # 安装基础工具
+        run_as_root yum install -y curl wget git vim htop unzip jq firewalld
+        
+        # 配置防火墙
+        run_as_root systemctl enable firewalld
+        run_as_root systemctl start firewalld
+        run_as_root firewall-cmd --add-service=ssh --permanent
+        run_as_root firewall-cmd --add-port=${HTTP_PORT:-80}/tcp --permanent
+        run_as_root firewall-cmd --add-port=${HTTPS_PORT:-443}/tcp --permanent
+        run_as_root firewall-cmd --reload
+        
+    elif command -v dnf >/dev/null 2>&1; then
+        log_info "检测到DNF包管理器 (CentOS/RHEL 8+/Fedora)"
+        
+        # 更新系统
+        run_as_root dnf update -y
+        
+        # 安装基础工具
+        run_as_root dnf install -y curl wget git vim htop unzip jq firewalld
+        
+        # 配置防火墙
+        run_as_root systemctl enable firewalld
+        run_as_root systemctl start firewalld
+        run_as_root firewall-cmd --add-service=ssh --permanent
+        run_as_root firewall-cmd --add-port=${HTTP_PORT:-80}/tcp --permanent
+        run_as_root firewall-cmd --add-port=${HTTPS_PORT:-443}/tcp --permanent
+        run_as_root firewall-cmd --reload
+        
+    else
+        log_error "不支持的操作系统，未找到 apt/yum/dnf 包管理器"
+        exit 1
+    fi
+    
+    log_success "系统依赖安装完成"
+}
+
+# 安装Nginx
+install_nginx() {
+    log_info "安装Nginx..."
+    
+    if command -v apt >/dev/null 2>&1; then
+        run_as_root apt install -y nginx
+        # 清理可能残留的站点配置
+        run_as_root rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+
+        # 检查nginx配置是否正确
+        if ! run_as_root nginx -t >/dev/null 2>&1; then
+            log_warning "Nginx配置检查失败，尝试修复..."
+            run_as_root apt install --reinstall -y nginx-common
+        fi
+        
+    elif command -v yum >/dev/null 2>&1; then
+        run_as_root yum install -y nginx
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+        
+    elif command -v dnf >/dev/null 2>&1; then
+        run_as_root dnf install -y nginx
+        run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+        
+    else
+        log_error "无法安装Nginx，未找到支持的包管理器"
+        exit 1
+    fi
+    
+    # 停止nginx（以防正在运行）
+    run_as_root systemctl stop nginx 2>/dev/null || true
+    
+    log_success "Nginx 安装完成"
+}
+
 # 收集部署信息
 collect_deployment_info() {
     log_header "🔧 部署配置向导"
@@ -2161,6 +2301,8 @@ deploy_production() {
     # 执行部署步骤
     check_system_requirements
     collect_deployment_info
+    install_system_dependencies
+    install_nginx
     
     # 创建应用目录
     log_info "创建应用目录: $APP_DIR"
@@ -2172,11 +2314,17 @@ deploy_production() {
     
     cd "$APP_DIR"
     
-    # 下载项目文件
-    download_project_files
+    # 下载项目源码
+    download_source_code
     
     # 配置环境变量
     configure_environment
+    
+    # 配置Nginx
+    create_nginx_config
+    
+    # 安装SSL证书
+    install_ssl_certificate
     
     # 选择并配置compose文件
     configure_compose_file
@@ -2184,73 +2332,89 @@ deploy_production() {
     # 启动服务
     deploy_services
     
+    # 验证部署
+    verify_deployment
+    
+    # 创建管理脚本
+    create_management_scripts
+    
+    # 保存部署信息
+    save_deployment_info
+    
     # 显示部署结果
     show_deployment_result
 }
 
-# 下载项目文件
-download_project_files() {
-    log_info "下载项目文件..."
+# 下载源码（完整项目）
+download_source_code() {
+    log_info "下载源码..."
     
-    # 如果已存在项目文件，询问是否覆盖
-    if [[ -f "docker-compose.yml" ]]; then
-        if ! prompt_yes_no "检测到现有安装，是否覆盖" "y"; then
-            log_info "跳过文件下载"
-            return 0
-        fi
+    # 检查目录是否为空，如果不为空则清理
+    if [[ "$(ls -A .)" ]]; then
+        log_warning "目录不为空，清理现有文件..."
+        rm -rf * .git 2>/dev/null || true
+        rm -rf .[^.]* 2>/dev/null || true
     fi
     
-    # 下载主要文件
-    local files=(
-        "docker-compose.yml"
-        "docker-compose.production.yml"
-        "docker-compose.https.yml"
-        ".env.example"
-        "Dockerfile.frontend"
-        "Dockerfile.backend"
-        "Dockerfile.agent"
-        "Dockerfile.updater"
+    # 尝试多种下载方式
+    local download_success=false
+    local methods=(
+        "git clone https://github.com/lonelyrower/SsalgTen.git ."
+        "git clone https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git ."
+        "git clone https://hub.fastgit.xyz/lonelyrower/SsalgTen.git ."
     )
     
-    for file in "${files[@]}"; do
-        log_info "下载 $file..."
-        if ! curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file"; then
-            log_error "下载 $file 失败"
-            return 1
+    # 尝试Git克隆
+    for method in "${methods[@]}"; do
+        log_info "尝试: $method"
+        if eval "$method" 2>/dev/null; then
+            download_success=true
+            log_success "Git克隆成功"
+            break
+        else
+            log_warning "Git克隆失败，尝试下一种方法..."
         fi
     done
     
-    # 下载配置文件
-    mkdir -p configs
-    local config_files=(
-        "configs/nginx-https.conf"
-        "configs/Caddyfile.https"
-    )
+    # 如果Git克隆都失败，使用wget下载ZIP包
+    if [[ "$download_success" == false ]]; then
+        log_warning "Git克隆失败，使用wget下载ZIP包..."
+        
+        local zip_urls=(
+            "https://github.com/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+            "https://github.com.cnpmjs.org/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+            "https://hub.fastgit.xyz/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+        )
+        
+        for zip_url in "${zip_urls[@]}"; do
+            log_info "尝试下载: $zip_url"
+            if wget -q "$zip_url" -O main.zip 2>/dev/null; then
+                if unzip -q main.zip 2>/dev/null; then
+                    mv SsalgTen-main/* . 2>/dev/null
+                    mv SsalgTen-main/.* . 2>/dev/null || true
+                    rmdir SsalgTen-main 2>/dev/null
+                    rm -f main.zip
+                    download_success=true
+                    log_success "ZIP包下载成功"
+                    break
+                fi
+            fi
+        done
+    fi
     
-    for file in "${config_files[@]}"; do
-        log_info "下载 $file..."
-        curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file" || true
-    done
+    # 最后检查是否下载成功
+    if [[ "$download_success" == false ]]; then
+        log_error "所有下载方法都失败了"
+        log_error "请检查网络连接或手动下载源码"
+        echo ""
+        echo "手动下载方法："
+        echo "1. 访问 https://github.com/lonelyrower/SsalgTen"
+        echo "2. 下载ZIP文件并解压到 $APP_DIR"
+        echo "3. 重新运行此脚本"
+        exit 1
+    fi
     
-    # 下载docker目录的必要文件
-    mkdir -p docker
-    local docker_files=(
-        "docker/custom-entrypoint.sh"
-        "docker/generate-config.sh"
-        "docker/healthcheck.sh"
-        "docker/inject-env.sh"
-        "docker/nginx.conf"
-    )
-    
-    for file in "${docker_files[@]}"; do
-        log_info "下载 $file..."
-        curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file" || true
-    done
-    
-    # 设置执行权限
-    chmod +x docker/*.sh 2>/dev/null || true
-    
-    log_success "项目文件下载完成"
+    log_success "源码下载完成"
 }
 
 # 配置环境变量
@@ -2292,6 +2456,186 @@ EOF
     chmod 600 .env
     
     log_success "环境变量配置完成"
+}
+
+# 创建Nginx配置
+create_nginx_config() {
+    log_info "创建Nginx配置..."
+    
+    # 如果没有启用SSL，跳过Nginx配置（使用Docker内置nginx）
+    if [[ "$ENABLE_SSL" != "true" ]]; then
+        log_info "未启用SSL，跳过Nginx配置（使用Docker内置代理）"
+        return 0
+    fi
+    
+    # 检测Nginx配置目录结构
+    if [[ -d "/etc/nginx/sites-available" ]]; then
+        NGINX_CONFIG_FILE="/etc/nginx/sites-available/ssalgten"
+        NGINX_ENABLE_CMD="run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/"
+    else
+        NGINX_CONFIG_FILE="/etc/nginx/conf.d/ssalgten.conf"
+        NGINX_ENABLE_CMD="# 配置已自动启用"
+        run_as_root mkdir -p /etc/nginx/conf.d
+    fi
+    
+    # 创建基础Nginx配置
+    run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
+# SsalgTen Nginx 配置
+server {
+    listen $HTTP_PORT;
+    server_name $DOMAIN www.$DOMAIN;
+
+    # 基础安全头
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
+    # 通用优化
+    client_max_body_size 20m;
+    gzip on;
+    gzip_proxied any;
+    gzip_types application/json application/javascript text/css text/plain application/xml;
+
+    # ACME 挑战
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # 前端代理
+    location / {
+        proxy_pass http://localhost:$FRONTEND_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    # API代理
+    location /api {
+        proxy_pass http://localhost:$BACKEND_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+EOF
+    
+    # 启用配置
+    eval $NGINX_ENABLE_CMD
+    
+    # 测试配置
+    if ! run_as_root nginx -t; then
+        log_error "Nginx配置测试失败"
+        exit 1
+    fi
+    
+    log_success "Nginx配置创建完成"
+}
+
+# 安装SSL证书
+install_ssl_certificate() {
+    if [[ "$ENABLE_SSL" != "true" ]]; then
+        log_info "未启用SSL，跳过证书安装"
+        return 0
+    fi
+    
+    log_info "安装SSL证书..."
+    
+    if [[ "$SSL_MODE" == "letsencrypt" ]]; then
+        # 安装Certbot
+        if command -v apt >/dev/null 2>&1; then
+            run_as_root apt install -y certbot python3-certbot-nginx
+        elif command -v yum >/dev/null 2>&1; then
+            run_as_root yum install -y certbot python3-certbot-nginx
+        elif command -v dnf >/dev/null 2>&1; then
+            run_as_root dnf install -y certbot python3-certbot-nginx
+        fi
+        
+        # 申请证书
+        run_as_root certbot --nginx -d $DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
+        
+        # 设置自动续期
+        echo "0 12 * * * /usr/bin/certbot renew --quiet" | run_as_root crontab -
+        
+    else
+        log_info "Cloudflare SSL模式，证书由Cloudflare自动管理"
+    fi
+    
+    log_success "SSL证书配置完成"
+}
+
+# 验证部署
+verify_deployment() {
+    log_info "验证部署..."
+    
+    # 等待服务启动
+    sleep 10
+    
+    # 检查Docker容器状态
+    if ! docker_compose ps | grep -q "Up"; then
+        log_warning "部分服务可能未正常启动"
+    fi
+    
+    # 检查服务连通性
+    local frontend_url="http://localhost:${FRONTEND_PORT:-3000}"
+    local backend_url="http://localhost:${BACKEND_PORT:-3001}/api/health"
+    
+    if curl -sf "$frontend_url" >/dev/null 2>&1; then
+        log_success "前端服务验证通过"
+    else
+        log_warning "前端服务验证失败"
+    fi
+    
+    if curl -sf "$backend_url" >/dev/null 2>&1; then
+        log_success "后端服务验证通过"
+    else
+        log_warning "后端服务验证失败"
+    fi
+    
+    log_success "部署验证完成"
+}
+
+# 创建管理脚本
+create_management_scripts() {
+    log_info "创建管理脚本..."
+    
+    # 在系统路径创建ssalgten命令
+    run_as_root tee /usr/local/bin/ssalgten > /dev/null << 'EOF'
+#!/bin/bash
+exec /opt/ssalgten/scripts/ssalgten.sh "$@"
+EOF
+    run_as_root chmod +x /usr/local/bin/ssalgten
+    
+    log_success "管理脚本创建完成"
+}
+
+# 保存部署信息
+save_deployment_info() {
+    log_info "保存部署信息..."
+    
+    cat > deployment-info.txt << EOF
+SsalgTen 部署信息
+部署时间: $(date)
+域名: $DOMAIN
+SSL启用: $ENABLE_SSL
+前端端口: $FRONTEND_PORT
+后端端口: $BACKEND_PORT
+
+访问地址:
+- 前端: $(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN:$FRONTEND_PORT"; fi)
+- 后端API: $(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN/api"; else echo "http://$DOMAIN:$BACKEND_PORT/api"; fi)
+
+管理命令:
+- 系统状态: ssalgten status
+- 查看日志: ssalgten logs
+- 重启服务: ssalgten restart
+EOF
+    
+    log_success "部署信息已保存到 deployment-info.txt"
 }
 
 # 配置compose文件
