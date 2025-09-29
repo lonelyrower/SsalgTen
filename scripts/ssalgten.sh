@@ -60,6 +60,10 @@ NON_INTERACTIVE=false
 VERBOSE=false
 LAST_RESULT_MSG=""
 
+DEFAULT_IMAGE_REGISTRY="ghcr.io"
+DEFAULT_IMAGE_NAMESPACE=""
+DEFAULT_IMAGE_TAG="latest"
+
 # 颜色定义（可通过环境变量禁用）
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
     RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
@@ -1111,7 +1115,98 @@ exec_in_container() {
 }
 
 # 更新系统
+update_system_from_images() {
+    check_docker_ready || return 1
+    detect_app_dir
+    detect_compose_file
+
+    local registry=${1:-$DEFAULT_IMAGE_REGISTRY}
+    local namespace=${2:-}
+    local tag=${3:-$DEFAULT_IMAGE_TAG}
+    local compose_override=${4:-}
+
+    if [[ -z $namespace ]]; then
+        namespace=$(detect_default_image_namespace)
+    fi
+
+    local compose_file
+    if [[ -n $compose_override ]]; then
+        compose_file=$compose_override
+    elif [[ -f "$APP_DIR/docker-compose.ghcr.yml" ]]; then
+        compose_file="$APP_DIR/docker-compose.ghcr.yml"
+    else
+        compose_file=$COMPOSE_FILE
+    fi
+
+    cd "$APP_DIR" || die "无法进入应用目录: $APP_DIR"
+
+    log_header "使用镜像更新 SsalgTen"
+    log_info "镜像仓库: $registry/$namespace"
+    log_info "镜像标签: $tag"
+
+    export IMAGE_REGISTRY=$registry
+    export IMAGE_NAMESPACE=$namespace
+    export IMAGE_TAG=$tag
+
+    docker_compose -f "$compose_file" pull
+    docker_compose -f "$compose_file" up -d postgres
+    log_info "等待数据库启动..."
+    sleep 5
+    if ! docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy; then
+        log_warning "数据库迁移执行失败，请手动检查"
+    fi
+    docker_compose -f "$compose_file" up -d --remove-orphans
+    log_success "镜像更新完成"
+}
+
 update_system() {
+    local use_image=true
+    local image_registry=""
+    local image_namespace=""
+    local image_tag=""
+    local compose_override=""
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --image|--from-image|--ghcr)
+                use_image=true
+                shift
+                ;;
+            --source)
+                use_image=false
+                shift
+                ;;
+            --registry)
+                image_registry=$2
+                shift 2
+                ;;
+            --namespace|--repo)
+                image_namespace=$2
+                shift 2
+                ;;
+            --tag)
+                image_tag=$2
+                shift 2
+                ;;
+            --compose-file)
+                compose_override=$2
+                shift 2
+                ;;
+            --help)
+                echo "用法: update [--image --registry REG --namespace OWNER/REPO --tag TAG]"
+                return 0
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    if [[ $use_image == true ]]; then
+        update_system_from_images "${image_registry:-$DEFAULT_IMAGE_REGISTRY}" "$image_namespace" "${image_tag:-$DEFAULT_IMAGE_TAG}" "$compose_override"
+        return
+    fi
+
     log_header "⚡ 更新系统"
     
     cd "$APP_DIR"
@@ -1713,6 +1808,121 @@ clean_system() {
 }
 
 # 生成诊断报告
+
+    local deploy_script
+    deploy_script=$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)/deploy-production.sh
+    if [[ ! -f $deploy_script ]]; then
+        log_error "未找到部署脚本: $deploy_script"
+        return 1
+    fi
+    bash "$deploy_script" "$@"
+}
+
+
+# 统一部署：默认镜像模式，可用 --source 切换源码模式
+random_string() {
+    # 生成长度参数的随机串，默认32
+    local len=${1:-32}
+    tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$len" 2>/dev/null || date +%s%N | sha1sum | cut -c1-"$len"
+}
+
+ensure_env_kv() {
+    # ensure_env_kv KEY VALUE [file]
+    local key="$1"; local val="$2"; local file="${3:-.env}"
+    if [[ -f "$file" ]] && grep -q "^${key}=" "$file"; then
+        sed -i "s#^${key}=.*#${key}=${val//#/\#}#" "$file"
+    else
+        echo "${key}=${val}" >> "$file"
+    fi
+}
+
+ensure_env_basics_image() {
+    # 准备 .env （若不存在则创建），写入镜像与必要密钥
+    [[ -f .env ]] || touch .env
+    local dbpass jwt api
+    dbpass=$(grep -E '^DB_PASSWORD=' .env 2>/dev/null | cut -d= -f2-)
+    jwt=$(grep -E '^JWT_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    api=$(grep -E '^API_KEY_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    [[ -n "$dbpass" ]] || dbpass=$(random_string 32)
+    [[ -n "$jwt" ]] || jwt=$(random_string 64)
+    [[ -n "$api" ]] || api=$(random_string 32)
+    ensure_env_kv IMAGE_REGISTRY "${IMAGE_REGISTRY:-$DEFAULT_IMAGE_REGISTRY}" .env
+    ensure_env_kv IMAGE_NAMESPACE "${IMAGE_NAMESPACE:-$(detect_default_image_namespace)}" .env
+    ensure_env_kv IMAGE_TAG "${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}" .env
+    ensure_env_kv DB_PASSWORD "$dbpass" .env
+    ensure_env_kv JWT_SECRET "$jwt" .env
+    ensure_env_kv API_KEY_SECRET "$api" .env
+}
+
+ensure_env_basics_source() {
+    [[ -f .env ]] || touch .env
+    local dbpass jwt api
+    dbpass=$(grep -E '^DB_PASSWORD=' .env 2>/dev/null | cut -d= -f2-)
+    jwt=$(grep -E '^JWT_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    api=$(grep -E '^API_KEY_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    [[ -n "$dbpass" ]] || dbpass=$(random_string 32)
+    [[ -n "$jwt" ]] || jwt=$(random_string 64)
+    [[ -n "$api" ]] || api=$(random_string 32)
+    ensure_env_kv DB_PASSWORD "$dbpass" .env
+    ensure_env_kv JWT_SECRET "$jwt" .env
+    ensure_env_kv API_KEY_SECRET "$api" .env
+}
+
+deploy_flow() {
+    # 解析参数
+    local mode="image"  # 默认镜像模式
+    local registry="" namespace="" tag="" compose_override=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --mode) mode="$2"; shift 2;;
+            --image) mode="image"; shift;;
+            --source) mode="source"; shift;;
+            --registry) registry="$2"; shift 2;;
+            --namespace|--repo) namespace="$2"; shift 2;;
+            --tag) tag="$2"; shift 2;;
+            --compose-file) compose_override="$2"; shift 2;;
+            --help) echo "用法: ssalgten deploy [--image|--source] [--registry ghcr.io] [--namespace owner/repo] [--tag latest]"; return 0;;
+            *) shift;;
+        esac
+    done
+
+    check_docker_ready || return 1
+    detect_app_dir
+    cd "$APP_DIR" || die "无法进入应用目录: $APP_DIR"
+
+    if [[ "$mode" == "image" ]]; then
+        IMAGE_REGISTRY="${registry:-${IMAGE_REGISTRY:-$DEFAULT_IMAGE_REGISTRY}}"
+        IMAGE_NAMESPACE="${namespace:-${IMAGE_NAMESPACE:-$(detect_default_image_namespace)}}"
+        IMAGE_TAG="${tag:-${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}}"
+        export IMAGE_REGISTRY IMAGE_NAMESPACE IMAGE_TAG
+        ensure_env_basics_image
+        local compose_file
+        if [[ -n "$compose_override" ]]; then compose_file="$compose_override";
+        elif [[ -f docker-compose.ghcr.yml ]]; then compose_file=docker-compose.ghcr.yml; else compose_file=$COMPOSE_FILE; fi
+        log_header "🚀 首次部署（镜像模式）"
+        log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE:(backend|frontend|updater|agent) 标签: $IMAGE_TAG"
+        docker_compose -f "$compose_file" pull
+        docker_compose -f "$compose_file" up -d postgres
+        log_info "等待数据库..."; sleep 5
+        docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
+        docker_compose -f "$compose_file" up -d --remove-orphans
+        log_success "部署完成"
+        echo "模式: 镜像 | 入口: http://localhost:${FRONTEND_PORT:-3000}"
+    else
+        ensure_env_basics_source
+        local compose_file
+        if [[ -n "$compose_override" ]]; then compose_file="$compose_override";
+        elif [[ -f docker-compose.production.yml ]]; then compose_file=docker-compose.production.yml; else compose_file=$COMPOSE_FILE; fi
+        log_header "🚀 首次部署（源码模式）"
+        docker_compose -f "$compose_file" build
+        docker_compose -f "$compose_file" up -d postgres
+        log_info "等待数据库..."; sleep 5
+        docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
+        docker_compose -f "$compose_file" up -d --remove-orphans
+        log_success "部署完成"
+        echo "模式: 源码 | 入口: http://localhost:${FRONTEND_PORT:-3000}"
+    fi
+}
 generate_diagnostic_report() {
     log_header "📊 生成诊断报告"
     
@@ -1785,6 +1995,7 @@ generate_diagnostic_report() {
 }
 
 # 脚本自更新
+    echo -e "  ${PURPLE}13.${NC} 🚀 镜像快速更新       ${PURPLE}14.${NC} 🛠️ 一键部署"
 # 自更新和安装功能
 self_update() {
     local install_mode=false
@@ -2143,7 +2354,7 @@ parse_arguments() {
                 exit 0
                 ;;
             # 主要命令
-            start|stop|restart|status|logs|ps|exec|update|backup|clean|port-check|diagnose|self-update)
+            start|stop|restart|status|logs|ps|exec|update|backup|clean|port-check|diagnose|self-update|deploy)
                 COMMAND="$1"
                 shift
                 COMMAND_ARGS=("$@")
@@ -2259,12 +2470,13 @@ main() {
                 [[ ${#COMMAND_ARGS[@]} -lt 2 ]] && die "用法: exec <service> <command...>"
                 exec_in_container "${COMMAND_ARGS[@]}"
                 ;;
-            update) update_system ;;
+            update) update_system "${COMMAND_ARGS[@]}" ;;
             backup) backup_data ;;
             clean) clean_system "${COMMAND_ARGS[@]}" ;;
             port-check) port_check ;;
             diagnose) generate_diagnostic_report ;;
             self-update) self_update "${COMMAND_ARGS[@]}" ;;
+            deploy) deploy_flow "${COMMAND_ARGS[@]}" ;;
             *) die "未知命令: $COMMAND" ;;
         esac
     else

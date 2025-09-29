@@ -33,7 +33,7 @@ services:
 
   # Backend API Service (using GHCR image)
   backend:
-    image: ghcr.io/lonelyrower/ssalgten/backend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/backend:${IMAGE_TAG:-latest}
     container_name: ssalgten-backend
     restart: unless-stopped
     depends_on:
@@ -88,7 +88,7 @@ services:
 
   # Frontend Web Service (using GHCR image)
   frontend:
-    image: ghcr.io/lonelyrower/ssalgten/frontend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/frontend:${IMAGE_TAG:-latest}
     container_name: ssalgten-frontend
     restart: unless-stopped
     depends_on:
@@ -118,7 +118,7 @@ services:
 
   # Updater Service (using GHCR image)
   updater:
-    image: ghcr.io/lonelyrower/ssalgten/updater:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/updater:${IMAGE_TAG:-latest}
     container_name: ssalgten-updater
     restart: unless-stopped
     depends_on:
@@ -139,7 +139,7 @@ services:
 
   # Agent Service (using GHCR image)
   agent:
-    image: ghcr.io/lonelyrower/ssalgten/agent:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/agent:${IMAGE_TAG:-latest}
     container_name: ssalgten-agent
     restart: unless-stopped
     depends_on:
