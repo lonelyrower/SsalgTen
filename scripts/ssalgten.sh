@@ -78,6 +78,8 @@ DEFAULT_IMAGE_REGISTRY="ghcr.io"
 DEFAULT_IMAGE_NAMESPACE=""
 DEFAULT_IMAGE_TAG="latest"
 
+DEFAULT_APP_DIR="${DEFAULT_APP_DIR:-/opt/ssalgten}"
+
 # 颜色定义（可通过环境变量禁用）
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
     RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
@@ -318,45 +320,50 @@ confirm() {
 
 # 自动检测应用目录
 detect_app_dir() {
-    # 1. 命令行参数或环境变量
     if [[ -n "$APP_DIR" ]]; then
-        [[ -d "$APP_DIR" ]] || die "指定的应用目录不存在: $APP_DIR"
+        mkdir -p "$APP_DIR" 2>/dev/null || die "无法创建应用目录: $APP_DIR"
         return 0
     fi
-    
-    # 2. 脚本在仓库内运行
+
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local project_dir="$(dirname "$script_dir")"
-    
+
     if [[ -f "$project_dir/docker-compose.yml" ]] || [[ -f "$project_dir/package.json" ]]; then
         APP_DIR="$project_dir"
         return 0
     fi
-    
-    # 3. 默认路径
-    APP_DIR="/opt/ssalgten"
-    if [[ ! -d "$APP_DIR" ]]; then
-        die "找不到项目目录。请使用 --dir=PATH 指定应用目录，或确保脚本在项目根目录下运行"
+
+    local default_dir="${DEFAULT_APP_DIR:-/opt/ssalgten}"
+    if [[ ! -d "$default_dir" ]]; then
+        log_warning "检测到默认应用目录不存在，正在创建: $default_dir"
+        if ! mkdir -p "$default_dir"; then
+            die "无法创建默认应用目录: $default_dir"
+        fi
     fi
+
+    APP_DIR="$default_dir"
+    export APP_DIR
 }
+
 
 # 检测 Compose 文件
 detect_compose_file() {
     if [[ -n "$COMPOSE_FILE" ]]; then
-        [[ -f "$COMPOSE_FILE" ]] || die "指定的Compose文件不存在: $COMPOSE_FILE"
-        return 0
+        if [[ -f "$COMPOSE_FILE" ]]; then
+            return 0
+        fi
+        log_warning "指定的 Compose 文件不存在: $COMPOSE_FILE"
     fi
-    
-    cd "$APP_DIR"
-    
-    # 按优先级查找
+
+    cd "$APP_DIR" 2>/dev/null || true
+
     local compose_files=(
         "docker-compose.yml"
         "docker-compose.production.yml"
         "docker-compose.https.yml"
     )
-    
+
     for file in "${compose_files[@]}"; do
         if [[ -f "$file" ]]; then
             COMPOSE_FILE="$APP_DIR/$file"
@@ -365,9 +372,10 @@ detect_compose_file() {
             return 0
         fi
     done
-    
-    die "未找到 Docker Compose 文件。请确保在正确的项目目录下运行"
+
+    COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 }
+
 
 # 增强健康检查
 health_check() {
@@ -2347,6 +2355,7 @@ EOF
     echo -e "${YELLOW}🛠️  维护工具:${NC}"
     echo -e "  ${YELLOW}9.${NC} 🗂️  数据备份        ${YELLOW}10.${NC} 🧹 系统清理"
     echo -e "  ${YELLOW}11.${NC} 📊 诊断报告       ${YELLOW}12.${NC} 🔄 脚本更新"
+    echo -e "  ${PURPLE}13.${NC} 🚀 镜像快速更新       ${PURPLE}14.${NC} 🔧 一键部署"
     echo ""
     echo -e "  ${GREEN}0.${NC} 🚪 退出程序"
     echo ""
