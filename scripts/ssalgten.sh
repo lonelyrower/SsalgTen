@@ -117,6 +117,76 @@ confirm() {
     [[ "$r" == "y" ]]
 }
 
+# 基础工具与环境探测
+die() { log_error "$*"; exit 1; }
+
+check_docker_ready() {
+    if ! command -v docker >/dev/null 2>&1; then
+        log_error "未检测到 Docker，请先安装 Docker 再继续"
+        return 1
+    fi
+    if ! docker info >/dev/null 2>&1; then
+        log_warning "Docker 未处于运行状态或当前用户无权限"
+        return 1
+    fi
+    return 0
+}
+
+docker_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+        return $?
+    fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+        return $?
+    fi
+    log_error "未找到 docker compose，请安装 Docker Compose 插件或 docker-compose"
+    return 127
+}
+
+detect_app_dir() {
+    if [[ -n "${APP_DIR:-}" ]]; then
+        return 0
+    fi
+    # 优先当前目录
+    local d="$PWD"
+    if [[ -f "$d/docker-compose.yml" || -f "$d/docker-compose.production.yml" || -f "$d/docker-compose.ghcr.yml" ]]; then
+        APP_DIR="$d"; return 0
+    fi
+    # 兜底使用当前目录
+    APP_DIR="$d"
+}
+
+detect_compose_file() {
+    if [[ -n "${COMPOSE_FILE:-}" && -f "$COMPOSE_FILE" ]]; then return 0; fi
+    local d="$APP_DIR"
+    for f in docker-compose.ghcr.yml docker-compose.production.yml docker-compose.yml; do
+        if [[ -f "$d/$f" ]]; then COMPOSE_FILE="$d/$f"; return 0; fi
+    done
+    COMPOSE_FILE="$d/docker-compose.yml"
+}
+
+detect_curl_bash_mode() {
+    # 通过 BASH_SOURCE 与是否为临时 fd 判断
+    if [[ "${BASH_SOURCE[0]}" == /dev/fd/* ]] || [[ "${BASH_SOURCE[0]}" == /proc/self/fd/* ]] || [[ ! -f "${BASH_SOURCE[0]}" ]] || [[ "${CURL_BASH_MODE:-}" == "true" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+handle_curl_bash_install() {
+    # 在 curl|bash 下处理 --install，转交给 self_update
+    for arg in "$@"; do
+        if [[ "$arg" == "--install" ]]; then
+            log_info "检测到 --install，开始安装到系统 PATH"
+            self_update --install "$@"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # 统一部署：默认镜像模式，可用 --source 切换源码模式
 random_string() {
     # 生成长度参数的随机串，默认32
