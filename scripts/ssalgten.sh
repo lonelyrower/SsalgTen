@@ -29,9 +29,14 @@ handle_curl_bash_install() {
     
     # 解析参数看是否要安装
     local should_install=false
+    local has_command=false
+    
     for arg in "$@"; do
         if [[ "$arg" == "--install" ]]; then
             should_install=true
+            break
+        elif [[ "$arg" =~ ^(start|stop|restart|status|logs|ps|exec|update|backup|clean|port-check|diagnose|self-update|deploy|uninstall|fix-agent-names)$ ]]; then
+            has_command=true
             break
         fi
     done
@@ -41,10 +46,22 @@ handle_curl_bash_install() {
         log_info "检测到安装请求，开始安装..."
         self_update --install "$@"
         return $?
+    elif [[ "$has_command" == "true" ]]; then
+        # 有具体命令，继续执行
+        log_info "检测到命令参数，继续执行..."
+        return 1  # 让主流程继续处理命令
     else
-        # 在 curl|bash 模式下，默认以临时模式继续运行；如需安装，请追加 --install
+        # 在 curl|bash 模式下无命令时，显示帮助并提供选项
         log_info "检测到 curl|bash 运行，默认以临时模式继续 (如需安装请使用 --install)"
-        return 1
+        echo ""
+        echo "💡 curl|bash 使用方式："
+        echo "  📦 安装到系统: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- --install"
+        echo "  🚀 直接部署: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- deploy"
+        echo "  📊 查看状态: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- status"
+        echo "  🔧 修复节点: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- fix-agent-names"
+        echo ""
+        echo "或者先下载再运行: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh -o ssalgten.sh && bash ssalgten.sh"
+        return 0  # 直接退出，不进入交互模式
     fi
 }
 
@@ -4012,7 +4029,7 @@ main() {
         fi
         # 处理curl|bash安装
         if handle_curl_bash_install "$@"; then
-            exit 0  # 安装成功，退出
+            exit 0  # 安装成功或显示帮助后退出
         fi
         # 如果返回1，说明用户选择临时运行，继续执行
     fi
@@ -4080,9 +4097,10 @@ main() {
         if [[ "$IN_CURL_BASH" == "true" ]]; then
             # 在curl|bash下优先尝试使用 /dev/tty 交互
             if [[ -r /dev/tty ]]; then
-                while true; do
-                    show_interactive_menu
-                done
+                log_info "进入交互菜单模式..."
+                exec </dev/tty
+                show_interactive_menu
+                # 只显示一次菜单，避免无限循环
             else
                 # 无法交互时给出明确指引
                 log_error "当前环境不支持交互输入。请使用以下任一方式："
