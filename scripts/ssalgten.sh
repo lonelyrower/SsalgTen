@@ -187,6 +187,78 @@ handle_curl_bash_install() {
     return 1
 }
 
+# 统一交互菜单（含 13/14）
+show_menu_unified() {
+    local status status_color choice tip_of_day day_num
+    status=$(get_system_status || true)
+    case "$status" in
+        running) status_color="${GREEN}✓ 运行中${NC}" ;;
+        partial) status_color="${YELLOW}△ 部分运行${NC}" ;;
+        stopped) status_color="${RED}○ 已停止${NC}" ;;
+        *) status_color="${RED}✗ ${status:-未知}${NC}" ;;
+    esac
+
+    clear
+    echo -e "${CYAN}================================================================${NC}"
+    echo -e "系统状态: $status_color"
+    echo -e "应用目录: ${APP_DIR:-$PWD}"
+    echo
+    echo -e "${YELLOW}📋 主要操作:${NC}"
+    echo -e "  ${GREEN}1.${NC} 🚀 启动系统        ${GREEN}2.${NC} 🛑 停止系统"
+    echo -e "  ${BLUE}3.${NC} 🔄 重启系统        ${PURPLE}4.${NC} ⚡ 更新系统"
+    echo
+    echo -e "${YELLOW}📊 监控管理:${NC}"
+    echo -e "  ${CYAN}5.${NC} 📊 系统状态        ${CYAN}6.${NC} 📋 查看日志"
+    echo -e "  ${CYAN}7.${NC} 🔍 容器信息        ${CYAN}8.${NC} 🔍 端口检查"
+    echo
+    echo -e "${YELLOW}🛠️  维护工具:${NC}"
+    echo -e "  ${YELLOW}9.${NC} 🗂️  数据备份        ${YELLOW}10.${NC} 🧹 系统清理"
+    echo -e "  ${YELLOW}11.${NC} 📊 诊断报告       ${YELLOW}12.${NC} 🔄 脚本更新"
+    echo -e "  ${PURPLE}13.${NC} 🚀 镜像快速更新       ${PURPLE}14.${NC} 🛠️ 一键部署"
+    echo
+    echo -e "  ${GREEN}0.${NC} 🚪 退出程序"
+    echo -e "${CYAN}================================================================${NC}"
+
+    day_num=$(($(date +%j) % 7))
+    case $day_num in
+        0) tip_of_day="小贴士: 用 'logs backend -f' 查看后端实时日志" ;;
+        1) tip_of_day="小贴士: 'clean --basic' 是安全的日常清理" ;;
+        2) tip_of_day="小贴士: 用 'sh' 进入容器快速排查" ;;
+        3) tip_of_day="小贴士: 'status' 一键查看服务概况" ;;
+        4) tip_of_day="小贴士: 记得 'backup' 定期备份数据库" ;;
+        5) tip_of_day="小贴士: 'port-check' 检测端口冲突" ;;
+        6) tip_of_day="小贴士: 加 '--verbose' 查看详细过程" ;;
+    esac
+    echo -e "${BLUE}${tip_of_day}${NC}"
+    echo
+
+    choice=$(read_from_tty "请选择操作 [0-14]: " "0")
+    case "$choice" in
+        1) start_system ;;
+        2) stop_system ;;
+        3) restart_system ;;
+        4) update_system ;;
+        5) system_status ;;
+        6) view_logs ;;
+        7) docker_compose ps ;;
+        8) port_check ;;
+        9) backup_data ;;
+        10) clean_system ;;
+        11) generate_diagnostic_report ;;
+        12) self_update ;;
+        13) update_system --image ;;
+        14) deploy_flow ;;
+        0) log_success "感谢使用 SsalgTen 管理器!"; exit 0 ;;
+        *) log_error "无效选择: $choice"; sleep 1 ;;
+    esac
+
+    if [[ "$choice" != "0" ]]; then
+        echo
+        read_from_tty "按回车继续..." ""
+        SKIP_CLEAR_ONCE=true
+    fi
+}
+
 # 统一部署：默认镜像模式，可用 --source 切换源码模式
 random_string() {
     # 生成长度参数的随机串，默认32
@@ -564,7 +636,7 @@ self_update() {
 }
 
 # 交互式菜单
-show_interactive_menu() {
+show_menu_unified() {
     local status
     status=$(get_system_status)
     local status_color
@@ -853,7 +925,7 @@ main() {
             # 在curl|bash下优先尝试使用 /dev/tty 交互
             if [[ -r /dev/tty ]]; then
                 while true; do
-                    show_interactive_menu
+                    show_menu_unified
                 done
             else
                 # 无法交互时给出明确指引
@@ -871,7 +943,7 @@ main() {
                 exit 1
             fi
             while true; do
-                show_interactive_menu
+                show_menu_unified
             done
         fi
     fi

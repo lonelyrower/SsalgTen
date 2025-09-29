@@ -1,0 +1,567 @@
+show_interactive_menu() {
+# 交互式菜单
+
+}
+    fi
+        return 1
+        rm -f "$temp_script"
+        log_error "安装失败 - 可能是权限问题"
+    else
+        fi
+            return 1
+            log_error "安装后的文件不可执行"
+        else
+            fi
+                log_info "重新运行以使用新版本"
+                log_success "✅ 脚本已更新到最新版本 ($new_version)"
+            else
+                
+                echo "  ssalgten --help   # 查看帮助"
+                echo "  ssalgten logs     # 查看日志"
+                echo "  ssalgten status   # 查看状态"
+                echo "  ssalgten start    # 启动系统"
+                echo "🚀 快速开始:"
+                echo
+                # 显示快速开始信息
+                
+                fi
+                    echo "可以运行: $target_path"
+                else
+                    esac
+                            ;;
+                            fi
+                                echo "export PATH=\"\$HOME/bin:\$PATH\""
+                                echo "💡 提示: 将以下行添加到 ~/.bashrc 或 ~/.zshrc:"
+                            if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+                        */bin/ssalgten)
+                            ;;
+                            fi
+                                echo "export PATH=\"\$HOME/.local/bin:\$PATH\""
+                                echo "💡 提示: 将以下行添加到 ~/.bashrc 或 ~/.zshrc:"
+                            if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+                        */.local/bin/*)
+                    case "$target_path" in
+                    # 检查PATH
+                    
+                    echo "现在可以在任何位置运行: ssalgten"
+                if [[ "$target_path" =~ ^/usr/local/bin ]] || [[ "$target_path" =~ \.local/bin ]] || [[ "$target_path" =~ /bin/ssalgten$ ]]; then
+                # PATH 建议
+                
+                log_success "✅ 脚本已成功安装到: $target_path"
+            if [[ "$install_mode" == "true" ]]; then
+        if [[ -x "$target_path" ]]; then
+        # 验证安装
+        
+        rm -f "$temp_script"
+    if cp "$temp_script" "$target_path"; then
+    log_info "安装新版本到: $target_path"
+    
+    chmod +x "$temp_script"
+    # 设置权限并安装
+    
+    fi
+        cp "$target_path" "$backup_path"
+        log_info "备份当前版本到: $backup_path"
+        local backup_path="${target_path}.bak.$(date +%Y%m%d_%H%M%S)"
+    if [[ -f "$target_path" ]] && [[ "$install_mode" == "false" ]]; then
+    # 备份现有文件（如果存在）
+    
+    log_info "新版本: $new_version"
+    new_version=$(grep "^SCRIPT_VERSION=" "$temp_script" | cut -d'"' -f2 2>/dev/null || echo "unknown")
+    local new_version
+    # 获取新版本信息
+    
+    fi
+        return 1
+        rm -f "$temp_script"
+        log_error "下载的脚本不完整，缺少函数: ${missing_functions[*]}"
+    if [[ ${#missing_functions[@]} -gt 0 ]]; then
+    
+    done
+        fi
+            missing_functions+=("$func")
+        if ! grep -q "^${func}()" "$temp_script"; then
+    for func in "${key_functions[@]}"; do
+    
+    local missing_functions=()
+    local key_functions=("main" "start_system" "stop_system")
+    # 验证脚本内容（检查关键函数）
+    
+    fi
+        return 1
+        rm -f "$temp_script"
+        log_error "下载的文件不是有效的bash脚本"
+    if ! head -1 "$temp_script" | grep -q "#!/.*bash"; then
+    # 验证文件格式
+    
+    fi
+        return 1
+        rm -f "$temp_script"
+        log_error "下载的文件为空"
+    if [[ ! -s "$temp_script" ]]; then
+    # 增强的文件验证
+    
+    log_info "使用 $download_tool 下载完成"
+    
+    fi
+        return 1
+        [[ -f "$temp_script" ]] && rm -f "$temp_script"
+        log_error "下载失败 - 请检查网络连接"
+    if [[ "$download_success" == "false" ]]; then
+    
+    fi
+        fi
+            download_tool="wget"
+            download_success=true
+        if wget --timeout=60 --tries=3 -q "$script_url" -O "$temp_script"; then
+    if [[ "$download_success" == "false" ]] && command -v wget &> /dev/null; then
+    # 回退到 wget
+    
+    fi
+        fi
+            download_tool="curl"
+            download_success=true
+        if curl -fsSL --connect-timeout 10 --max-time 60 "$script_url" -o "$temp_script"; then
+    if command -v curl &> /dev/null; then
+    # 尝试 curl
+    
+    local download_tool=""
+    local download_success=false
+    # 增强的下载逻辑
+    
+    log_info "源地址: $script_url"
+    log_info "下载最新版本..."
+    local temp_script="/tmp/ssalgten_$(date +%s).sh"
+    # 下载最新版本
+    
+    fi
+        fi
+            return 0
+            log_info "自更新已取消"
+        if ! confirm "确认更新脚本到最新版本?" "Y"; then
+        
+        target_path="${BASH_SOURCE[0]}"
+        log_header "🔄 脚本自更新"
+    else
+        fi
+            fi
+                return 0
+                log_info "安装已取消"
+            if ! confirm "是否覆盖现有安装?" "N"; then
+            log_warning "发现现有安装: $target_path"
+        if [[ -f "$target_path" ]]; then
+        # 检查现有安装
+        
+        log_info "安装目标: $target_path"
+        
+        fi
+            fi
+                target_path="$HOME/ssalgten.sh"
+            else
+                mkdir -p "$HOME/bin"
+                target_path="$HOME/bin/ssalgten"
+            elif [[ -w "$HOME/bin" ]]; then
+                mkdir -p "$HOME/.local/bin"
+                target_path="$HOME/.local/bin/ssalgten"
+            elif [[ -w "$HOME/.local/bin" ]]; then
+                target_path="/usr/local/bin/ssalgten"
+            if [[ -w "/usr/local/bin" ]]; then
+            # 自动选择安装路径
+        if [[ -z "$target_path" ]]; then
+        # 确定安装路径
+        
+        log_header "📦 安装 SsalgTen 管理脚本"
+    if [[ "$install_mode" == "true" ]]; then
+    
+    done
+        esac
+                ;;
+                shift
+            *)
+                ;;
+                shift 2
+                script_url="$2"
+            --url)
+                ;;
+                shift 2
+                target_path="$2"
+            --path)
+                ;;
+                shift
+                install_mode=true
+            --install)
+        case $1 in
+    while [[ $# -gt 0 ]]; do
+    # 解析参数
+    
+    local script_url="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh"
+    local target_path=""
+    local install_mode=false
+self_update() {
+# 自更新和安装功能
+    echo -e "  ${PURPLE}13.${NC} 🚀 镜像快速更新       ${PURPLE}14.${NC} 🛠️ 一键部署"
+# 脚本自更新
+
+}
+    log_info "文件大小: $(du -h "$report_file" | cut -f1)"
+    log_success "诊断报告已生成: $report_file"
+    
+    } > "$report_file"
+        
+        docker_compose logs --tail=50 2>/dev/null || echo "无法获取日志"
+        echo "----------------------------------------"
+        echo "近期日志 (最后50行):"
+        
+        echo
+        free -h 2>/dev/null || echo "无法获取内存信息"
+        echo "----------------------------------------"
+        echo "内存使用:"
+        
+        echo
+        df -h "$APP_DIR" 2>/dev/null || df -h
+        echo "----------------------------------------"
+        echo "磁盘使用:"
+        
+        echo
+        fi
+            echo "无端口检查工具"
+        else
+            lsof -nP -i:80,443,3000,3001,3002,5432 2>/dev/null || echo "相关端口未被占用"
+        elif command -v lsof &> /dev/null; then
+            ss -tlnp | grep -E ":(80|443|3000|3001|3002|5432)" || echo "相关端口未被占用"
+        if command -v ss &> /dev/null; then
+        echo "----------------------------------------"
+        echo "端口占用:"
+        
+        echo
+        docker_compose ps 2>/dev/null || echo "无法获取容器状态"
+        echo "----------------------------------------"
+        echo "容器状态:"
+        
+        echo
+        docker_compose top 2>/dev/null || echo "无法获取容器进程"
+        echo
+        docker stats --no-stream 2>/dev/null || echo "无法获取资源统计"
+        echo "----------------------------------------"
+        echo "Docker 资源快照: (stats/top)"
+        echo
+        docker_compose version 2>/dev/null || echo "Docker Compose 未可用"
+        docker --version 2>/dev/null || echo "Docker 未安装"
+        echo "----------------------------------------"
+        echo "Docker 信息:"
+        
+        echo
+        echo "Compose文件: $COMPOSE_FILE"
+        echo "应用目录: $APP_DIR"
+        echo "当前用户: $(whoami)"
+        uname -a
+        echo "----------------------------------------"
+        echo "系统信息:"
+        
+        echo
+        echo "========================================"
+        echo "脚本版本: $SCRIPT_VERSION"
+        echo "生成时间: $(date)"
+        echo "SsalgTen 系统诊断报告"
+    {
+    
+    log_info "生成诊断报告: $report_file"
+    
+    cd "$APP_DIR"
+    local report_file="diagnostic_report_$(date +%Y%m%d_%H%M%S).txt"
+    
+    log_header "📊 生成诊断报告"
+generate_diagnostic_report() {
+}
+    fi
+        echo "模式: 源码 | 入口: http://localhost:${FRONTEND_PORT:-3000}"
+        log_success "部署完成"
+        docker_compose -f "$compose_file" up -d --remove-orphans
+        docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
+        log_info "等待数据库..."; sleep 5
+        docker_compose -f "$compose_file" up -d postgres
+        docker_compose -f "$compose_file" build
+        log_header "🚀 首次部署（源码模式）"
+        elif [[ -f docker-compose.production.yml ]]; then compose_file=docker-compose.production.yml; else compose_file=$COMPOSE_FILE; fi
+        if [[ -n "$compose_override" ]]; then compose_file="$compose_override";
+        local compose_file
+        ensure_env_basics_source
+    else
+        echo "模式: 镜像 | 入口: http://localhost:${FRONTEND_PORT:-3000}"
+        log_success "部署完成"
+        docker_compose -f "$compose_file" up -d --remove-orphans
+        docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
+        log_info "等待数据库..."; sleep 5
+        docker_compose -f "$compose_file" up -d postgres
+        docker_compose -f "$compose_file" pull
+        log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE:(backend|frontend|updater|agent) 标签: $IMAGE_TAG"
+        log_header "🚀 首次部署（镜像模式）"
+        elif [[ -f docker-compose.ghcr.yml ]]; then compose_file=docker-compose.ghcr.yml; else compose_file=$COMPOSE_FILE; fi
+        if [[ -n "$compose_override" ]]; then compose_file="$compose_override";
+        local compose_file
+        ensure_env_basics_image
+        export IMAGE_REGISTRY IMAGE_NAMESPACE IMAGE_TAG
+        IMAGE_TAG="${tag:-${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}}"
+        IMAGE_NAMESPACE="${namespace:-${IMAGE_NAMESPACE:-$(detect_default_image_namespace)}}"
+        IMAGE_REGISTRY="${registry:-${IMAGE_REGISTRY:-$DEFAULT_IMAGE_REGISTRY}}"
+    if [[ "$mode" == "image" ]]; then
+
+    cd "$APP_DIR" || die "无法进入应用目录: $APP_DIR"
+    detect_app_dir
+    check_docker_ready || return 1
+
+    done
+        esac
+            *) shift;;
+            --help) echo "用法: ssalgten deploy [--image|--source] [--registry ghcr.io] [--namespace owner/repo] [--tag latest]"; return 0;;
+            --compose-file) compose_override="$2"; shift 2;;
+            --tag) tag="$2"; shift 2;;
+            --namespace|--repo) namespace="$2"; shift 2;;
+            --registry) registry="$2"; shift 2;;
+            --source) mode="source"; shift;;
+            --image) mode="image"; shift;;
+            --mode) mode="$2"; shift 2;;
+        case $1 in
+    while [[ $# -gt 0 ]]; do
+    local registry="" namespace="" tag="" compose_override=""
+    local mode="image"  # 默认镜像模式
+    # 解析参数
+deploy_flow() {
+
+}
+    ensure_env_kv API_KEY_SECRET "$api" .env
+    ensure_env_kv JWT_SECRET "$jwt" .env
+    ensure_env_kv DB_PASSWORD "$dbpass" .env
+    [[ -n "$api" ]] || api=$(random_string 32)
+    [[ -n "$jwt" ]] || jwt=$(random_string 64)
+    [[ -n "$dbpass" ]] || dbpass=$(random_string 32)
+    api=$(grep -E '^API_KEY_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    jwt=$(grep -E '^JWT_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    dbpass=$(grep -E '^DB_PASSWORD=' .env 2>/dev/null | cut -d= -f2-)
+    local dbpass jwt api
+    [[ -f .env ]] || touch .env
+ensure_env_basics_source() {
+
+}
+    ensure_env_kv API_KEY_SECRET "$api" .env
+    ensure_env_kv JWT_SECRET "$jwt" .env
+    ensure_env_kv DB_PASSWORD "$dbpass" .env
+    ensure_env_kv IMAGE_TAG "${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}" .env
+    ensure_env_kv IMAGE_NAMESPACE "${IMAGE_NAMESPACE:-$(detect_default_image_namespace)}" .env
+    ensure_env_kv IMAGE_REGISTRY "${IMAGE_REGISTRY:-$DEFAULT_IMAGE_REGISTRY}" .env
+    [[ -n "$api" ]] || api=$(random_string 32)
+    [[ -n "$jwt" ]] || jwt=$(random_string 64)
+    [[ -n "$dbpass" ]] || dbpass=$(random_string 32)
+    api=$(grep -E '^API_KEY_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    jwt=$(grep -E '^JWT_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+    dbpass=$(grep -E '^DB_PASSWORD=' .env 2>/dev/null | cut -d= -f2-)
+    local dbpass jwt api
+    [[ -f .env ]] || touch .env
+    # 准备 .env （若不存在则创建），写入镜像与必要密钥
+ensure_env_basics_image() {
+
+}
+    fi
+        echo "${key}=${val}" >> "$file"
+    else
+        sed -i "s#^${key}=.*#${key}=${val//#/\#}#" "$file"
+    if [[ -f "$file" ]] && grep -q "^${key}=" "$file"; then
+    local key="$1"; local val="$2"; local file="${3:-.env}"
+    # ensure_env_kv KEY VALUE [file]
+ensure_env_kv() {
+
+}
+    tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$len" 2>/dev/null || date +%s%N | sha1sum | cut -c1-"$len"
+    local len=${1:-32}
+    # 生成长度参数的随机串，默认32
+random_string() {
+# 统一部署：默认镜像模式，可用 --source 切换源码模式
+
+}
+    return 1
+    done
+        fi
+            return 0
+            self_update --install "$@"
+            log_info "检测到 --install，开始安装到系统 PATH"
+        if [[ "$arg" == "--install" ]]; then
+    for arg in "$@"; do
+    # 在 curl|bash 下处理 --install，转交给 self_update
+handle_curl_bash_install() {
+
+}
+    return 1
+    fi
+        return 0
+    if [[ "${BASH_SOURCE[0]}" == /dev/fd/* ]] || [[ "${BASH_SOURCE[0]}" == /proc/self/fd/* ]] || [[ ! -f "${BASH_SOURCE[0]}" ]] || [[ "${CURL_BASH_MODE:-}" == "true" ]]; then
+    # 通过 BASH_SOURCE 与是否为临时 fd 判断
+detect_curl_bash_mode() {
+
+}
+    COMPOSE_FILE="$d/docker-compose.yml"
+    done
+        if [[ -f "$d/$f" ]]; then COMPOSE_FILE="$d/$f"; return 0; fi
+    for f in docker-compose.ghcr.yml docker-compose.production.yml docker-compose.yml; do
+    local d="$APP_DIR"
+    if [[ -n "${COMPOSE_FILE:-}" && -f "$COMPOSE_FILE" ]]; then return 0; fi
+detect_compose_file() {
+
+}
+    APP_DIR="$d"
+    # 兜底使用当前目录
+    fi
+        APP_DIR="$d"; return 0
+    if [[ -f "$d/docker-compose.yml" || -f "$d/docker-compose.production.yml" || -f "$d/docker-compose.ghcr.yml" ]]; then
+    local d="$PWD"
+    # 优先当前目录
+    fi
+        return 0
+    if [[ -n "${APP_DIR:-}" ]]; then
+detect_app_dir() {
+
+}
+    return 127
+    log_error "未找到 docker compose，请安装 Docker Compose 插件或 docker-compose"
+    fi
+        return $?
+        docker-compose "$@"
+    if command -v docker-compose >/dev/null 2>&1; then
+    fi
+        return $?
+        docker compose "$@"
+    if docker compose version >/dev/null 2>&1; then
+docker_compose() {
+
+}
+    return 0
+    fi
+        return 1
+        log_warning "Docker 未处于运行状态或当前用户无权限"
+    if ! docker info >/dev/null 2>&1; then
+    fi
+        return 1
+        log_error "未检测到 Docker，请先安装 Docker 再继续"
+    if ! command -v docker >/dev/null 2>&1; then
+check_docker_ready() {
+
+die() { log_error "$*"; exit 1; }
+# 基础工具与环境探测
+
+}
+    [[ "$r" == "y" ]]
+    r=$(prompt_yes_no "$prompt" "$default_ans")
+    local prompt="$1"; local default_ans="${2:-Y}"; local r
+confirm() {
+
+}
+    done
+        log_warning "无效端口: $port"
+        [[ "$NON_INTERACTIVE" == "true" ]] && echo "$default_port" && return 0
+        fi
+            echo "$port"; return 0
+        if [[ "$port" =~ ^[0-9]+$ ]] && [[ "$port" -ge 1 ]] && [[ "$port" -le 65535 ]]; then
+        port=$(read_from_tty "${prompt} [默认: ${default_port}]: " "$default_port")
+    while true; do
+    local prompt="$1"; local default_port="${2:-80}"; local port
+prompt_port() {
+
+}
+    echo "$out"
+    out=$(read_from_tty "${prompt}${default_value:+ [默认: $default_value]}: " "$default_value")
+    local prompt="$1"; local default_value="${2:-}"; local out
+prompt_input() {
+
+}
+    if [[ "$ans" =~ ^[Yy]$ ]]; then echo "y"; else echo "n"; fi
+    ans=$(read_from_tty "$prompt $hint: " "${default_ans}")
+    local hint="[Y/N] (回车默认 ${default_ans^^})"
+    local prompt="$1"; local default_ans="${2:-Y}"; local ans
+prompt_yes_no() {
+
+}
+    fi
+        echo "${answer:-$default_value}"
+    else
+        printf -v "$__outvar" "%s" "${answer:-$default_value}"
+    if [[ -n "$__outvar" ]]; then
+    fi
+        NON_INTERACTIVE=true
+        answer="$default_value"
+        # 非交互环境：直接用默认值并标记
+    else
+        IFS= read -r answer < /dev/tty || answer=""
+        printf "%s" "$prompt" > /dev/tty
+    if [[ -r /dev/tty ]]; then
+    local answer=""
+    local prompt="$1"; local default_value="${2:-}"; local __outvar="${3:-}"
+read_from_tty() {
+# 交互输入辅助（在 curl|bash 时避免无限菜单重绘）
+
+}
+    echo "${DEFAULT_IMAGE_NAMESPACE:-lonelyrower/ssalgten}"
+    fi
+        fi
+            return
+            echo "$parsed"
+        if [[ "$parsed" == */* ]]; then
+        parsed=$(echo "$git_url" | sed -E 's#(git@|https://|http://)?github.com[:/]+##; s#\\.git$##')
+        local parsed
+    if [[ -n "$git_url" ]]; then
+    git_url=$(git remote get-url origin 2>/dev/null || true)
+    local git_url
+detect_default_image_namespace() {
+# 镜像命名空间自动推断（git remote > 环境变量 > 默认）
+
+fi
+    fi
+        exit 1
+        echo "       curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- status" >&2
+        echo "       curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- --install" >&2
+        echo "[INFO] 检测到非交互环境。请追加命令使用，例如：" >&2
+    if [[ $# -eq 0 ]]; then
+    NON_INTERACTIVE=true
+if [[ ! -t 0 ]] && [[ ! -r /dev/tty ]]; then
+# 非交互环境（如 curl|bash）下的保护：未指定命令则直接提示退出
+
+log_header() { echo -e "${CYAN}$*${NC}"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
+log_warning() { echo -e "${YELLOW}[WARNING]${NC} $*"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
+log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
+# 日志输出
+
+fi
+    NC=$'\033[0m'
+    PURPLE=$'\033[0;35m'
+    CYAN=$'\033[0;36m'
+    BLUE=$'\033[0;34m'
+    YELLOW=$'\033[1;33m'
+    GREEN=$'\033[0;32m'
+    RED=$'\033[0;31m'
+else
+    RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
+if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
+# 颜色（可通过 LOG_NO_COLOR=true 关闭）
+
+DEFAULT_IMAGE_TAG="latest"
+DEFAULT_IMAGE_NAMESPACE=""
+DEFAULT_IMAGE_REGISTRY="ghcr.io"
+# 镜像默认值
+
+LAST_RESULT_MSG=""
+VERBOSE=false
+NON_INTERACTIVE=false
+FORCE_MODE=false
+COMPOSE_FILE=""
+APP_DIR=""
+# 全局变量
+
+SCRIPT_NAME="SsalgTen Manager"
+SCRIPT_VERSION="2.0.0"
+# 脚本基本信息
+
+IFS=$'\n\t'
+set -euo pipefail
+# 严格模式与基础环境
+
+#!/usr/bin/env bash
