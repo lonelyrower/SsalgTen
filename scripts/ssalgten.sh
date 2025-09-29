@@ -3795,6 +3795,7 @@ show_interactive_menu() {
         "running") status_color="${GREEN}● 运行中${NC}" ;;
         "partial") status_color="${YELLOW}◐ 部分运行${NC}" ;;
         "stopped") status_color="${RED}○ 已停止${NC}" ;;
+        "not-installed") status_color="${YELLOW}◇ 未安装${NC}" ;;
         *) status_color="${RED}✗ $status${NC}" ;;
     esac
     
@@ -3894,6 +3895,12 @@ EOF
 
 # 获取系统状态（用于菜单显示）
 get_system_status() {
+    # curl|bash 模式下或应用目录不存在时，返回安全状态
+    if [[ "${IN_CURL_BASH:-false}" == "true" ]] || [[ ! -d "$APP_DIR" ]]; then
+        echo "not-installed"
+        return 0
+    fi
+    
     if ! check_docker_ready &> /dev/null; then
         echo "docker-unavailable"
         return 1
@@ -4101,8 +4108,11 @@ main() {
             if [[ -r /dev/tty ]]; then
                 log_info "进入交互菜单模式..."
                 exec </dev/tty
-                show_interactive_menu
-                # 只显示一次菜单，避免无限循环
+                # 设置全局变量供 get_system_status 使用
+                export IN_CURL_BASH=true
+                while true; do
+                    show_interactive_menu
+                done
             else
                 # 无法交互时给出明确指引
                 log_error "当前环境不支持交互输入。请使用以下任一方式："
