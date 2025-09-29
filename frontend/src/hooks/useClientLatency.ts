@@ -48,7 +48,7 @@ export function useClientLatency() {
         clientIP: parsed.clientIP || null,
       }));
     } catch {}
-  }, []);
+  }, [STORAGE_TTL_MS]);
 
   // 任何状态变化后保存到本地存储（轻量级持久化）
   React.useEffect(() => {

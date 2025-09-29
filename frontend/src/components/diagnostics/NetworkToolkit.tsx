@@ -65,7 +65,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     };
 
     fetchVisitorInfo();
-  }, []);
+  }, [getBestTestTarget, pingCount, preferIPv6, selectedNode.id, selectedNode.ipv4, selectedNode.ipv6, tools, trMaxHops, useProxy]);
 
   const tools = [
     {

@@ -49,9 +49,9 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       const response = await apiService.getNodes();
       if (response.success && response.data) {
         // 规范化状态为小写，避免统计/筛选误差
-        const normalized = response.data.map((n: any) => ({
+        const normalized = response.data.map((n: NodeData) => ({
           ...n,
-          status: typeof n.status === 'string' ? (n.status as string).toLowerCase() : n.status
+          status: (typeof n.status === 'string' ? n.status.toLowerCase() : n.status) as NodeData['status']
         }));
         setNodes(normalized);
       } else {
@@ -294,7 +294,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       try {
                         const text = await file.text();
                         setImportText((prev) => prev ? (prev + '\n' + text) : text);
-                      } catch (err) {
+                      } catch {
                         setError('读取文件失败');
                       }
                     }}
@@ -345,7 +345,9 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                         if (Array.isArray(parsed)) items = parsed;
                         else if (Array.isArray(parsed.items)) items = parsed.items;
                       }
-                    } catch {}
+                    } catch {
+                      // JSON解析失败时忽略错误，继续处理原始文本
+                    }
                     if (items.length === 0) {
                       // 逐行解析 IP
                       const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
@@ -360,14 +362,14 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                     try {
                       const resp = await apiService.importPlaceholderNodes(items);
                       if (resp.success && resp.data) {
-                        setImportResult(resp.data as any);
+                        setImportResult(resp.data);
                         // 刷新节点
                         await loadNodes();
                       } else {
                         setError(resp.error || '导入失败');
                       }
-                    } catch (e: any) {
-                      const msg = (e && e.message) ? String(e.message) : '';
+                    } catch (e: unknown) {
+                      const msg = (e instanceof Error && e.message) ? String(e.message) : '';
                       if (msg.includes('Placeholder feature not available') || msg.includes('501')) {
                         setError('占位功能不可用：请先在后端执行数据库迁移（prisma migrate deploy）后重试。');
                       } else {

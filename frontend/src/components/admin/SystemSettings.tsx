@@ -63,7 +63,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       } else {
         setError(response.error || 'Failed to load configurations');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load configurations');
     } finally {
       setLoading(false);
@@ -219,7 +219,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       } else {
         setError(response.error || '保存配置失败');
       }
-    } catch (err) {
+    } catch {
       setError('保存配置失败');
     } finally {
       setSaving(false);
@@ -246,7 +246,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       } else {
         setError(response.error || '重置配置失败');
       }
-    } catch (err) {
+    } catch {
       setError('重置配置失败');
     } finally {
       setSaving(false);
@@ -281,7 +281,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       } else {
         setError(resp.error || '密码修改失败');
       }
-    } catch (_) {
+    } catch {
       setError('密码修改失败');
     } finally {
       setSaving(false);

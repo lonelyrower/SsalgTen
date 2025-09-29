@@ -90,7 +90,7 @@ export const VisitorStatsCard: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [days]);
+  }, [timeRange, fetchStats]);
 
   useEffect(() => {
     // 每10分钟自动刷新
