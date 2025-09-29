@@ -80,6 +80,17 @@ DEFAULT_IMAGE_TAG="latest"
 
 DEFAULT_APP_DIR="${DEFAULT_APP_DIR:-/opt/ssalgten}"
 
+# 部署相关变量
+DOMAIN=""
+SSL_EMAIL=""
+DB_PASSWORD=""
+JWT_SECRET=""
+API_SECRET=""
+AGENT_KEY=""
+ENABLE_SSL=false
+SSL_MODE="none"
+RUNNING_AS_ROOT=false
+
 # 颜色定义（可通过环境变量禁用）
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
     RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
@@ -104,6 +115,57 @@ log_header() { echo -e "${CYAN}$*${NC}"; }
 die() { 
     log_error "$*"
     exit 1
+}
+
+# 通用sudo函数
+run_as_root() {
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
+
+# 改进的输入函数 - 支持默认值和回车确认
+prompt_input() {
+    local prompt="$1"
+    local default="$2"
+    local var_name="$3"
+    local response
+    
+    if [[ -n "$default" ]]; then
+        read -p "$prompt [默认: $default]: " response
+        response="${response:-$default}"
+    else
+        read -p "$prompt: " response
+    fi
+    
+    if [[ -n "$var_name" ]]; then
+        eval "$var_name=\"$response\""
+    fi
+    echo "$response"
+}
+
+# Yes/No 提示函数
+prompt_yes_no() {
+    local prompt="$1"
+    local default="${2:-}"
+    local response
+    
+    while true; do
+        if [[ -n "$default" ]]; then
+            read -p "$prompt [默认: $default]: " response
+            response="${response:-$default}"
+        else
+            read -p "$prompt (y/n): " response
+        fi
+        
+        case "${response,,}" in
+            y|yes|是|确认) echo "y"; return 0 ;;
+            n|no|否|取消) echo "n"; return 1 ;;
+            *) echo "请输入 y(是) 或 n(否)" ;;
+        esac
+    done
 }
 
 cleanup_on_interrupt() {
@@ -133,12 +195,14 @@ ${PURPLE}全局选项:${NC}
   --help, -h          显示此帮助信息
   --version           显示版本信息
 
-${PURPLE}系统管理命令:${NC}
+${PURPLE}系统生命周期命令:${NC}
+  ${GREEN}deploy${NC}              🔧 一键部署生产环境 (完整向导)
   ${GREEN}start${NC}               🚀 启动系统服务 (带健康检查)
   ${GREEN}stop${NC}                🛑 停止系统服务 (带端口清理)
   ${GREEN}restart${NC}             🔄 重启系统服务 (stop + start)
   ${GREEN}status${NC}              📊 显示系统运行状态
-  ${GREEN}update${NC}              ⚡ 更新系统代码并重启 (带备份)
+  ${GREEN}update${NC}              ⚡ 更新系统代码并重启 (带子菜单选择)
+  ${RED}uninstall${NC} [--force]   🗑️ 完全卸载系统 (谨慎使用)
 
 ${PURPLE}监控和调试命令:${NC}
   ${YELLOW}logs${NC} [OPTIONS] [SERVICE]  📋 查看服务日志
@@ -1875,6 +1939,526 @@ ensure_env_basics_source() {
     ensure_env_kv API_KEY_SECRET "$api" .env
 }
 
+# ============== 新的部署相关函数 ==============
+
+# 检查系统要求
+check_system_requirements() {
+    log_info "检查系统要求..."
+    
+    # 检查操作系统
+    if ! command -v apt-get >/dev/null 2>&1 && ! command -v yum >/dev/null 2>&1; then
+        log_warning "未检测到支持的包管理器 (apt-get/yum)"
+    fi
+    
+    # 检查内存
+    local mem_gb=$(free -g | awk 'NR==2{print $2}' 2>/dev/null || echo "0")
+    if [[ $mem_gb -lt 1 ]]; then
+        log_warning "系统内存少于1GB，可能影响性能"
+    fi
+    
+    # 检查磁盘空间
+    local disk_gb=$(df -BG / | awk 'NR==2{print $4}' | sed 's/G//' 2>/dev/null || echo "0")
+    if [[ $disk_gb -lt 5 ]]; then
+        log_warning "可用磁盘空间少于5GB，可能不足"
+    fi
+    
+    # 检查Docker
+    if ! command -v docker >/dev/null 2>&1; then
+        log_info "Docker 未安装，将自动安装"
+        install_docker
+    else
+        log_success "Docker 已安装: $(docker --version)"
+    fi
+    
+    # 检查Docker Compose
+    if ! docker compose version >/dev/null 2>&1 && ! command -v docker-compose >/dev/null 2>&1; then
+        log_info "Docker Compose 未安装，将自动安装"
+        install_docker_compose
+    else
+        log_success "Docker Compose 已安装"
+    fi
+}
+
+# 安装Docker
+install_docker() {
+    log_info "安装 Docker..."
+    
+    if command -v apt-get >/dev/null 2>&1; then
+        # Ubuntu/Debian
+        run_as_root apt-get update
+        run_as_root apt-get install -y ca-certificates curl gnupg lsb-release
+        
+        # 添加Docker官方GPG密钥
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        
+        # 添加Docker仓库
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+        
+        run_as_root apt-get update
+        run_as_root apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        
+    elif command -v yum >/dev/null 2>&1; then
+        # CentOS/RHEL
+        run_as_root yum install -y yum-utils
+        run_as_root yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        run_as_root yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        run_as_root systemctl start docker
+        run_as_root systemctl enable docker
+    else
+        log_error "不支持的操作系统，请手动安装Docker"
+        exit 1
+    fi
+    
+    # 添加用户到docker组
+    if [[ "$RUNNING_AS_ROOT" != "true" ]]; then
+        run_as_root usermod -aG docker "$USER"
+        log_warning "请重新登录以使Docker权限生效，或运行: newgrp docker"
+    fi
+    
+    log_success "Docker 安装完成"
+}
+
+# 安装Docker Compose
+install_docker_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        log_success "Docker Compose 插件已可用"
+        return 0
+    fi
+    
+    log_info "安装 Docker Compose..."
+    
+    # 尝试安装compose插件
+    if command -v apt-get >/dev/null 2>&1; then
+        run_as_root apt-get update
+        run_as_root apt-get install -y docker-compose-plugin
+    elif command -v yum >/dev/null 2>&1; then
+        run_as_root yum install -y docker-compose-plugin
+    else
+        # 下载二进制文件
+        local compose_version="2.21.0"
+        run_as_root curl -L "https://github.com/docker/compose/releases/download/v$compose_version/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        run_as_root chmod +x /usr/local/bin/docker-compose
+    fi
+    
+    log_success "Docker Compose 安装完成"
+}
+
+# 收集部署信息
+collect_deployment_info() {
+    log_header "🔧 部署配置向导"
+    echo ""
+    
+    echo "请选择部署类型："
+    echo "1. 完整部署 (域名 + Let's Encrypt SSL + HTTPS)"
+    echo "2. Cloudflare部署 (域名 + Cloudflare SSL + HTTPS)"  
+    echo "3. 简单部署 (仅IP访问，无SSL)"
+    echo ""
+    
+    local deploy_type
+    while true; do
+        read -p "请选择 [1-3]: " deploy_type
+        case "$deploy_type" in
+            1)
+                ENABLE_SSL=true
+                SSL_MODE="letsencrypt"
+                break
+                ;;
+            2)
+                ENABLE_SSL=true
+                SSL_MODE="cloudflare"
+                break
+                ;;
+            3)
+                ENABLE_SSL=false
+                SSL_MODE="none"
+                break
+                ;;
+            *) echo "请输入有效选项 (1-3)" ;;
+        esac
+    done
+    
+    # 收集域名信息
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        echo ""
+        log_info "配置域名信息"
+        
+        while [[ -z "$DOMAIN" ]]; do
+            DOMAIN=$(prompt_input "您的域名 (如: example.com)")
+            if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$ ]]; then
+                log_error "域名格式不正确，请重新输入"
+                DOMAIN=""
+            fi
+        done
+        
+        if [[ "$SSL_MODE" == "letsencrypt" ]]; then
+            while [[ -z "$SSL_EMAIL" ]]; do
+                SSL_EMAIL=$(prompt_input "SSL证书邮箱地址")
+                if [[ ! "$SSL_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; then
+                    log_error "邮箱格式不正确，请重新输入"
+                    SSL_EMAIL=""
+                fi
+            done
+        fi
+    else
+        echo ""
+        log_info "配置服务器信息"
+        
+        # 尝试自动检测IP
+        local detected_ip=$(curl -s -4 ifconfig.me 2>/dev/null || curl -s -4 icanhazip.com 2>/dev/null || echo "")
+        if [[ -n "$detected_ip" ]]; then
+            DOMAIN=$(prompt_input "服务器IP地址" "$detected_ip")
+        else
+            DOMAIN=$(prompt_input "请手动输入服务器IP地址")
+        fi
+    fi
+    
+    # 生成安全密钥
+    echo ""
+    log_info "生成安全配置..."
+    
+    DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+    JWT_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+    API_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+    AGENT_KEY=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+    
+    log_success "配置收集完成"
+}
+
+# 生产环境部署主函数
+deploy_production() {
+    log_header "🚀 SsalgTen 生产环境部署"
+    echo ""
+    
+    # 检查用户权限
+    if [[ $EUID -eq 0 ]]; then
+        RUNNING_AS_ROOT=true
+        log_warning "⚠️ 检测到root用户运行"
+        echo ""
+        echo -e "${YELLOW}安全建议：${NC}"
+        echo "- 为了系统安全，建议使用专用用户运行应用程序"
+        echo "- 推荐创建专用用户： useradd -m -s /bin/bash ssalgten"
+        echo "- 然后切换用户运行： su - ssalgten"
+        echo ""
+        
+        if ! prompt_yes_no "是否仍要继续使用root用户部署" "n"; then
+            log_info "已选择创建专用用户，这是更安全的选择！"
+            echo ""
+            echo -e "${GREEN}请执行以下命令创建专用用户：${NC}"
+            echo "  useradd -m -s /bin/bash ssalgten"
+            echo "  usermod -aG sudo ssalgten"
+            echo "  passwd ssalgten"
+            echo "  su - ssalgten"
+            echo ""
+            echo "然后重新运行此脚本即可。"
+            return 0
+        fi
+        
+        log_warning "继续使用root用户部署，将进行安全加固配置"
+    fi
+    
+    # 执行部署步骤
+    check_system_requirements
+    collect_deployment_info
+    
+    # 创建应用目录
+    log_info "创建应用目录: $APP_DIR"
+    run_as_root mkdir -p "$APP_DIR"
+    
+    if [[ "$RUNNING_AS_ROOT" != "true" ]]; then
+        run_as_root chown -R "$USER:$USER" "$APP_DIR"
+    fi
+    
+    cd "$APP_DIR"
+    
+    # 下载项目文件
+    download_project_files
+    
+    # 配置环境变量
+    configure_environment
+    
+    # 选择并配置compose文件
+    configure_compose_file
+    
+    # 启动服务
+    deploy_services
+    
+    # 显示部署结果
+    show_deployment_result
+}
+
+# 下载项目文件
+download_project_files() {
+    log_info "下载项目文件..."
+    
+    # 如果已存在项目文件，询问是否覆盖
+    if [[ -f "docker-compose.yml" ]]; then
+        if ! prompt_yes_no "检测到现有安装，是否覆盖" "y"; then
+            log_info "跳过文件下载"
+            return 0
+        fi
+    fi
+    
+    # 下载主要文件
+    local files=(
+        "docker-compose.yml"
+        "docker-compose.production.yml"
+        "docker-compose.https.yml"
+        ".env.example"
+    )
+    
+    for file in "${files[@]}"; do
+        log_info "下载 $file..."
+        if ! curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file"; then
+            log_error "下载 $file 失败"
+            return 1
+        fi
+    done
+    
+    # 下载配置文件
+    mkdir -p configs
+    local config_files=(
+        "configs/nginx-https.conf"
+        "configs/Caddyfile.https"
+    )
+    
+    for file in "${config_files[@]}"; do
+        log_info "下载 $file..."
+        curl -fsSL "https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/$file" -o "$file" || true
+    done
+    
+    log_success "项目文件下载完成"
+}
+
+# 配置环境变量
+configure_environment() {
+    log_info "配置环境变量..."
+    
+    # 创建.env文件
+    cat > .env << EOF
+# SsalgTen 生产环境配置
+# 自动生成于 $(date)
+
+# 基础配置
+NODE_ENV=production
+DOMAIN=$DOMAIN
+PORT=3000
+API_PORT=5000
+
+# 数据库配置
+DB_PASSWORD=$DB_PASSWORD
+DATABASE_URL=postgresql://postgres:$DB_PASSWORD@db:5432/ssalgten
+
+# 安全配置
+JWT_SECRET=$JWT_SECRET
+API_SECRET=$API_SECRET
+AGENT_KEY=$AGENT_KEY
+
+# SSL配置
+ENABLE_SSL=$ENABLE_SSL
+SSL_MODE=$SSL_MODE
+SSL_EMAIL=$SSL_EMAIL
+
+# 镜像配置
+IMAGE_REGISTRY=${DEFAULT_IMAGE_REGISTRY}
+IMAGE_NAMESPACE=${DEFAULT_IMAGE_NAMESPACE}
+IMAGE_TAG=${DEFAULT_IMAGE_TAG}
+EOF
+
+    # 设置权限
+    chmod 600 .env
+    
+    log_success "环境变量配置完成"
+}
+
+# 配置compose文件
+configure_compose_file() {
+    log_info "配置Docker Compose..."
+    
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        COMPOSE_FILE="$APP_DIR/docker-compose.https.yml"
+        log_info "使用HTTPS配置: docker-compose.https.yml"
+    else
+        COMPOSE_FILE="$APP_DIR/docker-compose.production.yml"
+        log_info "使用生产配置: docker-compose.production.yml"
+    fi
+    
+    export COMPOSE_FILE
+    export COMPOSE_PROJECT_NAME="ssalgten"
+}
+
+# 部署服务
+deploy_services() {
+    log_info "启动SsalgTen服务..."
+    
+    # 拉取镜像
+    log_info "拉取Docker镜像..."
+    if ! docker_compose pull; then
+        log_warning "部分镜像拉取失败，将尝试构建"
+    fi
+    
+    # 启动服务
+    log_info "启动服务容器..."
+    if ! docker_compose up -d --remove-orphans; then
+        log_error "服务启动失败"
+        return 1
+    fi
+    
+    log_success "服务启动完成"
+    
+    # 等待服务就绪
+    log_info "等待服务就绪..."
+    sleep 10
+    
+    # 检查服务状态
+    if ! health_check "backend" "http://localhost:5000/api/health"; then
+        log_warning "后端服务健康检查失败，但服务可能仍在启动中"
+    fi
+}
+
+# 显示部署结果
+show_deployment_result() {
+    echo ""
+    log_header "🎉 部署完成！"
+    echo ""
+    
+    local access_url
+    if [[ "$ENABLE_SSL" == "true" ]]; then
+        access_url="https://$DOMAIN"
+    else
+        access_url="http://$DOMAIN:3000"
+    fi
+    
+    echo -e "${GREEN}✅ SsalgTen 已成功部署${NC}"
+    echo ""
+    echo -e "${CYAN}访问地址:${NC} $access_url"
+    echo -e "${CYAN}管理后台:${NC} $access_url/admin"
+    echo -e "${CYAN}API接口:${NC} $access_url/api"
+    echo ""
+    echo -e "${YELLOW}默认管理员账户:${NC}"
+    echo "  用户名: admin"
+    echo "  密码: admin123"
+    echo "  ${RED}⚠️ 请立即登录后台修改默认密码！${NC}"
+    echo ""
+    echo -e "${CYAN}应用目录:${NC} $APP_DIR"
+    echo -e "${CYAN}配置文件:${NC} $APP_DIR/.env"
+    echo ""
+    echo -e "${BLUE}常用命令:${NC}"
+    echo "  查看状态: $0 status"
+    echo "  查看日志: $0 logs"
+    echo "  重启服务: $0 restart"
+    echo "  停止服务: $0 stop"
+    echo ""
+}
+
+# 卸载系统
+uninstall_system() {
+    log_header "🗑️ 卸载 SsalgTen 系统"
+    echo ""
+    
+    log_warning "此操作将完全删除 SsalgTen 系统和所有数据！"
+    echo ""
+    echo "将要删除的内容包括："
+    echo "- 应用程序文件"
+    echo "- Docker容器和镜像"
+    echo "- 数据库数据"
+    echo "- 配置文件"
+    echo "- 备份文件"
+    echo ""
+    
+    if [[ "$FORCE_MODE" != "true" ]]; then
+        echo -e "${RED}⚠️ 此操作不可恢复！${NC}"
+        echo ""
+        if ! prompt_yes_no "确认要卸载吗" "n"; then
+            log_info "卸载已取消"
+            return 0
+        fi
+        
+        echo ""
+        log_warning "最后确认：请输入 'DELETE' 来确认卸载"
+        read -p "确认输入: " confirm
+        if [[ "$confirm" != "DELETE" ]]; then
+            log_info "卸载已取消"
+            return 0
+        fi
+    fi
+    
+    echo ""
+    log_info "开始卸载过程..."
+    
+    # 停止并删除容器
+    if [[ -d "$APP_DIR" ]]; then
+        cd "$APP_DIR"
+        
+        log_info "停止Docker容器..."
+        docker_compose down --remove-orphans --volumes 2>/dev/null || true
+        
+        log_info "删除Docker镜像..."
+        docker images | grep -E "(ssalgten|ghcr.io.*ssalgten)" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
+    fi
+    
+    # 删除应用目录
+    log_info "删除应用目录..."
+    if [[ -d "$APP_DIR" ]]; then
+        run_as_root rm -rf "$APP_DIR"
+        log_success "应用目录已删除: $APP_DIR"
+    fi
+    
+    # 清理Docker资源
+    log_info "清理Docker资源..."
+    docker system prune -f >/dev/null 2>&1 || true
+    
+    # 删除脚本（如果是安装的版本）
+    if [[ -f "/usr/local/bin/ssalgten" ]]; then
+        log_info "删除管理脚本..."
+        run_as_root rm -f /usr/local/bin/ssalgten
+    fi
+    
+    echo ""
+    log_success "🎉 SsalgTen 卸载完成！"
+    echo ""
+    log_info "感谢您使用 SsalgTen！"
+}
+
+# 增强的更新系统函数（带子菜单）
+enhanced_update_system() {
+    log_header "⚡ 系统更新"
+    echo ""
+    
+    echo "请选择更新模式："
+    echo "1. 智能更新 (自动选择最佳方式)"
+    echo "2. 镜像快速更新 (仅更新Docker镜像)"
+    echo "3. 完整更新 (包含代码、配置、数据库)"
+    echo "4. 返回主菜单"
+    echo ""
+    
+    local update_choice
+    while true; do
+        read -p "请选择 [1-4]: " update_choice
+        case "$update_choice" in
+            1)
+                log_info "执行智能更新..."
+                update_system
+                break
+                ;;
+            2)
+                log_info "执行镜像快速更新..."
+                update_system --image
+                break
+                ;;
+            3)
+                log_info "执行完整更新..."
+                update_system --full
+                break
+                ;;
+            4)
+                log_info "返回主菜单"
+                return 0
+                ;;
+            *) echo "请输入有效选项 (1-4)" ;;
+        esac
+    done
+}
+
 run_deploy_production() {
     local deploy_script
     local temp_script=""
@@ -2344,18 +2928,20 @@ EOF
     echo -e "${CYAN}系统状态:${NC} $status_color"
     echo -e "${CYAN}应用目录:${NC} $APP_DIR"
     echo ""
-    echo -e "${YELLOW}📋 主要操作:${NC}"
-    echo -e "  ${GREEN}1.${NC} 🚀 启动系统        ${GREEN}2.${NC} 🛑 停止系统"
-    echo -e "  ${BLUE}3.${NC} 🔄 重启系统        ${PURPLE}4.${NC} ⚡ 更新系统"
+    echo -e "${YELLOW}🏗️ 系统管理:${NC}"
+    echo -e "  ${PURPLE}1.${NC} � 一键部署        ${PURPLE}2.${NC} ⚡ 系统更新"
+    echo -e "  ${PURPLE}3.${NC} 🔄 脚本更新        ${RED}4.${NC} 🗑️ 卸载系统"
     echo ""
-    echo -e "${YELLOW}📊 监控管理:${NC}"  
-    echo -e "  ${CYAN}5.${NC} 📊 系统状态        ${CYAN}6.${NC} 📋 查看日志"
-    echo -e "  ${CYAN}7.${NC} 🔍 容器信息        ${CYAN}8.${NC} 🔍 端口检查"
+    echo -e "${YELLOW}� 日常操作:${NC}"
+    echo -e "  ${GREEN}5.${NC} � 启动系统        ${GREEN}6.${NC} � 停止系统"
+    echo -e "  ${BLUE}7.${NC} � 重启系统        ${CYAN}8.${NC} � 系统状态"
     echo ""
-    echo -e "${YELLOW}🛠️  维护工具:${NC}"
-    echo -e "  ${YELLOW}9.${NC} 🗂️  数据备份        ${YELLOW}10.${NC} 🧹 系统清理"
-    echo -e "  ${YELLOW}11.${NC} 📊 诊断报告       ${YELLOW}12.${NC} 🔄 脚本更新"
-    echo -e "  ${PURPLE}13.${NC} 🚀 镜像快速更新       ${PURPLE}14.${NC} 🔧 一键部署"
+    echo -e "${YELLOW}� 监控诊断:${NC}"  
+    echo -e "  ${CYAN}9.${NC} � 查看日志        ${CYAN}10.${NC} 🔍 容器信息"
+    echo -e "  ${CYAN}11.${NC} 🔍 端口检查       ${CYAN}12.${NC} 📊 诊断报告"
+    echo ""
+    echo -e "${YELLOW}🛠️ 维护工具:${NC}"
+    echo -e "  ${YELLOW}13.${NC} �️ 数据备份       ${YELLOW}14.${NC} 🧹 系统清理"
     echo ""
     echo -e "  ${GREEN}0.${NC} 🚪 退出程序"
     echo ""
@@ -2380,20 +2966,20 @@ EOF
     choice=$(read_from_tty "请选择操作 [0-14]: " "0")
     
     case "$choice" in
-        1) start_system ;;
-        2) stop_system ;;
-        3) restart_system ;;
-        4) update_system ;;
-        5) system_status ;;
-        6) view_logs ;;
-        7) docker_compose ps ;;
-        8) port_check ;;
-        9) backup_data ;;
-        10) clean_system ;;
-        11) generate_diagnostic_report ;;
-        12) self_update ;;
-        13) update_system --image ;;
-        14) deploy_flow ;;
+        1) deploy_production ;;
+        2) enhanced_update_system ;;
+        3) self_update ;;
+        4) uninstall_system ;;
+        5) start_system ;;
+        6) stop_system ;;
+        7) restart_system ;;
+        8) system_status ;;
+        9) view_logs ;;
+        10) docker_compose ps ;;
+        11) port_check ;;
+        12) generate_diagnostic_report ;;
+        13) backup_data ;;
+        14) clean_system ;;
         0) log_success "感谢使用 SsalgTen 管理工具!"; exit 0 ;;
         *) log_error "无效选择: $choice"; sleep 1 ;;
     esac
@@ -2464,7 +3050,7 @@ parse_arguments() {
                 exit 0
                 ;;
             # 主要命令
-            start|stop|restart|status|logs|ps|exec|update|backup|clean|port-check|diagnose|self-update|deploy)
+            start|stop|restart|status|logs|ps|exec|update|backup|clean|port-check|diagnose|self-update|deploy|uninstall)
                 COMMAND="$1"
                 shift
                 COMMAND_ARGS=("$@")
@@ -2476,6 +3062,8 @@ parse_arguments() {
             rs|reboot) COMMAND="restart"; shift; COMMAND_ARGS=("$@"); break ;;
             stat|info) COMMAND="status"; shift; COMMAND_ARGS=("$@"); break ;;
             log|tail) COMMAND="logs"; shift; COMMAND_ARGS=("$@"); break ;;
+            install) COMMAND="deploy"; shift; COMMAND_ARGS=("$@"); break ;;
+            remove|delete) COMMAND="uninstall"; shift; COMMAND_ARGS=("$@"); break ;;
             sh|shell|bash) 
                 COMMAND="exec"
                 shift
@@ -2583,13 +3171,27 @@ main() {
                 [[ ${#COMMAND_ARGS[@]} -lt 2 ]] && die "用法: exec <service> <command...>"
                 exec_in_container "${COMMAND_ARGS[@]}"
                 ;;
-            update) update_system "${COMMAND_ARGS[@]}" ;;
+            update) enhanced_update_system ;;
             backup) backup_data ;;
             clean) clean_system "${COMMAND_ARGS[@]}" ;;
             port-check) port_check ;;
             diagnose) generate_diagnostic_report ;;
             self-update) self_update "${COMMAND_ARGS[@]}" ;;
-            deploy) deploy_flow "${COMMAND_ARGS[@]}" ;;
+            deploy) 
+                # 新的统一部署命令
+                if [[ ${#COMMAND_ARGS[@]} -eq 0 ]]; then
+                    deploy_production
+                else
+                    deploy_flow "${COMMAND_ARGS[@]}"
+                fi
+                ;;
+            uninstall) 
+                # 支持强制模式
+                if [[ "${COMMAND_ARGS[0]}" == "--force" ]] || [[ "${COMMAND_ARGS[0]}" == "-f" ]]; then
+                    FORCE_MODE=true
+                fi
+                uninstall_system 
+                ;;
             *) die "未知命令: $COMMAND" ;;
         esac
     else
