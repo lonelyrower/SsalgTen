@@ -117,7 +117,7 @@ sudo systemctl reset-failed`,
       const tpl = sshEnabled ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n` : '';
 
       if (okInstall) {
-        const data = (installRes as { value: { data: InstallCommandData } }).value.data;
+      const data = (installRes as { value: { data: InstallCommandData } }).value.data;
         setInstallData({
           ...data,
           quickCommand: data.quickCommand + tpl,

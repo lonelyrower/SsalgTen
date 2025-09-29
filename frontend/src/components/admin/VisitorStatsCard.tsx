@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiService } from '@/services/api';
 import type { VisitorStats as VisitorStatsT } from '@/services/api';
 import { Card } from '@/components/ui/card';
@@ -35,7 +35,7 @@ export const VisitorStatsCard: React.FC = () => {
   const [days, setDays] = useState(7);
   const [showDetails, setShowDetails] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setError(null);
       
@@ -59,7 +59,7 @@ export const VisitorStatsCard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [days]);
 
   const handleClearCache = async () => {
     if (!confirm('确定要清空访问者缓存吗？这将影响IP信息查询的响应速度。')) {
@@ -90,15 +90,13 @@ export const VisitorStatsCard: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [days]);
+  }, [days, fetchStats]);
 
   useEffect(() => {
     // 每10分钟自动刷新
     const interval = setInterval(fetchStats, 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  if (loading) {
+  }, [fetchStats]);  if (loading) {
     return (
       <Card className="p-6">
         <div className="animate-pulse">
@@ -335,17 +333,17 @@ export const VisitorStatsCard: React.FC = () => {
                       {showDetails && (
                         <>
                           <td className="p-2 text-xs font-mono text-green-600 dark:text-green-400">
-                            {(visitor as any).endpoint || '-'}
+                            {(visitor as Record<string, unknown>).endpoint as string || '-'}
                           </td>
                           <td className="p-2 text-xs text-gray-500">
-                            {(visitor as any).referer ? (
+                            {(visitor as Record<string, unknown>).referer ? (
                               <a 
-                                href={(visitor as any).referer} 
+                                href={(visitor as Record<string, unknown>).referer as string} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="hover:text-blue-600 dark:hover:text-blue-400"
                               >
-                                {new URL((visitor as any).referer).hostname}
+                                {new URL((visitor as Record<string, unknown>).referer as string).hostname}
                               </a>
                             ) : '-'}
                           </td>

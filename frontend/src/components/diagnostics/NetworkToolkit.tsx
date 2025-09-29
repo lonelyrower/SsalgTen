@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,36 @@ import {
 import type { NodeData, VisitorInfo } from '@/services/api';
 import { apiService } from '@/services/api';
 
+// 判断IP是否为公网地址的辅助函数
+const isPublicIP = (ip: string): boolean => {
+  if (!ip) return false;
+  
+  // IPv4 公网地址判断
+  if (ip.includes('.')) {
+    return !ip.startsWith('192.168.') && 
+           !ip.startsWith('10.') && 
+           !ip.startsWith('172.16.') && 
+           !ip.startsWith('172.17.') && 
+           !ip.startsWith('172.18.') && 
+           !ip.startsWith('172.19.') && 
+           !ip.startsWith('172.2') && 
+           !ip.startsWith('172.30.') && 
+           !ip.startsWith('172.31.') && 
+           !ip.startsWith('127.') && 
+           !ip.startsWith('169.254.');
+  }
+  
+  // IPv6 公网地址判断（简化版）
+  if (ip.includes(':')) {
+    return !ip.startsWith('::1') && 
+           !ip.startsWith('fe80:') && 
+           !ip.startsWith('fc00:') && 
+           !ip.startsWith('fd00:');
+  }
+  
+  return false;
+};
+
 interface NetworkToolkitProps {
   selectedNode: NodeData;
   onClose: () => void;
@@ -30,6 +60,7 @@ interface NetworkToolkitProps {
 interface DiagnosticResult {
   tool: string;
   status: 'running' | 'success' | 'failed' | 'idle';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result?: any;
   error?: string;
   startTime?: number;
@@ -110,6 +141,16 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     }
   ], []);
 
+  // 获取最佳测试目标的辅助函数
+  const getBestTestTarget = useCallback((prefer: boolean = false): string => {
+    if (customTarget && customTarget.trim().length > 0) return customTarget.trim();
+    if (visitorInfo?.ip && isPublicIP(visitorInfo.ip)) {
+      return visitorInfo.ip;
+    }
+    // 回退到公共DNS
+    return prefer ? '2001:4860:4860::8888' : '8.8.8.8';
+  }, [customTarget, visitorInfo?.ip]);
+
   // 调用真实诊断工具
   const runDiagnostic = useCallback(async (toolId: string) => {
     const tool = tools.find(t => t.id === toolId);
@@ -182,7 +223,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
           duration: Date.now() - (prev[toolId]?.startTime || Date.now())
         }
       }));
-    } catch (error) {
+    } catch {
       setResults(prev => ({
         ...prev,
         [toolId]: {
@@ -193,44 +234,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         }
       }));
     }
-  }, [visitorInfo]);
-
-  // 判断IP是否为公网地址的辅助函数
-  const isPublicIP = (ip: string): boolean => {
-    if (!ip) return false;
-    
-    // IPv4 公网地址判断
-    if (ip.includes('.')) {
-      return !ip.startsWith('192.168.') && 
-             !ip.startsWith('10.') && 
-             !ip.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./) && // 172.16-172.31
-             !ip.startsWith('127.') && 
-             !ip.startsWith('169.254.') &&
-             !ip.startsWith('0.') &&
-             !ip.startsWith('255.');
-    }
-    
-    // IPv6 公网地址判断  
-    if (ip.includes(':')) {
-      return !ip.startsWith('fe80:') && // 链路本地
-             !ip.startsWith('::1') &&   // 本地回环
-             !ip.startsWith('fc00:') && // 唯一本地地址
-             !ip.startsWith('fd00:') && // 唯一本地地址
-             !ip.startsWith('ff00:');   // 多播地址
-    }
-    
-    return false;
-  };
-
-  // 获取最佳测试目标的辅助函数
-  const getBestTestTarget = (prefer: boolean = false): string => {
-    if (customTarget && customTarget.trim().length > 0) return customTarget.trim();
-    if (visitorInfo?.ip && isPublicIP(visitorInfo.ip)) {
-      return visitorInfo.ip;
-    }
-    // 回退到公共DNS
-    return prefer ? '2001:4860:4860::8888' : '8.8.8.8';
-  };
+  }, [getBestTestTarget, pingCount, preferIPv6, selectedNode.id, selectedNode.ipv4, selectedNode.ipv6, tools, trMaxHops, useProxy, visitorInfo?.ip]);
 
   // 调用Agent API的辅助函数
   const callAgentAPI = async (url: string, timeout: number = 60000) => {
@@ -246,7 +250,9 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         try {
           const token = localStorage.getItem('ssalgten_auth_token');
           if (token) headers['Authorization'] = `Bearer ${token}`;
-        } catch {}
+        } catch {
+          // 忽略清理超时错误
+        }
       }
       const response = await fetch(url, {
         method: 'GET',
@@ -567,6 +573,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
 };
 
 // 结果显示组件
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> = ({ 
   toolId, 
   data 
@@ -674,6 +681,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
           {/* 详细结果 */}
           <div className="space-y-2">
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">详细延迟结果</h4>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {data.results?.map((result: any, index: number) => {
               const getStatusColor = (status: string) => {
                 switch (status) {
@@ -761,6 +769,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
           
           <div className="space-y-2">
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">路由跟踪结果</h4>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {data.hops?.map((hop: any, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border">
                 <div className="flex items-center space-x-3">
@@ -788,7 +797,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
         </div>
       );
 
-    case 'mtr':
+    case 'mtr': {
       const isWindowsType = data.type === 'windows-combined' || data.type === 'linux-fallback';
       const avgLatency = isWindowsType ? data.summary?.avgLatency : data.result?.report?.mtr?.avg || 0;
       const packetLoss = isWindowsType ? data.summary?.packetLoss : 0;
@@ -857,6 +866,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
                     </tr>
                   </thead>
                   <tbody>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {data.result.report.mtr.hubs.map((hub: any, index: number) => (
                       <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="p-2 font-medium">{hub.count || index + 1}</td>
@@ -876,6 +886,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
           )}
         </div>
       );
+    }
 
     default:
       return (
