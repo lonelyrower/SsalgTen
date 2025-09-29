@@ -42,9 +42,10 @@ AGENT_KEY=""
 
 # 检测是否通过 curl|bash 运行
 detect_curl_bash_mode() {
-    if [[ "${BASH_SOURCE[0]}" == "/dev/fd/"* ]] ||
-       [[ "${BASH_SOURCE[0]}" == "/proc/self/fd/"* ]] ||
-       [[ ! -f "${BASH_SOURCE[0]}" ]] ||
+    local bash_source="${BASH_SOURCE[0]:-}"
+    if [[ "$bash_source" == "/dev/fd/"* ]] ||
+       [[ "$bash_source" == "/proc/self/fd/"* ]] ||
+       [[ ! -f "$bash_source" ]] ||
        [[ "${CURL_BASH_MODE:-}" == "true" ]]; then
         return 0  # 是curl|bash模式
     fi
@@ -1026,6 +1027,6 @@ main() {
 }
 
 # 启动主程序
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]]; then
     main "$@"
 fi
