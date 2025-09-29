@@ -76,9 +76,44 @@ handle_curl_bash_install() {
         perform_installation
         return $?
     else
-        # 在 curl|bash 模式下，默认以临时模式继续运行
-        log_info "检测到 curl|bash 运行，默认以临时模式继续"
-        return 1
+        # 在 curl|bash 模式下，提供交互式安装选择
+        log_info "检测到 curl|bash 运行，启动交互式安装向导"
+        echo
+        echo -e "${YELLOW}🚀 欢迎使用SsalgTen终极版安装向导！${NC}"
+        echo
+        echo "选择安装方式："
+        echo -e "${GREEN}1) 镜像模式安装 (推荐)${NC} - 快速部署，2-4分钟"
+        echo -e "${CYAN}2) 源码模式安装${NC} - 可定制，8-12分钟"
+        echo "3) 退出"
+        echo
+
+        while true; do
+            read -p "请选择 (1-3): " choice
+            case $choice in
+                1)
+                    log_info "开始镜像模式安装..."
+                    INSTALL_MODE="image"
+                    perform_installation
+                    return $?
+                    ;;
+                2)
+                    log_info "开始源码模式安装..."
+                    INSTALL_MODE="source"
+                    perform_installation
+                    return $?
+                    ;;
+                3)
+                    log_info "安装已取消"
+                    echo "如需手动安装，请使用："
+                    echo "  镜像模式: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- install --image"
+                    echo "  源码模式: curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- install --source"
+                    exit 0
+                    ;;
+                *)
+                    log_error "无效选择，请输入 1-3"
+                    ;;
+            esac
+        done
     fi
 }
 
@@ -551,6 +586,58 @@ smart_status() {
 # =============================================================================
 # 🛠️ 安装功能模块 (从 deploy-production.sh 集成)
 # =============================================================================
+
+# 简化的安装流程（用于curl|bash模式）
+perform_installation() {
+    log_header "🎯 开始SsalgTen系统安装"
+
+    # 检查基本要求
+    if [[ $EUID -ne 0 ]] && ! command -v sudo >/dev/null; then
+        die "需要root权限或sudo命令"
+    fi
+
+    # 设置安装目录
+    APP_DIR="/opt/ssalgten"
+
+    log_info "安装模式: $INSTALL_MODE"
+    log_info "安装目录: $APP_DIR"
+
+    # 创建目录
+    if [[ $EUID -eq 0 ]]; then
+        mkdir -p "$APP_DIR"
+        cd "$APP_DIR"
+    else
+        sudo mkdir -p "$APP_DIR"
+        cd "$APP_DIR"
+    fi
+
+    # 下载完整的安装脚本
+    log_info "下载完整安装脚本..."
+    if command -v wget >/dev/null 2>&1; then
+        wget -O deploy-production.sh https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh
+    elif command -v curl >/dev/null 2>&1; then
+        curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh -o deploy-production.sh
+    else
+        die "需要wget或curl命令"
+    fi
+
+    chmod +x deploy-production.sh
+
+    # 运行完整安装
+    log_info "开始完整系统安装..."
+    if [[ "$INSTALL_MODE" == "image" ]]; then
+        echo -e "1\n" | ./deploy-production.sh  # 自动选择镜像模式
+    else
+        echo -e "2\n" | ./deploy-production.sh  # 自动选择源码模式
+    fi
+
+    log_success "🎉 SsalgTen安装完成！"
+    echo
+    echo -e "${GREEN}安装完成！您可以访问：${NC}"
+    echo -e "  ${CYAN}管理界面: https://您的域名${NC}"
+    echo -e "  ${CYAN}本地管理: $APP_DIR/ssalgten.sh${NC}"
+    echo
+}
 
 # 检查系统要求
 check_install_prerequisites() {
