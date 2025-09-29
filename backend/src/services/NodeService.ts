@@ -44,6 +44,7 @@ export interface UpdateNodeInput {
   datacenter?: string;
   tags?: string;
   description?: string;
+  nameCustomized?: boolean;
   osType?: string;
   osVersion?: string;
   status?: NodeStatus;

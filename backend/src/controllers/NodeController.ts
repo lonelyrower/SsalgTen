@@ -505,8 +505,7 @@ export class NodeController {
 
         // 如果提供了新的节点信息，也更新位置信息
         if (nodeInfo) {
-          await nodeService.updateNode(node.id, {
-            name: nodeInfo.name || node.name,
+          const updateData: any = {
             country: nodeInfo.country || node.country,
             city: nodeInfo.city || node.city,
             latitude: nodeInfo.latitude || node.latitude,
@@ -514,7 +513,14 @@ export class NodeController {
             provider: nodeInfo.provider || node.provider,
             ipv4: nodeInfo.ipv4 || node.ipv4,
             ipv6: nodeInfo.ipv6 || node.ipv6,
-          });
+          };
+
+          // 只有在名称未被用户自定义时，才允许Agent更新名称
+          if (!node.nameCustomized && nodeInfo.name) {
+            updateData.name = nodeInfo.name;
+          }
+
+          await nodeService.updateNode(node.id, updateData);
           // 如包含新的公网IP，尝试更新ASN信息
           try {
             const targetIP = nodeInfo.ipv4 || nodeInfo.ipv6;

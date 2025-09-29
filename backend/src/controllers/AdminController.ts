@@ -174,7 +174,7 @@ export class AdminController {
       // 检查节点是否存在
       const existingNode = await prisma.node.findUnique({
         where: { id },
-        select: { id: true },
+        select: { id: true, name: true },
       });
 
       if (!existingNode) {
@@ -187,10 +187,15 @@ export class AdminController {
       }
 
       // 处理tags数组
-      const updateDataFormatted = {
+      const updateDataFormatted: any = {
         ...updateData,
         tags: updateData.tags ? JSON.stringify(updateData.tags) : undefined,
       };
+
+      // 如果名称被修改，标记为用户自定义
+      if (updateData.name && updateData.name !== existingNode.name) {
+        updateDataFormatted.nameCustomized = true;
+      }
 
       const updatedNode = await prisma.node.update({
         where: { id },

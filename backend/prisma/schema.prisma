@@ -52,6 +52,7 @@ model Node {
   // 元数据
   tags        String?    // 标签，JSON字符串
   description String?    // 描述/备注
+  nameCustomized Boolean @default(false) // 标记节点名称是否被用户手动修改过
   
   // 系统信息
   osType      String?    // 操作系统类型
