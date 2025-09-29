@@ -53,6 +53,7 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
     label: string;
     value?: string;
     change?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     icon: any;
     color: string;
     description?: string;
@@ -72,6 +73,7 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
 
   // 基于统计数据构建饼图（节点状态分布）
   const nodeStatusPieData = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!stats) return [] as any[];
     return [
       { name: '在线', value: stats.onlineNodes, color: '#22c55e' },

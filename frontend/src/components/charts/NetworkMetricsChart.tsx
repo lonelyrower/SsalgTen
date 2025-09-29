@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 
 interface NetworkMetricsChartProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any[];
   type: 'line' | 'area' | 'bar' | 'pie';
   title: string;
@@ -59,6 +60,7 @@ const CHART_COLORS = [
 ];
 
 // 自定义Tooltip组件
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -67,6 +69,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           <p className="text-sm font-medium text-gray-900 dark:text-white">
             {label}
           </p>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center space-x-2">
               <div 
@@ -209,6 +212,7 @@ export const NetworkMetricsChart = memo(({
                 dataKey="value"
                 label={(entry) => `${entry.name}: ${entry.value}`}
               >
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {chartData.map((entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}

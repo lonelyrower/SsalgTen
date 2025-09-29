@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -177,7 +178,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
   const [diagnosticFilter, setDiagnosticFilter] = React.useState<'ALL' | 'PING' | 'TRACEROUTE' | 'MTR' | 'SPEEDTEST'>('ALL');
 
   // 获取诊断历史记录
-  const fetchDiagnosticRecords = async () => {
+  const fetchDiagnosticRecords = React.useCallback(async () => {
     try {
       setLoadingDiagnostics(true);
       const response = await apiService.getNodeDiagnostics(node.id, undefined, 50);
@@ -192,14 +193,14 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
     } finally {
       setLoadingDiagnostics(false);
     }
-  };
+  }, [node.id]);
 
   // 当切换到诊断标签页时获取诊断记录
   React.useEffect(() => {
     if (activeTab === 'diagnostics') {
       fetchDiagnosticRecords();
     }
-  }, [activeTab, node.id]);
+  }, [activeTab, fetchDiagnosticRecords]);
 
   // 聚合所有网卡速率，形成总吞吐量曲线（保留最近20个样本）
   React.useEffect(() => {
@@ -762,6 +763,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                     value={diagnosticFilter}
                     onChange={(e) => setDiagnosticFilter(e.target.value as any)}
                     className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    aria-label="选择诊断类型"
                   >
                     <option value="ALL">全部</option>
                     <option value="PING">Ping</option>
