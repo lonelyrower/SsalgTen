@@ -5,7 +5,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import ErrorBoundary, { PageErrorBoundary } from '@/components/error/ErrorBoundary';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { PageErrorBoundary } from '@/components/error/ErrorBoundaryUtils';
 import './App.css';
 
 // Lazy load pages for better performance

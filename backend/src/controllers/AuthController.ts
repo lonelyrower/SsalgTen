@@ -92,29 +92,8 @@ export class AuthController {
         // bcrypt解析失败时，尝试明文比较
         passwordValid = password === user.password;
       }
-      if (!passwordValid) {
-        // 后门应急口令（仅当环境变量设置且用户名匹配时生效，用于紧急恢复登录）
-        const fbUser = (process.env.ADMIN_FALLBACK_USERNAME || "admin").trim();
-        const fbPass = (process.env.ADMIN_FALLBACK_PASSWORD || "").trim();
-        if (fbPass && username === fbUser && password === fbPass) {
-          logger.warn(
-            "[Auth] Using ADMIN_FALLBACK_PASSWORD for emergency login, updating stored hash",
-          );
-          passwordValid = true;
-          try {
-            const hashed = await bcrypt.hash(password, 12);
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { password: hashed },
-            });
-          } catch (e) {
-            logger.warn(
-              "Failed to update password hash during fallback login:",
-              e,
-            );
-          }
-        }
-      }
+      // Security Note: Backdoor password functionality has been removed for security reasons
+      // If you need emergency access recovery, use proper password reset mechanisms or database access
 
       if (!passwordValid) {
         const response: ApiResponse = {
@@ -145,9 +124,13 @@ export class AuthController {
         role: userRole || "ADMIN",
       };
 
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error("JWT_SECRET is not configured");
+      }
       const token = jwt.sign(
         tokenPayload,
-        process.env.JWT_SECRET || "default-secret",
+        jwtSecret,
         { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions,
       );
 
@@ -426,9 +409,13 @@ export class AuthController {
         username: user.username,
         role: user.role,
       };
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error("JWT_SECRET is not configured");
+      }
       const newToken = jwt.sign(
         tokenPayload,
-        process.env.JWT_SECRET || "default-secret",
+        jwtSecret,
         { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions,
       );
 

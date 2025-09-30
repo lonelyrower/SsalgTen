@@ -28,10 +28,11 @@ export const authenticateToken = async (
     }
 
     // 验证JWT token
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "default-secret",
-    ) as AuthTokenPayload;
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+    const decoded = jwt.verify(token, jwtSecret) as AuthTokenPayload;
 
     // 验证用户是否仍然存在且活跃
     const user = await prisma.user.findUnique({
@@ -125,10 +126,11 @@ export const optionalAuth = async (
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "default-secret",
-    ) as AuthTokenPayload;
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+    const decoded = jwt.verify(token, jwtSecret) as AuthTokenPayload;
 
     // 验证用户是否存在且活跃
     const user = await prisma.user.findUnique({

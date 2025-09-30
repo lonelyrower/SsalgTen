@@ -69,6 +69,5 @@ export const useApiNotifications = () => {
       socketService.removeConnectionErrorListener(handleConnectionError);
       socketService.removeConnectionStatusListener(handleConnectionStatusChange);
     };
-  }
-  }, [isConnected, ENABLE_CONNECTION_TOASTS]);
+  }, [showError, showSuccess, ENABLE_CONNECTION_TOASTS]);
 };

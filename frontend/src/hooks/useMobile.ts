@@ -148,7 +148,29 @@ export const mobileUtils = {
 
   // 获取网络状态
   getNetworkInfo: () => {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    interface NavigatorWithConnection extends Navigator {
+      connection?: {
+        effectiveType: string;
+        downlink: number;
+        rtt: number;
+        saveData: boolean;
+      };
+      mozConnection?: {
+        effectiveType: string;
+        downlink: number;
+        rtt: number;
+        saveData: boolean;
+      };
+      webkitConnection?: {
+        effectiveType: string;
+        downlink: number;
+        rtt: number;
+        saveData: boolean;
+      };
+    }
+
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
 
     if (connection) {
       return {

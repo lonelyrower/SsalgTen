@@ -275,6 +275,40 @@ export const loadEnvConfig = (): EnvConfig => {
     );
   }
 
+  // Additional security validation in production
+  if (config.NODE_ENV === "production") {
+    // Validate JWT_SECRET strength
+    if (config.JWT_SECRET.length < 32) {
+      throw new Error(
+        "JWT_SECRET must be at least 32 characters in production environment",
+      );
+    }
+
+    // Check for weak/default secrets
+    const weakSecrets = ["default-secret", "secret", "changeme", "test"];
+    if (weakSecrets.includes(config.JWT_SECRET.toLowerCase())) {
+      throw new Error(
+        "JWT_SECRET appears to be a weak/default value. Please use a strong random secret in production",
+      );
+    }
+
+    if (weakSecrets.includes(config.API_KEY_SECRET.toLowerCase())) {
+      throw new Error(
+        "API_KEY_SECRET appears to be a weak/default value. Please use a strong random secret in production",
+      );
+    }
+
+    // Validate database credentials
+    if (
+      config.POSTGRES_PASSWORD === defaultConfig.POSTGRES_PASSWORD ||
+      config.POSTGRES_PASSWORD.length < 12
+    ) {
+      console.warn(
+        "WARNING: Using default or weak database password in production environment",
+      );
+    }
+  }
+
   return config;
 };
 

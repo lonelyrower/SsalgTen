@@ -224,7 +224,11 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
           if (parent) {
             const fallback = document.createElement('div');
             fallback.className = `${sizeClasses[size]} bg-gray-200 dark:bg-gray-700 rounded-sm flex items-center justify-center`;
-            fallback.innerHTML = '<span class="text-xs text-gray-500">🏳️</span>';
+            // Use textContent instead of innerHTML to avoid XSS risk
+            const span = document.createElement('span');
+            span.className = 'text-xs text-gray-500';
+            span.textContent = '🏳️';
+            fallback.appendChild(span);
             parent.insertBefore(fallback, target);
           }
         }}

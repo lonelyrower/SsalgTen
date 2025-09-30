@@ -1,14 +1,11 @@
 // API服务 - 与后端通信的统一接口
 
-// Window configuration interface
-interface WindowConfig {
-  APP_CONFIG?: {
-    API_BASE_URL?: string;
-  };
-}
-
 declare global {
-  interface Window extends WindowConfig {}
+  interface Window {
+    APP_CONFIG?: {
+      API_BASE_URL?: string;
+    };
+  }
 }
 
 // Get API base URL from runtime config or fallback to env var or current origin
@@ -89,7 +86,7 @@ class TokenManager {
   }
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -521,33 +518,33 @@ class ApiService {
   }
 
   // 获取节点详细心跳数据 API
-  async getNodeHeartbeatData(nodeId: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/nodes/${nodeId}/heartbeat`);
+  async getNodeHeartbeatData(nodeId: string): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>(`/nodes/${nodeId}/heartbeat`);
   }
 
   // 获取节点事件列表
-  async getNodeEvents(nodeId: string, limit: number = 100): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: any; timestamp: string }>>> {
+  async getNodeEvents(nodeId: string, limit: number = 100): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: unknown; timestamp: string }>>> {
     const query = limit ? `?limit=${limit}` : '';
     return this.request(`/nodes/${nodeId}/events${query}`);
   }
 
   // 获取全局活动日志
-  async getGlobalActivities(limit: number = 50): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: any; timestamp: string; node: { id: string; name: string; city: string; country: string; status: string } }>>> {
+  async getGlobalActivities(limit: number = 50): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: unknown; timestamp: string; node: { id: string; name: string; city: string; country: string; status: string } }>>> {
     const query = limit ? `?limit=${limit}` : '';
     return this.request(`/activities${query}`);
   }
 
   // Agent 诊断请求 API (直接调用Agent)
-  async callAgentDiagnostic(agentUrl: string, type: string, target?: string): Promise<any> {
+  async callAgentDiagnostic(agentUrl: string, type: string, target?: string): Promise<unknown> {
     const endpoint = target ? `${type}/${target}` : type;
     const url = `${agentUrl}/api/${endpoint}`;
-    
+
     try {
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Agent request failed: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Agent diagnostic request failed:', error);
@@ -747,13 +744,13 @@ class ApiService {
   }
 
   // 健康检查
-  async healthCheck(): Promise<ApiResponse<any>> {
-    return this.request<any>('/health');
+  async healthCheck(): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>('/health');
   }
 
   // API信息
-  async getApiInfo(): Promise<ApiResponse<any>> {
-    return this.request<any>('/info');
+  async getApiInfo(): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>('/info');
   }
 
   // 系统版本与更新
@@ -772,7 +769,7 @@ class ApiService {
     }, true);
   }
 
-  async getUpdaterHealth(): Promise<ApiResponse<any>> {
+  async getUpdaterHealth(): Promise<ApiResponse<unknown>> {
     return this.request('/admin/system/updater/health', {}, true);
   }
 
