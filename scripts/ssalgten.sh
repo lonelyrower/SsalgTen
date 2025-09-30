@@ -224,7 +224,9 @@ ${PURPLE}全局选项:${NC}
   --version           显示版本信息
 
 ${PURPLE}系统生命周期命令:${NC}
-  ${GREEN}deploy${NC}              🔧 一键部署生产环境 (完整向导)
+  ${GREEN}deploy${NC}              🔧 一键部署 (智能选择镜像/源码模式)
+    --image           🚀 快速镜像部署 (推荐，1-3分钟)
+    --source          🔨 源码完整部署 (高级，10-30分钟)
   ${GREEN}start${NC}               🚀 启动系统服务 (带健康检查)
   ${GREEN}stop${NC}                🛑 停止系统服务 (带端口清理)
   ${GREEN}restart${NC}             🔄 重启系统服务 (stop + start)
@@ -2504,7 +2506,56 @@ collect_deployment_info() {
 deploy_production() {
     log_header "🚀 SsalgTen 生产环境部署"
     echo ""
-    
+
+    # 新增：选择部署模式
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}请选择部署模式：${NC}"
+    echo ""
+    echo -e "${GREEN}1. 🚀 镜像快速部署 (推荐)${NC}"
+    echo "   ✓ 直接拉取预构建的Docker镜像"
+    echo "   ✓ 部署时间：1-3分钟"
+    echo "   ✓ 内存需求：最低512MB"
+    echo "   ✓ 自动更新：支持极速更新"
+    echo "   ✓ 适合：99%的部署场景"
+    echo ""
+    echo -e "${YELLOW}2. 🔧 源码完整部署 (高级)${NC}"
+    echo "   • 从GitHub下载源码并本地构建"
+    echo "   • 部署时间：10-30分钟"
+    echo "   • 内存需求：至少2GB"
+    echo "   • 适合：需要自定义修改源码的场景"
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+
+    local deploy_mode
+    deploy_mode=$(read_from_tty "请选择 [1/2] (默认: 1): " "1")
+    deploy_mode=${deploy_mode:-1}
+
+    echo ""
+
+    if [[ "$deploy_mode" == "1" ]]; then
+        log_success "✓ 已选择：镜像快速部署模式"
+        echo ""
+        log_info "将使用以下镜像源："
+        echo "  • 镜像仓库：ghcr.io"
+        echo "  • 镜像空间：lonelyrower/ssalgten"
+        echo "  • 镜像标签：latest"
+        echo ""
+
+        # 检查Docker
+        if ! check_docker_ready; then
+            log_warning "Docker未就绪，需要安装Docker"
+            install_docker
+        fi
+
+        # 使用镜像模式部署
+        deploy_flow --image
+        return $?
+    fi
+
+    log_info "已选择：源码完整部署模式"
+    echo ""
+
     # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
         RUNNING_AS_ROOT=true
@@ -2515,7 +2566,7 @@ deploy_production() {
         echo "- 推荐创建专用用户： useradd -m -s /bin/bash ssalgten"
         echo "- 然后切换用户运行： su - ssalgten"
         echo ""
-        
+
         if ! prompt_yes_no "是否仍要继续使用root用户部署" "n"; then
             log_info "已选择创建专用用户，这是更安全的选择！"
             echo ""
@@ -2528,44 +2579,44 @@ deploy_production() {
             echo "然后重新运行此脚本即可。"
             return 0
         fi
-        
+
         log_warning "继续使用root用户部署，将进行安全加固配置"
     fi
-    
-    # 执行部署步骤
+
+    # 执行源码部署步骤
     check_system_requirements
     collect_deployment_info
     install_system_dependencies
     install_docker
     install_nginx
     create_application_directory
-    
+
     cd "$APP_DIR"
-    
+
     # 下载项目源码
     download_source_code
-    
+
     # 配置环境变量
     create_environment_config
-    
+
     # 配置Nginx
     create_nginx_config
-    
+
     # 安装SSL证书
     install_ssl_certificate
-    
+
     # 构建和启动服务
     build_and_start_services
-    
+
     # 验证部署
     verify_deployment
-    
+
     # 创建管理脚本
     create_management_scripts
-    
+
     # 保存部署信息
     save_deployment_info
-    
+
     # 显示部署结果
     show_deployment_result
 }
@@ -3818,7 +3869,7 @@ EOF
     echo -e "${CYAN}应用目录:${NC} $APP_DIR"
     echo ""
     echo -e "${YELLOW}🏗️ 系统管理:${NC}"
-    echo -e "  ${PURPLE}1.${NC}  🚀 一键部署        ${PURPLE}2.${NC}  ⚡ 系统更新"
+    echo -e "  ${PURPLE}1.${NC}  🚀 一键部署 (智能模式)  ${PURPLE}2.${NC}  ⚡ 系统更新"
     echo -e "  ${PURPLE}3.${NC}  🔄 脚本更新        ${RED}4.${NC}  🗑️ 卸载系统"
     echo ""
     echo -e "${YELLOW}📋 日常操作:${NC}"

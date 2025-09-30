@@ -182,15 +182,44 @@ Redis 7+ + 持久化 + 集群支持
 ### 🎯 一键部署 (推荐)
 
 #### 生产环境部署
+
+**方式1：🚀 镜像快速部署（推荐，1-3分钟）**
 ```bash
-# 方法1: 远程一键安装 (最简单)
+# 直接拉取预构建的Docker镜像，快速部署
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- deploy --image
+
+# 或本地运行
+git clone https://github.com/lonelyrower/SsalgTen.git
+cd SsalgTen
+./scripts/ssalgten.sh deploy --image
+```
+
+**优点：**
+- ✓ 部署时间：1-3分钟
+- ✓ 内存需求：最低512MB
+- ✓ 自动从GHCR拉取镜像
+- ✓ 无需本地构建
+- ✓ 支持极速更新
+
+**方式2：🔧 源码完整部署（高级，10-30分钟）**
+```bash
+# 方法1: 远程一键安装
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh | bash
 
 # 方法2: 本地克隆安装
 git clone https://github.com/lonelyrower/SsalgTen.git
 cd SsalgTen
 sudo ./scripts/deploy-production.sh --domain your-domain.com --ssl
+
+# 方法3: 使用ssalgten.sh (交互式选择)
+./scripts/ssalgten.sh deploy
+# 选择菜单选项 1，然后选择 2 (源码部署)
 ```
+
+**适用场景：**
+- 需要自定义修改源码
+- 需要特殊的构建配置
+- 学习项目构建流程
 
 #### 开发环境启动
 ```bash
@@ -220,16 +249,18 @@ SsalgTen 提供了强大的 `ssalgten.sh` 管理脚本：
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- --install
 
 # 本地使用管理脚本
-./scripts/ssalgten.sh         # 交互式菜单
-./scripts/ssalgten.sh status  # 检查系统状态  
-./scripts/ssalgten.sh update  # 零停机更新
-./scripts/ssalgten.sh backup  # 数据备份
-./scripts/ssalgten.sh logs    # 查看日志
+./scripts/ssalgten.sh                # 交互式菜单
+./scripts/ssalgten.sh deploy --image # 镜像快速部署
+./scripts/ssalgten.sh status         # 检查系统状态
+./scripts/ssalgten.sh update --image # 镜像极速更新
+./scripts/ssalgten.sh backup         # 数据备份
+./scripts/ssalgten.sh logs           # 查看日志
 ```
 
 **系统管理功能:**
-- 🚀 启动/停止/重启服务
-- ⚡ 零停机系统更新  
+- 🚀 一键部署（镜像/源码双模式）
+- ⚡ 极速更新（镜像拉取1-3分钟）
+- 🔄 启动/停止/重启服务
 - 📊 实时状态监控
 - 📋 日志查看和分析
 - 🔍 容器和端口检查
