@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { apiService } from '@/services/api';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
@@ -98,6 +98,45 @@ interface ThreatVisualizationProps {
   className?: string;
 }
 
+interface ActivityEventDetails {
+  ip?: string;
+  previous?: {
+    ipv4?: string;
+    [key: string]: unknown;
+  };
+  to?: string;
+  success?: boolean;
+  [key: string]: unknown;
+}
+
+interface ActivityEventNode {
+  name?: string;
+  country?: string;
+  [key: string]: unknown;
+}
+
+interface ActivityEvent {
+  id?: string;
+  type?: string;
+  details?: ActivityEventDetails;
+  node?: ActivityEventNode;
+  nodeName?: string;
+  timestamp?: string | number | Date;
+  success?: boolean;
+  [key: string]: unknown;
+}
+
+interface ActivitiesResponse {
+  success?: boolean;
+  data?: ActivityEvent[];
+  [key: string]: unknown;
+}
+
+const isActivitiesResponse = (value: unknown): value is ActivitiesResponse => {
+  if (!value || typeof value !== 'object') return false;
+  return 'data' in value;
+};
+
 export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ className = '' }) => {
   const [threats, setThreats] = useState<ThreatData[]>([]);
   const [selectedThreat, setSelectedThreat] = useState<ThreatData | null>(null);
@@ -105,7 +144,7 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
   const [filter, setFilter] = useState<'all' | ThreatData['type']>('all');
 
   // 将后端活动日志转换为威胁项（简单映射）
-  const mapActivityToThreat = (ev: any): ThreatData | null => {
+  const mapActivityToThreat = useCallback((ev: ActivityEvent): ThreatData | null => {
     const now = new Date();
     const base = {
       id: ev.id || `ev-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -139,18 +178,18 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
       return { ...base, type: 'intrusion', severity: 'low', attackVector: 'New Agent' };
     }
     return null;
-  };
+  }, []);
 
   // 数据更新（仅使用后端活动日志）
   useEffect(() => {
-    let interval: any = null;
+    let interval: ReturnType<typeof setInterval> | undefined;
     const fetchActivities = async () => {
       try {
         const res = await apiService.getGlobalActivities?.();
-        if (res && (res as any).success && Array.isArray(res.data)) {
-          const items = (res.data as any[])
+        if (isActivitiesResponse(res) && res.success && Array.isArray(res.data)) {
+          const items = res.data
             .map(mapActivityToThreat)
-            .filter(Boolean) as ThreatData[];
+            .filter((item): item is ThreatData => item !== null);
           // 若无数据，展示空状态
           setThreats(items);
         } else {
@@ -167,9 +206,11 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [isLiveMode]);
+  }, [isLiveMode, mapActivityToThreat]);
 
   // 统计信息
   const stats = useMemo(() => {
@@ -381,6 +422,8 @@ export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ classN
               variant="ghost"
               size="sm"
               onClick={() => setSelectedThreat(null)}
+              aria-label="关闭威胁详情"
+              title="关闭威胁详情"
               className="text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
             >
               ×

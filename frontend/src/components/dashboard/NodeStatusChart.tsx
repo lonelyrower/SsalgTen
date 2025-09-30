@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Activity, Server } from 'lucide-react';
 
@@ -19,6 +19,8 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
   ];
 
   const total = onlineNodes + offlineNodes;
+  const progressRef = useRef<HTMLDivElement>(null);
+  const availabilityPercent = useMemo(() => (total > 0 ? Math.min(100, Math.max(0, (onlineNodes / total) * 100)) : 0), [onlineNodes, total]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomTooltip = ({ active, payload }: any) => {
@@ -36,6 +38,13 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
     return null;
   };
 
+  useEffect(() => {
+    const progressElement = progressRef.current;
+    if (!progressElement) return;
+
+    progressElement.style.width = `${availabilityPercent}%`;
+  }, [availabilityPercent]);
+
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
@@ -51,7 +60,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
       {total > 0 ? (
         <div className="flex items-center space-x-6">
           {/* 饼图 */}
-          <div className="flex-shrink-0" style={{ width: '200px', height: '200px' }}>
+          <div className="flex-shrink-0 w-[200px] h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -111,9 +120,9 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                <div 
+                <div
+                  ref={progressRef}
                   className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${total > 0 ? (onlineNodes / total) * 100 : 0}%` }}
                 ></div>
               </div>
             </div>

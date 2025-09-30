@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useMobile } from '@/hooks/useMobile';
 
@@ -22,23 +22,22 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const indicatorRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
   const scrollTop = useRef(0);
-
-  // 只在移动端启用
-  if (!isMobile || disabled) {
-    return <div className={className}>{children}</div>;
-  }
+  const isEnabled = isMobile && !disabled;
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (!isEnabled) return;
     const container = containerRef.current;
     if (!container || isRefreshing) return;
 
     startY.current = e.touches[0].clientY;
     scrollTop.current = container.scrollTop;
-  }, [isRefreshing]);
+  }, [isEnabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isEnabled) return;
     const container = containerRef.current;
     if (!container || isRefreshing) return;
 
@@ -52,9 +51,10 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
       const distance = Math.min(deltaY * 0.5, threshold * 1.5); // 阻尼效果
       setPullDistance(distance);
     }
-  }, [isRefreshing, threshold]);
+  }, [isEnabled, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
+    if (!isEnabled) return;
     if (isRefreshing) return;
 
     if (pullDistance >= threshold) {
@@ -70,9 +70,10 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
 
     setIsPulling(false);
     setPullDistance(0);
-  }, [pullDistance, threshold, onRefresh, isRefreshing]);
+  }, [isEnabled, pullDistance, threshold, onRefresh, isRefreshing]);
 
   useEffect(() => {
+    if (!isEnabled) return undefined;
     const container = containerRef.current;
     if (!container) return;
 
@@ -85,35 +86,63 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [isEnabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  const getRefreshIndicatorOpacity = () => {
+  const refreshIndicatorOpacity = useMemo(() => {
     if (isRefreshing) return 1;
     return Math.min(pullDistance / threshold, 1);
-  };
+  }, [isRefreshing, pullDistance, threshold]);
 
-  const getRefreshIndicatorScale = () => {
+  const refreshIndicatorScale = useMemo(() => {
     const scale = Math.min(pullDistance / threshold, 1);
-    return 0.5 + scale * 0.5; // 从 0.5 缩放到 1
-  };
+    return 0.5 + scale * 0.5;
+  }, [pullDistance, threshold]);
+
+  useEffect(() => {
+    if (!isEnabled) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const translate = isPulling ? Math.min(pullDistance, threshold) : 0;
+    container.style.transform = `translateY(${translate}px)`;
+    container.style.transition = isPulling ? 'none' : 'transform 0.3s ease-out';
+
+    return () => {
+      container.style.transform = '';
+      container.style.transition = '';
+    };
+  }, [isEnabled, isPulling, pullDistance, threshold]);
+
+  useEffect(() => {
+    if (!isEnabled) return;
+    const indicator = indicatorRef.current;
+    if (!indicator) return;
+
+    const translateY = -40 + Math.min(pullDistance * 0.5, 40);
+    indicator.style.transform = `translate(-50%, ${translateY}px) scale(${refreshIndicatorScale})`;
+    indicator.style.opacity = refreshIndicatorOpacity.toString();
+    indicator.style.transition = isPulling ? 'none' : 'all 0.3s ease-out';
+
+    return () => {
+      indicator.style.transform = '';
+      indicator.style.opacity = '';
+      indicator.style.transition = '';
+    };
+  }, [isEnabled, isPulling, pullDistance, refreshIndicatorOpacity, refreshIndicatorScale]);
+
+  if (!isEnabled) {
+    return <div className={className}>{children}</div>;
+  }
 
   return (
     <div
       ref={containerRef}
       className={`relative mobile-scroll ${className}`}
-      style={{
-        transform: `translateY(${isPulling ? Math.min(pullDistance, threshold) : 0}px)`,
-        transition: isPulling ? 'none' : 'transform 0.3s ease-out',
-      }}
     >
       {/* 下拉刷新指示器 */}
       <div
         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center"
-        style={{
-          transform: `translate(-50%, ${-40 + Math.min(pullDistance * 0.5, 40)}px) scale(${getRefreshIndicatorScale()})`,
-          opacity: getRefreshIndicatorOpacity(),
-          transition: isPulling ? 'none' : 'all 0.3s ease-out',
-        }}
+        ref={indicatorRef}
       >
         <div className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-600 p-3">
           <RefreshCw
@@ -135,32 +164,4 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
       {children}
     </div>
   );
-};
-
-// 简化版本，仅用于检测下拉动作
-export const usePullToRefresh = (
-  onRefresh: () => Promise<void>,
-  options: { threshold?: number; disabled?: boolean } = {}
-) => {
-  const { disabled = false } = options;
-  const { isMobile } = useMobile();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = useCallback(async () => {
-    if (isRefreshing || disabled || !isMobile) return;
-
-    setIsRefreshing(true);
-    try {
-      await onRefresh();
-    } catch (error) {
-      console.error('Refresh failed:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [onRefresh, isRefreshing, disabled, isMobile]);
-
-  return {
-    isRefreshing,
-    handleRefresh,
-  };
 };

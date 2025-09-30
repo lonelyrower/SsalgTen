@@ -222,9 +222,12 @@ const BoundsHandler = ({ onBoundsChange }: { onBoundsChange: (b: any) => void })
     zoomend: () => onBoundsChange(map.getBounds()),
   });
   useEffect(() => {
-    try { onBoundsChange(map.getBounds()); } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    try {
+      onBoundsChange(map.getBounds());
+    } catch (error) {
+      console.warn('Failed to emit initial bounds', error);
+    }
+  }, [map, onBoundsChange]);
   return null;
 };
 
@@ -394,7 +397,9 @@ export const EnhancedWorldMap = memo(({
                     // 正常缩放
                     mapRef.current?.setView([lat, lng], targetZoom, { animate: true });
                   }
-                } catch {}
+                } catch (error) {
+                  console.error('Failed to handle cluster click', error);
+                }
               },
             }}
           >
@@ -490,6 +495,8 @@ export const EnhancedWorldMap = memo(({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowStats(false)}
+                aria-label="关闭节点统计"
+                title="关闭节点统计"
                 className="h-6 w-6 p-0 text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
               >
                 ×
@@ -606,6 +613,7 @@ export const EnhancedWorldMap = memo(({
                 <button
                   onClick={() => setShowClusterModal(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  aria-label="关闭聚合节点详情"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

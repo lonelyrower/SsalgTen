@@ -223,7 +223,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredActivities.map((activity, index) => {
+            {filteredActivities.map((activity) => {
               const severityClasses = getSeverityClasses(activity.severity);
               const icon = getActivityIcon(activity.type);
               
@@ -231,7 +231,6 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
                 <div 
                   key={activity.id}
                   className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-start space-x-3">
                     <div className={`flex-shrink-0 p-2 rounded-lg ${severityClasses.bg} ${severityClasses.border} border`}>

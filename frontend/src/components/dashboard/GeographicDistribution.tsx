@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Globe, MapPin } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
@@ -8,6 +8,21 @@ interface GeographicDistributionProps {
   nodes: NodeData[];
   className?: string;
 }
+
+const LegendItem: React.FC<{ color?: string; name?: string; value?: number }> = ({ color, name, value }) => {
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (!textRef.current || !color) return;
+    textRef.current.style.color = color;
+  }, [color]);
+
+  return (
+    <p ref={textRef} className="text-sm">
+      {name}: {value}
+    </p>
+  );
+};
 
 export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   nodes,
@@ -55,9 +70,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
           <p className="font-medium text-gray-900 dark:text-white">{label}</p>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value}
-            </p>
+            <LegendItem key={index} color={entry.color} name={entry.name} value={entry.value} />
           ))}
         </div>
       );
