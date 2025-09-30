@@ -2780,7 +2780,9 @@ DB_PASSWORD=$DB_PASSWORD
 EOF
     
     # 创建后端环境配置（供容器内或手动运行参考；Docker Compose 将优先读取根目录 .env）
-    cat > backend/.env << EOF
+    # 如果backend目录存在才创建backend/.env（镜像模式下可能不存在）
+    if [[ -d "backend" ]]; then
+        cat > backend/.env << EOF
 # 生产环境标识
 NODE_ENV=production
 PORT=$BACKEND_PORT
@@ -2811,9 +2813,11 @@ IPINFO_TOKEN=$IPINFO_TOKEN
 DEFAULT_AGENT_API_KEY=$AGENT_KEY
 AGENT_HEARTBEAT_INTERVAL=30000
 EOF
-    
-    # 创建前端环境配置
-    cat > frontend/.env << EOF
+    fi
+
+    # 创建前端环境配置（如果frontend目录存在）
+    if [[ -d "frontend" ]]; then
+        cat > frontend/.env << EOF
 # API配置 - 使用相对路径，交由前置或容器内Nginx反代
 VITE_API_URL=/api
 VITE_APP_NAME=SsalgTen Network Monitor
@@ -2823,11 +2827,13 @@ VITE_MAP_PROVIDER=openstreetmap
 VITE_MAP_API_KEY=
 EOF
 
-    # 确保前端配置在Docker构建时可用
-    cp frontend/.env frontend/.env.production
-    
-    # 创建Agent环境配置模板
-    cat > agent/.env.template << EOF
+        # 确保前端配置在Docker构建时可用
+        cp frontend/.env frontend/.env.production
+    fi
+
+    # 创建Agent环境配置模板（如果agent目录存在）
+    if [[ -d "agent" ]]; then
+        cat > agent/.env.template << EOF
 # 代理配置模板
 AGENT_ID=your-unique-agent-id
 MASTER_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN"; fi)
@@ -2842,7 +2848,8 @@ NODE_LATITUDE=0.0
 NODE_LONGITUDE=0.0
 PORT=3002
 EOF
-    
+    fi
+
     log_success "环境配置创建完成"
 }
 
