@@ -163,7 +163,11 @@ export const VisitorStatsCard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <label htmlFor="visitor-stats-range" className="sr-only">
+              选择统计范围
+            </label>
             <select
+              id="visitor-stats-range"
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
               className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

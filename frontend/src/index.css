@@ -146,6 +146,7 @@
   /* 毛玻璃效果 */
   .glass {
     background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);

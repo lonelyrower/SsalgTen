@@ -449,7 +449,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
             </div>
             <div className="flex items-center space-x-3">
               <Filter className="h-4 w-4 text-gray-500" />
+              <label htmlFor="config-category-filter" className="sr-only">
+                选择配置类型
+              </label>
               <select
+                id="config-category-filter"
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -597,14 +601,23 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                     </div>
                                     <div className="flex-shrink-0 w-64">
                                       {inputType === 'boolean' ? (
-                                        <select
-                                          value={currentValue}
-                                          onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                          <option value="true">启用</option>
-                                          <option value="false">禁用</option>
-                                        </select>
+                                        <>
+                                          <label
+                                            className="sr-only"
+                                            htmlFor={`ssh-config-${config.id}`}
+                                          >
+                                            {meta?.label || formatConfigKey(config.key)}
+                                          </label>
+                                          <select
+                                            id={`ssh-config-${config.id}`}
+                                            value={currentValue}
+                                            onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                          >
+                                            <option value="true">启用</option>
+                                            <option value="false">禁用</option>
+                                          </select>
+                                        </>
                                       ) : (
                                         <input
                                           type={inputType}
@@ -672,14 +685,23 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                 </div>
                                 <div className="flex-shrink-0 w-64">
                                   {inputType === 'boolean' ? (
-                                    <select
-                                      value={currentValue}
-                                      onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                      <option value="true">启用</option>
-                                      <option value="false">禁用</option>
-                                    </select>
+                                    <>
+                                      <label
+                                        className="sr-only"
+                                        htmlFor={`config-${config.id}`}
+                                      >
+                                        {formatConfigKey(config.key)}
+                                      </label>
+                                      <select
+                                        id={`config-${config.id}`}
+                                        value={currentValue}
+                                        onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      >
+                                        <option value="true">启用</option>
+                                        <option value="false">禁用</option>
+                                      </select>
+                                    </>
                                   ) : (
                                     <input
                                       type={inputType}

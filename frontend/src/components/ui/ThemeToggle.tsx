@@ -102,7 +102,7 @@ export const ThemeToggle: React.FC = () => {
         onKeyDown={handleKeyDown}
         className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-expanded={isOpen}
-        aria-haspopup="menu"
+        aria-haspopup="listbox"
         aria-label={`主题设置：当前为${currentTheme?.label}，点击打开主题选择菜单`}
         id="theme-toggle-button"
       >
@@ -126,12 +126,13 @@ export const ThemeToggle: React.FC = () => {
           <div 
             ref={menuRef}
             className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] overflow-hidden"
-            role="menu"
+            role="listbox"
             aria-labelledby="theme-toggle-button"
+            aria-orientation="vertical"
             onKeyDown={handleKeyDown}
           >
             <div className="py-2">
-              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700" role="presentation">
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                   主题设置
                 </h3>
@@ -159,8 +160,8 @@ export const ThemeToggle: React.FC = () => {
                       buttonRef.current?.focus();
                     }}
                     onMouseEnter={() => setFocusedIndex(index)}
-                    role="menuitemradio"
-                    aria-checked={isSelected}
+                    role="option"
+                    aria-selected={isSelected}
                     aria-describedby={`theme-${themeOption.value}-desc`}
                     tabIndex={isFocused ? 0 : -1}
                   >
@@ -201,9 +202,8 @@ export const ThemeToggle: React.FC = () => {
               })}
               
               {/* 当前主题状态 */}
-              <div 
+              <div
                 className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
-                role="status"
                 aria-live="polite"
               >
                 <div className="flex items-center space-x-2">
