@@ -1,4 +1,4 @@
-import { apiService, type ApiResponse } from './api';
+import { apiService, type ApiResponse, type User, type NodeData } from './api';
 
 // Enhanced API service with user feedback
 class EnhancedApiService {
@@ -66,9 +66,9 @@ class EnhancedApiService {
     return result;
   }
 
-  async createUser(userData: any, showFeedback = true): Promise<ApiResponse<any>> {
+  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'> & { password: string }, showFeedback = true): Promise<ApiResponse<User>> {
     const result = await apiService.createUser(userData);
-    
+
     if (showFeedback) {
       if (result.success) {
         this.handleSuccess('创建用户成功');
@@ -76,13 +76,13 @@ class EnhancedApiService {
         this.handleError('创建用户失败', result.error || '未知错误');
       }
     }
-    
+
     return result;
   }
 
-  async updateUser(id: string, userData: any, showFeedback = true): Promise<ApiResponse<any>> {
+  async updateUser(id: string, userData: Partial<User>, showFeedback = true): Promise<ApiResponse<User>> {
     const result = await apiService.updateUser(id, userData);
-    
+
     if (showFeedback) {
       if (result.success) {
         this.handleSuccess('更新用户成功');
@@ -90,7 +90,7 @@ class EnhancedApiService {
         this.handleError('更新用户失败', result.error || '未知错误');
       }
     }
-    
+
     return result;
   }
 
@@ -108,9 +108,9 @@ class EnhancedApiService {
     return result;
   }
 
-  async createNode(nodeData: any, showFeedback = true): Promise<ApiResponse<any>> {
+  async createNode(nodeData: Omit<NodeData, 'id' | 'agentId' | 'status' | 'createdAt' | 'updatedAt'>, showFeedback = true): Promise<ApiResponse<NodeData>> {
     const result = await apiService.createNode(nodeData);
-    
+
     if (showFeedback) {
       if (result.success) {
         this.handleSuccess('创建节点成功');
@@ -118,13 +118,13 @@ class EnhancedApiService {
         this.handleError('创建节点失败', result.error || '未知错误');
       }
     }
-    
+
     return result;
   }
 
-  async updateNode(id: string, nodeData: any, showFeedback = true): Promise<ApiResponse<any>> {
+  async updateNode(id: string, nodeData: Partial<NodeData>, showFeedback = true): Promise<ApiResponse<NodeData>> {
     const result = await apiService.updateNode(id, nodeData);
-    
+
     if (showFeedback) {
       if (result.success) {
         this.handleSuccess('更新节点成功');
@@ -132,12 +132,12 @@ class EnhancedApiService {
         this.handleError('更新节点失败', result.error || '未知错误');
       }
     }
-    
+
     return result;
   }
 
   // 添加登录错误处理
-  async login(credentials: any, showFeedback = true): Promise<ApiResponse<any>> {
+  async login(credentials: { username: string; password: string }, showFeedback = true): Promise<ApiResponse<unknown>> {
     const result = await apiService.login(credentials);
     
     if (showFeedback && !result.success) {

@@ -575,7 +575,9 @@ class ApiService {
             response = await r.json();
           }
         }
-      } catch {}
+      } catch {
+        // Ignore fallback errors
+      }
     }
 
     if (response.success && response.data) {
@@ -593,7 +595,7 @@ class ApiService {
     // 可以调用后端的logout接口
     try {
       await this.request('/auth/logout', { method: 'POST' }, true);
-    } catch (error) {
+    } catch {
       // 忽略logout错误，因为令牌已经被清除
     }
   }
