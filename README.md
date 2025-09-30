@@ -183,43 +183,52 @@ Redis 7+ + 持久化 + 集群支持
 
 #### 生产环境部署
 
-**方式1：🚀 镜像快速部署（推荐，1-3分钟）**
+**智能部署模式（推荐）**
 ```bash
-# 直接拉取预构建的Docker镜像，快速部署
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- deploy --image
+# 远程一键部署
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- deploy
 
 # 或本地运行
 git clone https://github.com/lonelyrower/SsalgTen.git
 cd SsalgTen
-./scripts/ssalgten.sh deploy --image
-```
-
-**优点：**
-- ✓ 部署时间：1-3分钟
-- ✓ 内存需求：最低512MB
-- ✓ 自动从GHCR拉取镜像
-- ✓ 无需本地构建
-- ✓ 支持极速更新
-
-**方式2：🔧 源码完整部署（高级，10-30分钟）**
-```bash
-# 方法1: 远程一键安装
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/deploy-production.sh | bash
-
-# 方法2: 本地克隆安装
-git clone https://github.com/lonelyrower/SsalgTen.git
-cd SsalgTen
-sudo ./scripts/deploy-production.sh --domain your-domain.com --ssl
-
-# 方法3: 使用ssalgten.sh (交互式选择)
 ./scripts/ssalgten.sh deploy
-# 选择菜单选项 1，然后选择 2 (源码部署)
 ```
 
-**适用场景：**
-- 需要自定义修改源码
-- 需要特殊的构建配置
-- 学习项目构建流程
+部署过程会自动进行：
+1. **统一的系统环境准备**
+   - 检查用户权限（推荐非root用户）
+   - 检查系统要求（内存、磁盘、端口）
+   - 收集部署配置（域名/IP、SSL证书类型）
+   - 安装系统依赖（curl、git、jq等）
+   - 安装并配置Docker
+   - 安装并配置Nginx
+   - 创建应用目录
+
+2. **选择构建模式**
+
+   **模式1：🚀 镜像快速构建（推荐，1-3分钟）**
+   - ✓ 直接拉取预构建的Docker镜像
+   - ✓ 构建时间：1-3分钟
+   - ✓ 内存需求：最低512MB
+   - ✓ 自动从GHCR拉取镜像
+   - ✓ 无需本地构建
+   - ✓ 支持极速更新
+   - ✓ 适合：99%的部署场景
+
+   **模式2：🔧 源码本地构建（高级，10-30分钟）**
+   - • 从GitHub下载源码并本地构建
+   - • 构建时间：10-30分钟
+   - • 内存需求：至少2GB
+   - • 适合：需要自定义修改源码的场景
+
+**直接指定构建模式（高级）**
+```bash
+# 镜像快速构建
+./scripts/ssalgten.sh deploy --image
+
+# 源码本地构建
+./scripts/ssalgten.sh deploy --source
+```
 
 #### 开发环境启动
 ```bash

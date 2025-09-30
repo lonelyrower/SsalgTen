@@ -2132,26 +2132,64 @@ ensure_env_basics_source() {
 # ============== 新的部署相关函数 ==============
 
 # 检查系统要求
+check_port_conflicts() {
+    log_info "检查端口占用..."
+
+    # 检查关键端口
+    local ports_to_check=(80 443 3000 3001 5432 6379)
+    local conflicted_ports=()
+
+    for port in "${ports_to_check[@]}"; do
+        if netstat -tuln 2>/dev/null | grep -q ":$port " || ss -tuln 2>/dev/null | grep -q ":$port "; then
+            conflicted_ports+=($port)
+            log_warning "端口 $port 已被占用"
+        fi
+    done
+
+    # 如果端口80被占用，提供解决方案
+    if [[ " ${conflicted_ports[*]} " == *" 80 "* ]]; then
+        log_warning "端口80已被占用，这可能会导致Nginx无法启动"
+        echo ""
+        echo "解决方案选择："
+        echo "1. 停止占用端口80的服务"
+        echo "2. 使用其他端口（如8080）"
+        echo ""
+        local continue_deploy
+        continue_deploy=$(prompt_yes_no "是否继续部署" "Y")
+        if [[ "$continue_deploy" != "y" ]]; then
+            log_info "部署已取消"
+            exit 0
+        fi
+    fi
+
+    if [[ ${#conflicted_ports[@]} -eq 0 ]]; then
+        log_success "所有必需端口都可用"
+    fi
+}
+
 check_system_requirements() {
     log_info "检查系统要求..."
-    
+
     # 检查操作系统
     if ! command -v apt-get >/dev/null 2>&1 && ! command -v yum >/dev/null 2>&1; then
         log_warning "未检测到支持的包管理器 (apt-get/yum)"
     fi
-    
+
     # 检查内存
     local mem_gb=$(free -g | awk 'NR==2{print $2}' 2>/dev/null || echo "0")
     if [[ $mem_gb -lt 1 ]]; then
         log_warning "系统内存少于1GB，可能影响性能"
     fi
-    
+
     # 检查磁盘空间
     local disk_gb=$(df -BG / | awk 'NR==2{print $4}' | sed 's/G//' 2>/dev/null || echo "0")
     if [[ $disk_gb -lt 5 ]]; then
         log_warning "可用磁盘空间少于5GB，可能不足"
     fi
-    
+
+    # 检查端口冲突
+    check_port_conflicts
+
     # 检查Docker
     if ! command -v docker >/dev/null 2>&1; then
         log_info "Docker 未安装，将自动安装"
@@ -2159,7 +2197,7 @@ check_system_requirements() {
     else
         log_success "Docker 已安装: $(docker --version)"
     fi
-    
+
     # 检查Docker Compose
     if ! docker compose version >/dev/null 2>&1 && ! command -v docker-compose >/dev/null 2>&1; then
         log_info "Docker Compose 未安装，将自动安装"
@@ -2507,55 +2545,6 @@ deploy_production() {
     log_header "🚀 SsalgTen 生产环境部署"
     echo ""
 
-    # 新增：选择部署模式
-    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}请选择部署模式：${NC}"
-    echo ""
-    echo -e "${GREEN}1. 🚀 镜像快速部署 (推荐)${NC}"
-    echo "   ✓ 直接拉取预构建的Docker镜像"
-    echo "   ✓ 部署时间：1-3分钟"
-    echo "   ✓ 内存需求：最低512MB"
-    echo "   ✓ 自动更新：支持极速更新"
-    echo "   ✓ 适合：99%的部署场景"
-    echo ""
-    echo -e "${YELLOW}2. 🔧 源码完整部署 (高级)${NC}"
-    echo "   • 从GitHub下载源码并本地构建"
-    echo "   • 部署时间：10-30分钟"
-    echo "   • 内存需求：至少2GB"
-    echo "   • 适合：需要自定义修改源码的场景"
-    echo ""
-    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
-    echo ""
-
-    local deploy_mode
-    deploy_mode=$(read_from_tty "请选择 [1/2] (默认: 1): " "1")
-    deploy_mode=${deploy_mode:-1}
-
-    echo ""
-
-    if [[ "$deploy_mode" == "1" ]]; then
-        log_success "✓ 已选择：镜像快速部署模式"
-        echo ""
-        log_info "将使用以下镜像源："
-        echo "  • 镜像仓库：ghcr.io"
-        echo "  • 镜像空间：lonelyrower/ssalgten"
-        echo "  • 镜像标签：latest"
-        echo ""
-
-        # 检查Docker
-        if ! check_docker_ready; then
-            log_warning "Docker未就绪，需要安装Docker"
-            install_docker
-        fi
-
-        # 使用镜像模式部署
-        deploy_flow --image
-        return $?
-    fi
-
-    log_info "已选择：源码完整部署模式"
-    echo ""
-
     # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
         RUNNING_AS_ROOT=true
@@ -2583,7 +2572,7 @@ deploy_production() {
         log_warning "继续使用root用户部署，将进行安全加固配置"
     fi
 
-    # 执行源码部署步骤
+    # 共同的系统环境准备
     check_system_requirements
     collect_deployment_info
     install_system_dependencies
@@ -2593,6 +2582,83 @@ deploy_production() {
 
     cd "$APP_DIR"
 
+    # 显示构建模式选择菜单
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}请选择构建模式：${NC}"
+    echo ""
+    echo -e "${GREEN}1. 🚀 镜像快速构建 (推荐)${NC}"
+    echo "   ✓ 直接拉取预构建的Docker镜像"
+    echo "   ✓ 构建时间：1-3分钟"
+    echo "   ✓ 内存需求：最低512MB"
+    echo "   ✓ 自动更新：支持极速更新"
+    echo "   ✓ 适合：99%的部署场景"
+    echo ""
+    echo -e "${YELLOW}2. 🔧 源码本地构建 (高级)${NC}"
+    echo "   • 从GitHub下载源码并本地构建"
+    echo "   • 构建时间：10-30分钟"
+    echo "   • 内存需求：至少2GB"
+    echo "   • 适合：需要自定义修改源码的场景"
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+
+    local build_mode
+    build_mode=$(read_from_tty "请选择 [1/2] (默认: 1): " "1")
+    build_mode=${build_mode:-1}
+
+    echo ""
+
+    if [[ "$build_mode" == "1" ]]; then
+        log_success "✓ 已选择：镜像快速构建模式"
+        echo ""
+        log_info "将使用以下镜像源："
+        echo "  • 镜像仓库：ghcr.io"
+        echo "  • 镜像空间：lonelyrower/ssalgten"
+        echo "  • 镜像标签：latest"
+        echo ""
+
+        # 使用镜像模式部署
+        deploy_with_image_mode
+    else
+        log_info "已选择：源码本地构建模式"
+        echo ""
+
+        # 使用源码模式部署
+        deploy_with_source_mode
+    fi
+
+    # 验证部署
+    verify_deployment
+
+    # 创建管理脚本
+    create_management_scripts
+
+    # 保存部署信息
+    save_deployment_info
+
+    # 显示部署结果
+    show_deployment_result
+}
+
+# 镜像模式部署
+deploy_with_image_mode() {
+    # 配置环境变量
+    create_environment_config
+
+    # 配置Nginx
+    create_nginx_config
+
+    # 安装SSL证书
+    install_ssl_certificate
+
+    # 拉取镜像并启动服务
+    log_info "拉取Docker镜像并启动服务..."
+    deploy_flow --image
+}
+
+# 源码模式部署
+deploy_with_source_mode() {
     # 下载项目源码
     download_source_code
 
@@ -2607,18 +2673,6 @@ deploy_production() {
 
     # 构建和启动服务
     build_and_start_services
-
-    # 验证部署
-    verify_deployment
-
-    # 创建管理脚本
-    create_management_scripts
-
-    # 保存部署信息
-    save_deployment_info
-
-    # 显示部署结果
-    show_deployment_result
 }
 
 # 下载源码（完整项目）
@@ -2828,7 +2882,7 @@ server {
     client_max_body_size 20m;
     gzip on;
     gzip_proxied any;
-    gzip_types application/json application/javascript text/css text/plain application/xml;
+    gzip_types application/json application/javascript text/css text/plain application/xml application/xml+rss application/atom+xml image/svg+xml;
 
     # ACME 挑战
     location /.well-known/acme-challenge/ {
@@ -2842,6 +2896,14 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+
+        # 静态资源缓存
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
+            proxy_pass http://localhost:${FRONTEND_PORT:-3000};
+            proxy_set_header Host \$host;
+            proxy_cache_valid 200 1d;
+            add_header Cache-Control "public, max-age=86400";
+        }
     }
 
     # API代理
@@ -2851,9 +2913,50 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+
+        # WebSocket支持
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+
+        # 代理策略
+        proxy_buffering off;
+        proxy_cache off;
+
+        # 超时配置（较长以支持长时间请求/流式输出）
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    # Socket.IO专用代理
+    location /socket.io/ {
+        proxy_pass http://localhost:${BACKEND_PORT:-3001};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        # WebSocket升级支持
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Socket.IO特定配置
+        proxy_buffering off;
+        proxy_cache off;
+
+        # 超时配置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # 健康检查端点
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
     }
 }
 EOF
@@ -2876,9 +2979,9 @@ install_ssl_certificate() {
         log_info "未启用SSL，跳过证书安装"
         return 0
     fi
-    
+
     log_info "安装SSL证书..."
-    
+
     if [[ "$SSL_MODE" == "letsencrypt" ]]; then
         # 安装Certbot
         if command -v apt >/dev/null 2>&1; then
@@ -2888,17 +2991,53 @@ install_ssl_certificate() {
         elif command -v dnf >/dev/null 2>&1; then
             run_as_root dnf install -y certbot python3-certbot-nginx
         fi
-        
+
         # 申请证书
         run_as_root certbot --nginx -d $DOMAIN --email $SSL_EMAIL --agree-tos --non-interactive
-        
-        # 设置自动续期
-        echo "0 12 * * * /usr/bin/certbot renew --quiet" | run_as_root crontab -
-        
+
+        # 部署续期后自动reload Nginx的hook
+        run_as_root mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+        run_as_root bash -c 'cat > /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh <<EOF
+#!/bin/sh
+systemctl reload nginx || true
+EOF'
+        run_as_root chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+
+        # 设置自动续期：优先使用 systemd timer，无法使用时回退到 cron
+        if command -v systemctl >/dev/null 2>&1; then
+            log_info "配置 systemd timer 自动续期..."
+            run_as_root systemctl enable --now certbot.timer || true
+            # 显示定时器状态用于可观测
+            run_as_root systemctl status certbot.timer --no-pager || true
+        else
+            log_info "配置 cron 自动续期..."
+            echo "0 3,15 * * * /usr/bin/certbot renew --quiet" | run_as_root crontab -
+        fi
+
+        # 进行一次续期演练（不真正申请）以验证环境
+        log_info "执行证书续期演练..."
+        run_as_root certbot renew --dry-run || true
+
+        # 输出健康检查与观测指引
+        echo ""
+        log_info "证书续期健康检查（可选）:"
+        echo "  • 查看定时器状态: systemctl status certbot.timer"
+        echo "  • 查看最近日志:  journalctl -u certbot.timer -n 50 --no-pager"
+        echo "  • 列出下一次执行: systemctl list-timers --all | grep certbot"
+        echo "  • 手动演练续期:   certbot renew --dry-run"
+        echo ""
+        # 简要输出当前状态便于确认
+        run_as_root systemctl list-timers --all | grep certbot || true
+        run_as_root journalctl -u certbot.timer -n 5 --no-pager || true
+
+        # 证书安装完成后，测试并重新加载Nginx配置
+        run_as_root nginx -t
+        run_as_root systemctl reload nginx
+
     else
         log_info "Cloudflare SSL模式，证书由Cloudflare自动管理"
     fi
-    
+
     log_success "SSL证书配置完成"
 }
 
@@ -3869,8 +4008,8 @@ EOF
     echo -e "${CYAN}应用目录:${NC} $APP_DIR"
     echo ""
     echo -e "${YELLOW}🏗️ 系统管理:${NC}"
-    echo -e "  ${PURPLE}1.${NC}  🚀 一键部署 (智能模式)  ${PURPLE}2.${NC}  ⚡ 系统更新"
-    echo -e "  ${PURPLE}3.${NC}  🔄 脚本更新        ${RED}4.${NC}  🗑️ 卸载系统"
+    echo -e "  ${PURPLE}1.${NC}  🚀 一键部署          ${PURPLE}2.${NC}  ⚡ 系统更新"
+    echo -e "  ${PURPLE}3.${NC}  🔄 脚本更新          ${RED}4.${NC}  🗑️ 卸载系统"
     echo ""
     echo -e "${YELLOW}📋 日常操作:${NC}"
     echo -e "  ${GREEN}5.${NC}  ▶️  启动系统        ${GREEN}6.${NC}  ⏹️  停止系统"
