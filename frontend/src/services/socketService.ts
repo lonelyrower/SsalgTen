@@ -23,7 +23,7 @@ interface SocketService {
   unsubscribeFromNodeHeartbeat: (nodeId: string) => void;
   requestLatestHeartbeat: (nodeId: string) => void;
   // 单节点事件
-  subscribeToNodeEvents: (nodeId: string, callback: (event: any) => void) => void;
+  subscribeToNodeEvents: (nodeId: string, callback: (event: unknown) => void) => void;
   unsubscribeFromNodeEvents: (nodeId: string) => void;
 }
 
@@ -32,7 +32,7 @@ class SocketServiceImpl implements SocketService {
   connected: boolean = false;
   private callbacks: { [event: string]: ((data: unknown) => void)[] } = {};
   private heartbeatCallbacks: { [nodeId: string]: ((payload: { nodeId: string; data: unknown }) => void)[] } = {};
-  private eventCallbacks: { [nodeId: string]: ((event: any) => void)[] } = {};
+  private eventCallbacks: { [nodeId: string]: ((event: unknown) => void)[] } = {};
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private connectionErrorCallbacks: ((error: Error) => void)[] = [];
@@ -103,12 +103,20 @@ class SocketServiceImpl implements SocketService {
       // 重新订阅节点心跳详情
       const nodeIds = Object.keys(this.heartbeatCallbacks);
       for (const nodeId of nodeIds) {
-        try { this.socket?.emit('subscribe_node_heartbeat', nodeId); } catch {}
+        try {
+          this.socket?.emit('subscribe_node_heartbeat', nodeId);
+        } catch {
+          // Ignore resubscription errors
+        }
       }
       // 重新订阅节点事件
       const evNodeIds = Object.keys(this.eventCallbacks);
       for (const nodeId of evNodeIds) {
-        try { this.socket?.emit('subscribe_node_events', nodeId); } catch {}
+        try {
+          this.socket?.emit('subscribe_node_events', nodeId);
+        } catch {
+          // Ignore resubscription errors
+        }
       }
     });
 
@@ -291,11 +299,15 @@ class SocketServiceImpl implements SocketService {
     // 确保全局监听只注册一次
     if (!this.callbacks['node_heartbeat']) {
       this.callbacks['node_heartbeat'] = [() => {}];
-      this.socket.on('node_heartbeat', (payload: any) => {
+      this.socket.on('node_heartbeat', (payload: { nodeId: string; data: unknown }) => {
         const nid = payload?.nodeId;
         const list = this.heartbeatCallbacks[nid] || [];
         for (const cb of list) {
-          try { cb(payload); } catch (e) { console.error(e); }
+          try {
+            cb(payload);
+          } catch (e) {
+            console.error(e);
+          }
         }
       });
     }
@@ -313,7 +325,7 @@ class SocketServiceImpl implements SocketService {
   };
 
   // ========== 单节点事件 ==========
-  subscribeToNodeEvents = (nodeId: string, callback: (event: any) => void) => {
+  subscribeToNodeEvents = (nodeId: string, callback: (event: unknown) => void) => {
     if (!this.socket) {
       console.warn('Socket未连接，无法订阅节点事件');
       return;
@@ -323,11 +335,16 @@ class SocketServiceImpl implements SocketService {
     this.eventCallbacks[nodeId].push(callback);
     if (!this.callbacks['node_event']) {
       this.callbacks['node_event'] = [() => {}];
-      this.socket.on('node_event', (ev: any) => {
-        const nid = ev?.nodeId;
-        const list = this.eventCallbacks[nid] || [];
+      this.socket.on('node_event', (ev: unknown) => {
+        const event = ev as { nodeId?: string };
+        const nid = event?.nodeId;
+        const list = nid ? this.eventCallbacks[nid] || [] : [];
         for (const cb of list) {
-          try { cb(ev); } catch (e) { console.error(e); }
+          try {
+            cb(ev);
+          } catch (e) {
+            console.error(e);
+          }
         }
       });
     }
