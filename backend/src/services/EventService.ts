@@ -19,7 +19,7 @@ class EventService {
           nodeId,
           type,
           message,
-          details: details as Record<string, unknown>,
+          details: details ? (details as object) : undefined,
         },
       });
 

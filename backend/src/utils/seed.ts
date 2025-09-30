@@ -88,7 +88,14 @@ export async function seedNodes() {
     }
 
     // 创建示例节点（避免空数组推断为 never[]）
-    const createdNodes: { id: string }[] = [];
+    const createdNodes: Array<{
+      id: string;
+      name: string;
+      agentId: string;
+      apiKey: string;
+      city: string | null;
+      country: string | null;
+    }> = [];
 
     for (const nodeData of sampleNodes) {
       const agentId = crypto.randomUUID();
@@ -117,7 +124,9 @@ export async function seedNodes() {
       logger.info(`Agent ${index + 1} (${node.name}):`);
       logger.info(`  AGENT_ID=${node.agentId}`);
       logger.info(`  API_KEY=${node.apiKey}`);
-      logger.info(`  LOCATION=${node.city}, ${node.country}`);
+      logger.info(
+        `  LOCATION=${node.city || "Unknown"}, ${node.country || "Unknown"}`,
+      );
       logger.info("");
     });
   } catch (error) {

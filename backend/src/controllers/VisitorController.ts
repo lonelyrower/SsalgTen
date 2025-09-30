@@ -179,15 +179,17 @@ export class VisitorController {
           totalVisitors,
           uniqueIPs: Number(uniqueIPs[0]?.count || 0),
           topCountries: topCountries.map(
-            (item: { country: string; _count: number }) => ({
-              country: item.country,
+            (item: { country: string | null; _count: number }) => ({
+              country: item.country || "Unknown",
               count: item._count,
             }),
           ),
-          topASNs: topASNs.map((item: { asnName: string; _count: number }) => ({
-            asn: item.asnName,
-            count: item._count,
-          })),
+          topASNs: topASNs.map(
+            (item: { asnName: string | null; _count: number }) => ({
+              asn: item.asnName || "Unknown",
+              count: item._count,
+            }),
+          ),
           recentVisitors,
         },
       });

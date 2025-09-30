@@ -104,13 +104,14 @@ app.use("*", (req: Request, res: Response) => {
 app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
   logger.error("Unhandled error:", error);
 
+  const err = error as Error;
   const response: ApiResponse = {
     success: false,
     error: "Internal server error",
     ...(process.env.NODE_ENV === "development" && {
       data: {
-        details: error.message,
-        stack: error.stack,
+        details: err?.message || "Unknown error",
+        stack: err?.stack,
       },
     }),
   };

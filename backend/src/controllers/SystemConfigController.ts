@@ -15,7 +15,7 @@ interface ConfigByCategory {
   [category: string]: {
     [key: string]: {
       value: unknown;
-      description?: string;
+      description?: string | null;
       updatedAt: Date;
     };
   };
@@ -24,8 +24,9 @@ interface ConfigByCategory {
 interface ResetResult {
   key: string;
   value: unknown;
-  category?: string;
-  description?: string;
+  category?: string | null;
+  description?: string | null;
+  updatedAt?: Date;
 }
 
 export interface UpdateSystemConfigRequest {

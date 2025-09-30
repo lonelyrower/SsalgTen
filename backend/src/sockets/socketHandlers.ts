@@ -4,6 +4,7 @@ import { authenticateSocket } from "./socketAuth";
 import { NodeService, nodeService } from "../services/NodeService";
 import { sanitizeNodes } from "../utils/serialize";
 import { clientLatencyController } from "../controllers/ClientLatencyController";
+import { NodeStatus } from "@prisma/client";
 
 export interface AuthenticatedSocket extends Socket {
   user?: {
