@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";
+import { AuthenticatedRequest } from "../middleware/auth";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { refreshTokenService } from "../services/RefreshTokenService";
@@ -89,7 +90,7 @@ export class AuthController {
           // 回退为明文比较（不安全，仅为兼容历史数据；登录成功后立即升级为bcrypt）
           passwordValid = password === user.password;
         }
-      } catch (e) {
+      } catch {
         // bcrypt解析失败时，尝试明文比较
         passwordValid = password === user.password;
       }
@@ -136,7 +137,7 @@ export class AuthController {
       // 创建 refresh token
       const clientIp =
         (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-        (req.socket as any).remoteAddress;
+        (req.socket as { remoteAddress?: string }).remoteAddress;
       const userAgent = req.headers["user-agent"];
       // 创建 refresh token（容错：若表未迁移或写入失败，不影响主登录流程）
       let refreshToken: string | undefined;
@@ -165,11 +166,12 @@ export class AuthController {
       }
 
       // 返回用户信息（不包含密码）
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userInfo } = {
         ...user,
         role: userRole,
         active: isActive,
-      } as any;
+      };
 
       const response: ApiResponse = {
         success: true,
@@ -198,7 +200,7 @@ export class AuthController {
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
       // 从中间件中获取用户信息
-      const userId = (req as any).user?.userId;
+      const userId = (req as AuthenticatedRequest).user?.userId;
 
       if (!userId) {
         const response: ApiResponse = {
@@ -252,7 +254,7 @@ export class AuthController {
   // 修改密码
   async changePassword(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = (req as AuthenticatedRequest).user?.userId;
       const { currentPassword, newPassword } = req.body;
 
       if (!currentPassword || !newPassword) {
@@ -340,7 +342,7 @@ export class AuthController {
         message: "Logout successful",
       };
       res.json(response);
-    } catch (error) {
+    } catch {
       const response: ApiResponse = { success: false, error: "Logout failed" };
       res.status(500).json(response);
     }
@@ -386,7 +388,7 @@ export class AuthController {
       // 轮换 refresh token
       const clientIp =
         (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-        (req.socket as any).remoteAddress;
+        (req.socket as { remoteAddress?: string }).remoteAddress;
       const userAgent = req.headers["user-agent"];
       const rotated = await refreshTokenService.rotate(
         refreshToken,

@@ -47,10 +47,11 @@ export class ClientLatencyController {
       return forwarded.split(",")[0].trim();
     }
 
+    const connection = req.connection as { remoteAddress?: string; socket?: { remoteAddress?: string } };
     return (
-      req.connection.remoteAddress ||
+      connection.remoteAddress ||
       req.socket.remoteAddress ||
-      (req.connection as any).socket?.remoteAddress ||
+      connection.socket?.remoteAddress ||
       "127.0.0.1"
     );
   }
@@ -104,7 +105,7 @@ export class ClientLatencyController {
       this.testTimeouts.set(clientIP, timeout);
 
       // 优先使用 HTTP 直接调用各 Agent 的 /api/ping 接口（更简单可靠）
-      const buildAgentEndpoint = (node: any): string | null => {
+      const buildAgentEndpoint = (node: { ipv4?: string | null; ipv6?: string | null }): string | null => {
         const rawHost = (node?.ipv4 || node?.ipv6 || "").toString().trim();
         if (!rawHost) return null;
         // 默认 Agent 监听 3002 端口，与 docker-compose 保持一致；
