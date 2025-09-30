@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";
@@ -6,13 +6,13 @@ import { AuthenticatedRequest } from "../middleware/auth";
 
 export interface SystemConfigData {
   key: string;
-  value: any;
+  value: string;
   category?: string;
   description?: string;
 }
 
 export interface UpdateSystemConfigRequest {
-  value: any;
+  value: string;
   category?: string;
   description?: string;
 }
@@ -207,7 +207,7 @@ export class SystemConfigController {
               description: config.description,
               updatedAt: config.updatedAt,
             };
-          } catch (error) {
+          } catch {
             acc[cat][config.key] = {
               value: config.value,
               description: config.description,

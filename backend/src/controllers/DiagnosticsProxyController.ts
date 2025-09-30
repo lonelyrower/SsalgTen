@@ -44,7 +44,10 @@ const ensureEnabled = async (res: Response): Promise<boolean> => {
   }
 };
 
-const buildAgentEndpoint = (node: any): string | null => {
+const buildAgentEndpoint = (node: {
+  ipv4?: string | null;
+  ipv6?: string | null;
+}): string | null => {
   const host = node?.ipv4 || node?.ipv6;
   if (!host) return null;
   const formattedHost = host.includes(":") ? `[${host}]` : host;
@@ -56,12 +59,19 @@ export class DiagnosticsProxyController {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params; // nodeId
-      const { target, count } = req.query as any;
+      const { target, count } = req.query as {
+        target?: string;
+        count?: string;
+      };
       if (!target || !isValidTarget(String(target))) {
         res.status(400).json({ success: false, error: "Invalid target" });
         return;
       }
       const node = await nodeService.getNodeById(id);
+      if (!node) {
+        res.status(404).json({ success: false, error: "Node not found" });
+        return;
+      }
       const endpoint = buildAgentEndpoint(node);
       if (!endpoint) {
         res
@@ -82,12 +92,19 @@ export class DiagnosticsProxyController {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
-      const { target, maxHops } = req.query as any;
+      const { target, maxHops } = req.query as {
+        target?: string;
+        maxHops?: string;
+      };
       if (!target || !isValidTarget(String(target))) {
         res.status(400).json({ success: false, error: "Invalid target" });
         return;
       }
       const node = await nodeService.getNodeById(id);
+      if (!node) {
+        res.status(404).json({ success: false, error: "Node not found" });
+        return;
+      }
       const endpoint = buildAgentEndpoint(node);
       if (!endpoint) {
         res
@@ -113,12 +130,19 @@ export class DiagnosticsProxyController {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
-      const { target, count } = req.query as any;
+      const { target, count } = req.query as {
+        target?: string;
+        count?: string;
+      };
       if (!target || !isValidTarget(String(target))) {
         res.status(400).json({ success: false, error: "Invalid target" });
         return;
       }
       const node = await nodeService.getNodeById(id);
+      if (!node) {
+        res.status(404).json({ success: false, error: "Node not found" });
+        return;
+      }
       const endpoint = buildAgentEndpoint(node);
       if (!endpoint) {
         res
@@ -141,6 +165,10 @@ export class DiagnosticsProxyController {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
       const node = await nodeService.getNodeById(id);
+      if (!node) {
+        res.status(404).json({ success: false, error: "Node not found" });
+        return;
+      }
       const endpoint = buildAgentEndpoint(node);
       if (!endpoint) {
         res
@@ -161,8 +189,12 @@ export class DiagnosticsProxyController {
     try {
       if (!(await ensureEnabled(res))) return;
       const { id } = req.params;
-      const { testType } = req.query as any;
+      const { testType } = req.query as { testType?: string };
       const node = await nodeService.getNodeById(id);
+      if (!node) {
+        res.status(404).json({ success: false, error: "Node not found" });
+        return;
+      }
       const endpoint = buildAgentEndpoint(node);
       if (!endpoint) {
         res
