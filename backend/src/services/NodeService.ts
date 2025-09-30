@@ -1,9 +1,20 @@
 import { prisma } from "../lib/prisma";
-import { Node, NodeStatus, DiagnosticType, Prisma } from "@prisma/client";
+import { NodeStatus, DiagnosticType, Prisma } from "@prisma/client";
 import { logger } from "../utils/logger";
 import { ipInfoService } from "./IPInfoService";
+import type { ASNInfo } from "./IPInfoService";
 import crypto from "crypto";
-import { RecordHeartbeatInput, HeartbeatDetail } from "../types/heartbeat";
+import {
+  RecordHeartbeatInput,
+  HeartbeatDetail,
+  CPUDetail,
+  MemoryDetail,
+  DiskDetail,
+  NetworkInterfaceDetail,
+  ProcessInfoDetail,
+  VirtualizationDetail,
+  ServicesDetail,
+} from "../types/heartbeat";
 import { eventService } from "./EventService";
 
 export interface CreateNodeInput {
@@ -61,27 +72,99 @@ export interface UpdateNodeInput {
   agentId?: string;
 }
 
-export interface NodeWithStats extends Node {
+const BASE_NODE_SELECT = {
+  id: true,
+  name: true,
+  hostname: true,
+  country: true,
+  city: true,
+  latitude: true,
+  longitude: true,
+  ipv4: true,
+  ipv6: true,
+  asnNumber: true,
+  asnName: true,
+  asnOrg: true,
+  asnRoute: true,
+  asnType: true,
+  provider: true,
+  datacenter: true,
+  agentId: true,
+  apiKey: true,
+  status: true,
+  lastSeen: true,
+  tags: true,
+  description: true,
+  osType: true,
+  osVersion: true,
+  createdAt: true,
+  updatedAt: true,
+  isPlaceholder: true,
+  neverAdopt: true,
   _count: {
-    diagnosticRecords: number;
-    heartbeatLogs: number;
-  };
+    select: {
+      diagnosticRecords: true,
+      heartbeatLogs: true,
+    },
+  },
+} satisfies Prisma.NodeSelect;
+
+export type ManagedNode = Prisma.NodeGetPayload<{
+  select: typeof BASE_NODE_SELECT;
+}>;
+
+export type NodeWithStats = ManagedNode & {
   lastHeartbeat?: {
     timestamp: Date;
     status: string;
     uptime: number | null;
   };
-  // 新增：最近一次心跳的资源占用（用于前端概览展示）
   cpuUsage?: number | null;
   memoryUsage?: number | null;
   diskUsage?: number | null;
+};
+
+type PlaceholderImportItem = {
+  ip: string;
+  name?: string;
+  notes?: string;
+  tags?: string[];
+  neverAdopt?: boolean;
+};
+
+interface AgentNodeInfoPayload {
+  name?: string;
+  country?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  provider?: string;
+  ipv4?: string | null;
+  ipv6?: string | null;
 }
+
+interface AgentSystemInfoPayload {
+  platform?: string;
+  version?: string;
+  [key: string]: unknown;
+}
+
+type DiagnosticRecordSummary = {
+  id: string;
+  type: DiagnosticType;
+  target: string | null;
+  success: boolean;
+  result: string | null;
+  error: string | null;
+  duration: number | null;
+  timestamp: Date;
+};
 
 export class NodeService {
   private heartbeatLogCounter: Record<string, number> = {};
   private heartbeatLogInterval = 5; // 每5次详细记录一次
 
-  // 简易内存缓存，降低高频请求带来的数据库压力
+  // 内存缓存，减少频繁数据库访问压力
   private nodesCache: { data: NodeWithStats[]; ts: number } | null = null;
   private statsCache: {
     data: {
@@ -100,50 +183,13 @@ export class NodeService {
   // 兼容性：数据库是否已添加占位相关列（isPlaceholder、neverAdopt）
   private placeholderSupport: boolean | null = null;
 
-  private BASE_NODE_SELECT: Prisma.NodeSelect = {
-    id: true,
-    name: true,
-    hostname: true,
-    country: true,
-    city: true,
-    latitude: true,
-    longitude: true,
-    ipv4: true,
-    ipv6: true,
-    asnNumber: true,
-    asnName: true,
-    asnOrg: true,
-    asnRoute: true,
-    asnType: true,
-    provider: true,
-    datacenter: true,
-    agentId: true,
-    apiKey: true,
-    status: true,
-    lastSeen: true,
-    tags: true,
-    description: true,
-    osType: true,
-    osVersion: true,
-    createdAt: true,
-    updatedAt: true,
-    isPlaceholder: true,
-    neverAdopt: true,
-    _count: {
-      select: {
-        diagnosticRecords: true,
-        heartbeatLogs: true,
-      },
-    },
-  };
-
   private async ensurePlaceholderSupport(): Promise<boolean> {
     if (this.placeholderSupport !== null) return this.placeholderSupport;
     try {
       const rows = await prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
         `SELECT EXISTS (
-           SELECT 1 FROM information_schema.columns 
-           WHERE table_schema = 'public' AND table_name = 'nodes' 
+           SELECT 1 FROM information_schema.columns
+           WHERE table_schema = 'public' AND table_name = 'nodes'
              AND column_name IN ('isPlaceholder','neverAdopt')
          ) AS exists`,
       );
@@ -155,7 +201,7 @@ export class NodeService {
   }
 
   // 创建新节点
-  async createNode(input: CreateNodeInput): Promise<Node> {
+  async createNode(input: CreateNodeInput): Promise<ManagedNode> {
     try {
       // 使用提供的agentId或生成新的
       const agentId = input.agentId || crypto.randomUUID();
@@ -197,7 +243,7 @@ export class NodeService {
       }
 
       const node = await prisma.node.create({
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
         data: {
           ...input,
           ...asnInfo,
@@ -210,7 +256,7 @@ export class NodeService {
       logger.info(
         `Node created: ${node.name} (${node.id}) with ASN: ${asnInfo.asnNumber}`,
       );
-      return node;
+      return this.withPreferredProvider(node);
     } catch (error) {
       logger.error("Failed to create node:", error);
       throw new Error("Failed to create node");
@@ -229,11 +275,11 @@ export class NodeService {
       }
       // 1) 一次性取所有节点（按创建时间倒序）
       const nodes = await prisma.node.findMany({
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
         orderBy: { createdAt: "desc" },
       });
 
-      if (nodes.length === 0) return [] as unknown as NodeWithStats[];
+      if (nodes.length === 0) return [];
 
       // 2) 使用原生SQL一次性获取每个节点的最新心跳（避免 N+1 查询）
       // 注意：列名为 camelCase，需使用双引号；表名为映射后的 heartbeat_logs
@@ -292,20 +338,17 @@ export class NodeService {
   }
 
   // 根据ID获取节点
-  async getNodeById(id: string): Promise<Node | null> {
+  async getNodeById(id: string): Promise<ManagedNode | null> {
     try {
       const node = await prisma.node.findUnique({
         where: { id },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
 
       if (!node) return null;
 
       // 如果存在ASN名称，使用ASN名称作为服务商显示
-      return {
-        ...node,
-        provider: node.asnName || node.provider,
-      };
+      return this.withPreferredProvider(node);
     } catch (error) {
       logger.error(`Failed to fetch node ${id}:`, error);
       throw new Error("Failed to fetch node");
@@ -313,20 +356,17 @@ export class NodeService {
   }
 
   // 根据agentId获取节点
-  async getNodeByAgentId(agentId: string): Promise<Node | null> {
+  async getNodeByAgentId(agentId: string): Promise<ManagedNode | null> {
     try {
       const node = await prisma.node.findUnique({
         where: { agentId },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
 
       if (!node) return null;
 
       // 如果存在ASN名称，使用ASN名称作为服务商显示
-      return {
-        ...node,
-        provider: node.asnName || node.provider,
-      };
+      return this.withPreferredProvider(node);
     } catch (error) {
       logger.error(`Failed to fetch node by agentId ${agentId}:`, error);
       throw new Error("Failed to fetch node");
@@ -334,7 +374,7 @@ export class NodeService {
   }
 
   // 更新节点信息
-  async updateNode(id: string, input: UpdateNodeInput): Promise<Node> {
+  async updateNode(id: string, input: UpdateNodeInput): Promise<ManagedNode> {
     try {
       const node = await prisma.node.update({
         where: { id },
@@ -342,16 +382,13 @@ export class NodeService {
           ...input,
           updatedAt: new Date(),
         },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
 
       logger.info(`Node updated: ${node.name} (${node.id})`);
 
       // 如果存在ASN名称，使用ASN名称作为服务商显示
-      return {
-        ...node,
-        provider: node.asnName || node.provider,
-      };
+      return this.withPreferredProvider(node);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -393,7 +430,7 @@ export class NodeService {
       tags?: string[];
       neverAdopt?: boolean;
     },
-  ): Promise<Node> {
+  ): Promise<ManagedNode> {
     if (!(await this.ensurePlaceholderSupport())) {
       throw new Error(
         "Placeholder feature not available: please apply database migrations",
@@ -408,7 +445,7 @@ export class NodeService {
 
       const existing = await prisma.node.findFirst({
         where: { OR: orConds },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
       if (existing) {
         if (existing.isPlaceholder) {
@@ -425,18 +462,12 @@ export class NodeService {
                 ? { neverAdopt: options.neverAdopt }
                 : {}),
             },
-            select: this.BASE_NODE_SELECT,
+            select: BASE_NODE_SELECT,
           });
-          return {
-            ...updated,
-            provider: updated.asnName || updated.provider,
-          };
+          return this.withPreferredProvider(updated);
         }
         // 已存在非占位节点，直接返回（不覆盖）
-        return {
-          ...existing,
-          provider: existing.asnName || existing.provider,
-        };
+        return this.withPreferredProvider(existing);
       }
 
       // 查询IP信息，填充地理/ASN
@@ -445,13 +476,7 @@ export class NodeService {
       let latitude = 0;
       let longitude = 0;
       let provider = "Unknown";
-      let asn: {
-        asn?: string;
-        name?: string;
-        org?: string;
-        route?: string;
-        type?: string;
-      } = {};
+      let asn: Partial<ASNInfo> = {};
       try {
         const info = await ipInfoService.getIPInfo(ip);
         if (info) {
@@ -462,10 +487,11 @@ export class NodeService {
             latitude = parseFloat(lat) || 0;
             longitude = parseFloat(lon) || 0;
           }
-          provider = (info.asn?.name ||
-            info.company?.name ||
-            provider) as string;
-          asn = info.asn || {};
+          const providerCandidate = info.asn?.name ?? info.company?.name;
+          if (providerCandidate) {
+            provider = providerCandidate;
+          }
+          asn = info.asn ?? {};
         }
       } catch {
         // noop: best-effort IP info enrichment during placeholder creation
@@ -491,37 +517,26 @@ export class NodeService {
           tags: options?.tags ? JSON.stringify(options.tags) : null,
           isPlaceholder: true,
           neverAdopt: options?.neverAdopt === true,
-          asnNumber: (asn.asn as string) || null,
-          asnName: (asn.name as string) || null,
-          asnOrg: (asn.org as string) || null,
-          asnRoute: (asn.route as string) || null,
-          asnType: (asn.type as string) || null,
+          asnNumber: asn.asn ?? null,
+          asnName: asn.name ?? null,
+          asnOrg: asn.org ?? null,
+          asnRoute: asn.route ?? null,
+          asnType: asn.type ?? null,
         },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
-      return {
-        ...node,
-        provider: (node as any).asnName || node.provider,
-      } as any;
+      return this.withPreferredProvider(node);
     } catch (error) {
       logger.error("Failed to create placeholder node:", error);
       throw new Error("Failed to create placeholder node");
     }
   }
 
-  async createPlaceholdersFromIPs(
-    items: Array<{
-      ip: string;
-      name?: string;
-      notes?: string;
-      tags?: string[];
-      neverAdopt?: boolean;
-    }>,
-  ): Promise<{
+  async createPlaceholdersFromIPs(items: PlaceholderImportItem[]): Promise<{
     created: number;
     updated: number;
     skipped: number;
-    results: Node[];
+    results: ManagedNode[];
   }> {
     if (!(await this.ensurePlaceholderSupport())) {
       throw new Error(
@@ -531,7 +546,7 @@ export class NodeService {
     let created = 0,
       updated = 0,
       skipped = 0;
-    const results: Node[] = [] as any;
+    const results: ManagedNode[] = [];
     for (const item of items) {
       const ip = (item.ip || "").trim();
       if (!ip) {
@@ -542,7 +557,7 @@ export class NodeService {
         // 试着调用创建（内部会处理已存在时的更新/返回）
         const before = await prisma.node.findFirst({
           where: { OR: ip.includes(":") ? [{ ipv6: ip }] : [{ ipv4: ip }] },
-          select: this.BASE_NODE_SELECT,
+          select: BASE_NODE_SELECT,
         });
         const n = await this.createPlaceholderFromIP(ip, {
           name: item.name,
@@ -551,11 +566,11 @@ export class NodeService {
           neverAdopt: item.neverAdopt,
         });
         const after = await prisma.node.findUnique({
-          where: { id: (n as any).id },
-          select: this.BASE_NODE_SELECT,
+          where: { id: n.id },
+          select: BASE_NODE_SELECT,
         });
         if (!before && after) created++;
-        else if (before && (before as any).isPlaceholder) updated++;
+        else if (before && before.isPlaceholder) updated++;
         else skipped++;
         results.push(n);
         // 避免外部数据源限频
@@ -572,9 +587,9 @@ export class NodeService {
   async tryAdoptAgentToPlaceholder(
     agentId: string,
     ip?: string | null,
-    nodeInfo?: any,
-    systemInfo?: any,
-  ): Promise<Node | null> {
+    nodeInfo?: AgentNodeInfoPayload | null,
+    systemInfo?: AgentSystemInfoPayload | null,
+  ): Promise<ManagedNode | null> {
     if (!(await this.ensurePlaceholderSupport())) return null;
     if (!ip) return null;
     const isIPv6 = ip.includes(":");
@@ -583,10 +598,10 @@ export class NodeService {
     else orConds.push({ ipv4: ip });
     const placeholder = await prisma.node.findFirst({
       where: { AND: [{ isPlaceholder: true }, { OR: orConds }] },
-      select: this.BASE_NODE_SELECT,
+      select: BASE_NODE_SELECT,
     });
     if (!placeholder) return null;
-    if ((placeholder as any).neverAdopt === true) {
+    if (placeholder.neverAdopt) {
       // 纪念/冻结占位：不自动收编
       return null;
     }
@@ -604,24 +619,24 @@ export class NodeService {
         osType: systemInfo?.platform || placeholder.osType,
         osVersion: systemInfo?.version || placeholder.osVersion,
       },
-      select: this.BASE_NODE_SELECT,
+      select: BASE_NODE_SELECT,
     });
     logger.info(
       `Adopted agent ${agentId} into placeholder node ${placeholder.id} (${placeholder.name})`,
     );
-    return {
-      ...updated,
-      provider: updated.asnName || updated.provider,
-    } as any;
+    return this.withPreferredProvider(updated);
   }
 
   // 更新节点状态
-  async updateNodeStatus(agentId: string, status: NodeStatus): Promise<Node> {
+  async updateNodeStatus(
+    agentId: string,
+    status: NodeStatus,
+  ): Promise<ManagedNode> {
     try {
       // 读取旧状态
       const old = await prisma.node.findUnique({
         where: { agentId },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
       if (!old) {
         throw new Error(`Node with agentId ${agentId} not found`);
@@ -633,7 +648,7 @@ export class NodeService {
           status,
           lastSeen: new Date(),
         },
-        select: this.BASE_NODE_SELECT,
+        select: BASE_NODE_SELECT,
       });
 
       // 增强日志输出，记录所有状态更新（包括相同状态的刷新）
@@ -706,16 +721,20 @@ export class NodeService {
       const node = await this.updateNodeStatus(agentId, NodeStatus.ONLINE);
 
       // 准备心跳日志数据
-      const logData: any = {
+      const logData: Prisma.HeartbeatLogUncheckedCreateInput = {
         nodeId: node.id,
         status: heartbeatData.status,
         uptime: heartbeatData.uptime,
         cpuUsage: heartbeatData.cpuUsage,
         memoryUsage: heartbeatData.memoryUsage,
         diskUsage: heartbeatData.diskUsage,
-        connectivity: heartbeatData.connectivity,
         timestamp: new Date(),
       };
+
+      if (typeof heartbeatData.connectivity !== "undefined") {
+        logData.connectivity =
+          heartbeatData.connectivity as Prisma.InputJsonValue;
+      }
 
       // 如果包含详细系统信息，添加到日志数据中
       if (heartbeatData.systemInfo) {
@@ -723,47 +742,57 @@ export class NodeService {
 
         // 存储详细信息为JSON
         if (sysInfo.cpu) {
-          logData.cpuInfo = sysInfo.cpu;
+          logData.cpuInfo = sysInfo.cpu as Prisma.InputJsonValue;
           // 更新兼容性字段
-          if (!logData.cpuUsage && sysInfo.cpu.usage) {
+          if (
+            logData.cpuUsage == null &&
+            typeof sysInfo.cpu.usage === "number"
+          ) {
             logData.cpuUsage = sysInfo.cpu.usage;
           }
         }
 
         if (sysInfo.memory) {
-          logData.memoryInfo = sysInfo.memory;
+          logData.memoryInfo = sysInfo.memory as Prisma.InputJsonValue;
           // 更新兼容性字段
-          if (!logData.memoryUsage && sysInfo.memory.usage) {
+          if (
+            logData.memoryUsage == null &&
+            typeof sysInfo.memory.usage === "number"
+          ) {
             logData.memoryUsage = sysInfo.memory.usage;
           }
         }
 
         if (sysInfo.disk) {
-          logData.diskInfo = sysInfo.disk;
+          logData.diskInfo = sysInfo.disk as Prisma.InputJsonValue;
           // 更新兼容性字段
-          if (!logData.diskUsage && sysInfo.disk.usage) {
+          if (
+            logData.diskUsage == null &&
+            typeof sysInfo.disk.usage === "number"
+          ) {
             logData.diskUsage = sysInfo.disk.usage;
           }
         }
 
-        if (sysInfo.network && Array.isArray(sysInfo.network)) {
-          logData.networkInfo = sysInfo.network;
+        if (Array.isArray(sysInfo.network)) {
+          logData.networkInfo = sysInfo.network as Prisma.InputJsonValue;
         }
 
         if (sysInfo.processes) {
-          logData.processInfo = sysInfo.processes;
+          logData.processInfo = sysInfo.processes as Prisma.InputJsonValue;
         }
 
         if (sysInfo.virtualization) {
-          logData.virtualization = sysInfo.virtualization;
+          logData.virtualization =
+            sysInfo.virtualization as Prisma.InputJsonValue;
         }
 
         if (sysInfo.services) {
-          logData.services = sysInfo.services;
+          logData.services = sysInfo.services as Prisma.InputJsonValue;
         }
 
-        if (sysInfo.loadAverage && Array.isArray(sysInfo.loadAverage)) {
-          logData.loadAverage = sysInfo.loadAverage;
+        if (Array.isArray(sysInfo.loadAverage)) {
+          logData.loadAverage = sysInfo.loadAverage as Prisma.InputJsonValue;
         }
       }
 
@@ -778,13 +807,13 @@ export class NodeService {
       const detailed =
         this.heartbeatLogCounter[agentId] % this.heartbeatLogInterval === 0;
       const logPayload = {
-        hasCpuInfo: !!logData.cpuInfo,
-        hasMemoryInfo: !!logData.memoryInfo,
-        hasDiskInfo: !!logData.diskInfo,
-        hasNetworkInfo: !!logData.networkInfo,
-        hasProcessInfo: !!logData.processInfo,
-        hasVirtualization: !!logData.virtualization,
-        hasServices: !!logData.services,
+        hasCpuInfo: Boolean(logData.cpuInfo),
+        hasMemoryInfo: Boolean(logData.memoryInfo),
+        hasDiskInfo: Boolean(logData.diskInfo),
+        hasNetworkInfo: Boolean(logData.networkInfo),
+        hasProcessInfo: Boolean(logData.processInfo),
+        hasVirtualization: Boolean(logData.virtualization),
+        hasServices: Boolean(logData.services),
       };
       if (detailed) {
         logger.debug(
@@ -805,7 +834,7 @@ export class NodeService {
       type: DiagnosticType;
       target?: string;
       success: boolean;
-      result: any;
+      result: unknown;
       error?: string;
       duration?: number;
     },
@@ -897,14 +926,14 @@ export class NodeService {
     nodeId: string,
     type?: DiagnosticType,
     limit = 100,
-  ): Promise<any[]> {
+  ): Promise<DiagnosticRecordSummary[]> {
     try {
-      const whereClause: any = { nodeId };
+      const whereClause: Prisma.DiagnosticRecordWhereInput = { nodeId };
       if (type) {
         whereClause.type = type;
       }
 
-      return await prisma.diagnosticRecord.findMany({
+      const records = await prisma.diagnosticRecord.findMany({
         where: whereClause,
         orderBy: { timestamp: "desc" },
         take: limit,
@@ -919,6 +948,8 @@ export class NodeService {
           timestamp: true,
         },
       });
+
+      return records;
     } catch (error) {
       logger.error(`Failed to fetch diagnostics for node ${nodeId}:`, error);
       throw new Error("Failed to fetch node diagnostics");
@@ -940,43 +971,42 @@ export class NodeService {
         return null;
       }
 
-      const latest: any = heartbeats[0] as any;
-      const previous: any | undefined = heartbeats[1] as any | undefined;
+      const latest = heartbeats[0];
+      const previous = heartbeats[1];
 
-      // 复制 networkInfo 并基于上一次心跳计算速率（bps）
-      let networkInfo = latest.networkInfo || null;
-      if (networkInfo && previous?.networkInfo && previous?.timestamp) {
-        try {
-          const prevMap = new Map<string, any>();
-          for (const n of previous.networkInfo as any[]) {
-            if (n && n.interface) prevMap.set(n.interface, n);
+      let networkInfo = this.parseNetworkInterfaces(latest.networkInfo);
+      const previousNetwork = previous
+        ? this.parseNetworkInterfaces(previous.networkInfo)
+        : null;
+
+      if (networkInfo && previousNetwork && previous) {
+        const prevMap = new Map<string, NetworkInterfaceDetail>();
+        previousNetwork.forEach((iface) => {
+          if (iface && iface.interface) {
+            prevMap.set(iface.interface, iface);
           }
-          const dt = Math.max(
-            1,
-            (latest.timestamp.getTime() -
-              new Date(previous.timestamp).getTime()) /
-              1000,
-          ); // seconds
-          networkInfo = (latest.networkInfo as any[]).map((n: any) => {
-            const prev = prevMap.get(n.interface);
-            if (
-              prev &&
-              typeof n.bytesReceived === "number" &&
-              typeof n.bytesSent === "number" &&
-              typeof prev.bytesReceived === "number" &&
-              typeof prev.bytesSent === "number"
-            ) {
-              const rx = n.bytesReceived - prev.bytesReceived;
-              const tx = n.bytesSent - prev.bytesSent;
-              const rxBps = rx >= 0 ? Math.round((rx * 8) / dt) : undefined;
-              const txBps = tx >= 0 ? Math.round((tx * 8) / dt) : undefined;
-              return { ...n, rxBps, txBps };
-            }
-            return n;
-          });
-        } catch {
-          // noop: network delta computation best-effort only
-        }
+        });
+        const dt = Math.max(
+          1,
+          (latest.timestamp.getTime() - previous.timestamp.getTime()) / 1000,
+        );
+        networkInfo = networkInfo.map((iface) => {
+          const prev = prevMap.get(iface.interface);
+          if (
+            prev &&
+            typeof iface.bytesReceived === "number" &&
+            typeof iface.bytesSent === "number" &&
+            typeof prev.bytesReceived === "number" &&
+            typeof prev.bytesSent === "number"
+          ) {
+            const rx = iface.bytesReceived - prev.bytesReceived;
+            const tx = iface.bytesSent - prev.bytesSent;
+            const rxBps = rx >= 0 ? Math.round((rx * 8) / dt) : undefined;
+            const txBps = tx >= 0 ? Math.round((tx * 8) / dt) : undefined;
+            return { ...iface, rxBps, txBps };
+          }
+          return iface;
+        });
       }
 
       const detail: HeartbeatDetail = {
@@ -986,15 +1016,19 @@ export class NodeService {
         cpuUsage: latest.cpuUsage,
         memoryUsage: latest.memoryUsage,
         diskUsage: latest.diskUsage,
-        connectivity: latest.connectivity,
-        cpuInfo: latest.cpuInfo || null,
-        memoryInfo: latest.memoryInfo || null,
-        diskInfo: latest.diskInfo || null,
-        networkInfo: networkInfo,
-        processInfo: latest.processInfo || null,
-        virtualization: latest.virtualization || null,
-        services: latest.services || null,
-        loadAverage: latest.loadAverage || null,
+        connectivity: latest.connectivity ?? null,
+        cpuInfo: this.parseJsonObject<CPUDetail>(latest.cpuInfo),
+        memoryInfo: this.parseJsonObject<MemoryDetail>(latest.memoryInfo),
+        diskInfo: this.parseJsonObject<DiskDetail>(latest.diskInfo),
+        networkInfo: networkInfo ?? null,
+        processInfo: this.parseJsonObject<ProcessInfoDetail>(
+          latest.processInfo,
+        ),
+        virtualization: this.parseJsonObject<VirtualizationDetail>(
+          latest.virtualization,
+        ),
+        services: this.parseJsonObject<ServicesDetail>(latest.services),
+        loadAverage: this.parseNumberArray(latest.loadAverage),
       };
       return detail;
     } catch (error) {
@@ -1007,6 +1041,58 @@ export class NodeService {
   }
 
   // 批量更新节点ASN信息
+  private withPreferredProvider<
+    T extends { provider: string | null; asnName: string | null },
+  >(node: T): T {
+    return {
+      ...node,
+      provider: node.asnName || node.provider,
+    };
+  }
+
+  private parseJsonObject<T extends Record<string, unknown>>(
+    value: Prisma.JsonValue | null,
+  ): T | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return null;
+    }
+    return value as T;
+  }
+
+  private parseNetworkInterfaces(
+    value: Prisma.JsonValue | null,
+  ): NetworkInterfaceDetail[] | null {
+    if (!value || !Array.isArray(value)) {
+      return null;
+    }
+
+    const interfaces: NetworkInterfaceDetail[] = [];
+    for (const entry of value) {
+      if (
+        entry &&
+        typeof entry === "object" &&
+        !Array.isArray(entry) &&
+        "interface" in entry &&
+        typeof (entry as { interface?: unknown }).interface === "string"
+      ) {
+        interfaces.push(entry as NetworkInterfaceDetail);
+      }
+    }
+
+    return interfaces;
+  }
+
+  private parseNumberArray(value: Prisma.JsonValue | null): number[] | null {
+    if (!value || !Array.isArray(value)) {
+      return null;
+    }
+
+    const numbers = value.filter(
+      (item): item is number => typeof item === "number",
+    );
+    return numbers;
+  }
+
   async updateNodesASN(): Promise<void> {
     try {
       const nodes = await prisma.node.findMany({
@@ -1276,7 +1362,7 @@ export class NodeService {
   }
 
   // 静态方法：计算节点统计信息
-  static calculateStats(nodes: Node[]): {
+  static calculateStats(nodes: ManagedNode[]): {
     totalNodes: number;
     onlineNodes: number;
     offlineNodes: number;
