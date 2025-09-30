@@ -137,6 +137,7 @@ export class AdminController {
       });
 
       // Return node data without sensitive apiKey
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { apiKey: _, ...nodeWithoutApiKey } = node;
 
       const response: ApiResponse = {
@@ -187,7 +188,7 @@ export class AdminController {
       }
 
       // 处理tags数组
-      const updateDataFormatted: any = {
+      const updateDataFormatted: Record<string, unknown> = {
         ...updateData,
         tags: updateData.tags ? JSON.stringify(updateData.tags) : undefined,
       };
@@ -223,6 +224,7 @@ export class AdminController {
       });
 
       // Return node data without sensitive apiKey
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { apiKey: _, ...nodeWithoutApiKey } = updatedNode;
 
       const response: ApiResponse = {
@@ -401,8 +403,9 @@ export class AdminController {
       let result;
       try {
         result = await nodeService.createPlaceholdersFromIPs(filtered);
-      } catch (e: any) {
-        const msg = e && e.message ? String(e.message) : "";
+      } catch (e: unknown) {
+        const error = e as { message?: string };
+        const msg = error && error.message ? String(error.message) : "";
         if (msg.includes("Placeholder feature not available")) {
           res.status(501).json({
             success: false,
@@ -863,15 +866,15 @@ export class AdminController {
       // 数据库实例运行时间（更能代表系统整体持续运行时长，不受后端重启影响）
       let dbUptimeSec = 0;
       try {
-        const rows = await prisma.$queryRawUnsafe<any[]>(
+        const rows = await prisma.$queryRawUnsafe<Array<{ seconds: unknown }>>(
           "SELECT EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time())) AS seconds",
         );
-        const sec = rows && rows[0] && (rows[0].seconds as any);
+        const sec = rows && rows[0] && rows[0].seconds;
         dbUptimeSec = Math.max(
           0,
           Math.floor(typeof sec === "string" ? parseFloat(sec) : Number(sec)),
         );
-      } catch (e) {
+      } catch {
         // 忽略错误，回退为0
       }
       const version = process.env.APP_VERSION || "0.1.0";

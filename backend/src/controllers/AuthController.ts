@@ -61,9 +61,10 @@ export class AuthController {
           select: { active: true, role: true, email: true, name: true },
         });
         if (extra && typeof extra.active === "boolean") isActive = extra.active;
-        if (extra && typeof (extra as any).role === "string")
-          userRole = (extra as any).role;
-      } catch (e) {
+        const extraData = extra as { role?: string };
+        if (extra && typeof extraData.role === "string")
+          userRole = extraData.role;
+      } catch {
         // 忽略：历史库缺少字段时仅使用默认
       }
 
