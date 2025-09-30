@@ -16,6 +16,7 @@ interface ActivityLogItem {
   id: string;
   type: string;
   message?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any;
   timestamp: string;
   node: {
@@ -39,7 +40,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
   const [hasRealData, setHasRealData] = useState(false);
 
   // 加载活动数据
-  const fetchActivities = async () => {
+  const fetchActivities = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiService.getGlobalActivities(50);
@@ -63,7 +64,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 根据事件类型推断严重程度
   const inferSeverity = (type: string): 'info' | 'warning' | 'error' | 'success' => {
@@ -82,7 +83,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
 
   useEffect(() => {
     fetchActivities();
-  }, []);
+  }, [fetchActivities]);
 
   const getActivityIcon = (type: string) => {
     const lowerType = type.toLowerCase();
@@ -180,8 +181,10 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
           <div className="flex items-center space-x-2">
             <select
               value={filter}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onChange={(e) => setFilter(e.target.value as any)}
               className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              aria-label="筛选活动类型"
             >
               <option value="all">全部</option>
               <option value="nodes">节点</option>

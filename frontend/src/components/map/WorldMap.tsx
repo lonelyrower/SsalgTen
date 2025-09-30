@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, memo, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
@@ -113,7 +114,7 @@ export const WorldMap = memo(({ nodes = [], onNodeClick, hideIPs = false }: Worl
         </Popup>
       </Marker>
     ));
-  }, [nodes, onNodeClick]);
+  }, [nodes, onNodeClick, hideIPs]);
 
   return (
     <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
