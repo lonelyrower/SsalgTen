@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Lock, User, Eye, EyeOff, Shield } from 'lucide-react';
+
+interface LocationState {
+  from?: {
+    pathname?: string;
+  };
+}
 
 export const LoginPage: React.FC = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -18,7 +24,8 @@ export const LoginPage: React.FC = () => {
 
   // 如果已经登录，重定向到目标页面或首页
   if (isAuthenticated) {
-    const redirectTo = (location.state as any)?.from?.pathname || '/dashboard';
+    const state = location.state as LocationState | null;
+    const redirectTo = state?.from?.pathname ?? '/dashboard';
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -61,6 +68,7 @@ export const LoginPage: React.FC = () => {
         setError('用户名或密码错误');
       }
     } catch (error) {
+      console.error('Login failed:', error);
       setError('登录失败，请稍后重试');
     } finally {
       setIsSubmitting(false);
@@ -139,6 +147,7 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                aria-label={showPassword ? '隐藏密码' : '显示密码'}
                 disabled={isSubmitting}
               >
                 {showPassword ? <EyeOff /> : <Eye />}

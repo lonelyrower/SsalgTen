@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { apiService } from '@/services/api';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useNotification } from '@/hooks/useNotification';
 import { 
   X, 
   Lock, 

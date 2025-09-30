@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon, Monitor, Check, ChevronDown } from 'lucide-react';
 
@@ -129,7 +129,6 @@ export const ThemeToggle: React.FC = () => {
             role="menu"
             aria-labelledby="theme-toggle-button"
             onKeyDown={handleKeyDown}
-            style={{ zIndex: 9999 }}
           >
             <div className="py-2">
               <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
@@ -160,7 +159,7 @@ export const ThemeToggle: React.FC = () => {
                       buttonRef.current?.focus();
                     }}
                     onMouseEnter={() => setFocusedIndex(index)}
-                    role="menuitem"
+                    role="menuitemradio"
                     aria-checked={isSelected}
                     aria-describedby={`theme-${themeOption.value}-desc`}
                     tabIndex={isFocused ? 0 : -1}

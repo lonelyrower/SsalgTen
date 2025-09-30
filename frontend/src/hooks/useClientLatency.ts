@@ -47,7 +47,9 @@ export function useClientLatency() {
         lastUpdated: parsed.lastUpdated || null,
         clientIP: parsed.clientIP || null,
       }));
-    } catch {}
+    } catch (error) {
+      console.warn('恢复客户端延迟状态失败:', error);
+    }
   }, [STORAGE_TTL_MS]);
 
   // 任何状态变化后保存到本地存储（轻量级持久化）
@@ -61,7 +63,9 @@ export function useClientLatency() {
         _savedAt: Date.now(),
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch {}
+    } catch (error) {
+      console.warn('保存客户端延迟状态失败:', error);
+    }
   }, [state.results, state.stats, state.lastUpdated, state.clientIP]);
 
   // 清理定时器
@@ -205,7 +209,11 @@ export function useClientLatency() {
   const clearData = useCallback(() => {
     clearTimers();
     setState(initialState);
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn('清除客户端延迟缓存失败:', error);
+    }
   }, [clearTimers]);
 
   // 计算延迟颜色等级

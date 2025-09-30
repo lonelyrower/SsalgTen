@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
@@ -42,33 +41,39 @@ const formatUptime = (uptime: number | null | undefined) => {
 
 // 目前未显示原始内存/磁盘容量，去除未使用的格式化函数以避免编译告警
 
-const ProgressBar: React.FC<{ 
-  value: number | null | undefined; 
-  color: 'blue' | 'green' | 'yellow' | 'red'; 
-  size?: 'sm' | 'md' 
+const ProgressBar: React.FC<{
+  value: number | null | undefined;
+  color: 'blue' | 'green' | 'yellow' | 'red';
+  size?: 'sm' | 'md';
 }> = ({ value, color, size = 'md' }) => {
-  const percentage = value || 0;
-  const height = size === 'sm' ? 'h-2' : 'h-3';
-  
-  const colorClasses = {
-    blue: 'bg-blue-500',
-    green: percentage > 80 ? 'bg-red-500' : percentage > 60 ? 'bg-yellow-500' : 'bg-green-500',
-    yellow: 'bg-yellow-500',
-    red: 'bg-red-500'
-  };
+  const percentage = value ?? 0;
+  const clamped = Math.min(Math.max(percentage, 0), 100);
+  const heightClass = size === 'sm' ? 'h-2' : 'h-3';
+  const fillClass = (() => {
+    if (color === 'blue') return 'fill-blue-500';
+    if (color === 'yellow') return 'fill-yellow-500';
+    if (color === 'red') return 'fill-red-500';
+    // green
+    if (clamped > 80) return 'fill-red-500';
+    if (clamped > 60) return 'fill-yellow-500';
+    return 'fill-green-500';
+  })();
 
   return (
-    <div className={`w-full ${height} bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden`}>
-      <div 
-        className={`${height} ${colorClasses[color]} transition-all duration-300 ease-in-out`}
-        style={{ width: `${Math.min(Math.max(percentage, 0), 100)}%` }}
-      />
-    </div>
+    <svg
+      className={`w-full ${heightClass}`}
+      viewBox="0 0 100 10"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={`当前进度 ${Math.round(clamped)}%`}
+    >
+      <rect x={0} y={0} width={100} height={10} rx={5} className="fill-gray-200 dark:fill-gray-700" />
+      <rect x={0} y={0} width={clamped} height={10} rx={5} className={fillClass} />
+    </svg>
   );
 };
 
 export const MonitoringPage: React.FC = () => {
-  const { /* user */ } = useAuth();
   const { nodes, connected, lastUpdate, refreshData } = useRealTime();
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 布局模式
@@ -98,8 +103,8 @@ export const MonitoringPage: React.FC = () => {
   // Remove error handling since useRealTime handles it internally
 
   const totalNodes = nodes.length;
-  const onlineNodes = nodes.filter(node => node.status.toLowerCase() === 'online').length;
-  const offlineNodes = nodes.filter(node => node.status.toLowerCase() === 'offline').length;
+  const onlineNodes = nodes.filter(node => node.status === 'online').length;
+  const offlineNodes = nodes.filter(node => node.status === 'offline').length;
   const unknownNodes = totalNodes - onlineNodes - offlineNodes;
 
 

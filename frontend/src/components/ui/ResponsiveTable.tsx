@@ -156,13 +156,13 @@ if (typeof window !== 'undefined' && !document.getElementById('responsive-table-
 // 简化的表格组件，用于快速替换现有表格
 interface SimpleResponsiveTableProps<T> {
   data: T[];
-  columns: {
+  columns: Array<{
     key: keyof T;
     label: string;
-    render?: (value: any, item: T) => React.ReactNode;
+    render?: (value: T[keyof T], item: T) => React.ReactNode;
     hideOnMobile?: boolean;
     className?: string;
-  }[];
+  }>;
   className?: string;
   emptyMessage?: string;
   onRowClick?: (item: T) => void;

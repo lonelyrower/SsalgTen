@@ -1,21 +1,21 @@
 import React, { memo, useEffect, useState } from 'react';
 
-interface SmoothTransitionProps {
+interface SmoothTransitionProps<T = unknown> {
   children: React.ReactNode;
-  data: any;
+  data: T;
   duration?: number;
   className?: string;
 }
 
 // 平滑过渡组件，避免数据更新时的闪跳
-export const SmoothTransition: React.FC<SmoothTransitionProps> = memo(({ 
+export const SmoothTransition = memo(<T = unknown>({
   children, 
   data, 
   duration = 300,
   className = '' 
-}) => {
+}: SmoothTransitionProps<T>) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [prevData, setPrevData] = useState(data);
+  const [prevData, setPrevData] = useState<T>(data);
 
   useEffect(() => {
     if (JSON.stringify(data) !== JSON.stringify(prevData)) {

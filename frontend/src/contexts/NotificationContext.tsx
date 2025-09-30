@@ -1,35 +1,10 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { useState, type ReactNode } from 'react';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
-
-interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  title: string;
-  message?: string;
-  duration?: number;
-  autoClose?: boolean;
-}
-
-interface NotificationContextType {
-  notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'id'>) => string;
-  removeNotification: (id: string) => void;
-  clearAll: () => void;
-  showError: (title: string, message?: string) => string;
-  showSuccess: (title: string, message?: string) => string;
-  showInfo: (title: string, message?: string) => string;
-  showWarning: (title: string, message?: string) => string;
-}
-
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
-
-export const useNotification = () => {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotification must be used within a NotificationProvider');
-  }
-  return context;
-};
+import {
+  NotificationContext,
+  type Notification,
+  type NotificationContextValue,
+} from './notification-context';
 
 interface NotificationProviderProps {
   children: ReactNode;
@@ -82,19 +57,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     return addNotification({ type: 'warning', title, message, duration: 6000 });
   };
 
+  const contextValue: NotificationContextValue = {
+    notifications,
+    addNotification,
+    removeNotification,
+    clearAll,
+    showError,
+    showSuccess,
+    showInfo,
+    showWarning,
+  };
+
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        addNotification,
-        removeNotification,
-        clearAll,
-        showError,
-        showSuccess,
-        showInfo,
-        showWarning,
-      }}
-    >
+    <NotificationContext.Provider value={contextValue}>
       {children}
       <NotificationContainer notifications={notifications} onRemove={removeNotification} />
     </NotificationContext.Provider>

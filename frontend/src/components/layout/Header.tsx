@@ -2,7 +2,7 @@ import { Globe, Activity, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header = () => {
@@ -20,11 +20,7 @@ export const Header = () => {
       {/* 动态背景效果 */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95" />
       <div 
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, hsl(217 91% 60% / 0.3) 0%, transparent 50%),
-                            radial-gradient(circle at 75% 75%, hsl(280 100% 70% / 0.3) 0%, transparent 50%)`
-        }}
+        className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_25%_25%,_hsl(217_91%_60%_/_0.3)_0%,_transparent_50%),_radial-gradient(circle_at_75%_75%,_hsl(280_100%_70%_/_0.3)_0%,_transparent_50%)]"
       />
       
       <div className="relative z-10 mobile-container py-3">

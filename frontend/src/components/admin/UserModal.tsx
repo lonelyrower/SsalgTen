@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService, type User } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useNotification } from '@/hooks/useNotification';
 import { 
   X, 
   User as UserIcon, 

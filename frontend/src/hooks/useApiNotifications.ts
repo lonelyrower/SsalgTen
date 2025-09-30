@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNotification } from '@/contexts/NotificationContext';
+import { useNotification } from '@/hooks/useNotification';
 import { enhancedApiService } from '@/services/enhancedApiService';
 import { socketService } from '@/services/socketService';
 

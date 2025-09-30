@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
 import { useConnectivityDiagnostics } from '@/hooks/useConnectivityDiagnostics';
@@ -7,6 +7,7 @@ import { ConnectivityDiagnostics } from '@/components/nodes/ConnectivityDiagnost
 import { Button } from '@/components/ui/button';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
+import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
@@ -14,6 +15,53 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
 import { socketService } from '@/services/socketService';
+
+type StatusFilter = 'all' | 'online' | 'offline';
+
+interface NodeEventDetails {
+  previous?: {
+    ipv4?: string;
+    ipv6?: string;
+  };
+  current?: {
+    ipv4?: string;
+    ipv6?: string;
+  };
+  from?: string;
+  to?: string;
+  [key: string]: unknown;
+}
+
+interface NodeEventRecord {
+  id: string;
+  type: string;
+  message?: string;
+  details?: NodeEventDetails;
+  timestamp: string;
+}
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const normalizeNodeEvent = (event: unknown): NodeEventRecord | null => {
+  if (!isObjectRecord(event)) {
+    return null;
+  }
+
+  const id = typeof event.id === 'string' ? event.id : String(event.id ?? `event-${Date.now()}`);
+  const type = typeof event.type === 'string' ? event.type : 'UNKNOWN';
+  const message = typeof event.message === 'string' ? event.message : undefined;
+  const timestamp = typeof event.timestamp === 'string' ? event.timestamp : new Date().toISOString();
+  const details = isObjectRecord(event.details) ? (event.details as NodeEventDetails) : undefined;
+
+  return {
+    id,
+    type,
+    message,
+    timestamp,
+    details,
+  };
+};
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
@@ -25,10 +73,10 @@ export const NodesPage: React.FC = () => {
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
-  const [heartbeatData, setHeartbeatData] = useState<any | null>(null);
-  const [events, setEvents] = useState<any[]>([]);
-  const [eventFilter, setEventFilter] = useState<'all' | string>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [heartbeatData, setHeartbeatData] = useState<HeartbeatData | null>(null);
+  const [events, setEvents] = useState<NodeEventRecord[]>([]);
+  const [eventFilter, setEventFilter] = useState<'all' | NodeEventRecord['type']>('all');
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [exportingNodes, setExportingNodes] = useState(false);
@@ -36,6 +84,16 @@ export const NodesPage: React.FC = () => {
   const diagnostics = useConnectivityDiagnostics(connected);
   // 只保留 2D 地图模式
   const [visibleCount, setVisibleCount] = useState(60);
+
+  const handleStatusFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextValue = event.target.value as StatusFilter;
+    setStatusFilter(nextValue);
+  };
+
+  const handleEventFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextValue = event.target.value as NodeEventRecord['type'] | 'all';
+    setEventFilter(nextValue);
+  };
   
   // 延迟测试功能
   const { 
@@ -108,7 +166,7 @@ export const NodesPage: React.FC = () => {
       if (showSpinner) setLoadingHeartbeat(true);
       const response = await apiService.getNodeHeartbeatData(nodeId);
       if (response.success && response.data) {
-        setHeartbeatData(response.data);
+        setHeartbeatData(response.data as HeartbeatData);
       } else {
         setHeartbeatData(null);
       }
@@ -126,7 +184,10 @@ export const NodesPage: React.FC = () => {
     try {
       const res = await apiService.getNodeEvents(nodeId, 50);
       if (res.success && Array.isArray(res.data)) {
-        setEvents(res.data);
+        const normalized = res.data
+          .map(normalizeNodeEvent)
+          .filter((event): event is NodeEventRecord => event !== null);
+        setEvents(normalized);
       } else {
         setEvents([]);
       }
@@ -145,7 +206,7 @@ export const NodesPage: React.FC = () => {
   };
 
   // 事件友好渲染
-  const renderEventMessage = (ev: any) => {
+  const renderEventMessage = (ev: NodeEventRecord) => {
     try {
       if (ev.type === 'IP_CHANGED') {
         const prev = ev.details?.previous || {};
@@ -160,11 +221,14 @@ export const NodesPage: React.FC = () => {
         return parts.join('；');
       }
       if (ev.type === 'STATUS_CHANGED') {
-        const from = ev.details?.from || 'UNKNOWN';
-        const to = ev.details?.to || 'UNKNOWN';
+        const from = (ev.details?.from as string | undefined) || 'UNKNOWN';
+        const to = (ev.details?.to as string | undefined) || 'UNKNOWN';
         return `状态：${from} → ${to}`;
       }
-      return ev.message || JSON.stringify(ev.details || {});
+      if (ev.message) {
+        return ev.message;
+      }
+      return ev.details ? JSON.stringify(ev.details) : '';
     } catch {
       return ev.message || '';
     }
@@ -191,9 +255,9 @@ export const NodesPage: React.FC = () => {
       const id = selectedNode.id;
 
       if (connected) {
-        const handler = (payload: any) => {
+        const handler = (payload: { nodeId: string; data: unknown }) => {
           if (payload?.nodeId === id) {
-            setHeartbeatData(payload.data || null);
+            setHeartbeatData((payload.data as HeartbeatData | null | undefined) ?? null);
           }
         };
         socketService.subscribeToNodeHeartbeat(id, handler);
@@ -201,8 +265,12 @@ export const NodesPage: React.FC = () => {
         socketService.requestLatestHeartbeat(id);
 
         // 节点事件走WS增量订阅
-        const handleEvent = (ev: any) => {
-          setEvents(prev => [ev, ...prev].slice(0, 50));
+        const handleEvent = (event: unknown) => {
+          const normalized = normalizeNodeEvent(event);
+          if (!normalized) {
+            return;
+          }
+          setEvents(prev => [normalized, ...prev].slice(0, 50));
         };
         socketService.subscribeToNodeEvents(id, handleEvent);
         // 初次拉取一页历史以填充
@@ -363,8 +431,9 @@ export const NodesPage: React.FC = () => {
             <div className="flex items-center space-x-3">
               <Filter className="h-4 w-4 text-gray-500" />
               <select
+                aria-label="筛选节点状态"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={handleStatusFilterChange}
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">所有状态</option>
@@ -663,7 +732,7 @@ export const NodesPage: React.FC = () => {
             ) : (
               <ServerDetailsPanel 
                 node={selectedNode}
-                heartbeatData={heartbeatData}
+                heartbeatData={heartbeatData ?? undefined}
               />
             )}
             {/* 事件列表 */}
@@ -673,8 +742,9 @@ export const NodesPage: React.FC = () => {
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="text-gray-600 dark:text-gray-400">筛选</span>
                   <select
+                    aria-label="筛选节点事件类型"
                     value={eventFilter}
-                    onChange={(e) => setEventFilter(e.target.value)}
+                    onChange={handleEventFilterChange}
                     className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   >
                     <option value="all">全部</option>

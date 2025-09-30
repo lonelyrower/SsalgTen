@@ -6,7 +6,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';

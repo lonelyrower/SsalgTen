@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { ResponsiveTabs } from '@/components/ui/ResponsiveTabs';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
