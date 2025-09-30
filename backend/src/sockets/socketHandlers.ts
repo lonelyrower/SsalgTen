@@ -202,7 +202,7 @@ export function emitToRole(
 export function broadcastNodeStatusChange(
   io: Server,
   nodeId: string,
-  status: any,
+  status: NodeStatus | string,
 ) {
   io.to("nodes_updates").emit("node_status_changed", {
     nodeId,
