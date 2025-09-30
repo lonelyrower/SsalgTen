@@ -127,6 +127,14 @@ export class NodeService {
     osVersion: true,
     createdAt: true,
     updatedAt: true,
+    isPlaceholder: true,
+    neverAdopt: true,
+    _count: {
+      select: {
+        diagnosticRecords: true,
+        heartbeatLogs: true,
+      },
+    },
   };
 
   private async ensurePlaceholderSupport(): Promise<boolean> {
@@ -258,9 +266,9 @@ export class NodeService {
       }
 
       // 3) 组装返回（不再 include 关系，显著降低查询负载）
-      const result = nodes.map((node) => {
+      const result = nodes.map((node): NodeWithStats => {
         const lh = latestMap.get(node.id);
-        const out: any = {
+        return {
           ...node,
           provider: node.asnName || node.provider,
           lastHeartbeat: lh
@@ -274,7 +282,6 @@ export class NodeService {
           memoryUsage: lh?.memoryUsage ?? null,
           diskUsage: lh?.diskUsage ?? null,
         };
-        return out as NodeWithStats;
       });
       this.nodesCache = { data: result, ts: Date.now() };
       return result;
@@ -395,7 +402,7 @@ export class NodeService {
     const isIPv6 = ip.includes(":");
     try {
       // 先查找是否已有同IP的节点
-      const orConds: any[] = [];
+      const orConds: Prisma.NodeWhereInput[] = [];
       if (!isIPv6) orConds.push({ ipv4: ip });
       else orConds.push({ ipv6: ip });
 
@@ -404,7 +411,7 @@ export class NodeService {
         select: this.BASE_NODE_SELECT,
       });
       if (existing) {
-        if ((existing as any) && (existing as any).isPlaceholder) {
+        if (existing.isPlaceholder) {
           // 更新占位信息（名称/标签/描述）
           const updated = await prisma.node.update({
             where: { id: existing.id },
@@ -422,14 +429,14 @@ export class NodeService {
           });
           return {
             ...updated,
-            provider: (updated as any).asnName || updated.provider,
-          } as any;
+            provider: updated.asnName || updated.provider,
+          };
         }
         // 已存在非占位节点，直接返回（不覆盖）
         return {
           ...existing,
-          provider: (existing as any).asnName || existing.provider,
-        } as any;
+          provider: existing.asnName || existing.provider,
+        };
       }
 
       // 查询IP信息，填充地理/ASN
@@ -571,7 +578,7 @@ export class NodeService {
     if (!(await this.ensurePlaceholderSupport())) return null;
     if (!ip) return null;
     const isIPv6 = ip.includes(":");
-    const orConds: any[] = [];
+    const orConds: Prisma.NodeWhereInput[] = [];
     if (isIPv6) orConds.push({ ipv6: ip });
     else orConds.push({ ipv4: ip });
     const placeholder = await prisma.node.findFirst({
@@ -604,7 +611,7 @@ export class NodeService {
     );
     return {
       ...updated,
-      provider: (updated as any).asnName || updated.provider,
+      provider: updated.asnName || updated.provider,
     } as any;
   }
 

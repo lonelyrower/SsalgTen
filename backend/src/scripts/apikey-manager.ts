@@ -5,7 +5,7 @@
  * 用于生成、查看、重置系统API密钥
  */
 
-import { apiKeyService, ApiKeyInfo } from "../services/ApiKeyService";
+import { apiKeyService } from "../services/ApiKeyService";
 import { logger } from "../utils/logger";
 
 async function main() {

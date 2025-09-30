@@ -1,5 +1,6 @@
 import axios from "axios";
 import { logger } from "../utils/logger";
+import type { Request } from "express";
 
 export interface ASNInfo {
   asn: string;
@@ -191,8 +192,9 @@ class IPInfoService {
         `获取IP信息成功: ${ip} - ASN: ${asnInfo.asn} (${asnInfo.name})`,
       );
       return ipInfo;
-    } catch (error: any) {
-      logger.error("获取IP信息失败:", { ip, error: error?.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error("获取IP信息失败:", { ip, error: message });
 
       // 返回基础信息作为降级
       return {
@@ -240,10 +242,17 @@ class IPInfoService {
   /**
    * 解析访问者信息
    */
-  async getVisitorInfo(req: any): Promise<VisitorInfo> {
+  async getVisitorInfo(req: Request): Promise<VisitorInfo> {
     // 获取真实IP地址
     const ip = this.extractRealIP(req);
-    const userAgent = req.headers["user-agent"] || "Unknown";
+    const userAgentHeader = req.headers["user-agent"];
+    const normalizedUserAgent = Array.isArray(userAgentHeader)
+      ? userAgentHeader.find((value) => value && value.trim())
+      : userAgentHeader;
+    const userAgent =
+      typeof normalizedUserAgent === "string" && normalizedUserAgent.trim()
+        ? normalizedUserAgent.trim()
+        : "Unknown";
 
     try {
       const ipInfo = await this.getIPInfo(ip);
@@ -260,8 +269,9 @@ class IPInfoService {
         asn: ipInfo?.asn,
         company: ipInfo?.company,
       };
-    } catch (error: any) {
-      logger.error("获取访问者信息失败:", { ip, error: error?.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error("获取访客信息失败:", { ip, error: message });
 
       return {
         ip,
@@ -273,22 +283,55 @@ class IPInfoService {
   /**
    * 提取真实IP地址
    */
-  private extractRealIP(req: any): string {
-    // 检查各种可能的IP头
-    const forwarded = req.headers["x-forwarded-for"];
+  private extractRealIP(req: Request): string {
+    const pickHeaderValue = (
+      value: string | string[] | undefined,
+    ): string | undefined => {
+      if (!value) return undefined;
+      const raw = Array.isArray(value)
+        ? value.find((item) => item && item.trim())
+        : value;
+      if (typeof raw !== "string") return undefined;
+      const trimmed = raw.trim();
+      return trimmed.length > 0 ? trimmed : undefined;
+    };
+
+    const forwarded = pickHeaderValue(req.headers["x-forwarded-for"]);
     if (forwarded) {
-      const ips = forwarded.split(",").map((ip: string) => ip.trim());
-      return ips[0]; // 返回第一个IP（客户端真实IP）
+      const firstForwarded = forwarded
+        .split(",")
+        .map((part) => part.trim())
+        .find((part) => part.length > 0);
+      if (firstForwarded) {
+        return firstForwarded;
+      }
     }
 
-    return (
-      req.headers["x-real-ip"] ||
-      req.headers["x-client-ip"] ||
-      req.connection?.remoteAddress ||
-      req.socket?.remoteAddress ||
-      req.ip ||
-      "Unknown"
-    );
+    const headerCandidates: Array<string | string[] | undefined> = [
+      req.headers["x-real-ip"],
+      req.headers["x-client-ip"],
+    ];
+
+    for (const candidate of headerCandidates) {
+      const value = pickHeaderValue(candidate);
+      if (value) {
+        return value;
+      }
+    }
+
+    const fallbackCandidates = [
+      req.connection?.remoteAddress,
+      req.socket?.remoteAddress,
+      req.ip,
+    ];
+
+    for (const candidate of fallbackCandidates) {
+      if (typeof candidate === "string" && candidate.trim().length > 0) {
+        return candidate.trim();
+      }
+    }
+
+    return "Unknown";
   }
 
   /**

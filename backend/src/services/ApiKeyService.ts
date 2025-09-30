@@ -482,13 +482,7 @@ export class ApiKeyService {
     nonce?: string;
     body?: unknown;
   }): Promise<{ ok: boolean; reason?: string }> {
-    const {
-      providedApiKey: _providedApiKey,
-      timestamp,
-      signature,
-      nonce,
-      body,
-    } = options;
+    const { timestamp, signature, nonce, body } = options;
     if (!this.requireSignature) {
       // 未强制要求时，如果未提供签名则放行，但记录提示
       if (!signature) {
