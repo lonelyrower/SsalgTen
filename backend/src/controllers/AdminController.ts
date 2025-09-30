@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";

@@ -108,7 +108,7 @@ export class ClientLatencyController {
         const rawHost = (node?.ipv4 || node?.ipv6 || "").toString().trim();
         if (!rawHost) return null;
         // 默认 Agent 监听 3002 端口，与 docker-compose 保持一致；
-        const host = rawHost.includes(':') ? `[${rawHost}]` : rawHost;
+        const host = rawHost.includes(":") ? `[${rawHost}]` : rawHost;
         return `http://${host}:3002`;
       };
 
@@ -340,7 +340,9 @@ export class ClientLatencyController {
 
     // 计算所有完成测试的节点（包括成功、失败、超时）
     const completedResults = results.filter((r) => r.status !== "testing");
-    const failedCount = completedResults.filter((r) => r.status !== "success" || r.latency === null).length;
+    const failedCount = completedResults.filter(
+      (r) => r.status !== "success" || r.latency === null,
+    ).length;
 
     // 延迟分布统计
     const distribution = [

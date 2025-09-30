@@ -128,11 +128,9 @@ export class AuthController {
       if (!jwtSecret) {
         throw new Error("JWT_SECRET is not configured");
       }
-      const token = jwt.sign(
-        tokenPayload,
-        jwtSecret,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions,
-      );
+      const token = jwt.sign(tokenPayload, jwtSecret, {
+        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+      } as jwt.SignOptions);
 
       // 创建 refresh token
       const clientIp =
@@ -413,11 +411,9 @@ export class AuthController {
       if (!jwtSecret) {
         throw new Error("JWT_SECRET is not configured");
       }
-      const newToken = jwt.sign(
-        tokenPayload,
-        jwtSecret,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions,
-      );
+      const newToken = jwt.sign(tokenPayload, jwtSecret, {
+        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+      } as jwt.SignOptions);
 
       const response: ApiResponse = {
         success: true,

@@ -47,7 +47,7 @@ const ensureEnabled = async (res: Response): Promise<boolean> => {
 const buildAgentEndpoint = (node: any): string | null => {
   const host = node?.ipv4 || node?.ipv6;
   if (!host) return null;
-  const formattedHost = host.includes(':') ? `[${host}]` : host;
+  const formattedHost = host.includes(":") ? `[${host}]` : host;
   return `http://${formattedHost}:3002`;
 };
 
