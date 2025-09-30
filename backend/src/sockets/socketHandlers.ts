@@ -92,13 +92,13 @@ export function setupSocketHandlers(io: Server) {
     socket.on("get_realtime_nodes", async () => {
       try {
         const nodes = await nodeService.getAllNodes();
-        const safeNodes = sanitizeNodes(nodes as any[]);
+        const safeNodes = sanitizeNodes(nodes as Record<string, unknown>[]);
         socket.emit("realtime_nodes", {
           success: true,
           data: safeNodes,
           timestamp: new Date().toISOString(),
         });
-      } catch (error) {
+      } catch {
         socket.emit("realtime_nodes", {
           success: false,
           error: "Failed to fetch nodes data",
@@ -143,12 +143,15 @@ export function setupSocketHandlers(io: Server) {
   });
 
   // 定期广播系统状态更新（降低频率以减少闪跳）
-  let lastBroadcastData: any = null;
+  let lastBroadcastData: {
+    nodes: Record<string, unknown>[];
+    stats: unknown;
+  } | null = null;
 
   setInterval(async () => {
     try {
       const nodes = await nodeService.getAllNodes();
-      const safeNodes = sanitizeNodes(nodes as any[]);
+      const safeNodes = sanitizeNodes(nodes as Record<string, unknown>[]);
       const stats = NodeService.calculateStats(nodes);
 
       // 简单比较，只有数据真正变化时才广播
@@ -180,13 +183,18 @@ export function emitToUser(
   io: Server,
   userId: string,
   event: string,
-  data: any,
+  data: unknown,
 ) {
   io.to(`user_${userId}`).emit(event, data);
 }
 
 // 辅助函数：向特定角色发送消息
-export function emitToRole(io: Server, role: string, event: string, data: any) {
+export function emitToRole(
+  io: Server,
+  role: string,
+  event: string,
+  data: unknown,
+) {
   io.to(`role_${role.toLowerCase()}`).emit(event, data);
 }
 

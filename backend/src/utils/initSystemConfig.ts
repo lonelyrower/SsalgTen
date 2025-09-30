@@ -74,7 +74,7 @@ export async function initSystemConfig(): Promise<void> {
  * @param defaultValue 默认值
  * @returns 配置值
  */
-export async function getSystemConfig<T = any>(
+export async function getSystemConfig<T = unknown>(
   key: string,
   defaultValue?: T,
 ): Promise<T | undefined> {
@@ -89,7 +89,7 @@ export async function getSystemConfig<T = any>(
 
     try {
       return JSON.parse(config.value) as T;
-    } catch (error) {
+    } catch {
       logger.warn(
         `Failed to parse config value for ${key}, returning raw value`,
       );
@@ -110,7 +110,7 @@ export async function getSystemConfig<T = any>(
  */
 export async function setSystemConfig(
   key: string,
-  value: any,
+  value: unknown,
   category?: string,
   description?: string,
 ): Promise<void> {
@@ -162,18 +162,18 @@ export async function deleteSystemConfig(key: string): Promise<boolean> {
  */
 export async function getSystemConfigsByCategory(
   category: string,
-): Promise<Record<string, any>> {
+): Promise<Record<string, unknown>> {
   try {
     const configs = await prisma.setting.findMany({
       where: { category },
     });
 
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
 
     for (const config of configs) {
       try {
         result[config.key] = JSON.parse(config.value);
-      } catch (error) {
+      } catch {
         result[config.key] = config.value;
       }
     }

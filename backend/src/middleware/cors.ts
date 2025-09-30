@@ -74,7 +74,7 @@ const corsOptions: cors.CorsOptions = {
           // 开发环境：允许所有
           return callback(null, true);
         }
-      } catch (e) {
+      } catch {
         // URL解析失败，拒绝
         return callback(new Error(`Invalid origin: ${origin}`));
       }
@@ -124,7 +124,7 @@ const corsOptions: cors.CorsOptions = {
           ) {
             return callback(null, true);
           }
-        } catch (e) {
+        } catch {
           // URL解析失败，跳过此规则
           continue;
         }

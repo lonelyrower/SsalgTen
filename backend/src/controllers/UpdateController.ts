@@ -27,7 +27,7 @@ export class UpdateController {
       const url = `https://api.github.com/repos/${owner}/${repo}/commits/${branch}`;
       const resp = await fetch(url, { headers });
       if (!resp.ok) throw new Error(`GitHub API ${resp.status}`);
-      const data: any = await resp.json();
+      const data = (await resp.json()) as { sha?: string };
       latestCommit = data && data.sha ? String(data.sha) : null;
       if (latestCommit && localVersion) {
         // 只在本地像 commit 哈希时才严格比较；否则仅返回字段供前端提示
@@ -36,8 +36,9 @@ export class UpdateController {
             latestCommit.substring(0, localVersion.length) !== localVersion;
         }
       }
-    } catch (e: any) {
-      error = e?.message || "Failed to query GitHub";
+    } catch (e: unknown) {
+      const err = e as Error;
+      error = err?.message || "Failed to query GitHub";
       logger.warn("Version check failed:", e);
     }
 
@@ -81,9 +82,9 @@ export class UpdateController {
           data: { status: resp.status, body: text },
         });
       }
-      let payload: any = undefined;
+      let payload: { job?: string } | undefined = undefined;
       try {
-        payload = JSON.parse(text);
+        payload = JSON.parse(text) as { job?: string };
       } catch {
         // noop: updater may return plain text, not JSON
       }
@@ -92,7 +93,7 @@ export class UpdateController {
         message: "Update started",
         data: payload?.job ? { job: payload.job } : { raw: text },
       });
-    } catch (e: any) {
+    } catch {
       return res.status(501).json({
         success: false,
         error:
@@ -133,7 +134,7 @@ export class UpdateController {
         });
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       return res.send(text);
-    } catch (e: any) {
+    } catch {
       return res.status(502).json({ success: false, error: "proxy failed" });
     }
   }
@@ -151,7 +152,7 @@ export class UpdateController {
       }
       const data = await resp.json().catch(() => ({ ok: true }));
       return res.json({ success: true, data });
-    } catch (e: any) {
+    } catch {
       return res
         .status(502)
         .json({ success: false, error: "updater not reachable" });

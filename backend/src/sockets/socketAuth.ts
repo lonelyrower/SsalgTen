@@ -30,7 +30,11 @@ export function authenticateSocket(
       return next(new Error("服务器配置错误"));
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as any;
+    const decoded = jwt.verify(token, jwtSecret) as {
+      userId: string;
+      username: string;
+      role: string;
+    };
 
     // 将用户信息添加到socket对象
     (socket as AuthenticatedSocket).user = {

@@ -28,13 +28,13 @@ export interface DiagnosticResult {
   nodeId: string;
   tool: "ping" | "traceroute" | "mtr" | "speedtest" | "iperf3";
   target: string;
-  result: any;
+  result: unknown;
   status: "running" | "completed" | "failed";
   createdAt: Date;
   completedAt?: Date;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;

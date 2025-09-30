@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { prisma } from "../lib/prisma";
-import { logger } from "../utils/logger";
 
 const DEFAULT_EXPIRES_DAYS = parseInt(
   process.env.REFRESH_TOKEN_EXPIRES_IN_DAYS || "30",
@@ -50,7 +49,7 @@ export class RefreshTokenService {
         data: { revoked: true },
       });
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }

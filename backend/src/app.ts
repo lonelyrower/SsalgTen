@@ -100,7 +100,8 @@ app.use("*", (req: Request, res: Response) => {
 });
 
 // 全局错误处理
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
   logger.error("Unhandled error:", error);
 
   const response: ApiResponse = {

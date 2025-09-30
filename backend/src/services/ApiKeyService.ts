@@ -10,6 +10,8 @@ export interface ApiKeyInfo {
   createdAt: Date;
   lastUsed?: Date;
   usageCount: number;
+  previousKeyGraceUntil?: string;
+  hasPreviousKey?: boolean;
 }
 
 export class ApiKeyService {
@@ -211,7 +213,8 @@ export class ApiKeyService {
   }
 
   // 更新API密钥使用统计
-  private async updateApiKeyUsage(key: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async updateApiKeyUsage(_key: string): Promise<void> {
     try {
       // 节流：限制最小写入间隔
       const now = Date.now();
@@ -298,8 +301,8 @@ export class ApiKeyService {
       };
       // 附加旧密钥宽限信息（不包含旧密钥的实际值）
       if (previousKeyExpires) {
-        (info as any).previousKeyGraceUntil = previousKeyExpires.value;
-        (info as any).hasPreviousKey = !!previousKeyRecord;
+        info.previousKeyGraceUntil = previousKeyExpires.value;
+        info.hasPreviousKey = !!previousKeyRecord;
       }
       return info;
     } catch (error) {
@@ -477,9 +480,15 @@ export class ApiKeyService {
     timestamp?: string;
     signature?: string;
     nonce?: string;
-    body?: any;
+    body?: unknown;
   }): Promise<{ ok: boolean; reason?: string }> {
-    const { providedApiKey, timestamp, signature, nonce, body } = options;
+    const {
+      providedApiKey: _providedApiKey,
+      timestamp,
+      signature,
+      nonce,
+      body,
+    } = options;
     if (!this.requireSignature) {
       // 未强制要求时，如果未提供签名则放行，但记录提示
       if (!signature) {

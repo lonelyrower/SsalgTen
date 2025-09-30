@@ -11,6 +11,23 @@ export interface SystemConfigData {
   description?: string;
 }
 
+interface ConfigByCategory {
+  [category: string]: {
+    [key: string]: {
+      value: unknown;
+      description?: string;
+      updatedAt: Date;
+    };
+  };
+}
+
+interface ResetResult {
+  key: string;
+  value: unknown;
+  category?: string;
+  description?: string;
+}
+
 export interface UpdateSystemConfigRequest {
   value: string;
   category?: string;
@@ -194,31 +211,28 @@ export class SystemConfigController {
       });
 
       // 按分类分组配置项
-      const configsByCategory = configs.reduce(
-        (acc, config) => {
-          const cat = config.category || "other";
-          if (!acc[cat]) {
-            acc[cat] = {};
-          }
+      const configsByCategory = configs.reduce((acc, config) => {
+        const cat = config.category || "other";
+        if (!acc[cat]) {
+          acc[cat] = {};
+        }
 
-          try {
-            acc[cat][config.key] = {
-              value: JSON.parse(config.value),
-              description: config.description,
-              updatedAt: config.updatedAt,
-            };
-          } catch {
-            acc[cat][config.key] = {
-              value: config.value,
-              description: config.description,
-              updatedAt: config.updatedAt,
-            };
-          }
+        try {
+          acc[cat][config.key] = {
+            value: JSON.parse(config.value),
+            description: config.description,
+            updatedAt: config.updatedAt,
+          };
+        } catch {
+          acc[cat][config.key] = {
+            value: config.value,
+            description: config.description,
+            updatedAt: config.updatedAt,
+          };
+        }
 
-          return acc;
-        },
-        {} as Record<string, any>,
-      );
+        return acc;
+      }, {} as ConfigByCategory);
 
       const response: ApiResponse = {
         success: true,
@@ -270,7 +284,7 @@ export class SystemConfigController {
       let parsedValue;
       try {
         parsedValue = JSON.parse(config.value);
-      } catch (error) {
+      } catch {
         parsedValue = config.value;
       }
 
@@ -342,7 +356,7 @@ export class SystemConfigController {
       let parsedValue;
       try {
         parsedValue = JSON.parse(updatedConfig.value);
-      } catch (error) {
+      } catch {
         parsedValue = updatedConfig.value;
       }
 
@@ -452,7 +466,7 @@ export class SystemConfigController {
         return;
       }
 
-      const results: any[] = [];
+      const results: ResetResult[] = [];
 
       // 使用事务批量更新
       await prisma.$transaction(async (tx) => {
@@ -519,18 +533,22 @@ export class SystemConfigController {
     try {
       const { category } = req.body;
 
-      let configsToReset: Record<string, any> = DEFAULT_SYSTEM_CONFIGS;
+      let configsToReset: Record<
+        string,
+        { value: unknown; category?: string; description?: string }
+      > = DEFAULT_SYSTEM_CONFIGS;
 
       // 如果指定了分类，只重置该分类的配置
       if (category) {
         configsToReset = Object.fromEntries(
           Object.entries(DEFAULT_SYSTEM_CONFIGS).filter(
-            ([key, config]) => config.category === category,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ([_key, config]) => config.category === category,
           ),
         );
       }
 
-      const results: any[] = [];
+      const results: ResetResult[] = [];
 
       await prisma.$transaction(async (tx) => {
         for (const [key, defaultConfig] of Object.entries(configsToReset)) {

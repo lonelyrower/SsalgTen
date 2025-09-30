@@ -5,7 +5,7 @@
  * 用于生成、查看、重置系统API密钥
  */
 
-import { apiKeyService } from "../services/ApiKeyService";
+import { apiKeyService, ApiKeyInfo } from "../services/ApiKeyService";
 import { logger } from "../utils/logger";
 
 async function main() {
@@ -95,9 +95,8 @@ async function showApiKeyInfo() {
   );
 
   // 显示旧密钥宽限期信息
-  const infoWithGrace = info as any;
-  if (infoWithGrace.hasPreviousKey) {
-    console.log(`   旧密钥宽限期至: ${infoWithGrace.previousKeyGraceUntil}`);
+  if (info.hasPreviousKey) {
+    console.log(`   旧密钥宽限期至: ${info.previousKeyGraceUntil}`);
   }
 }
 

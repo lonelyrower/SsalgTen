@@ -6,11 +6,7 @@ import { adminController } from "../controllers/AdminController";
 import { systemConfigController } from "../controllers/SystemConfigController";
 import { visitorController } from "../controllers/VisitorController";
 import { clientLatencyController } from "../controllers/ClientLatencyController";
-import {
-  authenticateToken,
-  requireAdmin,
-  optionalAuth,
-} from "../middleware/auth";
+import { authenticateToken, requireAdmin } from "../middleware/auth";
 import {
   loginLimiter,
   agentLimiter,

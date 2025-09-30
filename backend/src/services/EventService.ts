@@ -3,7 +3,7 @@ import { logger } from "../utils/logger";
 import { getIO } from "../sockets/ioRegistry";
 
 export interface EventDetails {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class EventService {
@@ -19,7 +19,7 @@ class EventService {
           nodeId,
           type,
           message,
-          details: details as any,
+          details: details as Record<string, unknown>,
         },
       });
 

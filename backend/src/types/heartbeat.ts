@@ -9,7 +9,7 @@ export interface CPUDetail {
   usage?: number;
   temperature?: number;
   architecture?: string;
-  [key: string]: any; // forward-compatible
+  [key: string]: unknown; // forward-compatible
 }
 
 export interface MemoryDetail {
@@ -20,7 +20,7 @@ export interface MemoryDetail {
   usage?: number;
   type?: string;
   speed?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DiskDetail {
@@ -32,7 +32,7 @@ export interface DiskDetail {
   model?: string;
   health?: string;
   temperature?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface NetworkInterfaceDetail {
@@ -46,7 +46,7 @@ export interface NetworkInterfaceDetail {
   // Computed rates based on previous heartbeat (bps)
   rxBps?: number;
   txBps?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProcessInfoDetail {
@@ -54,13 +54,13 @@ export interface ProcessInfoDetail {
   running?: number;
   sleeping?: number;
   zombie?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface VirtualizationDetail {
   type?: string;
   provider?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ServicesDetail {
@@ -70,7 +70,7 @@ export interface ServicesDetail {
   mysql?: boolean;
   postgresql?: boolean;
   redis?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface HeartbeatDetail {
@@ -80,7 +80,7 @@ export interface HeartbeatDetail {
   cpuUsage?: number | null;
   memoryUsage?: number | null;
   diskUsage?: number | null;
-  connectivity?: any;
+  connectivity?: unknown;
   cpuInfo?: CPUDetail | null;
   memoryInfo?: MemoryDetail | null;
   diskInfo?: DiskDetail | null;
@@ -97,7 +97,7 @@ export interface RecordHeartbeatInput {
   cpuUsage?: number;
   memoryUsage?: number;
   diskUsage?: number;
-  connectivity?: any;
+  connectivity?: unknown;
   systemInfo?: {
     cpu?: CPUDetail;
     memory?: MemoryDetail;
