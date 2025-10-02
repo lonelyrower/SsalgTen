@@ -378,14 +378,63 @@ check_docker_ready() {
     fi
     
     # 非 WSL2 环境的原有逻辑
-    ensure_cmd docker "curl -fsSL https://get.docker.com | sh"
-    
-    if ! docker info &> /dev/null; then
-        die "Docker daemon 未运行或无访问权限。请启动 Docker 服务或检查权限设置"
+    # 检查 Docker 命令
+    if ! command -v docker &> /dev/null; then
+        log_error "Docker 未安装"
+        log_info "安装建议: curl -fsSL https://get.docker.com | sh"
+        die "请先安装 Docker"
     fi
     
-    # 测试 Docker Compose
-    if ! docker_compose version &> /dev/null; then
+    # 检查 Docker daemon
+    if ! docker info &> /dev/null; then
+        log_error "Docker daemon 未运行或无访问权限"
+        echo
+        echo "可能的原因和解决方法："
+        echo "1. Docker 服务未启动"
+        echo "   → sudo systemctl start docker    # systemd 系统"
+        echo "   → sudo service docker start      # sysvinit 系统"
+        echo
+        echo "2. 当前用户无权限访问 Docker"
+        echo "   → sudo usermod -aG docker \$USER"
+        echo "   → newgrp docker  # 或重新登录"
+        echo
+        echo "3. Docker socket 权限问题"
+        echo "   → ls -la /var/run/docker.sock"
+        echo "   → sudo chmod 666 /var/run/docker.sock  # 临时解决"
+        die "请启动 Docker 服务或检查权限设置"
+    fi
+    
+    # 测试 Docker Compose（尝试两种方式）
+    local compose_available=false
+    
+    if docker compose version &> /dev/null; then
+        compose_available=true
+        log_success "检测到 Docker Compose V2 (docker compose)"
+    elif command -v docker-compose &> /dev/null && docker-compose version &> /dev/null; then
+        compose_available=true
+        log_success "检测到 Docker Compose V1 (docker-compose)"
+    fi
+    
+    if [[ "$compose_available" != "true" ]]; then
+        log_error "Docker Compose 不可用"
+        echo
+        echo "检测结果："
+        echo "  • docker compose: $(docker compose version 2>&1 | head -1 || echo '不可用')"
+        echo "  • docker-compose: $(command -v docker-compose &>/dev/null && docker-compose version 2>&1 | head -1 || echo '未安装')"
+        echo
+        echo "请安装 Docker Compose："
+        echo
+        echo "方法 1: 安装 Docker Compose 插件 (推荐)"
+        echo "  Ubuntu/Debian:"
+        echo "    sudo apt-get update"
+        echo "    sudo apt-get install docker-compose-plugin"
+        echo
+        echo "  CentOS/RHEL:"
+        echo "    sudo yum install docker-compose-plugin"
+        echo
+        echo "方法 2: 安装独立版本"
+        echo "  sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose"
+        echo "  sudo chmod +x /usr/local/bin/docker-compose"
         die "Docker Compose 不可用"
     fi
 }
