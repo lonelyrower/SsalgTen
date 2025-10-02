@@ -342,6 +342,42 @@ docker_compose() {
 
 # 检查Docker环境
 check_docker_ready() {
+    # 检测 WSL2 环境
+    if grep -qi microsoft /proc/version 2>/dev/null || [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+        log_warning "检测到 WSL2 环境"
+        
+        # 检查 Docker Desktop 是否在 Windows 上运行
+        if ! docker version &> /dev/null; then
+            echo
+            log_error "Docker Desktop WSL2 集成未配置或未启动"
+            echo
+            echo "请按以下步骤解决："
+            echo "1. 确保 Windows 上的 Docker Desktop 已启动"
+            echo "2. 打开 Docker Desktop → Settings → Resources → WSL Integration"
+            echo "3. 启用当前 WSL2 发行版的集成（如 Ubuntu）"
+            echo "4. 点击 'Apply & Restart'"
+            echo "5. 重新运行此脚本"
+            echo
+            echo "更多信息: https://docs.docker.com/desktop/wsl/"
+            exit 1
+        fi
+        
+        # 检查 docker compose 命令
+        if ! docker compose version &> /dev/null; then
+            log_error "Docker Compose 在 WSL2 中不可用"
+            echo
+            echo "请确保："
+            echo "1. Docker Desktop 版本 >= 3.0 (内置 Compose V2)"
+            echo "2. 在 Docker Desktop 设置中启用了 'Use Docker Compose V2'"
+            echo "3. WSL2 集成已正确配置"
+            exit 1
+        fi
+        
+        log_success "Docker Desktop WSL2 集成已就绪"
+        return 0
+    fi
+    
+    # 非 WSL2 环境的原有逻辑
     ensure_cmd docker "curl -fsSL https://get.docker.com | sh"
     
     if ! docker info &> /dev/null; then

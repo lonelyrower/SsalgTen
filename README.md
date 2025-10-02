@@ -179,6 +179,22 @@ Redis 7+ + 持久化 + 集群支持
 - 4 CPU 核心 / 8GB RAM / 100GB SSD
 - 域名和 SSL 证书 (推荐)
 
+> **⚠️ WSL2 用户特别提示:**
+> 
+> 如果在 Windows WSL2 环境中部署，需要先配置 **Docker Desktop WSL2 集成**：
+> 
+> 1. 确保 Docker Desktop 已在 Windows 上安装并启动
+> 2. Docker Desktop → Settings → Resources → WSL Integration
+> 3. 启用你的 WSL 发行版（如 Ubuntu）
+> 4. Apply & Restart
+> 
+> **快速检查工具：**
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/check-wsl2-docker.sh | bash
+> ```
+> 
+> 详细说明: [WSL2 Docker 配置指南](docs/WSL2_DOCKER_FIX.md)
+
 ### 🎯 一键部署 (推荐)
 
 #### 生产环境部署
