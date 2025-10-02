@@ -2728,6 +2728,9 @@ deploy_production() {
 
 # 镜像模式部署
 deploy_with_image_mode() {
+    # 下载必要的 compose 文件
+    download_compose_files_for_image_mode
+    
     # 配置环境变量
     create_environment_config
 
@@ -2740,6 +2743,114 @@ deploy_with_image_mode() {
     # 拉取镜像并启动服务
     log_info "拉取Docker镜像并启动服务..."
     deploy_flow --image
+}
+
+# 下载镜像模式所需的 compose 文件
+download_compose_files_for_image_mode() {
+    log_info "下载 Docker Compose 配置文件..."
+    
+    local base_url="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main"
+    local files=(
+        "docker-compose.ghcr.yml"
+        "docker-compose.yml"
+        ".env.example"
+    )
+    
+    local download_success=false
+    
+    # 尝试使用 curl 或 wget 下载
+    for file in "${files[@]}"; do
+        local downloaded=false
+        
+        # 尝试使用 curl
+        if command -v curl &> /dev/null; then
+            if curl -fsSL "$base_url/$file" -o "$file" 2>/dev/null; then
+                downloaded=true
+                log_success "✓ 已下载: $file"
+            fi
+        fi
+        
+        # 如果 curl 失败，尝试 wget
+        if [[ "$downloaded" == false ]] && command -v wget &> /dev/null; then
+            if wget -q "$base_url/$file" -O "$file" 2>/dev/null; then
+                downloaded=true
+                log_success "✓ 已下载: $file"
+            fi
+        fi
+        
+        # 如果是必需文件但下载失败，尝试创建最小配置
+        if [[ "$downloaded" == false ]]; then
+            if [[ "$file" == "docker-compose.ghcr.yml" ]] || [[ "$file" == "docker-compose.yml" ]]; then
+                log_warning "⚠ 无法下载 $file，创建最小配置..."
+                create_minimal_compose_file "$file"
+            else
+                log_warning "⚠ 跳过可选文件: $file"
+            fi
+        fi
+    done
+    
+    # 确保至少有一个 compose 文件
+    if [[ -f "docker-compose.ghcr.yml" ]] || [[ -f "docker-compose.yml" ]]; then
+        log_success "Docker Compose 配置文件准备完成"
+    else
+        log_error "无法获取 Docker Compose 配置文件"
+        die "请检查网络连接或手动下载配置文件"
+    fi
+}
+
+# 创建最小 compose 配置（应急方案）
+create_minimal_compose_file() {
+    local filename="$1"
+    
+    log_info "创建最小 compose 配置: $filename"
+    
+    cat > "$filename" << 'EOF'
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ssalgten}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-ssalgten}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ssalgten"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/backend:${IMAGE_TAG:-latest}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD}@postgres:5432/ssalgten?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      API_KEY_SECRET: ${API_KEY_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+
+  frontend:
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/frontend:${IMAGE_TAG:-latest}
+    environment:
+      VITE_API_URL: /api
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:
+EOF
+    
+    log_success "已创建最小 compose 配置: $filename"
 }
 
 # 源码模式部署
