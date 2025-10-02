@@ -322,19 +322,27 @@ flush_output() {
 
 # Docker Compose 兼容性检查和包装函数
 docker_compose() {
-    local base_args=""
-    [ -n "$COMPOSE_FILE" ] && base_args="$base_args -f $COMPOSE_FILE"
+    local compose_args=()
+    
+    # 添加 compose 文件参数
+    if [ -n "$COMPOSE_FILE" ] && [ -f "$COMPOSE_FILE" ]; then
+        compose_args+=(-f "$COMPOSE_FILE")
+    fi
+    
     # 自动合并本地覆盖文件（例如禁用/调整端口映射），避免 up 时忽略 override
     local override_file="$APP_DIR/docker-compose.override.yml"
     if [ -f "$override_file" ]; then
-        base_args="$base_args -f $override_file"
+        compose_args+=(-f "$override_file")
     fi
-    local proj="--project-name ${COMPOSE_PROJECT_NAME:-ssalgten}"
     
+    # 添加项目名称
+    compose_args+=(--project-name "${COMPOSE_PROJECT_NAME:-ssalgten}")
+    
+    # 使用 docker compose (V2) 或 docker-compose (V1)
     if docker compose version >/dev/null 2>&1; then
-        docker compose $base_args $proj "$@"
+        docker compose "${compose_args[@]}" "$@"
     elif command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
-        docker-compose $base_args $proj "$@"
+        docker-compose "${compose_args[@]}" "$@"
     else
         die "未找到可用的 Docker Compose。请安装 Docker Compose v2 或 docker-compose v1"
     fi
@@ -1081,7 +1089,19 @@ view_logs() {
     done
     
     check_docker_ready
-    cd "$APP_DIR"
+    
+    # 检测应用目录和 Compose 文件
+    detect_app_dir
+    detect_compose_file
+    
+    cd "$APP_DIR" || die "无法进入应用目录: $APP_DIR"
+    
+    # 验证 Compose 文件存在
+    if [[ ! -f "$COMPOSE_FILE" ]]; then
+        log_error "未找到 Compose 配置文件: $COMPOSE_FILE"
+        log_info "请先部署应用或指定正确的应用目录"
+        return 1
+    fi
     
     # 验证服务名称
     if [[ -n "$service" ]]; then
