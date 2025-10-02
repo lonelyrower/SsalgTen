@@ -3864,16 +3864,32 @@ EOF
     fi
 
     check_docker_ready || return 1
+    
+    log_info "检测应用目录..."
     detect_app_dir
+    log_info "应用目录: $APP_DIR"
+    
+    log_info "检测 Compose 文件..."
     detect_compose_file
+    log_info "Compose 文件: $COMPOSE_FILE"
+    
+    log_info "切换到应用目录: $APP_DIR"
     cd "$APP_DIR" || die "无法进入应用目录: $APP_DIR"
+    
+    log_info "当前目录内容:"
+    ls -la | head -10
 
     if [[ "$mode" == "image" ]]; then
+        log_info "=== 镜像模式部署开始 ==="
         IMAGE_REGISTRY="${registry:-${IMAGE_REGISTRY:-$DEFAULT_IMAGE_REGISTRY}}"
         IMAGE_NAMESPACE="${namespace:-${IMAGE_NAMESPACE:-$(detect_default_image_namespace)}}"
         IMAGE_TAG="${tag:-${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}}"
         export IMAGE_REGISTRY IMAGE_NAMESPACE IMAGE_TAG
+        
+        log_info "准备环境变量..."
         ensure_env_basics_image
+        
+        log_info "选择 Compose 文件..."
         local compose_file
         if [[ -n "$compose_override" ]]; then
             compose_file="$compose_override"
@@ -3882,14 +3898,32 @@ EOF
         else
             compose_file=$COMPOSE_FILE
         fi
+        
+        log_info "使用 Compose 文件: $compose_file"
+        
+        if [[ ! -f "$compose_file" ]]; then
+            log_error "Compose 文件不存在: $compose_file"
+            die "无法找到 Compose 配置文件"
+        fi
+        
         log_header "🚀 首次部署（镜像模式）"
         log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE (标签: $IMAGE_TAG)"
+        
+        log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
+        
+        log_info "启动数据库服务..."
         docker_compose -f "$compose_file" up -d postgres
-        log_info "等待数据库..."
+        
+        log_info "等待数据库启动..."
         sleep 5
+        
+        log_info "执行数据库迁移..."
         docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
+        
+        log_info "启动所有服务..."
         docker_compose -f "$compose_file" up -d --remove-orphans
+        
         log_success "部署完成"
         echo "模式: 镜像 | 访问: http://localhost:${FRONTEND_PORT:-3000}"
     else
