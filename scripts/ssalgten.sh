@@ -377,32 +377,57 @@ check_docker_ready() {
         return 0
     fi
     
-    # 非 WSL2 环境的原有逻辑
+    # 非 WSL2 环境 - 生产环境自动安装逻辑
+    
     # 检查 Docker 命令
     if ! command -v docker &> /dev/null; then
-        log_error "Docker 未安装"
-        log_info "安装建议: curl -fsSL https://get.docker.com | sh"
-        die "请先安装 Docker"
+        log_warning "Docker 未安装，正在自动安装..."
+        if ! install_docker; then
+            die "Docker 自动安装失败"
+        fi
     fi
     
     # 检查 Docker daemon
     if ! docker info &> /dev/null; then
-        log_error "Docker daemon 未运行或无访问权限"
-        echo
-        echo "可能的原因和解决方法："
-        echo "1. Docker 服务未启动"
-        echo "   → sudo systemctl start docker    # systemd 系统"
-        echo "   → sudo service docker start      # sysvinit 系统"
-        echo
-        echo "2. 当前用户无权限访问 Docker"
-        echo "   → sudo usermod -aG docker \$USER"
-        echo "   → newgrp docker  # 或重新登录"
-        echo
-        echo "3. Docker socket 权限问题"
-        echo "   → ls -la /var/run/docker.sock"
-        echo "   → sudo chmod 666 /var/run/docker.sock  # 临时解决"
-        die "请启动 Docker 服务或检查权限设置"
+        log_warning "Docker daemon 未运行，尝试启动..."
+        
+        # 尝试启动 Docker 服务
+        if command -v systemctl &> /dev/null; then
+            run_as_root systemctl start docker
+            run_as_root systemctl enable docker
+        elif command -v service &> /dev/null; then
+            run_as_root service docker start
+        fi
+        
+        # 等待服务启动
+        sleep 3
+        
+        # 再次检查
+        if ! docker info &> /dev/null; then
+            # 检查权限问题
+            if [[ ! -w /var/run/docker.sock ]]; then
+                log_info "添加当前用户到 docker 组..."
+                run_as_root usermod -aG docker "$USER" || true
+                
+                # 临时修改 socket 权限
+                run_as_root chmod 666 /var/run/docker.sock 2>/dev/null || true
+                
+                # 再次尝试
+                if ! docker info &> /dev/null; then
+                    log_error "Docker daemon 仍无法访问"
+                    echo
+                    echo "已尝试自动修复，但仍存在问题。可能需要："
+                    echo "1. 重新登录以使 docker 组权限生效"
+                    echo "2. 或手动运行: newgrp docker"
+                    die "Docker daemon 无法访问"
+                fi
+            else
+                die "Docker daemon 未运行且无法启动"
+            fi
+        fi
     fi
+    
+    log_success "Docker 运行正常"
     
     # 测试 Docker Compose（尝试两种方式）
     local compose_available=false
@@ -416,26 +441,19 @@ check_docker_ready() {
     fi
     
     if [[ "$compose_available" != "true" ]]; then
-        log_error "Docker Compose 不可用"
-        echo
-        echo "检测结果："
-        echo "  • docker compose: $(docker compose version 2>&1 | head -1 || echo '不可用')"
-        echo "  • docker-compose: $(command -v docker-compose &>/dev/null && docker-compose version 2>&1 | head -1 || echo '未安装')"
-        echo
-        echo "请安装 Docker Compose："
-        echo
-        echo "方法 1: 安装 Docker Compose 插件 (推荐)"
-        echo "  Ubuntu/Debian:"
-        echo "    sudo apt-get update"
-        echo "    sudo apt-get install docker-compose-plugin"
-        echo
-        echo "  CentOS/RHEL:"
-        echo "    sudo yum install docker-compose-plugin"
-        echo
-        echo "方法 2: 安装独立版本"
-        echo "  sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose"
-        echo "  sudo chmod +x /usr/local/bin/docker-compose"
-        die "Docker Compose 不可用"
+        log_warning "Docker Compose 未安装，正在自动安装..."
+        if ! install_docker_compose; then
+            die "Docker Compose 自动安装失败"
+        fi
+        
+        # 验证安装
+        if docker compose version &> /dev/null; then
+            log_success "Docker Compose V2 安装成功"
+        elif command -v docker-compose &> /dev/null && docker-compose version &> /dev/null; then
+            log_success "Docker Compose V1 安装成功"
+        else
+            die "Docker Compose 安装验证失败"
+        fi
     fi
 }
 
