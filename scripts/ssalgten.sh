@@ -1411,7 +1411,7 @@ update_system_from_images() {
     export IMAGE_TAG=$tag
 
     docker_compose -f "$compose_file" pull
-    docker_compose -f "$compose_file" up -d postgres
+    docker_compose -f "$compose_file" up -d database
     log_info "等待数据库启动..."
     sleep 5
     if ! docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy; then
@@ -1443,9 +1443,9 @@ fix_agent_name_override() {
     
     # 确保数据库服务在运行
     log_info "检查数据库服务状态..."
-    if ! docker_compose ps postgres | grep -q "Up"; then
+    if ! docker_compose ps database | grep -q "Up"; then
         log_info "启动数据库服务..."
-        docker_compose up -d postgres
+        docker_compose up -d database
         sleep 10
     fi
     
@@ -1534,9 +1534,9 @@ run_database_migrations() {
     log_info "检查并运行数据库迁移..."
     
     # 确保数据库服务在运行
-    if ! docker_compose ps postgres | grep -q "Up"; then
+    if ! docker_compose ps database | grep -q "Up"; then
         log_info "启动数据库服务..."
-        docker_compose up -d postgres
+        docker_compose up -d database
         sleep 10
     fi
     
@@ -3683,7 +3683,7 @@ build_and_start_services() {
     fi
     
     # 启动数据库
-    docker_compose -f $compose_file up -d postgres
+    docker_compose -f $compose_file up -d database
     log_info "等待数据库启动..."
     
     # 等待数据库健康检查通过
@@ -3744,7 +3744,7 @@ build_and_start_services() {
                                 log_info "删除数据卷..."
                                 docker volume rm ssalgten-postgres-data || true
                                 log_info "使用新密码重新启动数据库..."
-                                docker_compose -f $compose_file up -d postgres
+                                docker_compose -f $compose_file up -d database
                                 # 重新等待健康
                                 attempt=0
                                 while [ $attempt -lt $max_attempts ]; do
@@ -4118,7 +4118,7 @@ EOF
         docker_compose -f "$compose_file" pull
         
         log_info "启动数据库服务..."
-        docker_compose -f "$compose_file" up -d postgres
+        docker_compose -f "$compose_file" up -d database
         
         log_info "等待数据库启动..."
         sleep 5
@@ -4143,7 +4143,7 @@ EOF
         fi
         log_header "🚀 首次部署（源码模式）"
         docker_compose -f "$compose_file" build
-        docker_compose -f "$compose_file" up -d postgres
+        docker_compose -f "$compose_file" up -d database
         log_info "等待数据库..."
         sleep 5
         docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
