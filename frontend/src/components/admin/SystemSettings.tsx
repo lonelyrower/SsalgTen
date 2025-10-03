@@ -626,13 +626,22 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                           </select>
                                         </>
                                       ) : (
-                                        <input
-                                          type={inputType}
-                                          value={currentValue}
-                                          onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                          step={inputType === 'number' ? 1 : undefined}
-                                        />
+                                        <>
+                                          <label
+                                            className="sr-only"
+                                            htmlFor={`ssh-config-${config.id}`}
+                                          >
+                                            {meta?.label || formatConfigKey(config.key)}
+                                          </label>
+                                          <input
+                                            id={`ssh-config-${config.id}`}
+                                            type={inputType}
+                                            value={currentValue}
+                                            onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            step={inputType === 'number' ? 1 : undefined}
+                                          />
+                                        </>
                                       )}
                                     </div>
                                   </div>
@@ -710,13 +719,22 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                       </select>
                                     </>
                                   ) : (
-                                    <input
-                                      type={inputType}
-                                      value={currentValue}
-                                      onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                      step={inputType === 'number' ? 1 : undefined}
-                                    />
+                                    <>
+                                      <label
+                                        className="sr-only"
+                                        htmlFor={`config-${config.id}`}
+                                      >
+                                        {formatConfigKey(config.key)}
+                                      </label>
+                                      <input
+                                        id={`config-${config.id}`}
+                                        type={inputType}
+                                        value={currentValue}
+                                        onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        step={inputType === 'number' ? 1 : undefined}
+                                      />
+                                    </>
                                   )}
                                 </div>
                               </div>
