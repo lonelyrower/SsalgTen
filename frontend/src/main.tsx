@@ -3,6 +3,24 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
+// Declare build time global variable
+declare const __BUILD_TIME__: string;
+
+// Log build information
+console.info(
+  `%c🚀 SsalgTen Frontend %c\n` +
+  `%cBuild Time: ${__BUILD_TIME__}\n` +
+  `%cIf you see old content, please: %c\n` +
+  `1. Hard refresh (Ctrl+Shift+R or Cmd+Shift+R)\n` +
+  `2. Clear browser cache\n` +
+  `3. Open DevTools > Application > Clear storage`,
+  'color: #3b82f6; font-size: 14px; font-weight: bold',
+  '',
+  'color: #10b981',
+  'color: #f59e0b; font-weight: bold',
+  'color: #6b7280'
+);
+
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
   // Suppress browser extension related errors

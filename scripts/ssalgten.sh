@@ -1432,6 +1432,13 @@ update_system_from_images() {
     fi
     docker_compose -f "$compose_file" up -d --remove-orphans
     log_success "镜像更新完成"
+
+    # 提示清除浏览器缓存
+    echo ""
+    log_info "📢 重要提示：前端已更新，请清除浏览器缓存以查看最新内容"
+    echo "   方式1: 硬刷新 (Ctrl+Shift+R 或 Cmd+Shift+R)"
+    echo "   方式2: 清除浏览器缓存后刷新"
+    echo "   方式3: 打开浏览器开发者工具 > Application > Clear storage"
 }
 
 # Agent节点名称覆盖问题修复
@@ -4706,8 +4713,8 @@ EOF
     
     if [[ "$choice" != "0" ]]; then
         echo
-        # 在 curl|bash 环境下也尽量停留，避免信息被清掉
-        read_from_tty "按回车键继续..." ""
+        # 自动继续，无需等待用户输入
+        sleep 1
         # 下一次进入菜单时跳过 clear，一次性保留上一轮输出
         SKIP_CLEAR_ONCE=true
     fi
