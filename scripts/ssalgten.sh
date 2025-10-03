@@ -3896,6 +3896,20 @@ uninstall_system() {
         log_info "停止Docker容器..."
         docker_compose down --remove-orphans --volumes 2>/dev/null || true
         
+        # 额外清理：删除可能残留的容器
+        log_info "清理残留容器..."
+        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                     ssalgten-backend ssalgten-frontend ssalgten-agent \
+                     ssalgten-updater 2>/dev/null || true
+        
+        # 清理网络
+        log_info "清理Docker网络..."
+        docker network rm ssalgten-network 2>/dev/null || true
+        
+        # 清理数据卷
+        log_info "清理Docker数据卷..."
+        docker volume rm ssalgten-postgres-data ssalgten-redis-data 2>/dev/null || true
+        
         log_info "删除Docker镜像..."
         docker images | grep -E "(ssalgten|ghcr.io.*ssalgten)" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
     fi
@@ -4114,6 +4128,13 @@ EOF
         log_header "🚀 首次部署（镜像模式）"
         log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE (标签: $IMAGE_TAG)"
         
+        # 清理可能的残留容器和网络，避免端口冲突
+        log_info "清理可能的残留资源..."
+        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                     ssalgten-backend ssalgten-frontend ssalgten-agent \
+                     ssalgten-updater 2>/dev/null || true
+        docker network rm ssalgten-network 2>/dev/null || true
+        
         log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
         
@@ -4142,6 +4163,14 @@ EOF
             compose_file=$COMPOSE_FILE
         fi
         log_header "🚀 首次部署（源码模式）"
+        
+        # 清理可能的残留容器和网络，避免端口冲突
+        log_info "清理可能的残留资源..."
+        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                     ssalgten-backend ssalgten-frontend ssalgten-agent \
+                     ssalgten-updater 2>/dev/null || true
+        docker network rm ssalgten-network 2>/dev/null || true
+        
         docker_compose -f "$compose_file" build
         docker_compose -f "$compose_file" up -d database
         log_info "等待数据库..."
