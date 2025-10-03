@@ -1,7 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
-import { EnhancedWorldMap } from '@/components/map/EnhancedWorldMap';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -10,6 +9,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Activity, Globe } from 'lucide-react';
 import type { NodeData } from '@/services/api';
+
+// 懒加载地图组件以提升首屏加载速度
+const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
@@ -120,13 +122,22 @@ export const HomePage = () => {
             
             {/* 地图容器 */}
             <div className="map-container relative h-[600px]">
-              <EnhancedWorldMap
-                nodes={nodes}
-                onNodeClick={handleNodeClick}
-                selectedNode={selectedNode}
-                className="h-full"
-                showControlPanels={false}
-              />
+              <Suspense fallback={
+                <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-xl">
+                  <div className="text-center">
+                    <LoadingSpinner />
+                    <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">加载地图中...</p>
+                  </div>
+                </div>
+              }>
+                <EnhancedWorldMap
+                  nodes={nodes}
+                  onNodeClick={handleNodeClick}
+                  selectedNode={selectedNode}
+                  className="h-full"
+                  showControlPanels={false}
+                />
+              </Suspense>
             </div>
           </GlassCard>
         </div>
