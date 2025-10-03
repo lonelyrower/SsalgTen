@@ -392,12 +392,23 @@ collect_node_info() {
         # 主服务器地址
         if [[ -z "$MASTER_URL" ]]; then
             while true; do
-                MASTER_URL=$(read_from_tty "主服务器地址 (推荐: https://your-domain.com): ")
+                MASTER_URL=$(read_from_tty "主服务器地址 (例如: http://your-ip:3001 或 https://your-domain.com): ")
                 # 若用户未填写协议，默认使用 https
                 if [[ -n "$MASTER_URL" && ! "$MASTER_URL" =~ ^https?:// ]]; then
                     MASTER_URL="https://$MASTER_URL"
                 fi
                 if [[ -n "$MASTER_URL" && "$MASTER_URL" =~ ^https?:// ]]; then
+                    # 检查是否包含端口，如果使用 http 但没有端口，提示用户
+                    if [[ "$MASTER_URL" =~ ^http://[^:/]+$ ]]; then
+                        log_warning "检测到使用 HTTP 但未指定端口"
+                        log_warning "默认后端 API 端口通常是 3001"
+                        confirm=$(read_from_tty "是否自动添加端口 :3001？ [Y/n]: ")
+                        confirm="${confirm:-y}"
+                        if [[ "$confirm" =~ ^[Yy] ]]; then
+                            MASTER_URL="${MASTER_URL}:3001"
+                            log_info "已设置为: $MASTER_URL"
+                        fi
+                    fi
                     break
                 else
                     log_error "请输入有效的URL地址（以 http:// 或 https:// 开头）"
