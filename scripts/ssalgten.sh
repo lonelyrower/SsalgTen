@@ -3737,8 +3737,9 @@ build_and_start_services() {
     # 根据资源情况选择构建策略
     if [[ "${RESOURCE_CONSTRAINED:-false}" == "true" ]]; then
         log_info "使用资源优化构建模式..."
-        # 清理Docker缓存
-        docker system prune -f >/dev/null 2>&1 || true
+        # 只清理悬空资源，不影响其他项目
+        log_info "清理悬空镜像..."
+        docker image prune -f >/dev/null 2>&1 || true
         
         # 分别构建服务以减少内存压力
         log_info "分别构建后端服务..."
@@ -3747,8 +3748,8 @@ build_and_start_services() {
             exit 1
         fi
         
-        # 清理中间缓存
-        docker system prune -f >/dev/null 2>&1 || true
+        # 再次清理悬空镜像
+        docker image prune -f >/dev/null 2>&1 || true
         
         log_info "分别构建前端服务..."
         if ! timeout 1800 bash -c "$(declare -f docker_compose); docker_compose -f $compose_file build frontend"; then
@@ -4015,9 +4016,10 @@ uninstall_system() {
         log_success "应用目录已删除: $APP_DIR"
     fi
     
-    # 清理Docker资源
-    log_info "清理Docker资源..."
-    docker system prune -f >/dev/null 2>&1 || true
+    # 不使用 docker system prune，避免影响其他项目
+    # 只清理 SsalgTen 相关的悬空资源
+    log_info "清理 SsalgTen 悬空资源..."
+    docker images --filter "dangling=true" --filter "label=org.opencontainers.image.source=*ssalgten*" -q | xargs -r docker rmi 2>/dev/null || true
     
     # 删除脚本（如果是安装的版本）
     if [[ -f "/usr/local/bin/ssalgten" ]]; then
