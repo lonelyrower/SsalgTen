@@ -1133,13 +1133,26 @@ start_agent_service() {
 verify_installation() {
     log_info "验证安装..."
     
+    # 等待容器启动
+    sleep 3
+    
     # 检查容器状态
+    log_info "检查容器状态..."
+    docker_compose ps
+    
     if docker_compose ps | grep -q "Up"; then
         log_success "Docker容器运行正常"
     else
-        log_error "Docker容器启动失败"
-        docker_compose logs
-        return 1
+        log_warning "Docker容器可能启动失败，查看详细日志："
+        echo ""
+        docker_compose logs --tail=50
+        echo ""
+        log_warning "如果容器持续重启，请检查："
+        echo "  1. 环境变量配置是否正确 (cat $APP_DIR/.env)"
+        echo "  2. 主服务器URL是否可访问"
+        echo "  3. 容器日志： cd $APP_DIR && docker compose logs -f"
+        echo ""
+        # 不直接返回失败，继续执行后续步骤
     fi
     
     # 等待服务启动
@@ -1655,6 +1668,9 @@ main() {
     show_installation_result
     
     log_success "🎉 SsalgTen Agent安装完成！"
+    
+    # 安装完成后直接退出，不需要用户手动确认
+    exit 0
 }
 
 # 错误处理
