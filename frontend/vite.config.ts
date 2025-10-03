@@ -1,12 +1,12 @@
 import path from "path"
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import cesium from 'vite-plugin-cesium'
+// import cesium from 'vite-plugin-cesium'  // Temporarily disabled
 
 export default defineConfig({
   plugins: [
     react(),
-    cesium(), // 添加 Cesium 支持
+    // cesium(), // Temporarily disabled - will re-enable after adding dependencies
   ],
   resolve: {
     alias: {

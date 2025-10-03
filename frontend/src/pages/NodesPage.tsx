@@ -11,6 +11,8 @@ import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
 import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
+// TODO: Re-enable after installing Cesium dependencies
+// import { Map as MapIcon, Globe } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -65,6 +67,8 @@ const normalizeNodeEvent = (event: unknown): NodeEventRecord | null => {
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
+// TODO: Re-enable after installing Cesium dependencies
+// const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const NodesPage: React.FC = () => {
@@ -80,9 +84,10 @@ export const NodesPage: React.FC = () => {
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [exportingNodes, setExportingNodes] = useState(false);
+  // TODO: Re-enable after installing Cesium dependencies
+  // const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
-  // 只保留 2D 地图模式
   const [visibleCount, setVisibleCount] = useState(60);
 
   const handleStatusFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -457,7 +462,7 @@ export const NodesPage: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布（2D 地图）
                 </h2>
-                <div className="flex items-center space-x-4"></div>
+                {/* TODO: Re-enable 3D toggle after installing Cesium dependencies */}
               </div>
               
               <div className="flex-1 min-h-0">

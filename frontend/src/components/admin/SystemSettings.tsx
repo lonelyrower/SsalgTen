@@ -19,7 +19,7 @@ import {
   Bell,
   Globe,
   Zap,
-  Map
+  Map as MapIcon
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -43,7 +43,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
-  const [changedConfigs, setChangedConfigs] = useState<Map<string, string>>(new Map());
+  const [changedConfigs, setChangedConfigs] = useState<globalThis.Map<string, string>>(new globalThis.Map());
   // const [downloading, setDownloading] = useState(false);
   // 修改密码表单状态
   const [currentPassword, setCurrentPassword] = useState('');
@@ -60,7 +60,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       const response = await apiService.getSystemConfigs();
       if (response.success && response.data) {
         setConfigs(response.data);
-        setChangedConfigs(new Map());
+        setChangedConfigs(new globalThis.Map());
       } else {
         setError(response.error || 'Failed to load configurations');
       }
@@ -88,7 +88,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       case 'performance':
         return <Zap className="h-5 w-5 text-orange-500" />;
       case 'map':
-        return <Map className="h-5 w-5 text-cyan-500" />;
+        return <MapIcon className="h-5 w-5 text-cyan-500" />;
       default:
         return <Settings className="h-5 w-5 text-gray-500" />;
     }
@@ -189,7 +189,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   }));
 
   const handleConfigChange = (key: string, value: string) => {
-    const newChanges = new Map(changedConfigs);
+    const newChanges = new globalThis.Map(changedConfigs);
     const original = configs.find(c => c.key === key);
     
     if (original && value === original.value) {
@@ -219,7 +219,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       
       if (response.success) {
         setSuccess(`成功更新了 ${configsToUpdate.length} 个配置项`);
-        setChangedConfigs(new Map());
+        setChangedConfigs(new globalThis.Map());
         await loadConfigs();
         
         setTimeout(() => setSuccess(''), 3000);
@@ -246,7 +246,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       
       if (response.success) {
         setSuccess('所有配置已重置为默认值');
-        setChangedConfigs(new Map());
+        setChangedConfigs(new globalThis.Map());
         await loadConfigs();
         
         setTimeout(() => setSuccess(''), 3000);
@@ -643,7 +643,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
-                                          const newChanges = new Map(changedConfigs);
+                                          const newChanges = new globalThis.Map(changedConfigs);
                                           newChanges.delete(config.key);
                                           setChangedConfigs(newChanges);
                                         }}
@@ -727,7 +727,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
-                                      const newChanges = new Map(changedConfigs);
+                                      const newChanges = new globalThis.Map(changedConfigs);
                                       newChanges.delete(config.key);
                                       setChangedConfigs(newChanges);
                                     }}
