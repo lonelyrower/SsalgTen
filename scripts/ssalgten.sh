@@ -3994,9 +3994,15 @@ uninstall_system() {
         log_info "停止Docker容器..."
         docker_compose down --remove-orphans --volumes 2>/dev/null || true
         
-        # 使用强力清理函数
-        log_info "完全清理 Docker 资源和端口..."
-        force_cleanup_docker_resources || log_warning "部分资源清理失败"
+        # 简单直接的清理
+        log_info "清理残留容器..."
+        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                     ssalgten-backend ssalgten-frontend ssalgten-agent \
+                     ssalgten-updater 2>/dev/null || true
+        
+        log_info "清理网络和数据卷..."
+        docker network rm ssalgten-network 2>/dev/null || true
+        docker volume rm ssalgten-postgres-data ssalgten-redis-data 2>/dev/null || true
         
         log_info "删除Docker镜像..."
         docker images | grep -E "(ssalgten|ghcr.io.*ssalgten)" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
@@ -4216,19 +4222,12 @@ EOF
         log_header "🚀 首次部署（镜像模式）"
         log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE (标签: $IMAGE_TAG)"
         
-        # 强力清理所有可能的残留资源和端口占用
-        log_info "清理残留资源和端口占用..."
-        if ! force_cleanup_docker_resources; then
-            log_error "端口清理失败，无法继续部署"
-            log_info "请手动检查并停止占用端口的进程："
-            echo ""
-            echo "  sudo lsof -i :5432    # 检查 PostgreSQL 端口"
-            echo "  sudo lsof -i :6379    # 检查 Redis 端口"
-            echo "  sudo lsof -i :3000    # 检查 Frontend 端口"
-            echo "  sudo lsof -i :3001    # 检查 Backend 端口"
-            echo ""
-            die "部署已取消"
-        fi
+        # 简单直接的清理：先down再删除
+        log_info "清理残留资源..."
+        docker_compose -f "$compose_file" down --remove-orphans 2>/dev/null || true
+        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                     ssalgten-backend ssalgten-frontend ssalgten-agent \
+                     ssalgten-updater 2>/dev/null || true
         
         log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
@@ -4259,12 +4258,12 @@ EOF
         fi
         log_header "🚀 首次部署（源码模式）"
         
-        # 强力清理所有可能的残留资源和端口占用
-        log_info "清理残留资源和端口占用..."
-        if ! force_cleanup_docker_resources; then
-            log_error "端口清理失败，无法继续部署"
-            die "部署已取消"
-        fi
+        # 简单直接的清理：先down再删除
+        log_info "清理残留资源..."
+        docker_compose -f "$compose_file" down --remove-orphans 2>/dev/null || true
+        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                     ssalgten-backend ssalgten-frontend ssalgten-agent \
+                     ssalgten-updater 2>/dev/null || true
         
         docker_compose -f "$compose_file" build
         docker_compose -f "$compose_file" up -d database
