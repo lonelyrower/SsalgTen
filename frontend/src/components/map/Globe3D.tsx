@@ -26,13 +26,10 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       // 创建 Cesium Viewer
       const viewer = new Cesium.Viewer(containerRef.current, {
         // 地形配置
-        terrainProvider: Cesium.createWorldTerrain({
+        terrain: Cesium.Terrain.fromWorldTerrain({
           requestWaterMask: true, // 水面效果
           requestVertexNormals: true, // 地形光照
         }),
-        
-        // 影像配置（使用 Bing Maps）
-        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }),
         
         // UI 配置
         baseLayerPicker: false, // 禁用底图选择器
@@ -56,7 +53,9 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       viewer.scene.globe.enableLighting = true;
       
       // 设置大气效果
-      viewer.scene.skyAtmosphere.show = true;
+      if (viewer.scene.skyAtmosphere) {
+        viewer.scene.skyAtmosphere.show = true;
+      }
       
       // 设置相机初始位置（查看整个地球）
       viewer.camera.setView({
@@ -146,24 +145,35 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           `,
         });
 
-        // 添加点击事件
-        entity.onclick = () => {
-          // 飞往节点
-          viewer.flyTo(entity, {
-            duration: 2,
-            offset: new Cesium.HeadingPitchRange(
-              0,
-              Cesium.Math.toRadians(-45),
-              5000000 // 距离 5000km
-            ),
-          });
-
-          // 回调
-          if (onNodeClick) {
-            onNodeClick(node);
-          }
-        };
+        // 存储节点数据用于点击事件
+        (entity as any)._nodeData = node;
       });
+
+      // 添加点击事件监听器
+      viewer.screenSpaceEventHandler.setInputAction((movement: any) => {
+        const pickedObject = viewer.scene.pick(movement.position);
+        if (Cesium.defined(pickedObject) && pickedObject.id) {
+          const entity = pickedObject.id;
+          const nodeData = (entity as any)._nodeData;
+
+          if (nodeData) {
+            // 飞往节点
+            viewer.flyTo(entity, {
+              duration: 2,
+              offset: new Cesium.HeadingPitchRange(
+                0,
+                Cesium.Math.toRadians(-45),
+                5000000 // 距离 5000km
+              ),
+            });
+
+            // 回调
+            if (onNodeClick) {
+              onNodeClick(nodeData);
+            }
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
       // 添加节点之间的连线（可选）
       if (nodes.length > 1) {
