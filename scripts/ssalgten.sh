@@ -199,9 +199,9 @@ prompt_yes_no() {
         if [[ -n "$default" ]]; then
             # 根据默认值高亮显示
             if [[ "${default,,}" == "y" ]]; then
-                read -p "$prompt [Y/n] (默认: Y): " response
+                read -p "$prompt [Y/N] (默认: Y): " response
             else
-                read -p "$prompt [y/N] (默认: N): " response
+                read -p "$prompt [Y/N] (默认: N): " response
             fi
             response="${response:-$default}"
         else
@@ -534,8 +534,8 @@ confirm() {
         return 0
     fi
     
-    local prompt="$question [y/N] (默认: N): "
-    [[ "$default" == "Y" ]] && prompt="$question [Y/n] (默认: Y): "
+    local prompt="$question [Y/N] (默认: N): "
+    [[ "$default" == "Y" ]] && prompt="$question [Y/N] (默认: Y): "
     
     local answer
     answer=$(read_from_tty "$prompt" "$default")
@@ -2419,6 +2419,40 @@ check_port_conflicts() {
             log_warning "端口 $port 已被占用"
         fi
     done
+
+    # 特殊处理 PostgreSQL 端口 5432
+    if [[ " ${conflicted_ports[*]} " == *" 5432 "* ]]; then
+        log_warning "端口 5432 (PostgreSQL) 已被占用"
+        echo ""
+        echo "${YELLOW}解决方案：${NC}"
+        echo "1. 停止占用端口的 PostgreSQL 服务"
+        echo "2. 修改 .env 文件中的 DB_PORT（推荐使用 5433）"
+        echo ""
+        echo "检测占用进程："
+        lsof -i :5432 2>/dev/null || ss -tulpn | grep :5432 2>/dev/null || echo "  无法检测进程信息"
+        echo ""
+        
+        if prompt_yes_no "是否自动停止系统 PostgreSQL 服务" "N"; then
+            log_info "尝试停止 PostgreSQL 服务..."
+            run_as_root systemctl stop postgresql 2>/dev/null || \
+            run_as_root service postgresql stop 2>/dev/null || \
+            log_warning "无法自动停止服务，请手动停止"
+            sleep 2
+            # 再次检查
+            if netstat -tuln 2>/dev/null | grep -q ":5432 " || ss -tuln 2>/dev/null | grep -q ":5432 "; then
+                log_error "端口 5432 仍然被占用"
+                return 1
+            else
+                log_success "端口 5432 已释放"
+            fi
+        else
+            log_error "端口 5432 冲突未解决，部署可能失败"
+            if ! prompt_yes_no "是否仍要继续部署" "N"; then
+                log_info "部署已取消"
+                exit 0
+            fi
+        fi
+    fi
 
     # 如果端口80被占用，提供解决方案
     if [[ " ${conflicted_ports[*]} " == *" 80 "* ]]; then
