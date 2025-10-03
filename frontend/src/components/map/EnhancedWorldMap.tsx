@@ -32,7 +32,7 @@ const getMapConfig = () => {
   // 选项：
   // - openstreetmap（默认）
   // - carto（Carto light_all，无需密钥，速度通常更快）
-  // - maptiler（需要 MAP_API_KEY）
+  // - mapbox（需要 MAP_API_KEY，矢量地图）
   switch (provider) {
     case 'carto':
       return {
@@ -40,10 +40,10 @@ const getMapConfig = () => {
         attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
         subdomains: ['a', 'b', 'c', 'd'] as string[],
       };
-    case 'maptiler':
+    case 'mapbox':
       return {
-        url: `https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${apiKey}`,
-        attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; OSM contributors',
+        url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
+        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
         subdomains: undefined as unknown as string[],
       };
     case 'openstreetmap':

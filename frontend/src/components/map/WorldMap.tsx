@@ -16,10 +16,10 @@ const getMapConfig = () => {
         url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
       };
-    case 'maptiler':
+    case 'mapbox':
       return {
-        url: `https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${apiKey}`,
-        attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; OSM contributors',
+        url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
+        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
       };
     case 'openstreetmap':
     default:

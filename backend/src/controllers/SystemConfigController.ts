@@ -196,6 +196,18 @@ export const DEFAULT_SYSTEM_CONFIGS = {
     category: "notifications",
     description: "Number of failures before sending alert",
   },
+
+  // 地图配置
+  "map.provider": {
+    value: "carto",
+    category: "map",
+    description: "Map tile provider (carto, openstreetmap, mapbox)",
+  },
+  "map.api_key": {
+    value: "",
+    category: "map",
+    description: "Map API key (required for mapbox)",
+  },
 };
 
 export class SystemConfigController {

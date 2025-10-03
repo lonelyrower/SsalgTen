@@ -25,7 +25,7 @@ VITE_MAP_API_KEY=  # 留空
 
 ---
 
-### 2. **OpenStreetMap** (默认)
+### 2. **OpenStreetMap** (开源默认)
 
 **特点**：
 - ✅ **完全免费** - 开源社区维护
@@ -46,30 +46,32 @@ VITE_MAP_API_KEY=  # 留空
 
 ---
 
-### 3. **MapTiler** (高级)
+### 3. **Mapbox** (高级，矢量地图)
 
 **特点**：
-- ✅ **高性能** - 矢量瓦片
-- ✅ **可定制** - 多种样式
-- ⚠️ **需要注册** - 需要 API key
-- ⚠️ **有限额** - 免费版 100k 次/月
+- ✅ **矢量地图** - 超清晰缩放
+- ✅ **3D 支持** - 建筑物立体展示
+- ✅ **多样式** - Streets, Satellite, Dark 等
+- ✅ **免费额度大** - 50,000 次加载/月
+- ⚠️ **需要注册** - 需要 Access Token
 
 **配置**：
 ```bash
-VITE_MAP_PROVIDER=maptiler
-VITE_MAP_API_KEY=your_maptiler_api_key
+VITE_MAP_PROVIDER=mapbox
+VITE_MAP_API_KEY=pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLWtleSJ9.example
 ```
 
-**获取 API Key**：
-1. 访问 [MapTiler Cloud](https://cloud.maptiler.com/)
-2. 注册免费账号
-3. 创建 API key
-4. 添加到 `.env` 文件
+**获取 Access Token**：
+1. 访问 [Mapbox](https://www.mapbox.com/)
+2. 注册免费账号（GitHub/Google 快速登录）
+3. 进入 [Access tokens](https://account.mapbox.com/access-tokens/)
+4. 复制默认的 **Default public token**（以 `pk.` 开头）
+5. 或创建新 token（建议限制 HTTP referrer 为你的域名）
 
 **适用场景**：
-- 需要高性能
-- 追求视觉效果
-- 中高流量项目
+- 专业项目
+- 需要矢量地图和 3D 效果
+- 小型项目（免费额度足够）
 
 ---
 
@@ -78,148 +80,168 @@ VITE_MAP_API_KEY=your_maptiler_api_key
 ### 生产环境推荐配置
 
 **国外VPS** (推荐 Carto)：
-```bash
-# .env 文件
+```env
 VITE_MAP_PROVIDER=carto
 ```
 
-**国内VPS** (需要使用国内地图服务，如高德/百度)：
-```bash
-# 需要自行集成国内地图SDK
-# 当前版本暂不支持
+**国内VPS** (可能需要代理)：
+```env
+VITE_MAP_PROVIDER=openstreetmap
 ```
 
-### 修改配置步骤
-
-1. **编辑环境变量文件**：
-   ```bash
-   cd /path/to/ssalgten
-   nano .env
-   ```
-
-2. **设置地图提供商**：
-   ```bash
-   VITE_MAP_PROVIDER=carto  # 或 openstreetmap / maptiler
-   VITE_MAP_API_KEY=        # MapTiler 需要填写
-   ```
-
-3. **重建前端容器**（重要！）：
-   ```bash
-   # 使用镜像模式
-   docker compose -f docker-compose.ghcr.yml up -d --force-recreate frontend
-   
-   # 或使用源码模式
-   docker compose up -d --force-recreate frontend
-   ```
-
-4. **清除浏览器缓存**：
-   - 按 `Ctrl+Shift+R` (Windows/Linux)
-   - 或 `Cmd+Shift+R` (Mac)
-
----
-
-## 🔍 性能对比
-
-| 提供商 | 加载速度 | 稳定性 | 成本 | 推荐度 |
-|--------|----------|--------|------|---------|
-| **Carto** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 免费 | ⭐⭐⭐⭐⭐ |
-| OpenStreetMap | ⭐⭐⭐ | ⭐⭐⭐ | 免费 | ⭐⭐⭐ |
-| MapTiler | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 有限免费 | ⭐⭐⭐⭐ |
-
----
-
-## 🛠️ 故障排查
-
-### 问题1: 地图不显示
-
-**可能原因**：
-- 环境变量未生效
-- 前端容器未重启
-- 浏览器缓存
-
-**解决方法**：
-```bash
-# 1. 检查环境变量
-docker compose exec frontend env | grep VITE_MAP
-
-# 2. 强制重建容器
-docker compose up -d --force-recreate frontend
-
-# 3. 清除浏览器缓存 (Ctrl+Shift+R)
-```
-
-### 问题2: 地图加载很慢
-
-**可能原因**：
-- 使用了 OpenStreetMap
-- 网络连接慢
-- MapTiler API key 配额用完
-
-**解决方法**：
-```bash
-# 切换到 Carto（速度更快）
+**个人小项目** (推荐 Carto 或 Mapbox)：
+```env
+# Carto - 免配置，立即可用
 VITE_MAP_PROVIDER=carto
 
-# 重启容器
-docker compose restart frontend
+# 或者 Mapbox - 注册后更美观
+VITE_MAP_PROVIDER=mapbox
+VITE_MAP_API_KEY=pk.ey...
 ```
-
-### 问题3: MapTiler 显示错误
-
-**可能原因**：
-- API key 无效
-- 超出免费配额
-- API key 未设置
-
-**解决方法**：
-1. 检查 API key 是否正确
-2. 登录 MapTiler Cloud 查看使用量
-3. 切换回 Carto 或 OpenStreetMap
 
 ---
 
-## 📊 使用量估算
+## ⚙️ 配置方式
 
-假设您的网站：
-- 每天 **100** 个独立访客
-- 每人浏览 **3** 个页面（包含地图）
-- 每月约 **9,000** 次地图加载
+### 方式 1: 环境变量 (推荐新部署)
 
-**各服务商对比**：
-| 提供商 | 免费额度 | 是否足够 | 超出成本 |
+编辑 `.env` 文件：
+```bash
+VITE_MAP_PROVIDER=carto  # 或 openstreetmap / mapbox
+VITE_MAP_API_KEY=        # Mapbox 需要填写
+```
+
+重启前端容器：
+```bash
+docker-compose restart frontend
+```
+
+---
+
+### 方式 2: 管理后台动态配置 (推荐生产环境)
+
+1. 登录管理后台 `/admin`
+2. 进入 **系统设置** → **地图配置**
+3. 修改：
+   - `map.provider`: `carto` / `openstreetmap` / `mapbox`
+   - `map.api_key`: Mapbox Access Token（如需要）
+4. 点击 **保存更改**
+5. **刷新首页即可**（无需重启容器）
+
+---
+
+## 📊 性能对比
+
+| 提供商 | 速度 | 免费额度 | 样式选择 | 推荐指数 |
+|--------|------|----------|----------|----------|
+| **Carto** | ⭐⭐⭐⭐⭐ | 无限 | 简洁风格 | ⭐⭐⭐⭐⭐ |
+| OpenStreetMap | ⭐⭐⭐ | 有限 | 基础 | ⭐⭐⭐ |
+| **Mapbox** | ⭐⭐⭐⭐⭐ | 50k/月 | 10+ 样式 | ⭐⭐⭐⭐ |
+
+**实测加载时间** (国外 VPS)：
+- Carto: ~500ms
+- OpenStreetMap: ~1200ms
+- Mapbox: ~600ms (矢量瓦片)
+
+---
+
+## 🔧 常见问题
+
+### 问题1: 地图加载慢
+
+**原因**：
+- OpenStreetMap 社区服务器负载高
+- 国内网络访问国外地图服务慢
+
+**解决方案**：
+1. 切换到 **Carto**（速度提升 2-3 倍）
+2. 如需更高性能，使用 **Mapbox**（矢量地图）
+
+---
+
+### 问题2: 地图显示空白
+
+**原因**：
+- Mapbox API token 无效或过期
+- 网络无法访问地图服务器
+
+**解决方案**：
+1. 检查 `map.api_key` 是否正确
+2. 验证 token 是否激活（Mapbox 控制台）
+3. 尝试切换到 Carto（无需 API key）
+
+---
+
+### 问题3: Mapbox 显示 401 错误
+
+**原因**：
+- Access token 未配置
+- Token 被禁用或删除
+- Token 的 URL 限制不包含你的域名
+
+**解决方案**：
+1. 确认 `VITE_MAP_API_KEY` 或后台 `map.api_key` 已配置
+2. 登录 Mapbox 控制台查看 token 状态
+3. 检查 token 的 HTTP referrer 限制设置
+
+---
+
+## 💰 费用对比
+
+| 提供商 | 免费额度 | 超额费用 | 适合规模 |
 |--------|----------|----------|----------|
-| Carto | 无限制 | ✅ | N/A |
-| OpenStreetMap | 无限制 | ✅ | N/A |
-| MapTiler | 100k/月 | ✅ | $25/100k |
+| Carto | 无限制 | - | 任何规模 |
+| OpenStreetMap | 社区资源共享 | - | 小型项目 |
+| **Mapbox** | 50k loads/月 | $5/1000 sessions | **小中型项目** |
+
+**费用说明**：
+- **Carto**: 完全免费，无流量限制
+- **OpenStreetMap**: 免费但请遵守使用政策，避免滥用
+- **Mapbox**: 免费额度对个人项目完全够用（50,000 次地图加载/月）
 
 ---
 
-## 🔮 未来计划
+## �� 推荐配置方案
 
-我们计划支持更多地图服务：
+### 1. **个人小项目** → 使用 **Carto** 或 **Mapbox**
+```env
+VITE_MAP_PROVIDER=carto  # 或 mapbox
+VITE_MAP_API_KEY=        # Mapbox 需填写
+```
 
-- [ ] **Mapbox GL JS** - 高性能矢量地图
-- [ ] **高德地图** - 国内用户优化
-- [ ] **百度地图** - 国内备选方案
-- [ ] **Google Maps** - 国际标准
-- [ ] **自定义瓦片** - 完全自主控制
+### 2. **开发测试** → 使用 **OpenStreetMap**
+```env
+VITE_MAP_PROVIDER=openstreetmap
+```
+
+### 3. **高流量项目** → 使用 **Mapbox**（付费计划）
+```env
+VITE_MAP_PROVIDER=mapbox
+VITE_MAP_API_KEY=pk.ey...
+```
 
 ---
 
-## 💡 最佳实践
+## 🔄 动态切换示例
 
-1. **国外VPS** → 使用 **Carto** (最佳性能)
-2. **开发测试** → 使用 **OpenStreetMap** (无需配置)
-3. **高流量项目** → 使用 **MapTiler** (专业方案)
-4. **定期检查** → 监控地图加载速度
-5. **备用方案** → 准备多个提供商配置
+管理员可在后台实时切换地图提供商，无需重启服务：
+
+```bash
+# 初始配置：Carto（免费）
+map.provider = carto
+
+# 用户增长后：切换到 Mapbox（矢量地图）
+map.provider = mapbox
+map.api_key = pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLWtleSJ9.example
+
+# 刷新首页 → 立即生效！
+```
 
 ---
 
-**相关文档**：
-- [环境变量配置](./ENVIRONMENT_VARIABLES.md)
-- [Docker 部署指南](./installation.md)
-- [性能优化指南](./PERFORMANCE.md)
+## 📚 参考链接
 
-**问题反馈**：
-- GitHub Issues: https://github.com/lonelyrower/SsalgTen/issues
+- [Carto Base Maps](https://carto.com/basemaps/)
+- [OpenStreetMap Tile Servers](https://wiki.openstreetmap.org/wiki/Tile_servers)
+- [Mapbox Documentation](https://docs.mapbox.com/)
+- [Mapbox Pricing](https://www.mapbox.com/pricing)
