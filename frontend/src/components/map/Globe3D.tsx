@@ -30,9 +30,9 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           requestWaterMask: true, // 水面效果
           requestVertexNormals: true, // 地形光照
         }),
-        
+
         // UI 配置
-        baseLayerPicker: false, // 禁用底图选择器
+        baseLayerPicker: true, // 启用底图选择器（提供多种地图选择）
         geocoder: false, // 禁用地理编码搜索
         homeButton: false, // 禁用主页按钮
         sceneModePicker: false, // 禁用场景模式选择器

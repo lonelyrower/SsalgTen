@@ -1450,8 +1450,6 @@ uninstall_agent() {
     echo "如需重新安装，请重新运行安装脚本。"
     echo ""
 }
-    echo ""
-}
 
 # 显示主菜单
 show_main_menu() {

@@ -993,6 +993,7 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
       };
 
       const serverUrl =
+        normalizeEnvUrl(process.env.PUBLIC_URL || '') ||
         deriveFromRequest() ||
         normalizeEnvUrl(rawOrigin) ||
         `http://localhost:${backendPort}`;
