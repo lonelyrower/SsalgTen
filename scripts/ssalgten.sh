@@ -4254,11 +4254,16 @@ EOF
             log_warning "将继续部署，Docker 会尝试重用现有网络"
         fi
         
+        # 5. 等待 Docker 完全释放资源
+        log_info "等待 Docker 释放资源..."
+        sleep 3
+        
         log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
         
         log_info "启动数据库服务..."
-        docker_compose -f "$compose_file" up -d database
+        # 使用 --force-recreate 强制重新创建，避免端口冲突
+        docker_compose -f "$compose_file" up -d --force-recreate database
         
         log_info "等待数据库启动..."
         sleep 5
