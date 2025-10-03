@@ -1398,27 +1398,26 @@ uninstall_agent() {
     docker system prune -f 2>/dev/null || true
     log_success "Docker资源清理完成"
     
-    # 5. 删除防火墙规则（默认仅移除Agent端口，避免影响其他服务）
+    # 5. 删除防火墙规则（安装时添加的规则，卸载时自动清理）
     log_info "清理防火墙规则..."
     if command -v ufw >/dev/null 2>&1; then
-        sudo ufw --force delete allow 3002/tcp 2>/dev/null || true
-        # 询问是否同时删除其他可能规则
-        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N] (回车默认选择 N): ")
-        extra_fw="${extra_fw:-n}"  # 默认为 n，防火墙操作更谨慎
-        if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
-            for port in 3001 3003; do
-                sudo ufw --force delete allow $port/tcp 2>/dev/null || true
-            done
+        # 移除安装时添加的端口规则（默认 3002）
+        if [[ -n "$AGENT_PORT" ]]; then
+            sudo ufw --force delete allow "$AGENT_PORT"/tcp 2>/dev/null || true
+            log_info "已移除端口 $AGENT_PORT 的防火墙规则"
+        else
+            sudo ufw --force delete allow 3002/tcp 2>/dev/null || true
+            log_info "已移除端口 3002 的防火墙规则"
         fi
         log_success "UFW防火墙规则已清理"
     elif command -v firewall-cmd >/dev/null 2>&1; then
-        sudo firewall-cmd --permanent --remove-port=3002/tcp 2>/dev/null || true
-        extra_fw=$(read_from_tty "是否同时移除 3001/3003 端口规则？[Y/N] (回车默认选择 N): ")
-        extra_fw="${extra_fw:-n}"  # 默认为 n，防火墙操作更谨慎
-        if [[ "$extra_fw" == "y" || "$extra_fw" == "Y" ]]; then
-            for port in 3001 3003; do
-                sudo firewall-cmd --permanent --remove-port=$port/tcp 2>/dev/null || true
-            done
+        # 移除安装时添加的端口规则（默认 3002）
+        if [[ -n "$AGENT_PORT" ]]; then
+            sudo firewall-cmd --permanent --remove-port="$AGENT_PORT"/tcp 2>/dev/null || true
+            log_info "已移除端口 $AGENT_PORT 的防火墙规则"
+        else
+            sudo firewall-cmd --permanent --remove-port=3002/tcp 2>/dev/null || true
+            log_info "已移除端口 3002 的防火墙规则"
         fi
         sudo firewall-cmd --reload 2>/dev/null || true
         log_success "Firewalld防火墙规则已清理"
@@ -1426,58 +1425,9 @@ uninstall_agent() {
         log_info "未检测到防火墙管理工具，请手动检查防火墙规则"
     fi
     
-    # 6. 提供卸载Docker的选项（可选）
-    echo ""
-    uninstall_docker=$(read_from_tty "是否同时卸载Docker？(不推荐，可能影响其他应用) [Y/N] (回车默认选择 N): ")
-    uninstall_docker="${uninstall_docker:-n}"  # 默认为 n，危险操作更谨慎
-    if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
-        log_info "卸载Docker..."
-        
-        # 停止Docker服务
-        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-            systemctl stop docker 2>/dev/null || true
-            systemctl disable docker 2>/dev/null || true
-        else
-            sudo systemctl stop docker 2>/dev/null || true
-            sudo systemctl disable docker 2>/dev/null || true
-        fi
-        
-        # 根据包管理器卸载Docker
-        if command -v apt >/dev/null 2>&1; then
-            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-                apt remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                apt autoremove -y
-            else
-                sudo apt remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                sudo apt autoremove -y
-            fi
-        elif command -v yum >/dev/null 2>&1; then
-            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-                yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            else
-                sudo yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            fi
-        elif command -v dnf >/dev/null 2>&1; then
-            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-                dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            else
-                sudo dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            fi
-        fi
-        
-        # 删除Docker数据目录
-        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-            rm -rf /var/lib/docker
-            rm -rf /var/lib/containerd
-        else
-            sudo rm -rf /var/lib/docker
-            sudo rm -rf /var/lib/containerd
-        fi
-        
-        log_success "Docker已卸载"
-    else
-        log_info "保留Docker环境"
-    fi
+    # 6. 保留Docker环境（可能被其他服务使用，不应该删除）
+    log_info "Docker环境已保留（可能被其他应用使用）"
+    log_info "如需手动卸载Docker，请参考官方文档"
     
     # 显示卸载完成信息
     echo ""
@@ -1491,13 +1441,15 @@ uninstall_agent() {
     echo "  ✓ Docker容器和镜像"
     echo "  ✓ 应用目录 /opt/ssalgten-agent"
     echo "  ✓ 系统服务 ssalgten-agent.service"
-    echo "  ✓ 防火墙规则"
+    echo "  ✓ 防火墙规则（Agent端口）"
     echo "  ✓ 相关配置文件"
-    if [[ "$uninstall_docker" == "y" || "$uninstall_docker" == "Y" ]]; then
-        echo "  ✓ Docker环境"
-    fi
+    echo ""
+    echo "已保留的组件："
+    echo "  ○ Docker环境（可能被其他应用使用）"
     echo ""
     echo "如需重新安装，请重新运行安装脚本。"
+    echo ""
+}
     echo ""
 }
 
