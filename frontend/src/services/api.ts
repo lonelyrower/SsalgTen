@@ -4,6 +4,8 @@ declare global {
   interface Window {
     APP_CONFIG?: {
       API_BASE_URL?: string;
+      MAP_PROVIDER?: string;
+      MAP_API_KEY?: string;
     };
   }
 }
@@ -196,6 +198,12 @@ export interface SystemConfig {
   description?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// 地图配置接口
+export interface MapConfig {
+  provider: string;
+  apiKey: string;
 }
 
 // 系统概览数据接口
@@ -748,6 +756,11 @@ class ApiService {
   // 健康检查
   async healthCheck(): Promise<ApiResponse<unknown>> {
     return this.request<unknown>('/health');
+  }
+
+  // 获取公共地图配置（无需认证）
+  async getPublicMapConfig(): Promise<ApiResponse<MapConfig>> {
+    return this.request<MapConfig>('/public/map-config');
   }
 
   // API信息

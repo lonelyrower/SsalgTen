@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";
@@ -211,6 +211,37 @@ export const DEFAULT_SYSTEM_CONFIGS = {
 };
 
 export class SystemConfigController {
+  // 获取公共地图配置(无需认证)
+  async getPublicMapConfig(req: Request, res: Response): Promise<void> {
+    try {
+      // 获取地图相关配置
+      const mapProvider = await prisma.setting.findUnique({
+        where: { key: "map.provider" },
+      });
+      const mapApiKey = await prisma.setting.findUnique({
+        where: { key: "map.api_key" },
+      });
+
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          provider: mapProvider?.value
+            ? JSON.parse(mapProvider.value)
+            : "carto",
+          apiKey: mapApiKey?.value ? JSON.parse(mapApiKey.value) : "",
+        },
+      };
+      res.json(response);
+    } catch (error) {
+      logger.error("Error fetching public map config:", error);
+      const response: ApiResponse = {
+        success: false,
+        error: "Failed to fetch map configuration",
+      };
+      res.status(500).json(response);
+    }
+  }
+
   // 获取所有系统配置
   async getAllConfigs(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {

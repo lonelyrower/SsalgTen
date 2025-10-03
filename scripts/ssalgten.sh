@@ -189,6 +189,34 @@ prompt_port() {
     done
 }
 
+# 获取服务器IP地址
+get_server_ip() {
+    # 优先使用已配置的DOMAIN
+    if [[ -n "$DOMAIN" ]] && [[ "$DOMAIN" != "localhost" ]]; then
+        echo "$DOMAIN"
+        return
+    fi
+    
+    # 尝试从.env文件读取
+    if [[ -f .env ]]; then
+        local env_domain=$(grep -E "^DOMAIN=" .env 2>/dev/null | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+        if [[ -n "$env_domain" ]] && [[ "$env_domain" != "localhost" ]]; then
+            echo "$env_domain"
+            return
+        fi
+    fi
+    
+    # 自动检测公网IP
+    local detected_ip=$(curl -s -4 --max-time 3 ifconfig.me 2>/dev/null || curl -s -4 --max-time 3 icanhazip.com 2>/dev/null || echo "")
+    if [[ -n "$detected_ip" ]]; then
+        echo "$detected_ip"
+        return
+    fi
+    
+    # 回退到localhost
+    echo "localhost"
+}
+
 # Yes/No 提示函数
 prompt_yes_no() {
     local prompt="$1"
@@ -3064,6 +3092,9 @@ deploy_production() {
 
     # 显示部署结果
     show_deployment_result
+    
+    # 部署完成，直接退出
+    exit 0
 }
 
 # 镜像模式部署
@@ -3950,7 +3981,8 @@ show_deployment_result() {
     if [[ "$ENABLE_SSL" == "true" ]]; then
         access_url="https://$DOMAIN"
     else
-        access_url="http://$DOMAIN:3000"
+        # 使用 get_server_ip 获取实际IP
+        access_url="http://$(get_server_ip):${FRONTEND_PORT:-3000}"
     fi
     
     echo -e "${GREEN}✅ SsalgTen 已成功部署${NC}"
@@ -3968,10 +4000,12 @@ show_deployment_result() {
     echo -e "${CYAN}配置文件:${NC} $APP_DIR/.env"
     echo ""
     echo -e "${BLUE}常用命令:${NC}"
-    echo "  查看状态: $0 status"
-    echo "  查看日志: $0 logs"
-    echo "  重启服务: $0 restart"
-    echo "  停止服务: $0 stop"
+    echo "  查看状态: ssalgten status"
+    echo "  查看日志: ssalgten logs"
+    echo "  重启服务: ssalgten restart"
+    echo "  停止服务: ssalgten stop"
+    echo ""
+    log_info "提示: 首次部署需等待1-2分钟完成数据库初始化"
     echo ""
 }
 
@@ -4297,8 +4331,19 @@ EOF
         log_info "启动所有服务..."
         docker_compose -f "$compose_file" up -d --remove-orphans
         
-        log_success "部署完成"
-        echo "模式: 镜像 | 访问: http://localhost:${FRONTEND_PORT:-3000}"
+        echo ""
+        log_success "🎉 部署完成！"
+        echo ""
+        echo "访问地址:"
+        if [[ "$ENABLE_SSL" == "true" ]]; then
+            echo "  🌐 https://$DOMAIN"
+        else
+            echo "  🌐 http://$(get_server_ip):${FRONTEND_PORT:-3000}"
+        fi
+        echo ""
+        log_info "提示: 首次部署需等待1-2分钟完成数据库初始化"
+        echo ""
+        exit 0
     else
         ensure_env_basics_source
         local compose_file
@@ -4339,8 +4384,20 @@ EOF
         sleep 5
         docker_compose -f "$compose_file" run --rm backend npx prisma migrate deploy || log_warning "数据库迁移失败，可稍后重试"
         docker_compose -f "$compose_file" up -d --remove-orphans
-        log_success "部署完成"
-        echo "模式: 源码 | 访问: http://localhost:${FRONTEND_PORT:-3000}"
+        
+        echo ""
+        log_success "🎉 部署完成！"
+        echo ""
+        echo "访问地址:"
+        if [[ "$ENABLE_SSL" == "true" ]]; then
+            echo "  🌐 https://$DOMAIN"
+        else
+            echo "  🌐 http://$(get_server_ip):${FRONTEND_PORT:-3000}"
+        fi
+        echo ""
+        log_info "提示: 首次部署需等待1-2分钟完成数据库初始化"
+        echo ""
+        exit 0
     fi
 }
 
@@ -4912,7 +4969,10 @@ main() {
                 [[ ${#COMMAND_ARGS[@]} -lt 2 ]] && die "用法: exec <service> <command...>"
                 exec_in_container "${COMMAND_ARGS[@]}"
                 ;;
-            update) update_system "${COMMAND_ARGS[@]}" ;;
+            update) 
+                update_system "${COMMAND_ARGS[@]}"
+                exit $?
+                ;;
             backup) backup_data ;;
             clean) clean_system "${COMMAND_ARGS[@]}" ;;
             port-check) port_check ;;

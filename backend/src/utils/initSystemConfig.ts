@@ -5,10 +5,20 @@ import { logger } from "./logger";
 /**
  * 初始化系统配置
  * 检查并创建默认的系统配置项
+ * 自动处理数据库表不存在的情况
  */
 export async function initSystemConfig(): Promise<void> {
   try {
     logger.info("Initializing system configurations...");
+
+    // 首先检查数据库连接和表是否存在
+    try {
+      await prisma.$queryRaw`SELECT 1 FROM "settings" LIMIT 1`;
+    } catch {
+      logger.warn("Settings table not found, it will be created by migrations");
+      // 表不存在，等待迁移创建
+      return;
+    }
 
     const results = {
       created: 0,
@@ -64,7 +74,7 @@ export async function initSystemConfig(): Promise<void> {
     );
   } catch (error) {
     logger.error("System config initialization failed:", error);
-    throw error;
+    // 不抛出错误，允许系统继续启动
   }
 }
 

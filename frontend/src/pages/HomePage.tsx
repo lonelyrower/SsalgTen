@@ -12,8 +12,30 @@ import { Button } from '@/components/ui/button';
 import type { NodeData } from '@/services/api';
 
 // 懒加载地图组件以提升首屏加载速度
-const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
-const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
+// 使用动态导入和预加载策略
+const EnhancedWorldMap = lazy(() => 
+  import('@/components/map/EnhancedWorldMap').then(module => ({ 
+    default: module.EnhancedWorldMap 
+  }))
+);
+
+const Globe3D = lazy(() => 
+  import('@/components/map/Globe3D').then(module => ({ 
+    default: module.Globe3D 
+  }))
+);
+
+// 地图加载骨架屏组件
+const MapSkeleton = () => (
+  <div className="w-full h-[600px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+    <div className="text-center space-y-4">
+      <div className="animate-pulse">
+        <Globe className="w-16 h-16 mx-auto text-blue-400" />
+      </div>
+      <p className="text-gray-500 dark:text-gray-400">正在加载地图组件...</p>
+    </div>
+  </div>
+);
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
@@ -152,18 +174,9 @@ export const HomePage = () => {
               </div>
             </div>
             
-            {/* 地图容器 */}
+            {/* 地图容器 - 使用优化的加载策略 */}
             <div className="map-container relative h-[600px]">
-              <Suspense fallback={
-                <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-xl">
-                  <div className="text-center">
-                    <LoadingSpinner />
-                    <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                      加载{viewMode === '3d' ? '3D 地球' : '地图'}中...
-                    </p>
-                  </div>
-                </div>
-              }>
+              <Suspense fallback={<MapSkeleton />}>
                 {viewMode === '2d' ? (
                   <EnhancedWorldMap
                     nodes={nodes}

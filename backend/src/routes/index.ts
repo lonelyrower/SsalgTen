@@ -93,6 +93,13 @@ router.post(
   requireAdmin,
   updateController.triggerUpdate.bind(updateController),
 );
+
+// 公共地图配置 API（无需认证）
+router.get(
+  "/public/map-config",
+  publicLimiter,
+  systemConfigController.getPublicMapConfig.bind(systemConfigController),
+);
 router.get(
   "/admin/system/update/:id/log",
   authenticateToken,

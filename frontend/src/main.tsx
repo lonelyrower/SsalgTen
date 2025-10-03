@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { loadMapConfig } from './utils/configLoader'
 
 // Declare build time global variable
 declare const __BUILD_TIME__: string;
@@ -44,8 +45,19 @@ window.addEventListener('error', (event) => {
   }
 });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// 加载地图配置后再渲染应用
+loadMapConfig().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+}).catch((error) => {
+  console.error('Failed to initialize app:', error);
+  // 即使加载失败也要渲染应用
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+});

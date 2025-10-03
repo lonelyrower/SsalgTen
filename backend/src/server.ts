@@ -50,12 +50,24 @@ const server = httpServer.listen(PORT, async () => {
   logger.info(`📖 API info: http://${HOST}:${PORT}/api/info`);
   logger.info(`🏠 Homepage: http://${HOST}:${PORT}/`);
 
-  // 初始化系统配置
+  // 🔧 自动运行数据库迁移（确保所有表存在）
+  try {
+    logger.info("🔄 Running database migrations...");
+    const { execSync } = require("child_process");
+    execSync("npx prisma migrate deploy", { stdio: "inherit" });
+    logger.info("✅ Database migrations completed");
+  } catch (error) {
+    logger.warn("⚠️ Database migration warning:", error);
+    // 继续启动，可能是已经迁移过了
+  }
+
+  // 初始化系统配置（自动创建默认配置项）
   try {
     await initSystemConfig();
     logger.info("✅ System configuration initialized");
   } catch (error) {
     logger.error("❌ Failed to initialize system configuration:", error);
+    // 不阻止启动，允许后续手动修复
   }
 
   // 初始化API密钥系统

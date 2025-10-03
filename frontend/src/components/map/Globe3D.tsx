@@ -18,21 +18,77 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 设置 Cesium Ion Access Token (使用默认的公开 token)
-    // 用户可以在 https://ion.cesium.com/ 注册获取自己的 token
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYWE1OWUxNy1mMWZiLTQzYjYtYTQ0OS1kMWFjYmFkNjc5YzciLCJpZCI6NTc3MzMsImlhdCI6MTYyNzg0NTE4Mn0.XcKpgANiY19MC4bdFUXMVEBToBmqS8kuYpUlxJHYZxk';
+    // 使用异步函数初始化 Cesium
+    const initCesium = async () => {
+      // 读取地图配置（与 2D 地图保持一致）
+      const w: any = typeof window !== 'undefined' ? (window as any) : {};
+      const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
+      const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
 
-    try {
-      // 创建 Cesium Viewer
-      const viewer = new Cesium.Viewer(containerRef.current, {
-        // 地形配置
-        terrain: Cesium.Terrain.fromWorldTerrain({
-          requestWaterMask: true, // 水面效果
-          requestVertexNormals: true, // 地形光照
-        }),
+      // 设置 Cesium Ion Access Token（仅 Mapbox 时需要）
+      if (provider === 'mapbox' && apiKey) {
+        // Mapbox 不需要 Ion，这里只是保持兼容性
+        Cesium.Ion.defaultAccessToken = '';
+      } else {
+        // 使用公共 token（用于其他可能的 Ion 功能）
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5N2UyMjcwOS00MDY1LTQxYjEtYjZjMy00YTU0ZTg1YmUwYjgiLCJpZCI6OTc3MSwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU1NTg5NjM1Nn0.SJ1HGHpZLqfQU5IJ2PNgcG5pZdcWQT2X_r9VKzTw8Y4';
+      }
 
-        // UI 配置
-        baseLayerPicker: true, // 启用底图选择器（提供多种地图选择）
+      try {
+        // 根据配置选择地图源
+        let imageryProvider;
+        
+        switch (provider) {
+          case 'carto':
+            // CartoDB - 简洁快速，免费
+            imageryProvider = new Cesium.UrlTemplateImageryProvider({
+              url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+              credit: '© CARTO © OpenStreetMap contributors',
+              subdomains: ['a', 'b', 'c', 'd']
+            });
+            break;
+            
+          case 'mapbox':
+            // Mapbox - 需要 API key，卫星影像
+            if (apiKey) {
+              imageryProvider = new Cesium.UrlTemplateImageryProvider({
+                url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
+                credit: '© Mapbox © OpenStreetMap contributors'
+              });
+            } else {
+              console.warn('Mapbox 需要 API key，回退到 OpenStreetMap');
+              imageryProvider = new Cesium.OpenStreetMapImageryProvider({
+                url: 'https://tile.openstreetmap.org/'
+              });
+            }
+            break;
+            
+          case 'openstreetmap':
+            // OpenStreetMap - 免费开源，细节丰富
+            imageryProvider = new Cesium.OpenStreetMapImageryProvider({
+              url: 'https://tile.openstreetmap.org/'
+            });
+            break;
+            
+          default:
+            // 默认使用离线地图（NaturalEarth II）
+            imageryProvider = await Cesium.TileMapServiceImageryProvider.fromUrl(
+              Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+            );
+        }
+
+        // 创建 Cesium Viewer
+        const viewer = new Cesium.Viewer(containerRef.current!, {
+          // 使用选定的地图源
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Promise.resolve(imageryProvider)
+          ),
+          
+          // 禁用地形（避免 Ion 资源请求）
+          terrain: undefined,
+
+          // UI 配置
+          baseLayerPicker: false, // 禁用底图选择器（我们自己管理）
         geocoder: false, // 禁用地理编码搜索
         homeButton: false, // 禁用主页按钮
         sceneModePicker: false, // 禁用场景模式选择器
@@ -212,16 +268,20 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.02 * deltaTime);
       });
 
-      setIsLoading(false);
+        setIsLoading(false);
 
-      // 清理
-      return () => {
-        viewer.destroy();
-      };
-    } catch (error) {
-      console.error('Cesium initialization error:', error);
-      setIsLoading(false);
-    }
+        // 清理
+        return () => {
+          viewer.destroy();
+        };
+      } catch (error) {
+        console.error('Cesium initialization error:', error);
+        setIsLoading(false);
+      }
+    };
+
+    // 调用初始化函数
+    initCesium();
   }, [nodes, onNodeClick]);
 
   // 控制函数
@@ -266,14 +326,14 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         </div>
       )}
 
-      {/* 控制按钮 */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      {/* 控制按钮 - 移到左侧避免与Cesium控件重叠 */}
+      <div className="absolute bottom-4 left-4 flex flex-row gap-2">
         <Button
           variant="secondary"
           size="icon"
           onClick={zoomIn}
           title="放大"
-          className="bg-white/90 hover:bg-white"
+          className="bg-white/90 hover:bg-white shadow-lg"
         >
           <ZoomIn className="h-4 w-4" />
         </Button>
@@ -282,7 +342,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={zoomOut}
           title="缩小"
-          className="bg-white/90 hover:bg-white"
+          className="bg-white/90 hover:bg-white shadow-lg"
         >
           <ZoomOut className="h-4 w-4" />
         </Button>
@@ -291,7 +351,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={resetView}
           title="重置视图"
-          className="bg-white/90 hover:bg-white"
+          className="bg-white/90 hover:bg-white shadow-lg"
         >
           <Home className="h-4 w-4" />
         </Button>
