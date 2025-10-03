@@ -2405,6 +2405,104 @@ ensure_env_basics_source() {
 
 # ============== 新的部署相关函数 ==============
 
+# 强力清理端口占用（杀死 docker-proxy 进程）
+force_cleanup_port() {
+    local port=$1
+    log_info "强力清理端口 $port..."
+    
+    # 1. 查找并杀死 docker-proxy 进程
+    local pids
+    pids=$(sudo lsof -ti:$port 2>/dev/null)
+    if [[ -n "$pids" ]]; then
+        log_warning "发现占用端口 $port 的进程: $pids"
+        echo "$pids" | while read -r pid; do
+            local process_name
+            process_name=$(ps -p "$pid" -o comm= 2>/dev/null || echo "unknown")
+            log_info "进程 $pid ($process_name) 占用端口 $port"
+            
+            # 如果是 docker-proxy，直接杀死
+            if [[ "$process_name" == "docker-proxy" ]]; then
+                log_warning "杀死 docker-proxy 进程 $pid"
+                sudo kill -9 "$pid" 2>/dev/null || true
+            else
+                log_warning "发现非 Docker 进程占用: $process_name (PID: $pid)"
+            fi
+        done
+        sleep 1
+    fi
+    
+    # 2. 使用 fuser 杀死（备用方法）
+    if command -v fuser &>/dev/null; then
+        sudo fuser -k ${port}/tcp 2>/dev/null || true
+        sleep 1
+    fi
+    
+    # 3. 验证端口已释放
+    if sudo lsof -i:$port 2>/dev/null | grep -q LISTEN; then
+        log_error "端口 $port 仍然被占用！"
+        sudo lsof -i:$port
+        return 1
+    else
+        log_success "端口 $port 已释放"
+        return 0
+    fi
+}
+
+# 完全清理 Docker 资源和端口
+force_cleanup_docker_resources() {
+    log_info "完全清理 Docker 资源..."
+    
+    # 1. 停止并删除所有 SsalgTen 容器
+    log_info "删除 SsalgTen 容器..."
+    docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
+                 ssalgten-backend ssalgten-frontend ssalgten-agent \
+                 ssalgten-updater 2>/dev/null || true
+    
+    # 2. 删除网络
+    log_info "删除 Docker 网络..."
+    docker network rm ssalgten-network 2>/dev/null || true
+    
+    # 3. 等待 Docker 清理资源
+    sleep 2
+    
+    # 4. 强力清理关键端口的 docker-proxy 进程
+    log_info "检查并清理端口占用..."
+    local critical_ports=(5432 6379 3000 3001)
+    local ports_cleaned=0
+    
+    for port in "${critical_ports[@]}"; do
+        if sudo lsof -i:$port 2>/dev/null | grep -q LISTEN; then
+            log_warning "端口 $port 仍被占用，尝试清理..."
+            if force_cleanup_port "$port"; then
+                ((ports_cleaned++))
+            fi
+        fi
+    done
+    
+    if [[ $ports_cleaned -gt 0 ]]; then
+        log_success "清理了 $ports_cleaned 个端口"
+        sleep 2  # 等待系统完全释放资源
+    fi
+    
+    # 5. 最终验证
+    log_info "验证关键端口状态..."
+    local still_occupied=()
+    for port in "${critical_ports[@]}"; do
+        if sudo lsof -i:$port 2>/dev/null | grep -q LISTEN; then
+            still_occupied+=("$port")
+        fi
+    done
+    
+    if [[ ${#still_occupied[@]} -gt 0 ]]; then
+        log_error "以下端口仍然被占用: ${still_occupied[*]}"
+        log_warning "请手动检查并停止占用这些端口的进程"
+        return 1
+    else
+        log_success "所有关键端口已释放"
+        return 0
+    fi
+}
+
 # 检查系统要求
 check_port_conflicts() {
     log_info "检查端口占用..."
@@ -3896,19 +3994,9 @@ uninstall_system() {
         log_info "停止Docker容器..."
         docker_compose down --remove-orphans --volumes 2>/dev/null || true
         
-        # 额外清理：删除可能残留的容器
-        log_info "清理残留容器..."
-        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                     ssalgten-backend ssalgten-frontend ssalgten-agent \
-                     ssalgten-updater 2>/dev/null || true
-        
-        # 清理网络
-        log_info "清理Docker网络..."
-        docker network rm ssalgten-network 2>/dev/null || true
-        
-        # 清理数据卷
-        log_info "清理Docker数据卷..."
-        docker volume rm ssalgten-postgres-data ssalgten-redis-data 2>/dev/null || true
+        # 使用强力清理函数
+        log_info "完全清理 Docker 资源和端口..."
+        force_cleanup_docker_resources || log_warning "部分资源清理失败"
         
         log_info "删除Docker镜像..."
         docker images | grep -E "(ssalgten|ghcr.io.*ssalgten)" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
@@ -4128,12 +4216,19 @@ EOF
         log_header "🚀 首次部署（镜像模式）"
         log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE (标签: $IMAGE_TAG)"
         
-        # 清理可能的残留容器和网络，避免端口冲突
-        log_info "清理可能的残留资源..."
-        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                     ssalgten-backend ssalgten-frontend ssalgten-agent \
-                     ssalgten-updater 2>/dev/null || true
-        docker network rm ssalgten-network 2>/dev/null || true
+        # 强力清理所有可能的残留资源和端口占用
+        log_info "清理残留资源和端口占用..."
+        if ! force_cleanup_docker_resources; then
+            log_error "端口清理失败，无法继续部署"
+            log_info "请手动检查并停止占用端口的进程："
+            echo ""
+            echo "  sudo lsof -i :5432    # 检查 PostgreSQL 端口"
+            echo "  sudo lsof -i :6379    # 检查 Redis 端口"
+            echo "  sudo lsof -i :3000    # 检查 Frontend 端口"
+            echo "  sudo lsof -i :3001    # 检查 Backend 端口"
+            echo ""
+            die "部署已取消"
+        fi
         
         log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
@@ -4164,12 +4259,12 @@ EOF
         fi
         log_header "🚀 首次部署（源码模式）"
         
-        # 清理可能的残留容器和网络，避免端口冲突
-        log_info "清理可能的残留资源..."
-        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                     ssalgten-backend ssalgten-frontend ssalgten-agent \
-                     ssalgten-updater 2>/dev/null || true
-        docker network rm ssalgten-network 2>/dev/null || true
+        # 强力清理所有可能的残留资源和端口占用
+        log_info "清理残留资源和端口占用..."
+        if ! force_cleanup_docker_resources; then
+            log_error "端口清理失败，无法继续部署"
+            die "部署已取消"
+        fi
         
         docker_compose -f "$compose_file" build
         docker_compose -f "$compose_file" up -d database
