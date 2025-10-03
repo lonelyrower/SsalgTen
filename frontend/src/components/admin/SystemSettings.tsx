@@ -18,7 +18,8 @@ import {
   Shield,
   Bell,
   Globe,
-  Zap
+  Zap,
+  Map
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -86,6 +87,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return <Globe className="h-5 w-5 text-indigo-500" />;
       case 'performance':
         return <Zap className="h-5 w-5 text-orange-500" />;
+      case 'map':
+        return <Map className="h-5 w-5 text-cyan-500" />;
       default:
         return <Settings className="h-5 w-5 text-gray-500" />;
     }
@@ -107,6 +110,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return 'API设置';
       case 'performance':
         return '性能配置';
+      case 'map':
+        return '地图配置';
       default:
         return '其他设置';
     }
@@ -128,6 +133,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return 'API限流和CORS设置';
       case 'performance':
         return '系统性能和优化配置';
+      case 'map':
+        return '地图服务提供商和API密钥配置';
       default:
         return '其他配置选项';
     }
