@@ -3,6 +3,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import { corsMiddleware } from "./middleware/cors";
+import { visitorTrackingMiddleware } from "./middleware/visitorTracking";
 import { logger } from "./utils/logger";
 import router from "./routes";
 import { ApiResponse } from "./types";
@@ -57,6 +58,9 @@ if (process.env.ENABLE_MORGAN === "true") {
 // 解析中间件
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// 访问记录中间件 - 自动记录所有访问
+app.use(visitorTrackingMiddleware);
 
 // API 根路径信息
 app.get("/", (req: Request, res: Response) => {
