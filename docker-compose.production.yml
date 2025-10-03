@@ -1,8 +1,8 @@
 services:
   # PostgreSQL Database
-  postgres:
+  database:
     image: postgres:16-alpine
-    container_name: ssalgten-postgres
+    container_name: ssalgten-database
     restart: unless-stopped
     environment:
       POSTGRES_DB: ssalgten
@@ -36,7 +36,7 @@ services:
     container_name: ssalgten-backend
     restart: unless-stopped
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
     environment:
       NODE_ENV: production
@@ -44,7 +44,7 @@ services:
       HOST: 0.0.0.0
       
       # Database Configuration
-      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@postgres:5432/ssalgten
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten
       
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
