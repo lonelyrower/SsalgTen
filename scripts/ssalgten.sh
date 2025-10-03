@@ -197,16 +197,21 @@ prompt_yes_no() {
     
     while true; do
         if [[ -n "$default" ]]; then
-            read -p "$prompt [默认: $default]: " response
+            # 根据默认值高亮显示
+            if [[ "${default,,}" == "y" ]]; then
+                read -p "$prompt [Y/n] (默认: Y): " response
+            else
+                read -p "$prompt [y/N] (默认: N): " response
+            fi
             response="${response:-$default}"
         else
-            read -p "$prompt (y/n): " response
+            read -p "$prompt [Y/N]: " response
         fi
         
         case "${response,,}" in
             y|yes|是|确认) echo "y"; return 0 ;;
             n|no|否|取消) echo "n"; return 1 ;;
-            *) echo "请输入 y(是) 或 n(否)" ;;
+            *) echo "请输入 Y (是) 或 N (否)" ;;
         esac
     done
 }
@@ -529,8 +534,8 @@ confirm() {
         return 0
     fi
     
-    local prompt="$question [y/N]: "
-    [[ "$default" == "Y" ]] && prompt="$question [Y/n]: "
+    local prompt="$question [y/N] (默认: N): "
+    [[ "$default" == "Y" ]] && prompt="$question [Y/n] (默认: Y): "
     
     local answer
     answer=$(read_from_tty "$prompt" "$default")
@@ -2270,11 +2275,15 @@ ensure_env_kv() {
         fi
     fi
     
-    # 检查文件是否可写
+    # 检查文件是否可写（只在非root用户且文件不可写时修复）
     if [[ ! -w "$file" ]]; then
-        log_warning "文件 $file 不可写，尝试修复权限..."
-        run_as_root chmod 644 "$file" 2>/dev/null || true
-        run_as_root chown "$(whoami):$(whoami)" "$file" 2>/dev/null || true
+        if [[ "$EUID" -ne 0 ]] && [[ "$RUNNING_AS_ROOT" != "true" ]]; then
+            log_warning "文件 $file 不可写，尝试修复权限..."
+            run_as_root chmod 666 "$file" 2>/dev/null || true
+        else
+            log_error "文件 $file 不可写且无法修复权限"
+            return 1
+        fi
     fi
     
     # 转义特殊字符
@@ -2320,16 +2329,22 @@ ensure_env_kv() {
 
 ensure_env_basics_image() {
     log_info "确保环境变量文件存在..."
-    [[ -f .env ]] || touch .env || {
-        log_warning "无法创建 .env 文件，尝试使用 sudo..."
-        run_as_root touch .env || die "无法创建 .env 文件"
-    }
+    if [[ ! -f .env ]]; then
+        if ! touch .env 2>/dev/null; then
+            log_warning "无法创建 .env 文件，尝试使用 sudo..."
+            run_as_root touch .env || die "无法创建 .env 文件"
+        fi
+    fi
     
-    # 确保文件可写
+    # 确保文件可写（只在非root用户且文件不可写时修复）
     if [[ ! -w .env ]]; then
-        log_warning ".env 文件不可写，修复权限..."
-        run_as_root chown "$(whoami):$(whoami)" .env 2>/dev/null || true
-        run_as_root chmod 644 .env 2>/dev/null || true
+        if [[ "$EUID" -ne 0 ]] && [[ "$RUNNING_AS_ROOT" != "true" ]]; then
+            log_warning ".env 文件不可写，修复权限..."
+            run_as_root chmod 666 .env 2>/dev/null || true
+        else
+            # root用户下文件应该始终可写，如果不可写说明有问题
+            run_as_root chmod 666 .env || die ".env 文件不可写且无法修复"
+        fi
     fi
     
     log_info "读取现有配置..."
@@ -3537,7 +3552,7 @@ check_build_resources() {
     
     if [[ $warnings -gt 0 ]]; then
         echo ""
-        read -p "检测到资源不足，是否继续构建？建议先运行修复脚本 [Y/N]: " continue_build
+        read -p "检测到资源不足，是否继续构建？建议先运行修复脚本 [Y/N] (默认: N): " continue_build
         if [[ "$continue_build" != "y" && "$continue_build" != "Y" ]]; then
             log_info "构建已取消，请先解决资源问题"
             log_info "运行修复脚本: bash scripts/fix-docker-build.sh"
@@ -3619,7 +3634,7 @@ build_and_start_services() {
         echo "3. 检查系统资源是否足够"
         echo "4. 分别构建服务: bash scripts/fix-docker-build.sh --separate-build"
         echo ""
-        read -p "是否自动运行修复脚本？[Y/N]: " auto_fix
+        read -p "是否自动运行修复脚本？[Y/N] (默认: Y): " auto_fix
         if [[ "$auto_fix" != "n" && "$auto_fix" != "N" ]]; then
             if [[ -f "scripts/fix-docker-build.sh" ]]; then
                 log_info "运行Docker构建修复脚本..."
