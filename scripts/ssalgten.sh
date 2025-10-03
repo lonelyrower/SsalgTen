@@ -4222,12 +4222,17 @@ EOF
         log_header "🚀 首次部署（镜像模式）"
         log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE (标签: $IMAGE_TAG)"
         
-        # 简单直接的清理：先down再删除
+        # 先清理：使用相同的 compose 文件
         log_info "清理残留资源..."
-        docker_compose -f "$compose_file" down --remove-orphans 2>/dev/null || true
+        docker_compose -f "$compose_file" down --remove-orphans --volumes 2>/dev/null || true
+        
+        # 额外清理可能的残留容器（不同 compose 文件创建的）
         docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
                      ssalgten-backend ssalgten-frontend ssalgten-agent \
                      ssalgten-updater 2>/dev/null || true
+        
+        # 删除网络（可能被其他 compose 文件创建）
+        docker network rm ssalgten-network 2>/dev/null || true
         
         log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
@@ -4258,12 +4263,17 @@ EOF
         fi
         log_header "🚀 首次部署（源码模式）"
         
-        # 简单直接的清理：先down再删除
+        # 先清理：使用相同的 compose 文件
         log_info "清理残留资源..."
-        docker_compose -f "$compose_file" down --remove-orphans 2>/dev/null || true
+        docker_compose -f "$compose_file" down --remove-orphans --volumes 2>/dev/null || true
+        
+        # 额外清理可能的残留容器
         docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
                      ssalgten-backend ssalgten-frontend ssalgten-agent \
                      ssalgten-updater 2>/dev/null || true
+        
+        # 删除网络
+        docker network rm ssalgten-network 2>/dev/null || true
         
         docker_compose -f "$compose_file" build
         docker_compose -f "$compose_file" up -d database
