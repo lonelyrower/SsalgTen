@@ -3324,6 +3324,9 @@ NODE_ENV=production
 PORT=$BACKEND_PORT
 HOST=0.0.0.0
 
+# 外部访问URL（用于生成节点安装脚本）
+PUBLIC_URL=$(if [[ "$ENABLE_SSL" == "true" ]]; then echo "https://$DOMAIN"; else echo "http://$DOMAIN:$BACKEND_PORT"; fi)
+
 # 数据库配置 (Docker内部通信使用默认端口5432)
 DATABASE_URL="postgresql://ssalgten:$DB_PASSWORD@postgres:5432/ssalgten?schema=public"
 
@@ -4713,10 +4716,9 @@ EOF
     
     if [[ "$choice" != "0" ]]; then
         echo
-        # 自动继续，无需等待用户输入
-        sleep 1
-        # 下一次进入菜单时跳过 clear，一次性保留上一轮输出
-        SKIP_CLEAR_ONCE=true
+        # 操作完成后直接退出，不返回菜单
+        log_success "操作完成，程序退出"
+        exit 0
     fi
 }
 
