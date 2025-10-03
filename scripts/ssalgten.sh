@@ -343,28 +343,40 @@ flush_output() {
 # Docker Compose 兼容性检查和包装函数
 docker_compose() {
     local compose_args=()
-    
-    # 添加 compose 文件参数
-    if [ -n "$COMPOSE_FILE" ] && [ -f "$COMPOSE_FILE" ]; then
-        compose_args+=(-f "$COMPOSE_FILE")
-    fi
-    
-    # 自动合并本地覆盖文件（例如禁用/调整端口映射），避免 up 时忽略 override
+    local user_specified_file=false
     local override_file="$APP_DIR/docker-compose.override.yml"
-    if [ -f "$override_file" ]; then
-        compose_args+=(-f "$override_file")
+
+    # 检测调用方是否显式指定了 compose 文件，若已指定则保持调用方自定义的组合
+    for arg in "$@"; do
+        case "$arg" in
+            -f|--file|--file=*)
+                user_specified_file=true
+                break
+                ;;
+        esac
+    done
+
+    # 未显式传入 -f/--file 时，自动追加默认 compose 与 override 文件
+    if [[ "$user_specified_file" == false ]]; then
+        if [ -n "$COMPOSE_FILE" ] && [ -f "$COMPOSE_FILE" ]; then
+            compose_args+=(-f "$COMPOSE_FILE")
+        fi
+
+        if [ -f "$override_file" ]; then
+            compose_args+=(-f "$override_file")
+        fi
     fi
-    
-    # 添加项目名称
+
+    # 指定项目名称，避免 compose 自动使用当前目录名
     compose_args+=(--project-name "${COMPOSE_PROJECT_NAME:-ssalgten}")
-    
-    # 使用 docker compose (V2) 或 docker-compose (V1)
+
+    # 兼容 docker compose (V2) 与 docker-compose (V1)
     if docker compose version >/dev/null 2>&1; then
         docker compose "${compose_args[@]}" "$@"
     elif command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
         docker-compose "${compose_args[@]}" "$@"
     else
-        die "未找到可用的 Docker Compose。请安装 Docker Compose v2 或 docker-compose v1"
+        die "未找到可用的 Docker Compose，请安装 Docker Compose v2 或 docker-compose v1"
     fi
 }
 
@@ -2657,9 +2669,9 @@ install_docker_compose() {
         log_success "Docker Compose 插件已可用"
         return 0
     fi
-    
+
     log_info "安装 Docker Compose..."
-    
+
     # 尝试安装compose插件
     if command -v apt-get >/dev/null 2>&1; then
         run_as_root apt-get update
@@ -2672,7 +2684,7 @@ install_docker_compose() {
         run_as_root curl -L "https://github.com/docker/compose/releases/download/v$compose_version/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         run_as_root chmod +x /usr/local/bin/docker-compose
     fi
-    
+
     log_success "Docker Compose 安装完成"
 }
 
@@ -4950,3 +4962,4 @@ main() {
 
 # 运行主函数
 main "$@"
+
