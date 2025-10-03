@@ -7,21 +7,17 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Activity } from 'lucide-react';
-// TODO: Re-enable after installing Cesium dependencies
-// import { Button } from '@/components/ui/button';
-// import { Globe, Map as MapIcon } from 'lucide-react';
+import { Activity, Globe, Map as MapIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { NodeData } from '@/services/api';
 
 // 懒加载地图组件以提升首屏加载速度
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
-// TODO: Re-enable after installing Cesium dependencies
-// const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
+const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  // TODO: Re-enable after installing Cesium dependencies
-  // const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const { nodes, stats } = useRealTime();
   const { user } = useAuth();
   const loading = nodes.length === 0;
@@ -96,7 +92,7 @@ export const HomePage = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm">
-                    <Activity className="h-6 w-6 text-blue-400" />
+                    <Globe className="h-6 w-6 text-blue-400" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold gradient-text">
@@ -110,9 +106,27 @@ export const HomePage = () => {
                 </div>
               </div>
               
-              {/* 状态指示器 */}
+              {/* 状态指示器 + 视图切换按钮 */}
               <div className="flex flex-wrap items-center gap-3 text-sm">
-                {/* TODO: Re-enable 3D toggle after installing Cesium dependencies */}
+                {/* 2D/3D 切换按钮 */}
+                <Button
+                  variant={viewMode === '2d' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('2d')}
+                  className="flex items-center gap-2"
+                >
+                  <MapIcon className="h-4 w-4" />
+                  2D 地图
+                </Button>
+                <Button
+                  variant={viewMode === '3d' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('3d')}
+                  className="flex items-center gap-2"
+                >
+                  <Globe className="h-4 w-4" />
+                  3D 地球
+                </Button>
                 
                 {/* 状态统计 */}
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
@@ -137,18 +151,25 @@ export const HomePage = () => {
                   <div className="text-center">
                     <LoadingSpinner />
                     <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                      加载地图中...
+                      加载{viewMode === '3d' ? '3D 地球' : '地图'}中...
                     </p>
                   </div>
                 </div>
               }>
-                <EnhancedWorldMap
-                  nodes={nodes}
-                  onNodeClick={handleNodeClick}
-                  selectedNode={selectedNode}
-                  className="h-full"
-                  showControlPanels={false}
-                />
+                {viewMode === '2d' ? (
+                  <EnhancedWorldMap
+                    nodes={nodes}
+                    onNodeClick={handleNodeClick}
+                    selectedNode={selectedNode}
+                    className="h-full"
+                    showControlPanels={false}
+                  />
+                ) : (
+                  <Globe3D
+                    nodes={nodes}
+                    onNodeClick={handleNodeClick}
+                  />
+                )}
               </Suspense>
             </div>
           </GlassCard>

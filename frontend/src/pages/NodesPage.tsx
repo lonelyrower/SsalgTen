@@ -10,9 +10,7 @@ import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
-// TODO: Re-enable after installing Cesium dependencies
-// import { Map as MapIcon, Globe } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download, Map as MapIcon, Globe } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -67,8 +65,7 @@ const normalizeNodeEvent = (event: unknown): NodeEventRecord | null => {
 
 // Lazy load components
 const EnhancedWorldMap = lazy(() => import('@/components/map/EnhancedWorldMap').then(module => ({ default: module.EnhancedWorldMap })));
-// TODO: Re-enable after installing Cesium dependencies
-// const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
+const Globe3D = lazy(() => import('@/components/map/Globe3D').then(module => ({ default: module.Globe3D })));
 const NetworkToolkit = lazy(() => import('@/components/diagnostics/NetworkToolkit').then(module => ({ default: module.NetworkToolkit })));
 
 export const NodesPage: React.FC = () => {
@@ -84,8 +81,7 @@ export const NodesPage: React.FC = () => {
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [exportingNodes, setExportingNodes] = useState(false);
-  // TODO: Re-enable after installing Cesium dependencies
-  // const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
   const [visibleCount, setVisibleCount] = useState(60);
@@ -460,23 +456,49 @@ export const NodesPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col min-h-[700px] xl:sticky xl:top-4 xl:h-[calc(100vh-160px)]">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  节点分布（2D 地图）
+                  节点分布（{viewMode === '3d' ? '3D 地球' : '2D 地图'}）
                 </h2>
-                {/* TODO: Re-enable 3D toggle after installing Cesium dependencies */}
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant={viewMode === '2d' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('2d')}
+                    className="flex items-center space-x-2"
+                  >
+                    <MapIcon className="w-4 h-4" />
+                    <span>2D 地图</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === '3d' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('3d')}
+                    className="flex items-center space-x-2"
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span>3D 地球</span>
+                  </Button>
+                </div>
               </div>
               
               <div className="flex-1 min-h-0">
                 <Suspense fallback={
                   <LoadingSpinner text="加载地图..." size="lg" className="h-64" />
                 }>
-                  <EnhancedWorldMap 
-                    nodes={filteredNodes} 
-                    onNodeClick={handleNodeClick} 
-                    selectedNode={selectedNode}
-                    showHeatmap={false}
-                    showControlPanels={false}
-                    className="h-full"
-                  />
+                  {viewMode === '2d' ? (
+                    <EnhancedWorldMap 
+                      nodes={filteredNodes} 
+                      onNodeClick={handleNodeClick} 
+                      selectedNode={selectedNode}
+                      showHeatmap={false}
+                      showControlPanels={false}
+                      className="h-full"
+                    />
+                  ) : (
+                    <Globe3D 
+                      nodes={filteredNodes} 
+                      onNodeClick={handleNodeClick}
+                    />
+                  )}
                 </Suspense>
               </div>
             </div>
