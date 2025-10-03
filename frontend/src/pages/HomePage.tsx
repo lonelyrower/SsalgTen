@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -20,11 +20,19 @@ export const HomePage = () => {
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const { nodes, stats } = useRealTime();
   const { user } = useAuth();
-  const loading = nodes.length === 0;
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const error: string | null = null;
+
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
   }, []);
+
+  // 当数据加载后，取消初始加载状态
+  useEffect(() => {
+    if (nodes.length > 0) {
+      setIsInitialLoad(false);
+    }
+  }, [nodes]);
 
 
   // 缓存统计数据以防止不必要的重新渲染
@@ -37,7 +45,7 @@ export const HomePage = () => {
   }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders, stats?.totalTests]);
 
   // 如果正在加载，显示加载状态
-  if (loading && nodes.length === 0) {
+  if (isInitialLoad && nodes.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-cyan-900/20">
         <Header />
