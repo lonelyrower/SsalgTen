@@ -1422,7 +1422,8 @@ update_system_from_images() {
     export IMAGE_NAMESPACE=$namespace
     export IMAGE_TAG=$tag
 
-    docker_compose -f "$compose_file" pull
+    log_info "强制拉取最新镜像（忽略本地缓存）..."
+    docker_compose -f "$compose_file" pull --ignore-buildable
     docker_compose -f "$compose_file" up -d database
     log_info "等待数据库启动..."
     sleep 5
