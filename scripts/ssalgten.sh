@@ -2455,8 +2455,7 @@ force_cleanup_docker_resources() {
     # 1. 停止并删除所有 SsalgTen 容器
     log_info "删除 SsalgTen 容器..."
     docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                 ssalgten-backend ssalgten-frontend ssalgten-agent \
-                 ssalgten-updater 2>/dev/null || true
+                 ssalgten-backend ssalgten-frontend ssalgten-updater 2>/dev/null || true
     
     # 2. 删除网络
     log_info "删除 Docker 网络..."
@@ -3998,8 +3997,7 @@ uninstall_system() {
         # 简单直接的清理
         log_info "清理残留容器..."
         docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                     ssalgten-backend ssalgten-frontend ssalgten-agent \
-                     ssalgten-updater 2>/dev/null || true
+                     ssalgten-backend ssalgten-frontend ssalgten-updater 2>/dev/null || true
         
         log_info "清理网络和数据卷..."
         docker network rm ssalgten-network 2>/dev/null || true
@@ -4230,8 +4228,8 @@ EOF
         # 1. 停止所有服务
         docker_compose -f "$compose_file" down --remove-orphans --volumes 2>&1 | grep -v "no configuration file" || true
         
-        # 2. 强制删除所有可能的容器
-        for container in ssalgten-database ssalgten-postgres ssalgten-redis ssalgten-backend ssalgten-frontend ssalgten-agent ssalgten-updater; do
+        # 2. 强制删除所有可能的容器（不包括 agent，agent 在其他 VPS 上运行）
+        for container in ssalgten-database ssalgten-postgres ssalgten-redis ssalgten-backend ssalgten-frontend ssalgten-updater; do
             docker rm -f "$container" >/dev/null 2>&1 || true
         done
         
@@ -4296,8 +4294,8 @@ EOF
         # 1. 停止所有服务
         docker_compose -f "$compose_file" down --remove-orphans --volumes 2>&1 | grep -v "no configuration file" || true
         
-        # 2. 强制删除所有可能的容器
-        for container in ssalgten-database ssalgten-postgres ssalgten-redis ssalgten-backend ssalgten-frontend ssalgten-agent ssalgten-updater; do
+        # 2. 强制删除所有可能的容器（不包括 agent，agent 在其他 VPS 上运行）
+        for container in ssalgten-database ssalgten-postgres ssalgten-redis ssalgten-backend ssalgten-frontend ssalgten-updater; do
             docker rm -f "$container" >/dev/null 2>&1 || true
         done
         

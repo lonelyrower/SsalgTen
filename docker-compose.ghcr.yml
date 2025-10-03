@@ -138,26 +138,28 @@ services:
           memory: 128M
 
   # Agent Service (using GHCR image)
-  agent:
-    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/agent:${IMAGE_TAG:-latest}
-    container_name: ssalgten-agent
-    restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
-    environment:
-      # Agent specific environment variables
-      API_BASE_URL: http://backend:3001/api
-      AGENT_API_KEY: ${AGENT_API_KEY:-default-agent-key-change-this}
-      AGENT_NAME: ${AGENT_NAME:-local-agent}
-    networks:
-      - ssalgten-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
+  # Agent service - 仅用于测试，生产环境应在其他VPS单独部署
+  # 如需在主服务器也运行agent，取消注释以下配置
+  # agent:
+  #   image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-lonelyrower/ssalgten}/agent:${IMAGE_TAG:-latest}
+  #   container_name: ssalgten-local-agent
+  #   restart: unless-stopped
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #   environment:
+  #     # Agent specific environment variables
+  #     API_BASE_URL: http://backend:3001/api
+  #     AGENT_API_KEY: ${AGENT_API_KEY:-default-agent-key-change-this}
+  #     AGENT_NAME: ${AGENT_NAME:-local-agent}
+  #   networks:
+  #     - ssalgten-network
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 256M
+  #       reservations:
+  #         memory: 128M
 
 networks:
   ssalgten-network:
