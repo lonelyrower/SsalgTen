@@ -4222,17 +4222,37 @@ EOF
         log_header "🚀 首次部署（镜像模式）"
         log_info "镜像: $IMAGE_REGISTRY/$IMAGE_NAMESPACE (标签: $IMAGE_TAG)"
         
-        # 先清理：使用相同的 compose 文件
+        # 完整清理流程
         log_info "清理残留资源..."
-        docker_compose -f "$compose_file" down --remove-orphans --volumes 2>/dev/null || true
         
-        # 额外清理可能的残留容器（不同 compose 文件创建的）
-        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                     ssalgten-backend ssalgten-frontend ssalgten-agent \
-                     ssalgten-updater 2>/dev/null || true
+        # 1. 停止所有服务
+        docker_compose -f "$compose_file" down --remove-orphans --volumes 2>&1 | grep -v "no configuration file" || true
         
-        # 删除网络（可能被其他 compose 文件创建）
-        docker network rm ssalgten-network 2>/dev/null || true
+        # 2. 强制删除所有可能的容器
+        for container in ssalgten-database ssalgten-postgres ssalgten-redis ssalgten-backend ssalgten-frontend ssalgten-agent ssalgten-updater; do
+            docker rm -f "$container" >/dev/null 2>&1 || true
+        done
+        
+        # 3. 删除网络（重试机制）
+        for i in {1..3}; do
+            if docker network rm ssalgten-network >/dev/null 2>&1; then
+                log_info "网络已删除"
+                break
+            elif ! docker network ls | grep -q ssalgten-network; then
+                log_info "网络不存在"
+                break
+            else
+                log_warning "网络删除失败，等待重试 ($i/3)..."
+                sleep 1
+            fi
+        done
+        
+        # 4. 验证清理结果
+        if docker network ls | grep -q ssalgten-network; then
+            log_error "网络仍然存在，尝试查找占用的容器..."
+            docker network inspect ssalgten-network 2>/dev/null || true
+            log_warning "将继续部署，Docker 会尝试重用现有网络"
+        fi
         
         log_info "拉取 Docker 镜像..."
         docker_compose -f "$compose_file" pull
@@ -4263,17 +4283,27 @@ EOF
         fi
         log_header "🚀 首次部署（源码模式）"
         
-        # 先清理：使用相同的 compose 文件
+        # 完整清理流程
         log_info "清理残留资源..."
-        docker_compose -f "$compose_file" down --remove-orphans --volumes 2>/dev/null || true
         
-        # 额外清理可能的残留容器
-        docker rm -f ssalgten-database ssalgten-postgres ssalgten-redis \
-                     ssalgten-backend ssalgten-frontend ssalgten-agent \
-                     ssalgten-updater 2>/dev/null || true
+        # 1. 停止所有服务
+        docker_compose -f "$compose_file" down --remove-orphans --volumes 2>&1 | grep -v "no configuration file" || true
         
-        # 删除网络
-        docker network rm ssalgten-network 2>/dev/null || true
+        # 2. 强制删除所有可能的容器
+        for container in ssalgten-database ssalgten-postgres ssalgten-redis ssalgten-backend ssalgten-frontend ssalgten-agent ssalgten-updater; do
+            docker rm -f "$container" >/dev/null 2>&1 || true
+        done
+        
+        # 3. 删除网络（重试机制）
+        for i in {1..3}; do
+            if docker network rm ssalgten-network >/dev/null 2>&1; then
+                break
+            elif ! docker network ls | grep -q ssalgten-network; then
+                break
+            else
+                sleep 1
+            fi
+        done
         
         docker_compose -f "$compose_file" build
         docker_compose -f "$compose_file" up -d database
