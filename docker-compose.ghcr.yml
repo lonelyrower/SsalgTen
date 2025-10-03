@@ -99,6 +99,9 @@ services:
       VITE_API_URL: ${VITE_API_URL:-/api}
       VITE_NODE_ENV: ${VITE_NODE_ENV:-production}
       VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
+      # Map Configuration (carto/maptiler/openstreetmap)
+      VITE_MAP_PROVIDER: ${VITE_MAP_PROVIDER:-carto}
+      VITE_MAP_API_KEY: ${VITE_MAP_API_KEY:-}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     networks:
