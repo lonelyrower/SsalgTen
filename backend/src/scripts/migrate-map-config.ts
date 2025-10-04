@@ -2,7 +2,7 @@
 /**
  * 地图配置迁移脚本
  * 用于为已部署的系统添加地图配置
- * 
+ *
  * 使用方法:
  * docker compose exec backend npx tsx src/scripts/migrate-map-config.ts
  * 或者
