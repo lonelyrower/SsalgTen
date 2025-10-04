@@ -236,58 +236,40 @@ export async function seedSystemSettings() {
   try {
     logger.info("⚙️  Seeding system settings...");
 
-    const defaultSettings = [
-      {
-        key: "heartbeat_interval",
-        value: "30000",
-        category: "agent",
-        description: "Agent heartbeat interval in milliseconds",
-      },
-      {
-        key: "offline_threshold",
-        value: "120000",
-        category: "agent",
-        description: "Time in ms before marking agent as offline",
-      },
-      {
-        key: "cleanup_retention_days",
-        value: "30",
-        category: "maintenance",
-        description: "Days to retain diagnostic and heartbeat records",
-      },
-      {
-        key: "max_concurrent_diagnostics",
-        value: "5",
-        category: "diagnostics",
-        description: "Maximum concurrent diagnostic tests per agent",
-      },
-      // 地图配置 - 支持后台动态切换地图源
-      {
-        key: "map.provider",
-        value: JSON.stringify("carto"),
-        category: "map",
-        description: "Map tile provider (carto, openstreetmap, mapbox)",
-      },
-      {
-        key: "map.api_key",
-        value: JSON.stringify(""),
-        category: "map",
-        description: "Map API key (required for mapbox)",
-      },
-    ];
+    // 使用统一的配置定义，避免重复维护
+    const { DEFAULT_SYSTEM_CONFIGS } = await import(
+      "../controllers/SystemConfigController"
+    );
 
-    for (const setting of defaultSettings) {
+    let createdCount = 0;
+    let skippedCount = 0;
+
+    for (const [key, config] of Object.entries(DEFAULT_SYSTEM_CONFIGS)) {
       const existing = await prisma.setting.findUnique({
-        where: { key: setting.key },
+        where: { key },
       });
 
       if (!existing) {
-        await prisma.setting.create({ data: setting });
-        logger.info(`⚙️  Created setting: ${setting.key} = ${setting.value}`);
+        await prisma.setting.create({
+          data: {
+            key,
+            value: JSON.stringify(config.value),
+            category: config.category || "other",
+            description: config.description,
+          },
+        });
+        createdCount++;
+        logger.debug(
+          `⚙️  Created setting: ${key} = ${JSON.stringify(config.value)}`,
+        );
+      } else {
+        skippedCount++;
       }
     }
 
-    logger.info("✅ System settings configured");
+    logger.info(
+      `✅ System settings configured: ${createdCount} created, ${skippedCount} skipped`,
+    );
   } catch (error) {
     logger.error("❌ Settings seed failed:", error);
     throw error;
