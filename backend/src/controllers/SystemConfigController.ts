@@ -11,16 +11,6 @@ export interface SystemConfigData {
   description?: string;
 }
 
-interface ConfigByCategory {
-  [category: string]: {
-    [key: string]: {
-      value: unknown;
-      description?: string | null;
-      updatedAt: Date;
-    };
-  };
-}
-
 interface ResetResult {
   key: string;
   value: unknown;
@@ -254,36 +244,20 @@ export class SystemConfigController {
         orderBy: [{ category: "asc" }, { key: "asc" }],
       });
 
-      // 按分类分组配置项
-      const configsByCategory = configs.reduce((acc, config) => {
-        const cat = config.category || "other";
-        if (!acc[cat]) {
-          acc[cat] = {};
-        }
-
-        try {
-          acc[cat][config.key] = {
-            value: JSON.parse(config.value),
-            description: config.description,
-            updatedAt: config.updatedAt,
-          };
-        } catch {
-          acc[cat][config.key] = {
-            value: config.value,
-            description: config.description,
-            updatedAt: config.updatedAt,
-          };
-        }
-
-        return acc;
-      }, {} as ConfigByCategory);
+      // 转换为前端期望的数组格式
+      const configsArray = configs.map((config) => ({
+        id: config.id,
+        key: config.key,
+        value: config.value,
+        category: config.category,
+        description: config.description,
+        createdAt: config.createdAt.toISOString(),
+        updatedAt: config.updatedAt.toISOString(),
+      }));
 
       const response: ApiResponse = {
         success: true,
-        data: {
-          configs: configsByCategory,
-          total: configs.length,
-        },
+        data: configsArray,
         message: `Found ${configs.length} configuration items`,
       };
 
