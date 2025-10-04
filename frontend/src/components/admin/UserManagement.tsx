@@ -186,6 +186,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
             <div className="flex items-center space-x-3">
               <Filter className="h-4 w-4 text-gray-500" />
               <select
+                aria-label="筛选用户角色"
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
@@ -259,11 +260,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredUsers.map((user, index) => (
+              {filteredUsers.map((user) => (
                 <tr 
                   key={user.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -336,11 +336,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
 
         {/* 移动端卡片布局 */}
         <div className="lg:hidden">
-          {filteredUsers.map((user, index) => (
+          {filteredUsers.map((user) => (
             <div 
               key={user.id}
               className="p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 h-12 w-12">

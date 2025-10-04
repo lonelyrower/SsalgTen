@@ -4797,7 +4797,7 @@ self_update() {
                 
             else
                 log_success "✅ 脚本已更新到最新版本 ($new_version)"
-                log_info "重新运行以使用新版本"
+                # 不再提示"重新运行"，因为交互式菜单会自动exec重新加载
             fi
         else
             log_error "安装后的文件不可执行"
@@ -4893,7 +4893,15 @@ EOF
     case "$choice" in
         1) deploy_production ;;
         2) enhanced_update_system ;;
-        3) self_update ;;
+        3) 
+            # 脚本更新：更新后重新执行脚本
+            self_update
+            if [[ $? -eq 0 ]]; then
+                log_info "重新加载更新后的脚本..."
+                sleep 1
+                exec "${BASH_SOURCE[0]}" "$@"  # 重新执行脚本
+            fi
+            ;;
         4) uninstall_system ;;
         5) start_system ;;
         6) stop_system ;;
@@ -4909,9 +4917,9 @@ EOF
         *) log_error "无效选择: $choice"; sleep 1 ;;
     esac
     
-    if [[ "$choice" != "0" ]]; then
+    if [[ "$choice" != "0" ]] && [[ "$choice" != "3" ]]; then
         echo
-        # 操作完成后直接退出，不返回菜单
+        # 操作完成后直接退出，不返回菜单（脚本更新除外）
         log_success "操作完成，程序退出"
         exit 0
     fi

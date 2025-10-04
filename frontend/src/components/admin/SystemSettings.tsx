@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { apiService, type SystemConfig } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
 import {
   Settings,
   Save,
@@ -20,8 +19,8 @@ import {
   Globe,
   Zap,
   Map as MapIcon,
-  Lock,
-  Key
+  Info,
+  Activity
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -46,9 +45,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
   const [changedConfigs, setChangedConfigs] = useState<globalThis.Map<string, string>>(new globalThis.Map());
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
-  // 定义分类显示顺序（按重要性排序）
+  // 定义分类显示顺序（按重要性排序，其他设置放在最后）
   const CATEGORY_ORDER = React.useMemo(() => [
     'system',       // 系统设置
     'monitoring',   // 监控配置
@@ -56,7 +54,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     'security',     // 安全配置
     'api',          // API设置
     'map',          // 地图配置
-    'notifications' // 通知设置
+    'notifications',// 通知设置
+    'other'         // 其他设置（最后）
   ], []);
 
   // 渲染配置输入控件
@@ -191,6 +190,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return <Settings className="h-5 w-5 text-blue-500" />;
       case 'monitoring':
         return <Clock className="h-5 w-5 text-green-500" />;
+      case 'diagnostics':
+        return <Activity className="h-5 w-5 text-purple-500" />;
       case 'database':
         return <Database className="h-5 w-5 text-purple-500" />;
       case 'security':
@@ -214,6 +215,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return '系统设置';
       case 'monitoring':
         return '监控配置';
+      case 'diagnostics':
+        return '诊断配置';
       case 'database':
         return '数据库设置';
       case 'security':
@@ -234,23 +237,25 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const getCategoryDescription = (category: string) => {
     switch (category) {
       case 'system':
-        return '基础系统参数和全局设置';
+        return '系统基础参数、名称、时区等全局配置';
       case 'monitoring':
-        return '节点监控和心跳检测配置';
+        return '节点心跳检测、超时设置、数据保留策略';
+      case 'diagnostics':
+        return 'Ping、Traceroute、MTR 等诊断工具的默认参数';
       case 'database':
-        return '数据库连接和性能参数';
+        return '数据库连接池、性能优化和存储参数';
       case 'security':
-        return '认证和权限安全设置';
+        return 'JWT认证、登录限制、密码策略、SSH监控设置';
       case 'notifications':
-        return '邮件和Webhook通知配置';
+        return '告警通知、邮件发送、Webhook集成配置';
       case 'api':
-        return 'API限流和CORS设置';
+        return 'API速率限制、CORS跨域、日志级别设置';
       case 'performance':
-        return '系统性能和优化配置';
+        return '缓存策略、并发限制、资源优化配置';
       case 'map':
-        return '地图服务提供商和API密钥配置';
+        return '地图服务商选择、API密钥配置（支持Mapbox/OpenStreetMap/Carto）';
       default:
-        return '其他配置选项';
+        return '未分类的其他配置选项';
     }
   };
 
@@ -412,6 +417,58 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     return key.split('.').pop()?.replace(/_/g, ' ') || key;
   };
 
+  // 获取配置项的详细说明
+  const getConfigHelp = (key: string): string => {
+    const helpTexts: Record<string, string> = {
+      // 系统设置
+      'system.name': '在页面标题和导航栏中显示的系统名称',
+      'system.version': '当前系统版本号，用于版本追踪和兼容性检查',
+      'system.timezone': '系统默认时区，影响所有时间戳的显示格式',
+      'system.maintenance_mode': '开启后将限制系统访问，仅管理员可登录，用于系统维护期间',
+      
+      // 监控配置
+      'monitoring.heartbeat_interval': 'Agent向服务器发送心跳的间隔时间，过短会增加网络负载',
+      'monitoring.heartbeat_timeout': '超过此时间未收到心跳则判定Agent离线，应大于心跳间隔的2-3倍',
+      'monitoring.max_offline_time': '节点持续离线超过此时间将被标记为不可用状态',
+      'monitoring.cleanup_interval': '系统自动清理过期数据的时间间隔',
+      'monitoring.retention_days': '历史监控数据的保留天数，过期数据将被自动清理以节省存储空间',
+      
+      // 诊断配置
+      'diagnostics.default_ping_count': '执行Ping测试时的默认发包数量',
+      'diagnostics.default_traceroute_hops': 'Traceroute测试的最大跳数限制，防止无限循环',
+      'diagnostics.default_mtr_count': 'MTR测试的默认循环次数，影响测试精确度',
+      'diagnostics.speedtest_enabled': '是否启用网络速度测试功能（需要Agent支持）',
+      'diagnostics.max_concurrent_tests': '每个Agent同时执行的诊断任务数量上限，防止资源耗尽',
+      'diagnostics.proxy_enabled': '是否允许后端代理诊断请求，关闭后诊断将直接由Agent执行',
+      
+      // 安全配置
+      'security.jwt_expires_in': '用户登录令牌的有效期，过期后需要重新登录',
+      'security.max_login_attempts': '允许的最大连续登录失败次数，超过后账户将被临时锁定',
+      'security.lockout_duration': '账户被锁定后的冷却时间',
+      'security.require_strong_passwords': '强制要求新用户使用强密码（包含大小写字母、数字和特殊字符）',
+      'security.ssh_monitor_default_enabled': '新建Agent时是否默认启用SSH暴力破解监控功能',
+      'security.ssh_monitor_default_window_min': 'SSH监控的时间窗口，在此时间内统计失败登录次数',
+      'security.ssh_monitor_default_threshold': '时间窗口内失败登录次数达到此值时触发告警',
+      
+      // API配置
+      'api.rate_limit_requests': '时间窗口内允许的最大API请求次数',
+      'api.rate_limit_window': 'API速率限制的时间窗口长度',
+      'api.cors_enabled': '是否启用跨域资源共享，关闭后仅允许同源请求',
+      'api.log_level': 'API日志记录级别，debug级别会记录更详细的信息，适用于开发调试',
+      
+      // 通知配置
+      'notifications.email_enabled': '是否启用邮件通知功能（需配置SMTP服务器）',
+      'notifications.webhook_enabled': '是否启用Webhook推送功能',
+      'notifications.alert_threshold': '连续失败达到此次数后发送告警通知',
+      
+      // 地图配置
+      'map.provider': '地图图层提供商。Carto免费无需密钥；Mapbox需要API密钥但提供更丰富的样式',
+      'map.api_key': 'Mapbox的API访问密钥，在Mapbox官网申请。选择其他提供商时可留空',
+    };
+    
+    return helpTexts[key] || '';
+  };
+
   if (loading) {
     return (
       <div className={`${className} animate-pulse`}>
@@ -429,23 +486,27 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     <div className={className}>
       {/* 优化的头部区域 */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Settings className="h-8 w-8 mr-3 text-blue-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+              <Settings className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-blue-600" />
               系统配置
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              管理系统配置参数和运行时设置
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+              管理系统运行参数、监控设置和安全策略
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+              <AlertCircle className="h-4 w-4" />
+              <span>提示：修改配置后请点击底部的"保存更改"按钮应用设置</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <Button
               variant="outline"
               size="sm"
               onClick={loadConfigs}
               disabled={saving}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 flex-1 sm:flex-none justify-center"
             >
               <RefreshCw className="h-4 w-4" />
               <span>刷新</span>
@@ -455,46 +516,13 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
               size="sm"
               onClick={handleReset}
               disabled={saving}
-              className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
+              className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400 dark:border-orange-700 dark:hover:border-orange-600 flex-1 sm:flex-none justify-center"
             >
               <RotateCcw className="h-4 w-4" />
               <span>恢复默认</span>
             </Button>
           </div>
         </div>
-
-        {/* 账户安全卡片 */}
-        <Card className="p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-2 border-orange-200 dark:border-orange-800 shadow-lg mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg">
-                <Lock className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  账户安全
-                  <span className="text-xs font-normal px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full">
-                    重要
-                  </span>
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  修改您的登录密码，保护账户安全
-                </p>
-                <div className="mt-3 flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>建议定期更换密码，密码长度至少6个字符</span>
-                </div>
-              </div>
-            </div>
-            <Button
-              onClick={() => setShowChangePasswordModal(true)}
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-            >
-              <Key className="h-4 w-4" />
-              修改密码
-            </Button>
-          </div>
-        </Card>
 
         {/* 增强的搜索和过滤工具栏 */}
         <div className="relative">
@@ -618,34 +646,56 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       )}
 
       {/* 优化的配置分组 */}
-      <div className="space-y-4">
-        {filteredGroups.map(group => (
-          <Card key={group.category} className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+      <div className="space-y-6">
+        {filteredGroups.map((group, groupIndex) => (
+          <Card 
+            key={group.category} 
+            className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border-l-4"
+            style={{
+              borderLeftColor: [
+                '#3b82f6', // blue - system
+                '#10b981', // green - monitoring  
+                '#a855f7', // purple - diagnostics
+                '#ef4444', // red - security
+                '#6366f1', // indigo - api
+                '#06b6d4', // cyan - map
+                '#eab308', // yellow - notifications
+                '#6b7280', // gray - other
+              ][groupIndex % 8]
+            }}
+          >
             {/* 分组标题 */}
             <div 
-              className="p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent dark:hover:from-gray-700/50 dark:hover:to-transparent transition-all"
+              className="p-5 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent dark:hover:from-gray-700/50 dark:hover:to-transparent transition-all group"
               onClick={() => toggleGroup(group.category)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">{group.icon}</div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="flex-shrink-0 p-2 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-xl group-hover:scale-110 transition-transform">
+                    {group.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                       {group.title}
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                       {group.description}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full font-medium">
-                    {group.configs.length} 项
-                  </span>
+                <div className="flex items-center space-x-3 ml-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full">
+                      {group.configs.length}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
+                      配置项
+                    </span>
+                  </div>
                   <div className={`transition-transform duration-300 ${
                     expandedGroups.has(group.category) ? 'rotate-180' : ''
                   }`}>
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                    <ChevronDown className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
                   </div>
                 </div>
               </div>
@@ -657,57 +707,85 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                 {group.configs.map(config => {
                   const hasChanged = changedConfigs.has(config.key);
                   const displayName = config.displayName || formatConfigKey(config.key);
+                  const helpText = getConfigHelp(config.key);
 
                   return (
                     <div 
                       key={config.id} 
-                      className={`border rounded-lg p-4 transition-all ${
+                      className={`border rounded-xl p-5 transition-all duration-200 ${
                         hasChanged 
-                          ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-md' 
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                          ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg' 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md'
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        {/* 左侧：配置信息 */}
+                        <div className="flex-1 min-w-0 space-y-3">
+                          {/* 标题行 */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                               {displayName}
                             </h3>
                             {hasChanged && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white shadow-sm animate-pulse">
-                                已修改
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white shadow-sm animate-pulse">
+                                ● 已修改
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
-                            {config.key}
-                          </p>
+                          
+                          {/* 键名 */}
+                          <div className="flex items-center gap-2">
+                            <code className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
+                              {config.key}
+                            </code>
+                          </div>
+                          
+                          {/* 官方描述 */}
                           {config.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                               {config.description}
                             </p>
                           )}
+                          
+                          {/* 详细帮助信息 */}
+                          {helpText && (
+                            <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                              <p className="text-sm text-blue-800 dark:text-blue-200">
+                                {helpText}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* 更新时间 */}
+                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              更新: {new Date(config.updatedAt).toLocaleString('zh-CN')}
+                            </span>
+                            {hasChanged && (
+                              <button
+                                onClick={() => {
+                                  const newChanges = new globalThis.Map(changedConfigs);
+                                  newChanges.delete(config.key);
+                                  setChangedConfigs(newChanges);
+                                }}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all font-medium"
+                                title="撤销此项修改"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                <span>撤销修改</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-shrink-0 w-full sm:w-80 lg:w-96">
-                          {renderConfigInput(config)}
+                        
+                        {/* 右侧：输入控件 */}
+                        <div className="flex-shrink-0 w-full lg:w-80 xl:w-96">
+                          <div className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                            {renderConfigInput(config)}
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
-                        <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
-                        {hasChanged && (
-                          <button
-                            onClick={() => {
-                              const newChanges = new globalThis.Map(changedConfigs);
-                              newChanges.delete(config.key);
-                              setChangedConfigs(newChanges);
-                            }}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all"
-                            title="撤销此项修改"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            <span>撤销</span>
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
@@ -802,12 +880,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
           </div>
         </div>
       )}
-
-      {/* 密码修改模态框 */}
-      <ChangePasswordModal
-        isOpen={showChangePasswordModal}
-        onClose={() => setShowChangePasswordModal(false)}
-      />
     </div>
   );
 };

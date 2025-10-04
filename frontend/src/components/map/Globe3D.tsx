@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Cesium from 'cesium';
 import type { NodeData } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { Globe, ZoomIn, ZoomOut, Home } from 'lucide-react';
+import { Globe, ZoomIn, ZoomOut, Home, Layers, MapPin, Satellite, Map } from 'lucide-react';
 
 interface Globe3DProps {
   nodes: NodeData[];
@@ -15,6 +15,10 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const initializingRef = useRef(false); // 防止重复初始化
+  
+  // 图层状态
+  const [currentLayer, setCurrentLayer] = useState<'natural' | 'satellite' | 'street' | 'dark'>('satellite');
+  const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   // 使用 useMemo 缓存节点ID列表，只有当节点ID变化时才重新渲染
   const nodeIds = useMemo(() => nodes.map(n => n.id).join(','), [nodes]);
@@ -123,41 +127,51 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
         viewerRef.current = viewer;
 
-        // === 视觉增强配置 ===
+        // === 视觉增强配置（优化晨昏线效果）===
         const scene = viewer.scene;
         const globe = scene.globe;
 
-        // 启用光照以显示昼夜效果
+        // 使用Cesium默认的光照设置，获得更自然的晨昏线效果
         globe.enableLighting = true;
-        globe.dynamicAtmosphereLighting = true;
-        globe.dynamicAtmosphereLightingFromSun = true;
-
+        
+        // 关键：使用默认的太阳光照，不要过度调整
+        scene.globe.dynamicAtmosphereLighting = true;
+        scene.globe.dynamicAtmosphereLightingFromSun = true;
+        
+        // 大气层效果 - 使用接近Cesium默认值
         if (scene.skyAtmosphere) {
           scene.skyAtmosphere.show = true;
-          scene.skyAtmosphere.brightnessShift = 0.2;
-          scene.skyAtmosphere.saturationShift = 0.1;
+          // 使用更接近默认的值，让大气层更自然
+          scene.skyAtmosphere.brightnessShift = 0.0;  // 从0.2改为0.0
+          scene.skyAtmosphere.saturationShift = 0.0;  // 从0.1改为0.0
         }
 
         globe.showGroundAtmosphere = true;
-        globe.atmosphereBrightnessShift = 0.1;
-        globe.atmosphereSaturationShift = 0.1;
-        globe.baseColor = Cesium.Color.BLACK;
+        // 地面大气层也使用更温和的值
+        globe.atmosphereBrightnessShift = 0.0;  // 从0.1改为0.0
+        globe.atmosphereSaturationShift = 0.0;  // 从0.1改为0.0
+        
+        // 移除自定义基础颜色，使用默认
+        // globe.baseColor = Cesium.Color.BLACK; // 删除这行，让Cesium使用默认颜色
+        
         globe.showWaterEffect = true;
         
-        // 降低夜间区域的最小亮度，让黑夜更明显
-        globe.nightFadeInDistance = 5000000.0;
-        globe.nightFadeOutDistance = 10000000.0;
+        // 优化夜间过渡效果
+        globe.nightFadeInDistance = 8000000.0;   // 增大从5000000，让过渡更柔和
+        globe.nightFadeOutDistance = 15000000.0; // 增大从10000000
         
         scene.globe.maximumScreenSpaceError = 1.5;
         scene.globe.tileCacheSize = 200;
         
         scene.screenSpaceCameraController.enableCollisionDetection = false;
+        
+        // 雾效 - 使用更自然的设置
         scene.fog.enabled = true;
-        scene.fog.density = 0.0002;
-        scene.fog.minimumBrightness = 0.03; // 降低从0.1到0.03，让黑夜更暗
+        scene.fog.density = 0.0001;              // 从0.0002减小，让雾更淡
+        scene.fog.minimumBrightness = 0.05;      // 从0.03增加到0.05，避免过暗
 
-        // 使用太阳作为光源（删除固定方向光源，使用默认太阳光照）
-        // scene.light = new Cesium.Sun() 是默认值，不需要手动设置
+        // 使用默认的太阳光照（不需要手动设置）
+        // Cesium会自动根据当前时间计算太阳位置
       
         // 设置相机初始位置
         viewer.camera.setView({
@@ -226,7 +240,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       }
       initializingRef.current = false;
     };
-  }, []); // ← 仅初始化一次，不依赖nodes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ← 仅初始化一次，不依赖nodes或onNodeClick
 
   // useEffect 2: 更新节点标记（当nodes变化时）
   useEffect(() => {
@@ -337,6 +352,76 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     }
   }, [nodeIds, nodes]); // 依赖nodeIds，避免不必要的更新
 
+  // 点击外部关闭图层菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showLayerMenu && !target.closest('.layer-menu-container')) {
+        setShowLayerMenu(false);
+      }
+    };
+
+    if (showLayerMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showLayerMenu]);
+
+  // 图层切换功能
+  const switchLayer = (layerType: 'natural' | 'satellite' | 'street' | 'dark') => {
+    const viewer = viewerRef.current;
+    if (!viewer || viewer.isDestroyed()) return;
+
+    setCurrentLayer(layerType);
+    setShowLayerMenu(false);
+
+    // 移除当前图层
+    viewer.imageryLayers.removeAll();
+
+    let imageryProvider: Cesium.ImageryProvider | null = null;
+
+    switch (layerType) {
+      case 'satellite':
+        // 卫星影像（Esri世界影像）
+        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        } as any);
+        break;
+
+      case 'street':
+        // 街道地图（OpenStreetMap）
+        imageryProvider = new Cesium.OpenStreetMapImageryProvider({
+          url: 'https://tile.openstreetmap.org/'
+        });
+        break;
+
+      case 'dark':
+        // 深色地图（CartoDB Dark）
+        imageryProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+          credit: '© CARTO © OpenStreetMap contributors',
+          subdomains: ['a', 'b', 'c', 'd']
+        });
+        break;
+
+      case 'natural':
+      default:
+        // 自然地球II（Cesium默认）
+        Cesium.TileMapServiceImageryProvider.fromUrl(
+          Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+        ).then(provider => {
+          if (viewer && !viewer.isDestroyed()) {
+            viewer.imageryLayers.addImageryProvider(provider);
+          }
+        });
+        return; // 提前返回，因为是异步的
+    }
+
+    if (imageryProvider) {
+      viewer.imageryLayers.addImageryProvider(imageryProvider);
+    }
+  };
+
   // 控制函数
   const zoomIn = () => {
     if (viewerRef.current) {
@@ -408,6 +493,109 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         >
           <Home className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* 图层切换按钮 */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className="relative layer-menu-container">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowLayerMenu(!showLayerMenu)}
+            className="bg-white/90 hover:bg-white shadow-lg flex items-center gap-2"
+          >
+            <Layers className="h-4 w-4" />
+            <span className="hidden sm:inline">图层</span>
+          </Button>
+
+          {/* 图层选择菜单 */}
+          {showLayerMenu && (
+            <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[200px] animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
+                  选择底图样式
+                </p>
+              </div>
+              <div className="p-1">
+                {/* 卫星影像 */}
+                <button
+                  onClick={() => switchLayer('satellite')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                    currentLayer === 'satellite'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <Satellite className="h-4 w-4 flex-shrink-0" />
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">卫星影像</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">高清卫星图</p>
+                  </div>
+                  {currentLayer === 'satellite' && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </button>
+
+                {/* 街道地图 */}
+                <button
+                  onClick={() => switchLayer('street')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                    currentLayer === 'street'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <Map className="h-4 w-4 flex-shrink-0" />
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">街道地图</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">OpenStreetMap</p>
+                  </div>
+                  {currentLayer === 'street' && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </button>
+
+                {/* 深色地图 */}
+                <button
+                  onClick={() => switchLayer('dark')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                    currentLayer === 'dark'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">深色地图</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">CartoDB Dark</p>
+                  </div>
+                  {currentLayer === 'dark' && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </button>
+
+                {/* 自然地球 */}
+                <button
+                  onClick={() => switchLayer('natural')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                    currentLayer === 'natural'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <Globe className="h-4 w-4 flex-shrink-0" />
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">自然地球</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Natural Earth II</p>
+                  </div>
+                  {currentLayer === 'natural' && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

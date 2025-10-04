@@ -12,7 +12,10 @@ import {
   Clock, 
   Eye,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Layers,
+  Map as MapIcon,
+  MapPin
 } from 'lucide-react';
 import type { NodeData } from '@/services/api';
 
@@ -22,38 +25,107 @@ interface ExtendedNodeData extends NodeData {
   _originalLng?: number;
 }
 
-// 读取运行时地图配置
-const getMapConfig = () => {
-  const w: any = typeof window !== 'undefined' ? (window as any) : {};
-  const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
-  const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+// 地图提供商类型
+type MapProvider = 'carto' | 'openstreetmap' | 'mapbox';
 
-  // 支持多种底图源，默认 OSM。如需更快的瓦片，可在生产设置 MAP_PROVIDER。
-  // 选项：
-  // - openstreetmap（默认）
-  // - carto（Carto light_all，无需密钥，速度通常更快）
-  // - mapbox（需要 MAP_API_KEY，矢量地图）
-  switch (provider) {
-    case 'carto':
-      return {
+// 图层配置接口
+interface LayerConfig {
+  id: string;
+  name: string;
+  url: string;
+  attribution: string;
+  subdomains?: string[];
+  requiresApiKey?: boolean;
+}
+
+// 获取所有图层配置
+const getAllLayers = (apiKey: string = ''): Record<MapProvider, LayerConfig[]> => {
+  return {
+    carto: [
+      {
+        id: 'carto-light',
+        name: 'Light 亮色',
         url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
-        subdomains: ['a', 'b', 'c', 'd'] as string[],
-      };
-    case 'mapbox':
-      return {
-        url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
-        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
-        subdomains: undefined as unknown as string[],
-      };
-    case 'openstreetmap':
-    default:
-      return {
+        subdomains: ['a', 'b', 'c', 'd'],
+      },
+      {
+        id: 'carto-dark',
+        name: 'Dark 暗色',
+        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
+        subdomains: ['a', 'b', 'c', 'd'],
+      },
+      {
+        id: 'carto-voyager',
+        name: 'Voyager 航海',
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
+        subdomains: ['a', 'b', 'c', 'd'],
+      },
+    ],
+    openstreetmap: [
+      {
+        id: 'osm-standard',
+        name: 'Standard 标准',
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        subdomains: ['a', 'b', 'c'] as string[],
-      };
-  }
+        subdomains: ['a', 'b', 'c'],
+      },
+      {
+        id: 'osm-hot',
+        name: 'HOT 人道主义',
+        url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, HOT',
+        subdomains: ['a', 'b'],
+      },
+      {
+        id: 'osm-cycle',
+        name: 'CycleMap 自行车',
+        url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, CyclOSM',
+        subdomains: ['a', 'b', 'c'],
+      },
+    ],
+    mapbox: [
+      {
+        id: 'mapbox-streets',
+        name: 'Streets 街道',
+        url: apiKey 
+          ? `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`
+          : '',
+        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
+        requiresApiKey: true,
+      },
+      {
+        id: 'mapbox-satellite',
+        name: 'Satellite 卫星',
+        url: apiKey
+          ? `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`
+          : '',
+        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+        requiresApiKey: true,
+      },
+      {
+        id: 'mapbox-dark',
+        name: 'Dark 暗色',
+        url: apiKey
+          ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${apiKey}`
+          : '',
+        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
+        requiresApiKey: true,
+      },
+      {
+        id: 'mapbox-light',
+        name: 'Light 亮色',
+        url: apiKey
+          ? `https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=${apiKey}`
+          : '',
+        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
+        requiresApiKey: true,
+      },
+    ],
+  };
 };
 
 // 说明：标记均使用 DivIcon，自定义样式，不再依赖 Leaflet 默认图标
@@ -308,6 +380,48 @@ export const EnhancedWorldMap = memo(({
   const [showClusterModal, setShowClusterModal] = useState(false);
   const [clusterNodes, setClusterNodes] = useState<NodeData[]>([]);
   
+  // 图层切换状态
+  const [currentProvider, setCurrentProvider] = useState<MapProvider>(() => {
+    const w: any = typeof window !== 'undefined' ? (window as any) : {};
+    const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'carto').toString().toLowerCase();
+    return provider as MapProvider;
+  });
+  const [currentLayerId, setCurrentLayerId] = useState<string>('carto-light'); // 默认图层ID
+  const [showLayerMenu, setShowLayerMenu] = useState(false);
+  
+  // 获取API key（用于Mapbox）
+  const apiKey = useMemo(() => {
+    const w: any = typeof window !== 'undefined' ? (window as any) : {};
+    return w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+  }, []);
+  
+  // 获取所有图层
+  const allLayers = useMemo(() => getAllLayers(apiKey), [apiKey]);
+  
+  // 获取当前提供商的所有图层
+  const currentProviderLayers = useMemo(() => allLayers[currentProvider], [allLayers, currentProvider]);
+  
+  // 获取当前选中的图层配置
+  const currentLayerConfig = useMemo(() => {
+    const layer = currentProviderLayers.find(l => l.id === currentLayerId);
+    return layer || currentProviderLayers[0]; // 如果找不到，返回第一个
+  }, [currentProviderLayers, currentLayerId]);
+  
+  // 点击外部关闭图层菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showLayerMenu && !target.closest('.layer-menu-container')) {
+        setShowLayerMenu(false);
+      }
+    };
+
+    if (showLayerMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showLayerMenu]);
+  
   // 处理坐标重叠的节点
   const processedNodes = useMemo(() => jitterCoordinates(nodes), [nodes]);
   
@@ -548,6 +662,131 @@ export const EnhancedWorldMap = memo(({
             </Button>
           </div>
         </div>
+        
+        {/* 图层切换按钮 */}
+        <div className="layer-menu-container relative">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowLayerMenu(!showLayerMenu)}
+            className="w-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
+          >
+            <Layers className="h-4 w-4" />
+            <span>图层</span>
+          </Button>
+
+          {/* 图层选择菜单 */}
+          {showLayerMenu && (
+            <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
+                  选择地图图层
+                </p>
+              </div>
+              <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
+                {/* Carto 提供商 */}
+                <div>
+                  <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                    <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">CARTO</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {allLayers.carto.map((layer) => (
+                      <button
+                        key={layer.id}
+                        onClick={() => {
+                          setCurrentProvider('carto');
+                          setCurrentLayerId(layer.id);
+                          setShowLayerMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
+                          currentProvider === 'carto' && currentLayerId === layer.id
+                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <span className="flex-1 text-left">{layer.name}</span>
+                        {currentProvider === 'carto' && currentLayerId === layer.id && (
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* OpenStreetMap 提供商 */}
+                <div>
+                  <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                    <MapIcon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">OPENSTREETMAP</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {allLayers.openstreetmap.map((layer) => (
+                      <button
+                        key={layer.id}
+                        onClick={() => {
+                          setCurrentProvider('openstreetmap');
+                          setCurrentLayerId(layer.id);
+                          setShowLayerMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
+                          currentProvider === 'openstreetmap' && currentLayerId === layer.id
+                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <span className="flex-1 text-left">{layer.name}</span>
+                        {currentProvider === 'openstreetmap' && currentLayerId === layer.id && (
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mapbox 提供商 */}
+                <div>
+                  <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                    <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">MAPBOX</span>
+                    {!apiKey && (
+                      <span className="text-xs text-orange-600 dark:text-orange-400">(需要API密钥)</span>
+                    )}
+                  </div>
+                  <div className="space-y-0.5">
+                    {allLayers.mapbox.map((layer) => (
+                      <button
+                        key={layer.id}
+                        onClick={() => {
+                          if (!apiKey) {
+                            alert('Mapbox需要API密钥，请在系统设置中配置 MAP_API_KEY');
+                            return;
+                          }
+                          setCurrentProvider('mapbox');
+                          setCurrentLayerId(layer.id);
+                          setShowLayerMenu(false);
+                        }}
+                        disabled={!apiKey}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
+                          !apiKey
+                            ? 'opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-600'
+                            : currentProvider === 'mapbox' && currentLayerId === layer.id
+                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <span className="flex-1 text-left">{layer.name}</span>
+                        {apiKey && currentProvider === 'mapbox' && currentLayerId === layer.id && (
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       )}
 
@@ -567,19 +806,18 @@ export const EnhancedWorldMap = memo(({
           {/* 设置 mapRef，供点击聚合时 setView 使用 */}
           <MapRefSetter setRef={(m) => { (mapRef as any).current = m; }} />
           <BoundsHandler onBoundsChange={setBounds} />
-          {(() => {
-            const cfg = getMapConfig();
-            return (
-              <TileLayer
-                attribution={cfg.attribution}
-                url={cfg.url}
-                className="grayscale-[20%] contrast-[110%]"
-                updateWhenIdle={true}
-                updateWhenZooming={false}
-                keepBuffer={2}
-              />
-            );
-          })()}
+          
+          {/* 动态图层 */}
+          <TileLayer
+            key={currentLayerId} // 关键：当图层ID改变时重新渲染
+            attribution={currentLayerConfig.attribution}
+            url={currentLayerConfig.url}
+            subdomains={currentLayerConfig.subdomains}
+            className="grayscale-[20%] contrast-[110%]"
+            updateWhenIdle={true}
+            updateWhenZooming={false}
+            keepBuffer={2}
+          />
           
           {/* 缩放监听组件 */}
           <ZoomHandler onZoomChange={setCurrentZoom} />
