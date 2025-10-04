@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService, type SystemConfig } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
 import {
   Settings,
   Save,
@@ -18,7 +19,9 @@ import {
   Bell,
   Globe,
   Zap,
-  Map as MapIcon
+  Map as MapIcon,
+  Lock,
+  Key
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -43,6 +46,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
   const [changedConfigs, setChangedConfigs] = useState<globalThis.Map<string, string>>(new globalThis.Map());
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   // 定义分类显示顺序（按重要性排序）
   const CATEGORY_ORDER = React.useMemo(() => [
@@ -459,6 +463,39 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
           </div>
         </div>
 
+        {/* 账户安全卡片 */}
+        <Card className="p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-2 border-orange-200 dark:border-orange-800 shadow-lg mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-4">
+              <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg">
+                <Lock className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  账户安全
+                  <span className="text-xs font-normal px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full">
+                    重要
+                  </span>
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  修改您的登录密码，保护账户安全
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>建议定期更换密码，密码长度至少6个字符</span>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowChangePasswordModal(true)}
+              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+            >
+              <Key className="h-4 w-4" />
+              修改密码
+            </Button>
+          </div>
+        </Card>
+
         {/* 增强的搜索和过滤工具栏 */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-xl"></div>
@@ -765,6 +802,12 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
           </div>
         </div>
       )}
+
+      {/* 密码修改模态框 */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </div>
   );
 };
