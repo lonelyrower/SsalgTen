@@ -357,7 +357,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         setChangedConfigs(new globalThis.Map());
         await loadConfigs();
         
-        setTimeout(() => setSuccess(''), 3000);
+        // 检查是否修改了地图配置，如果是则刷新页面以应用新配置
+        const hasMapConfigChange = configsToUpdate.some(c => c.key.startsWith('map.'));
+        if (hasMapConfigChange) {
+          setSuccess(`成功更新了 ${configsToUpdate.length} 个配置项。地图配置已更新，3秒后自动刷新页面...`);
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        } else {
+          setTimeout(() => setSuccess(''), 3000);
+        }
       } else {
         setError(response.error || '保存配置失败');
       }
@@ -621,6 +630,25 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         </Card>
       )}
 
+      {/* 未保存更改提示 */}
+      {changedConfigs.size > 0 && !success && !error && (
+        <Card className="p-4 mb-6 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-amber-500 mr-3" />
+              <div>
+                <p className="text-amber-800 dark:text-amber-200 font-medium">
+                  您有 {changedConfigs.size} 项未保存的更改
+                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                  请点击底部的"保存更改"按钮以应用配置，或点击"取消"放弃修改。
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* 配置分组 */}
       <div className="space-y-6">
         {filteredGroups.map(group => (
@@ -818,6 +846,66 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
             {searchTerm || selectedCategory !== 'all' ? '没有找到匹配的配置项' : '暂无系统配置'}
           </p>
         </Card>
+      )}
+
+      {/* 固定底部保存栏 - 当有未保存更改时显示 */}
+      {changedConfigs.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-blue-500 shadow-2xl z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="h-3 w-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    您有 <span className="text-blue-600 dark:text-blue-400 font-bold">{changedConfigs.size}</span> 项未保存的更改
+                  </span>
+                </div>
+                <div className="hidden sm:flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span>•</span>
+                  <span>
+                    {Array.from(changedConfigs.keys()).slice(0, 3).map(key => {
+                      const config = configs.find(c => c.key === key);
+                      return config?.displayName || key.split('.').pop();
+                    }).join(', ')}
+                    {changedConfigs.size > 3 && ` 等 ${changedConfigs.size} 项`}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm('确定要放弃所有未保存的更改吗？')) {
+                      setChangedConfigs(new globalThis.Map());
+                    }
+                  }}
+                  disabled={saving}
+                  className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2 px-6"
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>保存中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>保存更改</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
