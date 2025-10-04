@@ -120,13 +120,45 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
       viewerRef.current = viewer;
 
-      // 启用地球光照
-      viewer.scene.globe.enableLighting = true;
-      
-      // 设置大气效果
-      if (viewer.scene.skyAtmosphere) {
-        viewer.scene.skyAtmosphere.show = true;
+      // === 视觉增强配置 ===
+      const scene = viewer.scene;
+      const globe = scene.globe;
+
+      // 1. 启用地球光照和阴影
+      globe.enableLighting = true;
+      globe.dynamicAtmosphereLighting = true;
+      globe.dynamicAtmosphereLightingFromSun = true;
+
+      // 2. 优化大气层效果
+      if (scene.skyAtmosphere) {
+        scene.skyAtmosphere.show = true;
+        scene.skyAtmosphere.brightnessShift = 0.2; // 增加亮度
+        scene.skyAtmosphere.saturationShift = 0.1; // 增加饱和度
       }
+
+      // 3. 显示地面大气
+      globe.showGroundAtmosphere = true;
+      globe.atmosphereBrightnessShift = 0.1;
+      globe.atmosphereSaturationShift = 0.1;
+
+      // 4. 优化地球表面渲染
+      globe.baseColor = Cesium.Color.BLACK; // 海洋基础颜色
+      globe.showWaterEffect = true; // 显示水面效果（如果支持）
+      
+      // 5. 优化性能和视觉质量
+      scene.globe.maximumScreenSpaceError = 1.5; // 降低可减少细节，提升性能
+      scene.globe.tileCacheSize = 200; // 增加缓存
+      
+      // 6. 优化相机和场景
+      scene.screenSpaceCameraController.enableCollisionDetection = false;
+      scene.fog.enabled = true; // 启用雾效
+      scene.fog.density = 0.0002; // 雾的密度
+      scene.fog.minimumBrightness = 0.1;
+
+      // 7. 添加环境光
+      scene.light = new Cesium.DirectionalLight({
+        direction: new Cesium.Cartesian3(1, 0, 0)
+      });
       
       // 设置相机初始位置（查看整个地球）
       viewer.camera.setView({

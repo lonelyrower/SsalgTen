@@ -50,6 +50,17 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // 定义分类显示顺序（按重要性排序）
+  const CATEGORY_ORDER = React.useMemo(() => [
+    'system',       // 系统设置
+    'monitoring',   // 监控配置
+    'diagnostics',  // 诊断配置
+    'security',     // 安全配置
+    'api',          // API设置
+    'map',          // 地图配置
+    'notifications' // 通知设置
+  ], []);
+
   // 渲染配置输入控件
   const renderConfigInput = (config: SystemConfig) => {
     const inputType = config.inputType || 'text';
@@ -262,14 +273,33 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       groups[category].push(config);
     });
 
-    return Object.entries(groups).map(([category, configs]) => ({
-      category,
-      icon: getCategoryIcon(category),
-      title: getCategoryTitle(category),
-      description: getCategoryDescription(category),
-      configs: configs.sort((a, b) => a.key.localeCompare(b.key))
-    })).sort((a, b) => a.title.localeCompare(b.title));
-  }, [configs]);
+    return Object.entries(groups)
+      .map(([category, configs]) => ({
+        category,
+        icon: getCategoryIcon(category),
+        title: getCategoryTitle(category),
+        description: getCategoryDescription(category),
+        configs: configs.sort((a, b) => a.key.localeCompare(b.key))
+      }))
+      .filter(group => group.configs.length > 0) // 只显示有配置的分类
+      .sort((a, b) => {
+        // 按预定义顺序排序
+        const indexA = CATEGORY_ORDER.indexOf(a.category);
+        const indexB = CATEGORY_ORDER.indexOf(b.category);
+        
+        // 如果分类在预定义列表中，按索引排序
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        
+        // 未定义的分类排到最后
+        if (indexA === -1 && indexB !== -1) return 1;
+        if (indexA !== -1 && indexB === -1) return -1;
+        
+        // 都不在列表中，按标题排序
+        return a.title.localeCompare(b.title);
+      });
+  }, [configs, CATEGORY_ORDER]);
 
   const filteredGroups = groupedConfigs.filter(group => {
     if (selectedCategory !== 'all' && group.category !== selectedCategory) {
