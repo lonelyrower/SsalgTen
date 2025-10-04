@@ -2665,15 +2665,34 @@ install_docker() {
     log_info "安装 Docker..."
     
     if command -v apt-get >/dev/null 2>&1; then
-        # Ubuntu/Debian
+        # Ubuntu/Debian - 自动检测正确的发行版
         run_as_root apt-get update
         run_as_root apt-get install -y ca-certificates curl gnupg lsb-release
         
-        # 添加Docker官方GPG密钥
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        # 检测操作系统类型
+        local os_type
+        if [[ -f /etc/os-release ]]; then
+            # shellcheck disable=SC1091
+            source /etc/os-release
+            os_type="${ID}"  # ubuntu 或 debian
+        else
+            # 降级方案：通过lsb_release检测
+            if lsb_release -i 2>/dev/null | grep -qi ubuntu; then
+                os_type="ubuntu"
+            elif lsb_release -i 2>/dev/null | grep -qi debian; then
+                os_type="debian"
+            else
+                os_type="ubuntu"  # 默认使用ubuntu
+            fi
+        fi
         
-        # 添加Docker仓库
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
+        log_info "检测到系统类型: ${os_type}"
+        
+        # 添加Docker官方GPG密钥（使用正确的URL）
+        curl -fsSL "https://download.docker.com/linux/${os_type}/gpg" | run_as_root gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        
+        # 添加Docker仓库（使用正确的URL）
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/${os_type} $(lsb_release -cs) stable" | run_as_root tee /etc/apt/sources.list.d/docker.list > /dev/null
         
         run_as_root apt-get update
         run_as_root apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
