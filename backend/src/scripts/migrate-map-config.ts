@@ -67,7 +67,6 @@ async function migrateMapConfig() {
     logger.info("   3. Find 'Map Configuration' category");
     logger.info("   4. Configure map.provider and map.api_key");
     logger.info("   5. Save and refresh your browser");
-
   } catch (error) {
     logger.error("❌ Migration failed:", error);
     throw error;
