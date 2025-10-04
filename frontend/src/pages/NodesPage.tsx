@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
@@ -202,6 +202,12 @@ export const NodesPage: React.FC = () => {
     const map: Record<string, string> = {
       IP_CHANGED: 'IP 变更',
       STATUS_CHANGED: '状态变更',
+      SSH_BRUTEFORCE: 'SSH暴力破解',
+      MALWARE_DETECTED: '恶意软件检测',
+      DDOS_ATTACK: 'DDoS攻击',
+      INTRUSION_DETECTED: '入侵检测',
+      ANOMALY_DETECTED: '异常检测',
+      SUSPICIOUS_ACTIVITY: '可疑活动',
     };
     return map[type] || type;
   };
@@ -291,18 +297,20 @@ export const NodesPage: React.FC = () => {
     }
   }, [selectedNode, showServerDetails, connected]);
 
-  // 过滤节点
-  const filteredNodes = nodes.filter(node => {
-    const matchesSearch = node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         node.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         node.provider.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'online' && node.status === 'online') ||
-                         (statusFilter === 'offline' && node.status === 'offline');
-    
-    return matchesSearch && matchesStatus;
-  });
+  // 过滤节点 - 使用useMemo缓存结果，避免不必要的引用变化
+  const filteredNodes = useMemo(() => {
+    return nodes.filter(node => {
+      const matchesSearch = node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           node.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           node.provider.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || 
+                           (statusFilter === 'online' && node.status === 'online') ||
+                           (statusFilter === 'offline' && node.status === 'offline');
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [nodes, searchTerm, statusFilter]); // 仅在这些依赖变化时重新计算
 
   // 当筛选结果变化时，校正可见数量，避免越界
   useEffect(() => {
@@ -781,25 +789,67 @@ export const NodesPage: React.FC = () => {
                   </select>
                 </div>
               </div>
-              {filteredEvents.length === 0 ? (
-                <p className="text-sm text-gray-500">暂无事件</p>
-              ) : (
-                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredEvents.map((ev) => (
-                    <li key={ev.id} className="py-2 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">
-                          <span className={`px-2 py-0.5 rounded text-xs mr-2 ${ev.type === 'STATUS_CHANGED' ? 'bg-blue-100 text-blue-800' : ev.type === 'IP_CHANGED' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {eventTypeLabel(ev.type)}
+              
+              {/* 显示来自API的安全事件 */}
+              {selectedNode?.securityEvents && selectedNode.securityEvents.length > 0 && (
+                <div className="mb-4">
+                  <h5 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center">
+                    <span className="mr-2">🛡️</span>
+                    安全威胁 ({selectedNode.securityEvents.length})
+                  </h5>
+                  <ul className="divide-y divide-red-100 dark:divide-red-900">
+                    {selectedNode.securityEvents.map((event) => (
+                      <li key={event.id} className="py-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <span className={`inline-block px-2 py-0.5 rounded text-xs mr-2 ${
+                              event.severity === 'critical' 
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
+                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            }`}>
+                              {eventTypeLabel(event.type)}
+                            </span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {event.description}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 whitespace-nowrap">
+                            {new Date(event.timestamp).toLocaleString()}
                           </span>
-                          {renderEventMessage(ev)}
-                        </span>
-                        <span className="text-gray-500">{new Date(ev.timestamp).toLocaleString()}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
+              
+              {/* 常规事件列表 */}
+              {filteredEvents.length === 0 && (!selectedNode?.securityEvents || selectedNode.securityEvents.length === 0) ? (
+                <p className="text-sm text-gray-500">暂无事件</p>
+              ) : filteredEvents.length > 0 ? (
+                <div>
+                  <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">常规事件</h5>
+                  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {filteredEvents.map((ev) => (
+                      <li key={ev.id} className="py-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            <span className={`px-2 py-0.5 rounded text-xs mr-2 ${
+                              ev.type === 'STATUS_CHANGED' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                              ev.type === 'IP_CHANGED' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 
+                              'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                            }`}>
+                              {eventTypeLabel(ev.type)}
+                            </span>
+                            {renderEventMessage(ev)}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400">{new Date(ev.timestamp).toLocaleString()}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

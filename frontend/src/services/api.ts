@@ -137,6 +137,14 @@ export interface NodeData {
     status: string;
     uptime: number | null;
   };
+  securityEvents?: Array<{
+    id: string;
+    type: string;
+    severity: string;
+    description: string;
+    timestamp: string;
+    metadata?: Record<string, unknown>;
+  }>;
 }
 
 // 节点统计信息接口
@@ -147,7 +155,7 @@ export interface NodeStats {
   unknownNodes: number;
   totalCountries: number;
   totalProviders: number;
-  totalTests?: number; // 网络检测总数，可选字段，后端未实现时默认为0
+  securityEvents?: number; // 安全事件统计（SSH暴力破解等），可选字段
 }
 
 // 诊断记录接口
@@ -403,10 +411,17 @@ class ApiService {
     }
 
     try {
+      // 为大数据查询添加超时控制（60秒）
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      
       const response = await fetch(url, {
         headers,
         ...options,
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (response.status === 401) {
         TokenManager.removeTokens();
@@ -422,6 +437,12 @@ class ApiService {
       return data;
     } catch (error) {
       console.error('API request failed:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        return {
+          success: false,
+          error: '请求超时，请刷新页面重试'
+        };
+      }
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'

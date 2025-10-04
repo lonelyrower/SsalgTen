@@ -3,6 +3,10 @@ import { logger } from '../utils/logger';
 import { config } from '../config';
 import { getSystemInfo, getPublicIPs } from '../utils/system';
 import { securityMonitor } from './SecurityMonitor';
+import { processMonitor } from './ProcessMonitor';
+import { networkMonitor } from './NetworkMonitor';
+import { fileMonitor } from './FileMonitor';
+import { emailAlertService } from './EmailAlertService';
 import { buildSignedHeaders } from '../utils/signing';
 
 export interface RegistrationResult {
@@ -143,6 +147,9 @@ export class RegistrationService {
               location: this.nodeInfo.location
             });
 
+            // 初始化安全监控服务
+            this.initializeSecurityServices();
+
             // 开始发送心跳
             this.startHeartbeat();
 
@@ -191,6 +198,30 @@ export class RegistrationService {
         success: false,
         error: errorMessage
       };
+    }
+  }
+
+  // 初始化安全监控服务
+  private initializeSecurityServices(): void {
+    logger.info('Initializing security monitoring services...');
+
+    try {
+      // 初始化邮件告警服务
+      emailAlertService.initialize();
+      
+      // 初始化文件完整性基线（异步，不阻塞）
+      fileMonitor.initializeBaseline().catch(err => {
+        logger.error('Failed to initialize file baseline:', err);
+      });
+
+      logger.info('Security services initialized');
+      logger.info(`- SSH Monitor: ${securityMonitor ? 'enabled' : 'disabled'}`);
+      logger.info(`- Process Monitor: ${processMonitor.config.enabled ? 'enabled' : 'disabled'}`);
+      logger.info(`- Network Monitor: ${networkMonitor.config.enabled ? 'enabled' : 'disabled'}`);
+      logger.info(`- File Monitor: ${fileMonitor.config.enabled ? 'enabled' : 'disabled'}`);
+      logger.info(`- Email Alerts: ${emailAlertService.config.enabled ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      logger.error('Failed to initialize security services:', error);
     }
   }
 
@@ -250,13 +281,146 @@ export class RegistrationService {
         }
       };
 
-      // 附加安全摘要（可选）
+      // 收集所有安全监控数据
+      const securityData: any = {};
+      let hasAlerts = false;
+
+      // 1. SSH暴力破解监控
       try {
-        const summary = await securityMonitor.checkSshBruteforce();
-        if (summary?.ssh) {
-          (heartbeatData as any).security = { ssh: summary.ssh };
+        const sshData = await securityMonitor.checkSshBruteforce();
+        if (sshData?.ssh) {
+          securityData.ssh = sshData.ssh;
+          if (sshData.ssh.alerts && sshData.ssh.alerts.length > 0) {
+            hasAlerts = true;
+            logger.warn(`SSH brute force detected: ${sshData.ssh.alerts.length} alerts`);
+          }
         }
-      } catch {}
+      } catch (error) {
+        logger.debug('SSH monitor check failed:', error);
+      }
+
+      // 2. 进程监控
+      try {
+        const processData = await processMonitor.scanProcesses();
+        if (processData.enabled) {
+          securityData.processes = {
+            enabled: processData.enabled,
+            totalProcesses: processData.totalProcesses,
+            suspiciousCount: processData.suspiciousProcesses.length,
+            suspiciousProcesses: processData.suspiciousProcesses.slice(0, 10), // 最多发送10个
+            summary: processData.summary,
+          };
+          
+          if (processData.suspiciousProcesses.length > 0) {
+            hasAlerts = true;
+            logger.warn(`Suspicious processes detected: ${processData.suspiciousProcesses.length}`);
+            
+            // 检测到挖矿程序，发送Critical邮件
+            const miners = processData.suspiciousProcesses.filter(p => p.reason.includes('miner'));
+            if (miners.length > 0) {
+              emailAlertService.sendAlert({
+                level: 'critical',
+                title: 'Cryptocurrency Miner Detected',
+                message: `Detected ${miners.length} cryptocurrency mining process(es) on node ${config.name}`,
+                details: miners.map(m => ({
+                  process: m.process.name,
+                  command: m.process.command,
+                  cpu: m.process.cpu,
+                  reason: m.reason,
+                })),
+                timestamp: new Date(),
+              }, config.name).catch(err => logger.error('Failed to send miner alert email:', err));
+            }
+          }
+        }
+      } catch (error) {
+        logger.debug('Process monitor check failed:', error);
+      }
+
+      // 3. 网络监控
+      try {
+        const networkData = await networkMonitor.monitor();
+        if (networkData.enabled) {
+          securityData.network = {
+            enabled: networkData.enabled,
+            alertsCount: networkData.alerts.length,
+            alerts: networkData.alerts,
+            trafficRate: networkData.trafficRate,
+            connectionStats: networkData.connectionStats,
+          };
+          
+          if (networkData.alerts.length > 0) {
+            hasAlerts = true;
+            logger.warn(`Network anomalies detected: ${networkData.alerts.length} alerts`);
+            
+            // 检测到DDoS攻击，发送Critical邮件
+            const ddosAlerts = networkData.alerts.filter(a => a.type === 'connection_flood' && a.severity === 'critical');
+            if (ddosAlerts.length > 0) {
+              emailAlertService.sendAlert({
+                level: 'critical',
+                title: 'DDoS Attack Detected',
+                message: `Potential DDoS attack detected on node ${config.name}`,
+                details: ddosAlerts.map(a => ({
+                  type: a.type,
+                  message: a.message,
+                  details: a.details,
+                })),
+                timestamp: new Date(),
+              }, config.name).catch(err => logger.error('Failed to send DDoS alert email:', err));
+            }
+          }
+        }
+      } catch (error) {
+        logger.debug('Network monitor check failed:', error);
+      }
+
+      // 4. 文件完整性监控
+      try {
+        const fileData = await fileMonitor.checkIntegrity();
+        if (fileData.enabled && fileData.baselineInitialized) {
+          securityData.files = {
+            enabled: fileData.enabled,
+            baselineInitialized: fileData.baselineInitialized,
+            filesMonitored: fileData.filesMonitored,
+            changesCount: fileData.changes.length,
+            changes: fileData.changes.slice(0, 20), // 最多发送20个变更
+            summary: fileData.summary,
+          };
+          
+          if (fileData.changes.length > 0) {
+            hasAlerts = true;
+            logger.warn(`File integrity changes detected: ${fileData.changes.length} changes`);
+            
+            // 检测到Critical文件变更，发送邮件
+            const criticalChanges = fileData.changes.filter(c => c.severity === 'critical');
+            if (criticalChanges.length > 0) {
+              emailAlertService.sendAlert({
+                level: 'critical',
+                title: 'Critical File Integrity Violation',
+                message: `Critical system files have been modified on node ${config.name}`,
+                details: criticalChanges.map(c => ({
+                  path: c.path,
+                  changeType: c.changeType,
+                  oldHash: c.oldInfo?.hash,
+                  newHash: c.newInfo?.hash,
+                })),
+                timestamp: new Date(),
+              }, config.name).catch(err => logger.error('Failed to send file integrity alert email:', err));
+            }
+          }
+        }
+      } catch (error) {
+        logger.debug('File monitor check failed:', error);
+      }
+
+      // 附加安全数据到心跳
+      if (Object.keys(securityData).length > 0) {
+        (heartbeatData as any).security = securityData;
+      }
+
+      if (hasAlerts) {
+        logger.info('Security alerts included in heartbeat');
+      }
 
       const masterUrl = config.masterUrl.replace(/\/$/, '');
       const response = await axios.post(

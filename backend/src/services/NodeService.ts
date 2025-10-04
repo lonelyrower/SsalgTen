@@ -174,6 +174,7 @@ export class NodeService {
       unknownNodes: number;
       totalCountries: number;
       totalProviders: number;
+      securityEvents: number;
     };
     ts: number;
   } | null = null;
@@ -273,66 +274,84 @@ export class NodeService {
       ) {
         return this.nodesCache.data;
       }
-      // 1) 一次性取所有节点（按创建时间倒序）
-      const nodes = await prisma.node.findMany({
-        select: BASE_NODE_SELECT,
-        orderBy: { createdAt: "desc" },
+
+      // 添加查询超时保护
+      const queryTimeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Query timeout")), 30000); // 30秒超时
       });
 
-      if (nodes.length === 0) return [];
+      const nodesQuery = (async () => {
+        // 1) 一次性取所有节点（按创建时间倒序），限制字段
+        const nodes = await prisma.node.findMany({
+          select: BASE_NODE_SELECT,
+          orderBy: { createdAt: "desc" },
+        });
 
-      // 2) 使用原生SQL一次性获取每个节点的最新心跳（避免 N+1 查询）
-      // 注意：列名为 camelCase，需使用双引号；表名为映射后的 heartbeat_logs
-      const latestRows = await prisma.$queryRawUnsafe<
-        Array<{
-          nodeId: string;
-          timestamp: Date;
-          status: string;
-          uptime: number | null;
-          cpuUsage: number | null;
-          memoryUsage: number | null;
-          diskUsage: number | null;
-        }>
-      >(`
-        SELECT DISTINCT ON ("nodeId")
-          "nodeId",
-          "timestamp",
-          "status",
-          "uptime",
-          "cpuUsage",
-          "memoryUsage",
-          "diskUsage"
-        FROM "heartbeat_logs"
-        ORDER BY "nodeId", "timestamp" DESC
-      `);
+        if (nodes.length === 0) return [];
 
-      const latestMap = new Map<string, (typeof latestRows)[number]>();
-      for (const r of latestRows) {
-        latestMap.set(r.nodeId, r);
-      }
+        // 2) 使用原生SQL一次性获取每个节点的最新心跳（避免 N+1 查询）
+        // 优化：只获取最近7天的心跳数据，进一步减少查询负载
+        const latestRows = await prisma.$queryRawUnsafe<
+          Array<{
+            nodeId: string;
+            timestamp: Date;
+            status: string;
+            uptime: number | null;
+            cpuUsage: number | null;
+            memoryUsage: number | null;
+            diskUsage: number | null;
+          }>
+        >(`
+          SELECT DISTINCT ON ("nodeId")
+            "nodeId",
+            "timestamp",
+            "status",
+            "uptime",
+            "cpuUsage",
+            "memoryUsage",
+            "diskUsage"
+          FROM "heartbeat_logs"
+          WHERE "timestamp" > NOW() - INTERVAL '7 days'
+          ORDER BY "nodeId", "timestamp" DESC
+        `);
 
-      // 3) 组装返回（不再 include 关系，显著降低查询负载）
-      const result = nodes.map((node): NodeWithStats => {
-        const lh = latestMap.get(node.id);
-        return {
-          ...node,
-          provider: node.asnName || node.provider,
-          lastHeartbeat: lh
-            ? {
-                timestamp: lh.timestamp,
-                status: lh.status,
-                uptime: lh.uptime ?? null,
-              }
-            : undefined,
-          cpuUsage: lh?.cpuUsage ?? null,
-          memoryUsage: lh?.memoryUsage ?? null,
-          diskUsage: lh?.diskUsage ?? null,
-        };
-      });
+        const latestMap = new Map<string, (typeof latestRows)[number]>();
+        for (const r of latestRows) {
+          latestMap.set(r.nodeId, r);
+        }
+
+        // 3) 组装返回（不再 include 关系，显著降低查询负载）
+        const result = nodes.map((node): NodeWithStats => {
+          const lh = latestMap.get(node.id);
+          return {
+            ...node,
+            provider: node.asnName || node.provider,
+            lastHeartbeat: lh
+              ? {
+                  timestamp: lh.timestamp,
+                  status: lh.status,
+                  uptime: lh.uptime ?? null,
+                }
+              : undefined,
+            cpuUsage: lh?.cpuUsage ?? null,
+            memoryUsage: lh?.memoryUsage ?? null,
+            diskUsage: lh?.diskUsage ?? null,
+          };
+        });
+        return result;
+      })();
+
+      // 使用Promise.race实现超时控制
+      const result = await Promise.race([nodesQuery, queryTimeout]);
       this.nodesCache = { data: result, ts: Date.now() };
       return result;
     } catch (error) {
       logger.error("Failed to fetch nodes:", error);
+      // 如果缓存存在，返回缓存数据而不是抛错
+      if (this.nodesCache && this.nodesCache.data.length > 0) {
+        logger.warn("Returning stale cache due to query error");
+        return this.nodesCache.data;
+      }
       throw new Error("Failed to fetch nodes");
     }
   }
@@ -872,6 +891,7 @@ export class NodeService {
     unknownNodes: number;
     totalCountries: number;
     totalProviders: number;
+    securityEvents: number;
   }> {
     try {
       if (
@@ -880,22 +900,46 @@ export class NodeService {
       ) {
         return this.statsCache.data;
       }
-      const [totalNodes, statusCounts, countries, providers] =
-        await Promise.all([
-          prisma.node.count(),
-          prisma.node.groupBy({
-            by: ["status"],
-            _count: true,
-          }),
-          prisma.node.findMany({
-            distinct: ["country"],
-            select: { country: true },
-          }),
-          prisma.node.findMany({
-            distinct: ["provider"],
-            select: { provider: true },
-          }),
-        ]);
+
+      // 统计最近24小时的安全事件
+      const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      const [
+        totalNodes,
+        statusCounts,
+        countries,
+        providers,
+        securityEventsCount,
+      ] = await Promise.all([
+        prisma.node.count(),
+        prisma.node.groupBy({
+          by: ["status"],
+          _count: true,
+        }),
+        prisma.node.findMany({
+          distinct: ["country"],
+          select: { country: true },
+        }),
+        prisma.node.findMany({
+          distinct: ["provider"],
+          select: { provider: true },
+        }),
+        prisma.eventLog.count({
+          where: {
+            timestamp: { gte: last24Hours },
+            type: {
+              in: [
+                "SSH_BRUTEFORCE",
+                "INTRUSION_DETECTED",
+                "MALWARE_DETECTED",
+                "DDOS_ATTACK",
+                "ANOMALY_DETECTED",
+                "SECURITY_ALERT",
+              ],
+            },
+          },
+        }),
+      ]);
 
       const statusMap = statusCounts.reduce(
         (acc, item) => {
@@ -912,6 +956,7 @@ export class NodeService {
         unknownNodes: statusMap[NodeStatus.UNKNOWN] || 0,
         totalCountries: countries.length,
         totalProviders: providers.length,
+        securityEvents: securityEventsCount,
       };
       this.statsCache = { data, ts: Date.now() };
       return data;

@@ -78,8 +78,8 @@ export const HomePage = () => {
     onlineNodes: stats?.onlineNodes || 0,
     totalCountries: stats?.totalCountries || 0,
     totalProviders: stats?.totalProviders || 0,
-    totalTests: stats?.totalTests || 0 // 网络检测数据，后端暂未实现时默认为0
-  }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders, stats?.totalTests]);
+    securityEvents: stats?.securityEvents || 0 // 安全事件统计（SSH暴力破解等）
+  }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders, stats?.securityEvents]);
 
   // 如果正在加载，显示加载状态
   if (isInitialLoad && nodes.length === 0 && !loadTimeout) {

@@ -12,6 +12,7 @@ import { logger } from "../utils/logger";
 import { eventService } from "../services/EventService";
 import { ipInfoService } from "../services/IPInfoService";
 import { sanitizeNode, sanitizeNodes } from "../utils/serialize";
+import { prisma } from "../lib/prisma";
 
 // ---- Broadcast throttling helpers ----
 const BROADCAST_MIN_INTERVAL_MS = parseInt(
@@ -123,9 +124,59 @@ export class NodeController {
         return;
       }
 
+      // 获取节点最近的安全事件（最近24小时）
+      // 使用EventLog表，筛选type包含SECURITY、SSH、MALWARE、DDOS、INTRUSION、ANOMALY的事件
+      const securityEvents = await prisma.eventLog.findMany({
+        where: {
+          nodeId: id,
+          timestamp: {
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          },
+          type: {
+            in: [
+              "SSH_BRUTEFORCE",
+              "MALWARE_DETECTED",
+              "DDOS_ATTACK",
+              "INTRUSION_DETECTED",
+              "ANOMALY_DETECTED",
+              "SUSPICIOUS_ACTIVITY",
+            ],
+          },
+        },
+        orderBy: {
+          timestamp: "desc",
+        },
+        take: 20,
+        select: {
+          id: true,
+          type: true,
+          message: true,
+          details: true,
+          timestamp: true,
+        },
+      });
+
+      // 格式化安全事件以匹配前端接口
+      const formattedSecurityEvents = securityEvents.map((event) => ({
+        id: event.id,
+        type: event.type,
+        severity:
+          event.type === "MALWARE_DETECTED" ||
+          event.type === "DDOS_ATTACK" ||
+          event.type === "INTRUSION_DETECTED"
+            ? "critical"
+            : "warning",
+        description: event.message || "",
+        timestamp: event.timestamp.toISOString(),
+        metadata: event.details as Record<string, unknown> | undefined,
+      }));
+
       const response: ApiResponse = {
         success: true,
-        data: sanitizeNode(node),
+        data: {
+          ...sanitizeNode(node),
+          securityEvents: formattedSecurityEvents,
+        },
       };
 
       res.json(response);
@@ -720,25 +771,154 @@ export class NodeController {
 
       await nodeService.recordHeartbeat(agentId, heartbeatData);
 
-      // 可选：从心跳中解析安全告警并写入事件
+      // 从心跳中解析安全告警并写入事件
       try {
         const node = await nodeService.getNodeByAgentId(agentId);
-        if (node && (heartbeatData as any)?.security?.ssh?.alerts?.length) {
-          for (const alert of (heartbeatData as any).security.ssh.alerts) {
-            await eventService.createEvent(
-              node.id,
-              "SSH_BRUTEFORCE",
-              `SSH brute force attempts detected`,
-              {
-                ip: alert.ip,
-                count: alert.count,
-                windowMinutes: alert.windowMinutes,
-              },
+        if (!node) {
+          logger.warn(`Node not found for agent ${agentId}`);
+        } else {
+          const security = (heartbeatData as any)?.security;
+
+          // 1. SSH暴力破解
+          if (security?.ssh?.alerts?.length) {
+            for (const alert of security.ssh.alerts) {
+              await eventService.createEvent(
+                node.id,
+                "SSH_BRUTEFORCE",
+                `SSH brute force detected from ${alert.ip}`,
+                {
+                  ip: alert.ip,
+                  count: alert.count,
+                  windowMinutes: alert.windowMinutes,
+                },
+              );
+            }
+            logger.info(
+              `Recorded ${security.ssh.alerts.length} SSH brute force alerts for node ${node.name}`,
+            );
+          }
+
+          // 2. 进程异常/恶意软件
+          if (security?.processes?.suspiciousProcesses?.length) {
+            for (const proc of security.processes.suspiciousProcesses) {
+              // 挖矿程序 → MALWARE_DETECTED
+              if (
+                proc.reason.includes("miner") ||
+                proc.reason.includes("crypto")
+              ) {
+                await eventService.createEvent(
+                  node.id,
+                  "MALWARE_DETECTED",
+                  `Cryptocurrency miner detected: ${proc.process.name}`,
+                  {
+                    process: proc.process,
+                    reason: proc.reason,
+                    severity: proc.severity,
+                  },
+                );
+              }
+              // 其他可疑进程 → ANOMALY_DETECTED
+              else if (
+                proc.severity === "critical" ||
+                proc.severity === "high"
+              ) {
+                await eventService.createEvent(
+                  node.id,
+                  "ANOMALY_DETECTED",
+                  `Suspicious process: ${proc.process.name}`,
+                  {
+                    process: proc.process,
+                    reason: proc.reason,
+                    severity: proc.severity,
+                  },
+                );
+              }
+            }
+            logger.info(
+              `Recorded ${security.processes.suspiciousProcesses.length} process alerts for node ${node.name}`,
+            );
+          }
+
+          // 3. 网络异常/DDoS攻击
+          if (security?.network?.alerts?.length) {
+            for (const alert of security.network.alerts) {
+              // SYN Flood / 连接洪水 → DDOS_ATTACK
+              if (
+                alert.type === "connection_flood" &&
+                alert.severity === "critical"
+              ) {
+                await eventService.createEvent(
+                  node.id,
+                  "DDOS_ATTACK",
+                  alert.message,
+                  {
+                    type: alert.type,
+                    severity: alert.severity,
+                    details: alert.details,
+                  },
+                );
+              }
+              // 流量异常 → ANOMALY_DETECTED
+              else if (alert.type === "traffic_spike") {
+                await eventService.createEvent(
+                  node.id,
+                  "ANOMALY_DETECTED",
+                  alert.message,
+                  {
+                    type: alert.type,
+                    severity: alert.severity,
+                    details: alert.details,
+                  },
+                );
+              }
+            }
+            logger.info(
+              `Recorded ${security.network.alerts.length} network alerts for node ${node.name}`,
+            );
+          }
+
+          // 4. 文件完整性变更
+          if (security?.files?.changes?.length) {
+            for (const change of security.files.changes) {
+              // Critical文件或修改 → INTRUSION_DETECTED
+              if (
+                change.severity === "critical" ||
+                change.changeType === "modified"
+              ) {
+                await eventService.createEvent(
+                  node.id,
+                  "INTRUSION_DETECTED",
+                  `Critical file ${change.changeType}: ${change.path}`,
+                  {
+                    path: change.path,
+                    changeType: change.changeType,
+                    severity: change.severity,
+                    oldHash: change.oldInfo?.hash,
+                    newHash: change.newInfo?.hash,
+                  },
+                );
+              }
+              // 权限变更 → ANOMALY_DETECTED
+              else if (change.changeType === "permissions") {
+                await eventService.createEvent(
+                  node.id,
+                  "ANOMALY_DETECTED",
+                  `File permissions changed: ${change.path}`,
+                  {
+                    path: change.path,
+                    oldPermissions: change.oldInfo?.permissions,
+                    newPermissions: change.newInfo?.permissions,
+                  },
+                );
+              }
+            }
+            logger.info(
+              `Recorded ${security.files.changes.length} file integrity alerts for node ${node.name}`,
             );
           }
         }
       } catch (e) {
-        logger.debug("Optional security alerts handling failed:", e);
+        logger.error("Security alerts handling failed:", e);
       }
 
       const response: ApiResponse = {

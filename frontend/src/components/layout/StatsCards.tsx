@@ -2,14 +2,14 @@
 import { memo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Server, Building, Activity, TrendingUp } from 'lucide-react';
+import { Globe, Server, Building, Shield, TrendingUp } from 'lucide-react';
 
 interface StatsCardsProps {
   totalNodes?: number;
   onlineNodes?: number;
   totalCountries?: number;
   totalProviders?: number;
-  totalTests?: number;
+  securityEvents?: number;
 }
 
 const StatsCardsComponent = ({ 
@@ -17,7 +17,7 @@ const StatsCardsComponent = ({
   onlineNodes = 0, 
   totalCountries = 0, 
   totalProviders = 0,
-  totalTests = 0
+  securityEvents = 0
 }: StatsCardsProps) => {
   const offlineNodes = totalNodes - onlineNodes;
 
@@ -53,12 +53,12 @@ const StatsCardsComponent = ({
       bgGradient: 'from-purple-500/10 to-pink-500/10'
     },
     {
-      title: '网络检测',
-      value: totalTests > 0 ? totalTests.toLocaleString() : '0',
-      subtitle: totalTests > 0 ? '次检测完成' : '待启动检测',
-      icon: <Activity className="h-6 w-6 text-orange-400" />,
-      badge: totalTests > 0 ? '活跃' : '待机',
-      badgeVariant: totalTests > 0 ? 'default' : 'outline' as const,
+      title: '安全事件',
+      value: securityEvents > 0 ? securityEvents.toLocaleString() : '0',
+      subtitle: securityEvents > 0 ? '检测到威胁' : '系统安全',
+      icon: <Shield className="h-6 w-6 text-orange-400" />,
+      badge: securityEvents > 0 ? '警惕' : '正常',
+      badgeVariant: securityEvents > 0 ? 'default' : 'outline' as const,
       gradient: 'from-orange-500 to-red-500',
       bgGradient: 'from-orange-500/10 to-red-500/10'
     }
