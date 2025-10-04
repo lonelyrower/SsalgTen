@@ -50,6 +50,111 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // 渲染配置输入控件
+  const renderConfigInput = (config: SystemConfig) => {
+    const inputType = config.inputType || 'text';
+    const currentValue = changedConfigs.get(config.key) ?? config.value;
+    const displayName = config.displayName || formatConfigKey(config.key);
+
+    // 解析 JSON 值
+    let parsedValue = currentValue;
+    try {
+      parsedValue = JSON.parse(currentValue);
+    } catch {
+      // 如果不是 JSON，使用原值
+    }
+
+    const handleChange = (newValue: string | boolean | number) => {
+      // 转换为 JSON 字符串存储（与后端一致）
+      const jsonValue = JSON.stringify(newValue);
+      handleConfigChange(config.key, jsonValue);
+    };
+
+    // 布尔类型 - 下拉框
+    if (inputType === 'boolean') {
+      return (
+        <>
+          <label className="sr-only" htmlFor={`config-${config.id}`}>
+            {displayName}
+          </label>
+          <select
+            id={`config-${config.id}`}
+            value={String(parsedValue)}
+            onChange={(e) => handleChange(e.target.value === 'true')}
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="true">✅ 启用</option>
+            <option value="false">❌ 禁用</option>
+          </select>
+        </>
+      );
+    }
+
+    // 下拉选择类型
+    if (inputType === 'select' && config.options && config.options.length > 0) {
+      return (
+        <>
+          <label className="sr-only" htmlFor={`config-${config.id}`}>
+            {displayName}
+          </label>
+          <select
+            id={`config-${config.id}`}
+            value={String(parsedValue)}
+            onChange={(e) => handleChange(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {config.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </>
+      );
+    }
+
+    // 数字类型 - 带单位和范围限制
+    if (inputType === 'number') {
+      return (
+        <div className="flex items-center space-x-2">
+          <label className="sr-only" htmlFor={`config-${config.id}`}>
+            {displayName}
+          </label>
+          <input
+            id={`config-${config.id}`}
+            type="number"
+            value={Number(parsedValue)}
+            onChange={(e) => handleChange(Number(e.target.value))}
+            min={config.min}
+            max={config.max}
+            className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          {config.unit && (
+            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              {config.unit}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // 文本类型 - 默认
+    return (
+      <>
+        <label className="sr-only" htmlFor={`config-${config.id}`}>
+          {displayName}
+        </label>
+        <input
+          id={`config-${config.id}`}
+          type="text"
+          value={String(parsedValue)}
+          onChange={(e) => handleChange(e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </>
+    );
+  };
+
   useEffect(() => {
     loadConfigs();
   }, []);
@@ -309,26 +414,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     return key.split('.').pop()?.replace(/_/g, ' ') || key;
   };
 
-  const getInputType = (key: string, value: string) => {
-    if (key.includes('password') || key.includes('secret') || key.includes('token')) {
-      return 'password';
-    }
-    if (
-      key.includes('port') ||
-      key.includes('timeout') ||
-      key.includes('interval') ||
-      key.includes('limit') ||
-      key.includes('window') ||
-      key.includes('threshold')
-    ) {
-      return 'number';
-    }
-    if (value === 'true' || value === 'false') {
-      return 'boolean';
-    }
-    return 'text';
-  };
-
   if (loading) {
     return (
       <div className={`${className} animate-pulse`}>
@@ -581,17 +666,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                           </div>
                           <div className="p-4 space-y-4">
                             {sshConfigs.map(config => {
-                              const inputType = getInputType(config.key, config.value);
-                              const currentValue = changedConfigs.get(config.key) ?? config.value;
                               const hasChanged = changedConfigs.has(config.key);
                               const meta = sshKeyMeta[config.key];
+                              const displayName = config.displayName || meta?.label || formatConfigKey(config.key);
                               return (
                                 <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1 min-w-0 mr-4">
                                       <div className="flex items-center space-x-2">
                                         <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {meta?.label || formatConfigKey(config.key)}
+                                          {displayName}
                                         </h4>
                                         {hasChanged && (
                                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -607,42 +691,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                       </p>
                                     </div>
                                     <div className="flex-shrink-0 w-64">
-                                      {inputType === 'boolean' ? (
-                                        <>
-                                          <label
-                                            className="sr-only"
-                                            htmlFor={`ssh-config-${config.id}`}
-                                          >
-                                            {meta?.label || formatConfigKey(config.key)}
-                                          </label>
-                                          <select
-                                            id={`ssh-config-${config.id}`}
-                                            value={currentValue}
-                                            onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                          >
-                                            <option value="true">启用</option>
-                                            <option value="false">禁用</option>
-                                          </select>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <label
-                                            className="sr-only"
-                                            htmlFor={`ssh-config-${config.id}`}
-                                          >
-                                            {meta?.label || formatConfigKey(config.key)}
-                                          </label>
-                                          <input
-                                            id={`ssh-config-${config.id}`}
-                                            type={inputType}
-                                            value={currentValue}
-                                            onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            step={inputType === 'number' ? 1 : undefined}
-                                          />
-                                        </>
-                                      )}
+                                      {renderConfigInput(config)}
                                     </div>
                                   </div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
@@ -672,9 +721,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                       {/* 其余配置项 */}
                       <div className="space-y-6">
                         {otherConfigs.map(config => {
-                          const inputType = getInputType(config.key, config.value);
-                          const currentValue = changedConfigs.get(config.key) ?? config.value;
                           const hasChanged = changedConfigs.has(config.key);
+                          const displayName = config.displayName || formatConfigKey(config.key);
 
                           return (
                             <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -682,7 +730,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                 <div className="flex-1 min-w-0 mr-4">
                                   <div className="flex items-center space-x-2">
                                     <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {formatConfigKey(config.key)}
+                                      {displayName}
                                     </h3>
                                     {hasChanged && (
                                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -700,42 +748,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                   )}
                                 </div>
                                 <div className="flex-shrink-0 w-64">
-                                  {inputType === 'boolean' ? (
-                                    <>
-                                      <label
-                                        className="sr-only"
-                                        htmlFor={`config-${config.id}`}
-                                      >
-                                        {formatConfigKey(config.key)}
-                                      </label>
-                                      <select
-                                        id={`config-${config.id}`}
-                                        value={currentValue}
-                                        onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                      >
-                                        <option value="true">启用</option>
-                                        <option value="false">禁用</option>
-                                      </select>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <label
-                                        className="sr-only"
-                                        htmlFor={`config-${config.id}`}
-                                      >
-                                        {formatConfigKey(config.key)}
-                                      </label>
-                                      <input
-                                        id={`config-${config.id}`}
-                                        type={inputType}
-                                        value={currentValue}
-                                        onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        step={inputType === 'number' ? 1 : undefined}
-                                      />
-                                    </>
-                                  )}
+                                  {renderConfigInput(config)}
                                 </div>
                               </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">

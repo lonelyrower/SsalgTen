@@ -198,6 +198,13 @@ export interface SystemConfig {
   description?: string;
   createdAt: string;
   updatedAt: string;
+  // 元数据字段
+  displayName?: string;
+  inputType?: 'text' | 'number' | 'boolean' | 'select' | 'textarea';
+  options?: string[];
+  unit?: string;
+  min?: number;
+  max?: number;
 }
 
 // 地图配置接口
