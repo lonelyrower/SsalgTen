@@ -40,9 +40,10 @@ const MapSkeleton = () => (
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
-  const { nodes, stats } = useRealTime();
+  const { nodes, stats, connected } = useRealTime();
   const { user } = useAuth();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [loadTimeout, setLoadTimeout] = useState(false);
   const error: string | null = null;
 
   const handleNodeClick = useCallback((node: NodeData) => {
@@ -53,8 +54,22 @@ export const HomePage = () => {
   useEffect(() => {
     if (nodes.length > 0) {
       setIsInitialLoad(false);
+      setLoadTimeout(false);
     }
   }, [nodes]);
+
+  // 添加加载超时机制（10秒后即使没有数据也显示页面）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isInitialLoad && nodes.length === 0) {
+        console.warn('Data loading timeout, showing page anyway');
+        setIsInitialLoad(false);
+        setLoadTimeout(true);
+      }
+    }, 10000); // 10秒超时
+
+    return () => clearTimeout(timer);
+  }, [isInitialLoad, nodes.length]);
 
 
   // 缓存统计数据以防止不必要的重新渲染
@@ -67,13 +82,13 @@ export const HomePage = () => {
   }), [stats?.totalNodes, stats?.onlineNodes, stats?.totalCountries, stats?.totalProviders, stats?.totalTests]);
 
   // 如果正在加载，显示加载状态
-  if (isInitialLoad && nodes.length === 0) {
+  if (isInitialLoad && nodes.length === 0 && !loadTimeout) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-cyan-900/20">
         <Header />
         <LoadingSpinner 
           fullScreen 
-          text="正在加载节点数据..." 
+          text={connected ? "正在加载节点数据..." : "正在连接服务器..."}
           size="xl"
           variant="elegant"
         />

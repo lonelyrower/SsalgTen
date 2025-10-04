@@ -975,6 +975,15 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
         ) {
           return "";
         }
+        
+        // 检查是否已包含端口号，如果没有则添加默认端口（针对IP地址）
+        const hasPort = hostHdr.includes(":");
+        if (!hasPort) {
+          // 如果是IP地址且没有端口，添加前端端口
+          const frontendPort = process.env.FRONTEND_PORT || "3000";
+          return `${proto}://${hostHdr}:${frontendPort}`;
+        }
+        
         return `${proto}://${hostHdr}`;
       };
 

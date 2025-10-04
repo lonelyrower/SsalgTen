@@ -261,6 +261,19 @@ export async function seedSystemSettings() {
         category: "diagnostics",
         description: "Maximum concurrent diagnostic tests per agent",
       },
+      // 地图配置 - 支持后台动态切换地图源
+      {
+        key: "map.provider",
+        value: JSON.stringify("carto"),
+        category: "map",
+        description: "Map tile provider (carto, openstreetmap, mapbox)",
+      },
+      {
+        key: "map.api_key",
+        value: JSON.stringify(""),
+        category: "map",
+        description: "Map API key (required for mapbox)",
+      },
     ];
 
     for (const setting of defaultSettings) {

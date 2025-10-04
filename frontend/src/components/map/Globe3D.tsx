@@ -25,13 +25,15 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
       const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
 
-      // 设置 Cesium Ion Access Token（仅 Mapbox 时需要）
-      if (provider === 'mapbox' && apiKey) {
-        // Mapbox 不需要 Ion，这里只是保持兼容性
-        Cesium.Ion.defaultAccessToken = '';
-      } else {
-        // 使用公共 token（用于其他可能的 Ion 功能）
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5N2UyMjcwOS00MDY1LTQxYjEtYjZjMy00YTU0ZTg1YmUwYjgiLCJpZCI6OTc3MSwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU1NTg5NjM1Nn0.SJ1HGHpZLqfQU5IJ2PNgcG5pZdcWQT2X_r9VKzTw8Y4';
+      // 完全禁用 Cesium Ion 避免沙盒错误
+      // 设置为空token并禁用所有Ion相关功能
+      Cesium.Ion.defaultAccessToken = '';
+      
+      // 禁用Ion服务器连接（通过设置为about:blank避免请求）
+      try {
+        (Cesium.Ion as any).defaultServer = 'about:blank';
+      } catch {
+        // 忽略错误，某些Cesium版本可能不支持
       }
 
       try {
@@ -89,19 +91,21 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
           // UI 配置
           baseLayerPicker: false, // 禁用底图选择器（我们自己管理）
-        geocoder: false, // 禁用地理编码搜索
-        homeButton: false, // 禁用主页按钮
-        sceneModePicker: false, // 禁用场景模式选择器
-        navigationHelpButton: false, // 禁用导航帮助
-        animation: false, // 禁用动画控制
-        timeline: false, // 禁用时间轴
-        fullscreenButton: false, // 禁用全屏按钮
-        vrButton: false, // 禁用 VR 按钮
-        
-        // 性能优化
-        requestRenderMode: true, // 请求渲染模式
-        maximumRenderTimeChange: Infinity, // 最大渲染时间变化
-      });
+          geocoder: false, // 禁用地理编码搜索
+          homeButton: false, // 禁用主页按钮
+          sceneModePicker: false, // 禁用场景模式选择器
+          navigationHelpButton: false, // 禁用导航帮助
+          animation: false, // 禁用动画控制
+          timeline: false, // 禁用时间轴
+          fullscreenButton: false, // 禁用全屏按钮
+          vrButton: false, // 禁用 VR 按钮
+          selectionIndicator: false, // 禁用选择指示器（避免 shader 错误）
+          infoBox: false, // 禁用信息框（使用自定义提示）
+          
+          // 场景配置
+          requestRenderMode: true, // 启用按需渲染
+          maximumRenderTimeChange: Infinity, // 防止自动渲染
+        });
 
       viewerRef.current = viewer;
 
@@ -259,29 +263,36 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
       // 慢速自动旋转地球
       let lastTime = Date.now();
-      viewer.clock.onTick.addEventListener(() => {
+      const tickListener = () => {
         const now = Date.now();
         const deltaTime = (now - lastTime) / 1000;
         lastTime = now;
         
         // 每秒旋转 0.02 弧度（约 1.15 度）
-        viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.02 * deltaTime);
-      });
+        if (viewer && !viewer.isDestroyed()) {
+          viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.02 * deltaTime);
+        }
+      };
+      
+      viewer.clock.onTick.addEventListener(tickListener);
 
-        setIsLoading(false);
-
-        // 清理
-        return () => {
-          viewer.destroy();
-        };
-      } catch (error) {
-        console.error('Cesium initialization error:', error);
-        setIsLoading(false);
-      }
-    };
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Cesium initialization error:', error);
+      setIsLoading(false);
+    }
+  };
 
     // 调用初始化函数
     initCesium();
+    
+    // 清理函数 - 非常重要！防止内存泄漏
+    return () => {
+      if (viewerRef.current && !viewerRef.current.isDestroyed()) {
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+      }
+    };
   }, [nodes, onNodeClick]);
 
   // 控制函数
@@ -318,7 +329,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
       {/* 加载指示器 */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm z-50">
           <div className="flex flex-col items-center gap-4">
             <Globe className="w-12 h-12 animate-spin text-blue-500" />
             <p className="text-white text-lg">加载 3D 地球...</p>
@@ -326,8 +337,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         </div>
       )}
 
-      {/* 控制按钮 - 移到左侧避免与Cesium控件重叠 */}
-      <div className="absolute bottom-4 left-4 flex flex-row gap-2">
+      {/* 控制按钮 - 移到右下角避免与Cesium原生控件重叠 */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
         <Button
           variant="secondary"
           size="icon"
@@ -355,32 +366,6 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         >
           <Home className="h-4 w-4" />
         </Button>
-      </div>
-
-      {/* 统计信息 */}
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Globe className="h-5 w-5 text-blue-500" />
-          <span className="font-semibold text-gray-900">节点统计</span>
-        </div>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between gap-4">
-            <span className="text-gray-600">总数:</span>
-            <span className="font-medium text-gray-900">{nodes.length}</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-green-600">在线:</span>
-            <span className="font-medium text-green-600">
-              {nodes.filter(n => n.status === 'online').length}
-            </span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-red-600">离线:</span>
-            <span className="font-medium text-red-600">
-              {nodes.filter(n => n.status === 'offline').length}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );

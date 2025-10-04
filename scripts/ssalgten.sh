@@ -3838,21 +3838,50 @@ build_and_start_services() {
     docker_compose -f $compose_file up -d database
     log_info "等待数据库启动..."
     
-    # 等待数据库健康检查通过
-    local max_attempts=30
+    # 等待数据库健康检查通过 (增加等待时间适配低内存VPS)
+    local max_attempts=60  # 从30增加到60次
     local attempt=0
+    local check_interval=3  # 从2秒增加到3秒
+    
+    log_info "[INFO] 数据库启动可能需要1-3分钟，请耐心等待..."
+    log_info "[INFO] 低内存VPS (1G-2G) 可能需要更长时间，这是正常现象"
+    
     while [ $attempt -lt $max_attempts ]; do
-        if docker_compose -f $compose_file exec postgres pg_isready -U ssalgten -d ssalgten > /dev/null 2>&1; then
+        # 检查容器是否还在运行
+        if ! docker_compose -f $compose_file ps database | grep -q "Up"; then
+            log_error "数据库容器已停止，检查日志..."
+            echo ""
+            echo "=== 数据库日志 ==="
+            docker_compose -f $compose_file logs --tail=50 database
+            echo ""
+            log_error "数据库容器启动失败，请检查上方日志"
+            exit 1
+        fi
+        
+        # 尝试连接数据库
+        if docker_compose -f $compose_file exec -T postgres pg_isready -U ssalgten -d ssalgten > /dev/null 2>&1; then
             log_success "数据库已启动完成"
             break
         fi
+        
         attempt=$((attempt + 1))
-        echo "等待数据库启动... ($attempt/$max_attempts)"
-        sleep 2
+        local elapsed=$((attempt * check_interval))
+        echo "等待数据库启动... ($attempt/$max_attempts) - 已等待 ${elapsed}秒"
+        sleep $check_interval
     done
     
     if [ $attempt -eq $max_attempts ]; then
-        log_error "数据库启动超时"
+        log_error "数据库启动超时 (等待了 $((max_attempts * check_interval))秒)"
+        echo ""
+        echo "=== 数据库日志 ==="
+        docker_compose -f $compose_file logs --tail=100 database
+        echo ""
+        log_error "可能的原因:"
+        echo "  1. 内存不足 (建议至少2G内存)"
+        echo "  2. 磁盘空间不足"
+        echo "  3. Docker资源限制"
+        echo ""
+        log_info "建议: 检查系统资源后重试，或使用镜像安装方式"
         exit 1
     fi
     
@@ -3987,25 +4016,47 @@ show_deployment_result() {
     
     echo -e "${GREEN}✅ SsalgTen 已成功部署${NC}"
     echo ""
-    echo -e "${CYAN}访问地址:${NC} $access_url"
-    echo -e "${CYAN}管理后台:${NC} $access_url/admin"
-    echo -e "${CYAN}API接口:${NC} $access_url/api"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${CYAN}📍 访问地址${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "  🌐 前端页面: ${GREEN}$access_url${NC}"
+    echo -e "  🔧 管理后台: ${GREEN}$access_url/admin${NC}"
+    echo -e "  📡 API接口:  ${GREEN}$access_url/api${NC}"
     echo ""
-    echo -e "${YELLOW}默认管理员账户:${NC}"
-    echo "  用户名: admin"
-    echo "  密码: admin123"
-    echo "  ${RED}⚠️ 请立即登录后台修改默认密码！${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${YELLOW}🔑 默认登录账户${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "  👤 管理员账户:"
+    echo -e "     用户名: ${GREEN}admin${NC}"
+    echo -e "     密码:   ${GREEN}admin123${NC}"
     echo ""
-    echo -e "${CYAN}应用目录:${NC} $APP_DIR"
-    echo -e "${CYAN}配置文件:${NC} $APP_DIR/.env"
+    echo -e "  ${RED}⚠️  安全提醒: 首次登录后请立即修改默认密码！${NC}"
     echo ""
-    echo -e "${BLUE}常用命令:${NC}"
-    echo "  查看状态: ssalgten status"
-    echo "  查看日志: ssalgten logs"
-    echo "  重启服务: ssalgten restart"
-    echo "  停止服务: ssalgten stop"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BLUE}📂 系统信息${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "  应用目录: ${CYAN}$APP_DIR${NC}"
+    echo -e "  配置文件: ${CYAN}$APP_DIR/.env${NC}"
+    echo -e "  前端端口: ${CYAN}${FRONTEND_PORT:-3000}${NC}"
+    echo -e "  后端端口: ${CYAN}${BACKEND_PORT:-3001}${NC}"
     echo ""
-    log_info "提示: 首次部署需等待1-2分钟完成数据库初始化"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BLUE}💻 常用管理命令${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  ssalgten status   - 查看系统状态"
+    echo "  ssalgten logs     - 查看运行日志"
+    echo "  ssalgten restart  - 重启所有服务"
+    echo "  ssalgten stop     - 停止所有服务"
+    echo "  ssalgten update   - 更新系统版本"
+    echo "  ssalgten backup   - 备份数据库"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${YELLOW}💡 重要提示${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  ⏱️  首次部署需等待1-2分钟完成数据库初始化"
+    echo "  📊 数据库初始化完成后才能正常登录和使用"
+    echo "  🔍 如遇问题请运行: ssalgten logs 查看详细日志"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 }
 
@@ -4332,16 +4383,50 @@ EOF
         docker_compose -f "$compose_file" up -d --remove-orphans
         
         echo ""
-        log_success "🎉 部署完成！"
+        log_header "🎉 部署完成！"
         echo ""
-        echo "访问地址:"
+        
+        local access_url
         if [[ "$ENABLE_SSL" == "true" ]]; then
-            echo "  🌐 https://$DOMAIN"
+            access_url="https://$DOMAIN"
         else
-            echo "  🌐 http://$(get_server_ip):${FRONTEND_PORT:-3000}"
+            access_url="http://$(get_server_ip):${FRONTEND_PORT:-3000}"
         fi
+        
+        echo -e "${GREEN}✅ SsalgTen 已成功部署 (镜像模式)${NC}"
         echo ""
-        log_info "提示: 首次部署需等待1-2分钟完成数据库初始化"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${CYAN}📍 访问地址${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "  🌐 前端页面: ${GREEN}$access_url${NC}"
+        echo -e "  🔧 管理后台: ${GREEN}$access_url/admin${NC}"
+        echo -e "  📡 API接口:  ${GREEN}$access_url/api${NC}"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${YELLOW}🔑 默认登录账户${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "  👤 管理员账户:"
+        echo -e "     用户名: ${GREEN}admin${NC}"
+        echo -e "     密码:   ${GREEN}admin123${NC}"
+        echo ""
+        echo -e "  ${RED}⚠️  安全提醒: 首次登录后请立即修改默认密码！${NC}"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${BLUE}💻 常用管理命令${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "  ssalgten status   - 查看系统状态"
+        echo "  ssalgten logs     - 查看运行日志"
+        echo "  ssalgten restart  - 重启所有服务"
+        echo "  ssalgten stop     - 停止所有服务"
+        echo "  ssalgten update   - 更新系统版本"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${YELLOW}💡 重要提示${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "  ⏱️  首次部署需等待1-2分钟完成数据库初始化"
+        echo "  📊 数据库初始化完成后才能正常登录和使用"
+        echo "  🔍 如遇问题请运行: ssalgten logs 查看详细日志"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
         exit 0
     else
@@ -4386,16 +4471,50 @@ EOF
         docker_compose -f "$compose_file" up -d --remove-orphans
         
         echo ""
-        log_success "🎉 部署完成！"
+        log_header "🎉 部署完成！"
         echo ""
-        echo "访问地址:"
+        
+        local access_url
         if [[ "$ENABLE_SSL" == "true" ]]; then
-            echo "  🌐 https://$DOMAIN"
+            access_url="https://$DOMAIN"
         else
-            echo "  🌐 http://$(get_server_ip):${FRONTEND_PORT:-3000}"
+            access_url="http://$(get_server_ip):${FRONTEND_PORT:-3000}"
         fi
+        
+        echo -e "${GREEN}✅ SsalgTen 已成功部署 (源码模式)${NC}"
         echo ""
-        log_info "提示: 首次部署需等待1-2分钟完成数据库初始化"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${CYAN}📍 访问地址${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "  🌐 前端页面: ${GREEN}$access_url${NC}"
+        echo -e "  🔧 管理后台: ${GREEN}$access_url/admin${NC}"
+        echo -e "  📡 API接口:  ${GREEN}$access_url/api${NC}"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${YELLOW}🔑 默认登录账户${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "  👤 管理员账户:"
+        echo -e "     用户名: ${GREEN}admin${NC}"
+        echo -e "     密码:   ${GREEN}admin123${NC}"
+        echo ""
+        echo -e "  ${RED}⚠️  安全提醒: 首次登录后请立即修改默认密码！${NC}"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${BLUE}💻 常用管理命令${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "  ssalgten status   - 查看系统状态"
+        echo "  ssalgten logs     - 查看运行日志"
+        echo "  ssalgten restart  - 重启所有服务"
+        echo "  ssalgten stop     - 停止所有服务"
+        echo "  ssalgten update   - 更新系统版本"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${YELLOW}💡 重要提示${NC}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "  ⏱️  首次部署需等待1-2分钟完成数据库初始化"
+        echo "  📊 数据库初始化完成后才能正常登录和使用"
+        echo "  🔍 如遇问题请运行: ssalgten logs 查看详细日志"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
         exit 0
     fi
