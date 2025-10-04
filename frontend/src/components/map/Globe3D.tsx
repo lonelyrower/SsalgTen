@@ -17,6 +17,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
   useEffect(() => {
     if (!containerRef.current) return;
+    // 防止重复初始化
+    if (viewerRef.current && !viewerRef.current.isDestroyed()) return;
 
     // 使用异步函数初始化 Cesium
     const initCesium = async () => {
@@ -25,15 +27,24 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
       const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
 
-      // 完全禁用 Cesium Ion 避免沙盒错误
+      // 完全禁用 Cesium Ion 避免沙盒错误和 401 错误
       // 设置为空token并禁用所有Ion相关功能
       Cesium.Ion.defaultAccessToken = '';
       
-      // 禁用Ion服务器连接（通过设置为about:blank避免请求）
+      // 禁用Ion服务器连接（防止任何网络请求）
       try {
-        (Cesium.Ion as any).defaultServer = 'about:blank';
+        (Cesium.Ion as any).defaultServer = '';
+        // 禁用资源检查
+        (Cesium.Ion as any).enabled = false;
       } catch {
         // 忽略错误，某些Cesium版本可能不支持
+      }
+      
+      // 禁用默认资源服务器
+      try {
+        (Cesium as any).buildModuleUrl.setBaseUrl = () => {};
+      } catch {
+        // 忽略
       }
 
       try {

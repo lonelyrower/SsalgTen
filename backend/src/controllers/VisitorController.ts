@@ -124,10 +124,16 @@ export class VisitorController {
             },
           }),
 
-          // 唯一IP数量 (优化性能)
-          prisma.$queryRaw`SELECT COUNT(DISTINCT ip) as count FROM visitor_logs WHERE createdAt >= ${cutoffDate}` as Promise<
-            [{ count: bigint }]
-          >,
+          // 唯一IP数量 (使用 findMany + Set 去重，兼容性更好)
+          prisma.visitorLog.findMany({
+            where: {
+              createdAt: { gte: cutoffDate },
+            },
+            select: {
+              ip: true,
+            },
+            distinct: ["ip"],
+          }),
 
           // 访问量最多的国家
           prisma.visitorLog.groupBy({
@@ -177,7 +183,7 @@ export class VisitorController {
         success: true,
         data: {
           totalVisitors,
-          uniqueIPs: Number(uniqueIPs[0]?.count || 0),
+          uniqueIPs: uniqueIPs.length,
           topCountries: topCountries.map(
             (item: { country: string | null; _count: number }) => ({
               country: item.country || "Unknown",
