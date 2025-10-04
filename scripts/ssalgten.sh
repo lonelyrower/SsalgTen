@@ -4899,7 +4899,15 @@ EOF
             if [[ $? -eq 0 ]]; then
                 log_info "重新加载更新后的脚本..."
                 sleep 1
-                exec "${BASH_SOURCE[0]}" "$@"  # 重新执行脚本
+                # 获取脚本的绝对路径
+                local script_path
+                if [[ -f "${BASH_SOURCE[0]}" ]]; then
+                    script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+                else
+                    # 如果BASH_SOURCE不可用，尝试使用which查找
+                    script_path="$(which "$(basename "${BASH_SOURCE[0]}")" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+                fi
+                exec bash "$script_path" "$@"  # 使用bash显式执行
             fi
             ;;
         4) uninstall_system ;;
