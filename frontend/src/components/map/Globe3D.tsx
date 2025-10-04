@@ -127,6 +127,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         const scene = viewer.scene;
         const globe = scene.globe;
 
+        // 启用光照以显示昼夜效果
         globe.enableLighting = true;
         globe.dynamicAtmosphereLighting = true;
         globe.dynamicAtmosphereLightingFromSun = true;
@@ -143,17 +144,20 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         globe.baseColor = Cesium.Color.BLACK;
         globe.showWaterEffect = true;
         
+        // 降低夜间区域的最小亮度，让黑夜更明显
+        globe.nightFadeInDistance = 5000000.0;
+        globe.nightFadeOutDistance = 10000000.0;
+        
         scene.globe.maximumScreenSpaceError = 1.5;
         scene.globe.tileCacheSize = 200;
         
         scene.screenSpaceCameraController.enableCollisionDetection = false;
         scene.fog.enabled = true;
         scene.fog.density = 0.0002;
-        scene.fog.minimumBrightness = 0.1;
+        scene.fog.minimumBrightness = 0.03; // 降低从0.1到0.03，让黑夜更暗
 
-        scene.light = new Cesium.DirectionalLight({
-          direction: new Cesium.Cartesian3(1, 0, 0)
-        });
+        // 使用太阳作为光源（删除固定方向光源，使用默认太阳光照）
+        // scene.light = new Cesium.Sun() 是默认值，不需要手动设置
       
         // 设置相机初始位置
         viewer.camera.setView({
