@@ -10,7 +10,6 @@ import {
   Search,
   Filter,
   ChevronDown,
-  ChevronRight,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -44,11 +43,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
   const [changedConfigs, setChangedConfigs] = useState<globalThis.Map<string, string>>(new globalThis.Map());
-  // const [downloading, setDownloading] = useState(false);
-  // 修改密码表单状态
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   // 定义分类显示顺序（按重要性排序）
   const CATEGORY_ORDER = React.useMemo(() => [
@@ -258,7 +252,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   // 按类别分组配置
   const groupedConfigs: ConfigGroup[] = React.useMemo(() => {
-    // 确保 configs 是数组
     if (!Array.isArray(configs)) {
       return [];
     }
@@ -281,22 +274,18 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         description: getCategoryDescription(category),
         configs: configs.sort((a, b) => a.key.localeCompare(b.key))
       }))
-      .filter(group => group.configs.length > 0) // 只显示有配置的分类
+      .filter(group => group.configs.length > 0)
       .sort((a, b) => {
-        // 按预定义顺序排序
         const indexA = CATEGORY_ORDER.indexOf(a.category);
         const indexB = CATEGORY_ORDER.indexOf(b.category);
         
-        // 如果分类在预定义列表中，按索引排序
         if (indexA !== -1 && indexB !== -1) {
           return indexA - indexB;
         }
         
-        // 未定义的分类排到最后
         if (indexA === -1 && indexB !== -1) return 1;
         if (indexA !== -1 && indexB === -1) return -1;
         
-        // 都不在列表中，按标题排序
         return a.title.localeCompare(b.title);
       });
   }, [configs, CATEGORY_ORDER]);
@@ -309,6 +298,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     if (searchTerm) {
       return group.configs.some(config =>
         config.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (config.displayName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (config.description?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
@@ -319,6 +309,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     configs: group.configs.filter(config =>
       !searchTerm || 
       config.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (config.displayName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (config.description?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
   }));
@@ -357,7 +348,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         setChangedConfigs(new globalThis.Map());
         await loadConfigs();
         
-        // 检查是否修改了地图配置，如果是则刷新页面以应用新配置
         const hasMapConfigChange = configsToUpdate.some(c => c.key.startsWith('map.'));
         if (hasMapConfigChange) {
           setSuccess(`成功更新了 ${configsToUpdate.length} 个配置项。地图配置已更新，3秒后自动刷新页面...`);
@@ -404,41 +394,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     }
   };
 
-  // 保存修改密码
-  const handleChangePassword = async () => {
-    setError('');
-    setSuccess('');
-    if (!currentPassword || !newPassword) {
-      setError('请输入当前密码和新密码');
-      return;
-    }
-    if (newPassword.length < 6) {
-      setError('新密码长度至少6位');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError('两次输入的新密码不一致');
-      return;
-    }
-    try {
-      setSaving(true);
-      const resp = await apiService.changePassword(currentPassword, newPassword);
-      if (resp.success) {
-        setSuccess('密码修改成功');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError(resp.error || '密码修改失败');
-      }
-    } catch {
-      setError('密码修改失败');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const toggleGroup = (category: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(category)) {
@@ -468,13 +423,13 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   return (
     <div className={className}>
-      {/* 头部区域 */}
+      {/* 优化的头部区域 */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
               <Settings className="h-8 w-8 mr-3 text-blue-600" />
-              系统设置
+              系统配置
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               管理系统配置参数和运行时设置
@@ -499,106 +454,82 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
               className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
             >
               <RotateCcw className="h-4 w-4" />
-              <span>重置默认</span>
+              <span>恢复默认</span>
             </Button>
-            {changedConfigs.size > 0 && (
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>保存中...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    <span>保存更改 ({changedConfigs.size})</span>
-                  </>
-                )}
-              </Button>
-            )}
           </div>
         </div>
 
-        {/* 修改密码 */}
-        <Card className="p-6 bg-white dark:bg-gray-800 shadow-sm mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">账户安全 - 修改密码</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">当前密码</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="请输入当前密码"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">新密码</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="至少6位"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">确认新密码</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="再次输入新密码"
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <Button onClick={handleChangePassword} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
-              {saving ? '保存中...' : '保存密码'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* 搜索和过滤器 */}
-        <Card className="p-4 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索配置项..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center space-x-3">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <label htmlFor="config-category-filter" className="sr-only">
-                选择配置类型
-              </label>
-              <select
-                id="config-category-filter"
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">所有分类</option>
-                {groupedConfigs.map(group => (
-                  <option key={group.category} value={group.category}>
-                    {group.title}
-                  </option>
+        {/* 增强的搜索和过滤工具栏 */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-xl"></div>
+          <Card className="relative p-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border-2 border-gray-200/50 dark:border-gray-700/50">
+            <div className="space-y-4">
+              {/* 搜索框 */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="搜索配置项名称、描述或键名..."
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    title="清除搜索"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              
+              {/* 快捷过滤按钮组 */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center">
+                  <Filter className="h-4 w-4 mr-2" />
+                  快捷过滤:
+                </span>
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    selectedCategory === 'all'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  全部
+                </button>
+                {groupedConfigs.slice(0, 6).map(group => (
+                  <button
+                    key={group.category}
+                    onClick={() => setSelectedCategory(group.category)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
+                      selectedCategory === group.category
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <span className="flex-shrink-0">{group.icon}</span>
+                    <span>{group.title}</span>
+                  </button>
                 ))}
-              </select>
+                {(searchTerm || selectedCategory !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedCategory('all');
+                    }}
+                    className="px-3 py-1.5 rounded-md text-sm font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all"
+                  >
+                    清除过滤
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
 
       {/* 状态消息 */}
@@ -649,18 +580,18 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         </Card>
       )}
 
-      {/* 配置分组 */}
-      <div className="space-y-6">
+      {/* 优化的配置分组 */}
+      <div className="space-y-4">
         {filteredGroups.map(group => (
-          <Card key={group.category} className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+          <Card key={group.category} className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
             {/* 分组标题 */}
             <div 
-              className="p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              className="p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent dark:hover:from-gray-700/50 dark:hover:to-transparent transition-all"
               onClick={() => toggleGroup(group.category)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  {group.icon}
+                  <div className="flex-shrink-0">{group.icon}</div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {group.title}
@@ -671,168 +602,79 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                  <span className="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full font-medium">
                     {group.configs.length} 项
                   </span>
-                  {expandedGroups.has(group.category) ? 
-                    <ChevronDown className="h-5 w-5 text-gray-400" /> : 
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  }
+                  <div className={`transition-transform duration-300 ${
+                    expandedGroups.has(group.category) ? 'rotate-180' : ''
+                  }`}>
+                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* 配置项 */}
+            {/* 配置项列表 - 带展开动画 */}
             {expandedGroups.has(group.category) && (
-              <div className="p-6 space-y-8">
-                {(() => {
-                  // 针对 security 分类，提炼 SSH 监控默认项分组
-                  const sshKeyMeta: Record<string, { label: string; desc: string }> = {
-                    'security.ssh_monitor_default_enabled': {
-                      label: 'SSH 监控默认启用',
-                      desc: '开启后：新复制的 Agent 安装命令中会附带注释示例，安装者取消注释即可启用；不影响已安装的 Agent。'
-                    },
-                    'security.ssh_monitor_default_window_min': {
-                      label: 'SSH 监控统计窗口（分钟）',
-                      desc: '在该时间窗口内统计失败登录尝试次数（用于判断是否触发暴力破解）。'
-                    },
-                    'security.ssh_monitor_default_threshold': {
-                      label: 'SSH 监控阈值（次数）',
-                      desc: '时间窗口内尝试次数超过该阈值即判定为“暴力破解”，Agent 将上报事件。'
-                    }
-                  };
-
-                  const isSecurity = group.category === 'security';
-                  const sshConfigs = isSecurity
-                    ? group.configs.filter(c => sshKeyMeta[c.key as keyof typeof sshKeyMeta])
-                    : [];
-                  const otherConfigs = isSecurity
-                    ? group.configs.filter(c => !sshKeyMeta[c.key as keyof typeof sshKeyMeta])
-                    : group.configs;
+              <div className="p-6 space-y-4">
+                {group.configs.map(config => {
+                  const hasChanged = changedConfigs.has(config.key);
+                  const displayName = config.displayName || formatConfigKey(config.key);
 
                   return (
-                    <>
-                      {isSecurity && sshConfigs.length > 0 && (
-                        <div className="border border-blue-200 dark:border-blue-800 rounded-xl overflow-hidden">
-                          <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-                            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                              SSH 监控默认项（安装引导模板）
+                    <div 
+                      key={config.id} 
+                      className={`border rounded-lg p-4 transition-all ${
+                        hasChanged 
+                          ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-md' 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                              {displayName}
                             </h3>
-                            <p className="text-xs text-blue-800/80 dark:text-blue-200/80 mt-1">
-                              这些设置仅影响“新复制”的安装命令模板，已安装的 Agent 不受影响。
+                            {hasChanged && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white shadow-sm animate-pulse">
+                                已修改
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
+                            {config.key}
+                          </p>
+                          {config.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                              {config.description}
                             </p>
-                          </div>
-                          <div className="p-4 space-y-4">
-                            {sshConfigs.map(config => {
-                              const hasChanged = changedConfigs.has(config.key);
-                              const meta = sshKeyMeta[config.key];
-                              const displayName = config.displayName || meta?.label || formatConfigKey(config.key);
-                              return (
-                                <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1 min-w-0 mr-4">
-                                      <div className="flex items-center space-x-2">
-                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {displayName}
-                                        </h4>
-                                        {hasChanged && (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                            已修改
-                                          </span>
-                                        )}
-                                      </div>
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
-                                        {config.key}
-                                      </p>
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                        {meta?.desc || config.description}
-                                      </p>
-                                    </div>
-                                    <div className="flex-shrink-0 w-64">
-                                      {renderConfigInput(config)}
-                                    </div>
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
-                                    <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
-                                    {hasChanged && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          const newChanges = new globalThis.Map(changedConfigs);
-                                          newChanges.delete(config.key);
-                                          setChangedConfigs(newChanges);
-                                        }}
-                                        className="text-gray-500 hover:text-gray-700 h-auto p-1"
-                                      >
-                                        撤销
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                          )}
                         </div>
-                      )}
-
-                      {/* 其余配置项 */}
-                      <div className="space-y-6">
-                        {otherConfigs.map(config => {
-                          const hasChanged = changedConfigs.has(config.key);
-                          const displayName = config.displayName || formatConfigKey(config.key);
-
-                          return (
-                            <div key={config.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0 mr-4">
-                                  <div className="flex items-center space-x-2">
-                                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {displayName}
-                                    </h3>
-                                    {hasChanged && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                        已修改
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
-                                    {config.key}
-                                  </p>
-                                  {config.description && (
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                      {config.description}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex-shrink-0 w-64">
-                                  {renderConfigInput(config)}
-                                </div>
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
-                                <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
-                                {hasChanged && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      const newChanges = new globalThis.Map(changedConfigs);
-                                      newChanges.delete(config.key);
-                                      setChangedConfigs(newChanges);
-                                    }}
-                                    className="text-gray-500 hover:text-gray-700 h-auto p-1"
-                                  >
-                                    撤销
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                        <div className="flex-shrink-0 w-full sm:w-80 lg:w-96">
+                          {renderConfigInput(config)}
+                        </div>
                       </div>
-                    </>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center justify-between">
+                        <span>更新时间: {new Date(config.updatedAt).toLocaleString('zh-CN')}</span>
+                        {hasChanged && (
+                          <button
+                            onClick={() => {
+                              const newChanges = new globalThis.Map(changedConfigs);
+                              newChanges.delete(config.key);
+                              setChangedConfigs(newChanges);
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all"
+                            title="撤销此项修改"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            <span>撤销</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   );
-                })()}
+                })}
               </div>
             )}
           </Card>
@@ -848,30 +690,45 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         </Card>
       )}
 
-      {/* 固定底部保存栏 - 当有未保存更改时显示 */}
+      {/* 增强的固定底部保存栏 */}
       {changedConfigs.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-blue-500 shadow-2xl z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t-2 border-blue-500 shadow-2xl z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center space-x-3">
                   <div className="h-3 w-3 bg-blue-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    您有 <span className="text-blue-600 dark:text-blue-400 font-bold">{changedConfigs.size}</span> 项未保存的更改
+                    您有 <span className="text-blue-600 dark:text-blue-400 font-bold text-lg">{changedConfigs.size}</span> 项未保存的更改
+                  </span>
+                  <span className="hidden md:inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs">Ctrl</kbd>
+                    +
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs">S</kbd>
+                    保存
                   </span>
                 </div>
-                <div className="hidden sm:flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>•</span>
-                  <span>
-                    {Array.from(changedConfigs.keys()).slice(0, 3).map(key => {
+                <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">修改项:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from(changedConfigs.keys()).slice(0, 5).map(key => {
                       const config = configs.find(c => c.key === key);
-                      return config?.displayName || key.split('.').pop();
-                    }).join(', ')}
-                    {changedConfigs.size > 3 && ` 等 ${changedConfigs.size} 项`}
-                  </span>
+                      const displayName = config?.displayName || key.split('.').pop();
+                      return (
+                        <span key={key} className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                          {displayName}
+                        </span>
+                      );
+                    })}
+                    {changedConfigs.size > 5 && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                        +{changedConfigs.size - 5} 项
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 self-end sm:self-auto">
                 <Button
                   variant="outline"
                   size="sm"
@@ -883,12 +740,13 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                   disabled={saving}
                   className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
+                  <RotateCcw className="h-4 w-4 mr-1" />
                   取消
                 </Button>
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2 px-6"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white flex items-center space-x-2 px-6 shadow-lg hover:shadow-xl transition-all"
                 >
                   {saving ? (
                     <>
