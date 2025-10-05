@@ -147,10 +147,14 @@ echo ""
 if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && npm run reset-admin" 2>&1 | grep -q "✅"; then
     :
 else
-    # 方法2: 直接使用 Node.js 内联脚本 (不依赖 tsx)
+    # 方法2: 使用临时文件方式执行 Node.js 脚本
     echo "⚠️  使用备用方案重置密码..."
     
-    RESET_SCRIPT="
+    # 创建临时重置脚本
+    TEMP_SCRIPT="/tmp/reset-admin-$$.js"
+    
+    # 写入脚本内容到容器
+    $EXEC_CMD $BACKEND_CONTAINER sh -c "cat > $TEMP_SCRIPT" <<'SCRIPT_EOF'
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
@@ -185,14 +189,15 @@ async function reset() {
     console.error('❌ 重置失败:', error.message);
     process.exit(1);
   } finally {
-    await prisma.\$disconnect();
+    await prisma.$disconnect();
   }
 }
 
 reset();
-"
+SCRIPT_EOF
     
-    if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && node -e \"$RESET_SCRIPT\"" 2>&1; then
+    # 执行脚本并清理
+    if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && node $TEMP_SCRIPT; rm -f $TEMP_SCRIPT" 2>&1; then
         echo ""
     else
         echo ""
