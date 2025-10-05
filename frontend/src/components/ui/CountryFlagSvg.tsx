@@ -9,6 +9,20 @@ interface Props {
 
 export const CountryFlagSvg: React.FC<Props> = ({ country, size = 16, className = '' }) => {
   const code = getCountryCode(country);
+  
+  // 如果是 Unknown，显示问号 emoji
+  if (country?.toLowerCase() === 'unknown' || !code) {
+    return (
+      <span 
+        className={`inline-flex items-center justify-center ${className}`}
+        style={{ width: size, height: size }}
+        title={country || 'Unknown'}
+      >
+        ❓
+      </span>
+    );
+  }
+  
   const src = `https://cdn.jsdelivr.net/npm/flag-icons/flags/1x1/${code}.svg`;
   const label = country || code.toUpperCase();
   return (
@@ -21,8 +35,14 @@ export const CountryFlagSvg: React.FC<Props> = ({ country, size = 16, className 
       className={`inline-block rounded-sm ${className}`}
       loading="lazy"
       onError={(e) => {
-        // 回退为地球图标
-        (e.currentTarget as HTMLImageElement).style.display = 'none';
+        // 回退为问号图标
+        const span = document.createElement('span');
+        span.textContent = '❓';
+        span.className = 'inline-flex items-center justify-center';
+        span.style.width = `${size}px`;
+        span.style.height = `${size}px`;
+        span.title = label;
+        e.currentTarget.parentNode?.replaceChild(span, e.currentTarget);
       }}
     />
   );

@@ -3,7 +3,7 @@ import { apiService } from '@/services/api';
 import type { VisitorStats as VisitorStatsT } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getCountryFlag } from '@/utils/countryFlags';
+import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import {
   Globe,
   Users,
@@ -251,9 +251,12 @@ export const VisitorStatsCard: React.FC = () => {
                     <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">
                       #{index + 1}
                     </span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {getCountryFlag(country.country)} {country.country}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <CountryFlagSvg country={country.country} size={16} />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {country.country}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
