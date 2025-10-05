@@ -537,6 +537,70 @@ export class SystemConfigController {
       res.status(500).json(response);
     }
   }
+
+  // 清理数据库中的旧配置项（只保留当前定义的配置）
+  async cleanupOldConfigs(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
+    try {
+      // 获取当前定义的配置键
+      const validKeys = Object.keys(DEFAULT_SYSTEM_CONFIGS);
+
+      // 获取数据库中的所有配置
+      const allConfigs = await prisma.setting.findMany({
+        select: { key: true },
+      });
+
+      // 找出需要删除的配置
+      const keysToDelete = allConfigs
+        .filter((config) => !validKeys.includes(config.key))
+        .map((config) => config.key);
+
+      if (keysToDelete.length === 0) {
+        logger.info("No old configs to cleanup");
+        const response: ApiResponse = {
+          success: true,
+          message: "Database configs are up to date",
+          data: { deleted: 0, remaining: allConfigs.length },
+        };
+        res.json(response);
+        return;
+      }
+
+      // 执行删除
+      const deleteResult = await prisma.setting.deleteMany({
+        where: {
+          key: {
+            in: keysToDelete,
+          },
+        },
+      });
+
+      logger.info(
+        `Cleaned up ${deleteResult.count} old configs: ${keysToDelete.join(", ")}`,
+      );
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully deleted ${deleteResult.count} old configuration items`,
+        data: {
+          deleted: deleteResult.count,
+          deletedKeys: keysToDelete,
+          remaining: allConfigs.length - keysToDelete.length,
+        },
+      };
+
+      res.json(response);
+    } catch (error) {
+      logger.error("Cleanup configs error:", error);
+      const response: ApiResponse = {
+        success: false,
+        error: "Failed to cleanup old configurations",
+      };
+      res.status(500).json(response);
+    }
+  }
 }
 
 export const systemConfigController = new SystemConfigController();

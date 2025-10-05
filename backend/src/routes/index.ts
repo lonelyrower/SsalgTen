@@ -403,6 +403,12 @@ router.post(
   requireAdmin,
   systemConfigController.resetToDefaults.bind(systemConfigController),
 );
+router.post(
+  "/admin/configs/cleanup",
+  authenticateToken,
+  requireAdmin,
+  systemConfigController.cleanupOldConfigs.bind(systemConfigController),
+);
 
 // 访问者统计（管理员专用）
 router.get(

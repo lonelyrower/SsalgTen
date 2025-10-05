@@ -367,6 +367,39 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     }
   };
 
+  const handleCleanup = async () => {
+    if (!confirm('确定要清理数据库中的旧配置项吗？\n这将删除所有不在当前版本中定义的配置。')) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError('');
+      
+      const response = await fetch('/api/admin/configs/cleanup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccess(`已清理 ${data.data?.deleted || 0} 个旧配置项`);
+        await loadConfigs();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || '清理配置失败');
+      }
+    } catch {
+      setError('清理配置失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toggleGroup = (category: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(category)) {
@@ -459,6 +492,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
             >
               <RefreshCw className="h-4 w-4" />
               <span>刷新</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCleanup}
+              disabled={saving}
+              className="flex items-center space-x-2 text-red-600 hover:text-red-700 border-red-300 hover:border-red-400 dark:border-red-700 dark:hover:border-red-600 flex-1 sm:flex-none justify-center"
+            >
+              <AlertCircle className="h-4 w-4" />
+              <span>清理旧配置</span>
             </Button>
             <Button
               variant="outline"
