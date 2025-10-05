@@ -229,14 +229,11 @@ export interface SystemOverviewData {
     last24h: number;
     avgPerHour: number;
   };
-  diagnostics: {
-    total: number;
-    last24h: number;
-    successRate: number;
-  };
-  users: {
-    total: number;
-    active: number;
+  resources: {
+    memoryUsedMB: number;
+    memoryTotalMB: number;
+    memoryPercent: number;
+    cpuPercent: number;
   };
   system: {
     uptime: number;

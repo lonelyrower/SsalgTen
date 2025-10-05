@@ -812,16 +812,7 @@ export class AdminController {
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
       // 并行查询所有统计数据
-      const [
-        nodeStats,
-        heartbeatTotal,
-        heartbeat24h,
-        diagnosticTotal,
-        diagnosticLast24h,
-        diagnosticSuccess,
-        userTotal,
-        activeUsers,
-      ] = await Promise.all([
+      const [nodeStats, heartbeatTotal, heartbeat24h] = await Promise.all([
         // 节点统计 (复用现有逻辑)
         this.getNodeStats(),
 
@@ -830,39 +821,31 @@ export class AdminController {
         prisma.heartbeatLog.count({
           where: { timestamp: { gte: twentyFourHoursAgo } },
         }),
-
-        // 诊断统计
-        prisma.diagnosticRecord.count(),
-        prisma.diagnosticRecord.count({
-          where: { timestamp: { gte: twentyFourHoursAgo } },
-        }),
-        prisma.diagnosticRecord.count({
-          where: {
-            timestamp: { gte: twentyFourHoursAgo },
-            success: true,
-          },
-        }),
-
-        // 用户统计
-        prisma.user.count(),
-        prisma.user.count({
-          where: {
-            lastLogin: { gte: twentyFourHoursAgo },
-          },
-        }),
       ]);
-
-      // 计算诊断成功率
-      const successRate =
-        diagnosticLast24h > 0
-          ? Math.round((diagnosticSuccess / diagnosticLast24h) * 100 * 10) / 10
-          : 0;
 
       // 计算平均心跳频率
       const avgPerHour = heartbeat24h > 0 ? Math.round(heartbeat24h / 24) : 0;
 
       // 系统信息
       const startTime = process.uptime(); // 后端进程运行时间（秒）
+
+      // 获取系统资源使用情况
+      const memUsage = process.memoryUsage();
+      const memUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+      const memTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
+      const memUsagePercent = Math.round(
+        (memUsage.heapUsed / memUsage.heapTotal) * 100,
+      );
+
+      // CPU使用率 (简化实现，使用进程CPU时间)
+      const cpuUsage = process.cpuUsage();
+      const cpuPercent = Math.min(
+        100,
+        Math.round(
+          ((cpuUsage.user + cpuUsage.system) / 1000000 / startTime) * 100,
+        ),
+      );
+
       // 数据库实例运行时间（更能代表系统整体持续运行时长，不受后端重启影响）
       let dbUptimeSec = 0;
       try {
@@ -889,14 +872,11 @@ export class AdminController {
             last24h: heartbeat24h,
             avgPerHour: avgPerHour,
           },
-          diagnostics: {
-            total: diagnosticTotal,
-            last24h: diagnosticLast24h,
-            successRate: successRate,
-          },
-          users: {
-            total: userTotal,
-            active: activeUsers,
+          resources: {
+            memoryUsedMB: memUsedMB,
+            memoryTotalMB: memTotalMB,
+            memoryPercent: memUsagePercent,
+            cpuPercent: cpuPercent,
           },
           system: {
             uptime: Math.floor(startTime),

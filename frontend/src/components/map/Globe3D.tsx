@@ -16,8 +16,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
   const [isLoading, setIsLoading] = useState(true);
   const initializingRef = useRef(false); // 防止重复初始化
   
-  // 图层状态
-  const [currentLayer, setCurrentLayer] = useState<'natural' | 'satellite' | 'street' | 'dark'>('satellite');
+  // 图层状态 - 3D 地球专用图层
+  const [currentLayer, setCurrentLayer] = useState<'satellite' | 'terrain' | 'bluemarble' | 'natgeo'>('satellite');
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   // 使用 useMemo 缓存节点ID列表，只有当节点ID变化时才重新渲染
@@ -91,9 +91,10 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
             break;
             
           default:
-            imageryProvider = await Cesium.TileMapServiceImageryProvider.fromUrl(
-              Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-            );
+            // 使用更可靠的默认地图源（ArcGIS World Imagery）
+            imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+              url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+            } as any);
         }
 
         // 创建 Cesium Viewer
@@ -126,6 +127,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         });
 
         viewerRef.current = viewer;
+        
+        console.log('✓ Cesium Viewer 初始化成功');
 
         // === 视觉增强配置（优化晨昏线效果）===
         const scene = viewer.scene;
@@ -172,7 +175,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
         // 使用默认的太阳光照（不需要手动设置）
         // Cesium会自动根据当前时间计算太阳位置
-      
+
         // 设置相机初始位置
         viewer.camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
@@ -367,8 +370,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     }
   }, [showLayerMenu]);
 
-  // 图层切换功能
-  const switchLayer = (layerType: 'natural' | 'satellite' | 'street' | 'dark') => {
+  // 图层切换功能 - 3D 地球专用
+  const switchLayer = (layerType: 'satellite' | 'terrain' | 'bluemarble' | 'natgeo') => {
     const viewer = viewerRef.current;
     if (!viewer || viewer.isDestroyed()) return;
 
@@ -382,39 +385,33 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
     switch (layerType) {
       case 'satellite':
-        // 卫星影像（Esri世界影像）
+        // 高清卫星影像（Esri 世界影像）
         imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
           url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
         } as any);
         break;
 
-      case 'street':
-        // 街道地图（OpenStreetMap）
-        imageryProvider = new Cesium.OpenStreetMapImageryProvider({
-          url: 'https://tile.openstreetmap.org/'
-        });
+      case 'terrain':
+        // 地形底图（Esri 世界地形）
+        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer'
+        } as any);
         break;
 
-      case 'dark':
-        // 深色地图（CartoDB Dark）
-        imageryProvider = new Cesium.UrlTemplateImageryProvider({
-          url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-          credit: '© CARTO © OpenStreetMap contributors',
-          subdomains: ['a', 'b', 'c', 'd']
-        });
+      case 'bluemarble':
+        // 蓝色大理石（夜景+白天）
+        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+        } as any);
         break;
 
-      case 'natural':
+      case 'natgeo':
       default:
-        // 自然地球II（Cesium默认）
-        Cesium.TileMapServiceImageryProvider.fromUrl(
-          Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-        ).then(provider => {
-          if (viewer && !viewer.isDestroyed()) {
-            viewer.imageryLayers.addImageryProvider(provider);
-          }
-        });
-        return; // 提前返回，因为是异步的
+        // National Geographic 风格（清晰的地理标注）
+        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer'
+        } as any);
+        break;
     }
 
     if (imageryProvider) {
@@ -510,86 +507,102 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
           {/* 图层选择菜单 */}
           {showLayerMenu && (
-            <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[200px] animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
-                  选择底图样式
+            <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
+                <p className="text-xs font-bold text-gray-800 dark:text-gray-100 uppercase tracking-wide">
+                  🌍 选择 3D 底图
                 </p>
               </div>
-              <div className="p-1">
+              <div className="p-2">
                 {/* 卫星影像 */}
                 <button
                   onClick={() => switchLayer('satellite')}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'satellite'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      ? 'bg-blue-500 text-white shadow-md scale-[1.02]'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
-                  <Satellite className="h-4 w-4 flex-shrink-0" />
+                  <Satellite className={`h-5 w-5 flex-shrink-0 ${
+                    currentLayer === 'satellite' ? 'text-white' : 'text-blue-500'
+                  }`} />
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">卫星影像</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">高清卫星图</p>
+                    <p className="text-sm font-semibold">卫星影像</p>
+                    <p className={`text-xs ${
+                      currentLayer === 'satellite' ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'
+                    }`}>高清卫星图</p>
                   </div>
                   {currentLayer === 'satellite' && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                   )}
                 </button>
 
-                {/* 街道地图 */}
+                {/* 地形图 */}
                 <button
-                  onClick={() => switchLayer('street')}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                    currentLayer === 'street'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  onClick={() => switchLayer('terrain')}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                    currentLayer === 'terrain'
+                      ? 'bg-green-500 text-white shadow-md scale-[1.02]'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
-                  <Map className="h-4 w-4 flex-shrink-0" />
+                  <Map className={`h-5 w-5 flex-shrink-0 ${
+                    currentLayer === 'terrain' ? 'text-white' : 'text-green-500'
+                  }`} />
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">街道地图</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">OpenStreetMap</p>
+                    <p className="text-sm font-semibold">地形图</p>
+                    <p className={`text-xs ${
+                      currentLayer === 'terrain' ? 'text-green-100' : 'text-gray-600 dark:text-gray-400'
+                    }`}>立体地形</p>
                   </div>
-                  {currentLayer === 'street' && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  {currentLayer === 'terrain' && (
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                   )}
                 </button>
 
-                {/* 深色地图 */}
+                {/* 街道底图 */}
                 <button
-                  onClick={() => switchLayer('dark')}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                    currentLayer === 'dark'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  onClick={() => switchLayer('bluemarble')}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                    currentLayer === 'bluemarble'
+                      ? 'bg-indigo-500 text-white shadow-md scale-[1.02]'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
-                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                  <MapPin className={`h-5 w-5 flex-shrink-0 ${
+                    currentLayer === 'bluemarble' ? 'text-white' : 'text-indigo-500'
+                  }`} />
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">深色地图</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">CartoDB Dark</p>
+                    <p className="text-sm font-semibold">街道底图</p>
+                    <p className={`text-xs ${
+                      currentLayer === 'bluemarble' ? 'text-indigo-100' : 'text-gray-600 dark:text-gray-400'
+                    }`}>清晰标注</p>
                   </div>
-                  {currentLayer === 'dark' && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  {currentLayer === 'bluemarble' && (
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                   )}
                 </button>
 
-                {/* 自然地球 */}
+                {/* 国家地理 */}
                 <button
-                  onClick={() => switchLayer('natural')}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                    currentLayer === 'natural'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  onClick={() => switchLayer('natgeo')}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                    currentLayer === 'natgeo'
+                      ? 'bg-amber-500 text-white shadow-md scale-[1.02]'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
-                  <Globe className="h-4 w-4 flex-shrink-0" />
+                  <Globe className={`h-5 w-5 flex-shrink-0 ${
+                    currentLayer === 'natgeo' ? 'text-white' : 'text-amber-500'
+                  }`} />
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">自然地球</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Natural Earth II</p>
+                    <p className="text-sm font-semibold">国家地理</p>
+                    <p className={`text-xs ${
+                      currentLayer === 'natgeo' ? 'text-amber-100' : 'text-gray-600 dark:text-gray-400'
+                    }`}>经典风格</p>
                   </div>
-                  {currentLayer === 'natural' && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  {currentLayer === 'natgeo' && (
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                   )}
                 </button>
               </div>

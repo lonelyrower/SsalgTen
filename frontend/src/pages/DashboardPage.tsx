@@ -7,7 +7,7 @@ import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { MobilePullToRefresh } from '@/components/ui/MobilePullToRefresh';
 import { useRealTime } from '@/hooks/useRealTime';
-import { MapPin, Settings, Shield, BarChart, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -97,7 +97,7 @@ export const DashboardPage: React.FC = () => {
           />
 
           {/* 延迟概览和地理分布 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
             {/* 延迟概览卡片 */}
             <div className="h-full">
               <LatencyOverviewCard className="h-full flex flex-col" />
@@ -106,54 +106,6 @@ export const DashboardPage: React.FC = () => {
             {/* 地理分布 */}
             <div className="h-full">
               <GeographicDistribution nodes={nodes} className="h-full flex flex-col" />
-            </div>
-          </div>
-
-
-          {/* 快速操作 */}
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-4 sm:p-6 mobile-safe">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">快速操作</h3>
-            <div className="mobile-grid-auto gap-3 sm:gap-4">
-              <a
-                href="/nodes"
-                className="flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow mobile-touch-target mobile-safe"
-              >
-                <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-3 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">节点管理</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">管理和诊断节点</div>
-                </div>
-              </a>
-
-              <a
-                href="/admin"
-                className="flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow mobile-touch-target mobile-safe"
-              >
-                <Settings className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mr-3 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">系统管理</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">用户和系统设置</div>
-                </div>
-              </a>
-
-              <a
-                href="/security"
-                className="flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow mobile-touch-target mobile-safe"
-              >
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mr-3 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">安全中心</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">安全日志和告警</div>
-                </div>
-              </a>
-
-              <div className="flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm opacity-75 mobile-safe">
-                <BarChart className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mr-3 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-medium text-gray-500 dark:text-gray-400 text-sm sm:text-base">数据分析</div>
-                  <div className="text-xs text-gray-400">即将推出</div>
-                </div>
-              </div>
             </div>
           </div>
         </>

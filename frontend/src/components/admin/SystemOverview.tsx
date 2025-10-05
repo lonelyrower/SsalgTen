@@ -5,14 +5,11 @@ import { Button } from '@/components/ui/button';
 import {
   Activity,
   Server,
-  Users,
   Database,
-  Clock,
   TrendingUp,
   RefreshCw,
   AlertCircle,
   CheckCircle2,
-  Globe,
   Zap,
   HardDrive,
 } from 'lucide-react';
@@ -185,8 +182,8 @@ export const SystemOverview: React.FC = () => {
         </div>
       </Card>
 
-      {/* 统计卡片网格 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* 核心监控卡片 - 2列2行布局 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 节点统计 */}
         <Card className="p-6">
           <div className="flex items-center justify-between">
@@ -231,88 +228,37 @@ export const SystemOverview: React.FC = () => {
           </div>
         </Card>
 
-        {/* 诊断统计 */}
+        {/* 内存使用 */}
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">诊断成功率</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.diagnostics.successRate}%</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">内存使用</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.resources.memoryPercent}%</p>
             </div>
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <Zap className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <HardDrive className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-gray-600 dark:text-gray-400">
             <Database className="h-4 w-4 mr-1" />
-            24小时内 {stats.diagnostics.last24h} 次测试
+            {stats?.resources.memoryUsedMB}MB / {stats?.resources.memoryTotalMB}MB
           </div>
         </Card>
 
-        {/* 用户统计 */}
+        {/* CPU使用 */}
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">活跃用户</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.users.active}/{stats.users.total}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">CPU使用率</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.resources.cpuPercent}%</p>
             </div>
             <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <Users className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <Zap className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-gray-600 dark:text-gray-400">
-            <Clock className="h-4 w-4 mr-1" />
-            在线率 {((stats.users.active / stats.users.total) * 100).toFixed(1)}%
-          </div>
-        </Card>
-      </div>
-
-      {/* 地理分布统计 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <Globe className="h-5 w-5 mr-2 text-blue-600" />
-            地理分布
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">覆盖国家</span>
-              <span className="font-semibold text-gray-900 dark:text-white">{stats.nodes.totalCountries} 个</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">服务提供商</span>
-              <span className="font-semibold text-gray-900 dark:text-white">{stats.nodes.totalProviders} 家</span>
-            </div>
-            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                节点分布在全球 {stats.nodes.totalCountries} 个国家，使用 {stats.nodes.totalProviders} 家不同的服务提供商
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <HardDrive className="h-5 w-5 mr-2 text-green-600" />
-            系统信息
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">系统版本</span>
-              <span className="font-semibold text-gray-900 dark:text-white">{stats.system.version}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">运行环境</span>
-              <span className="font-semibold text-gray-900 dark:text-white capitalize">{stats.system.environment}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">运行时间</span>
-              <span className="font-semibold text-gray-900 dark:text-white">{formatUptime(stats.system.uptime)}</span>
-            </div>
-            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                系统稳定运行，所有核心服务正常
-              </p>
-            </div>
+            <Activity className="h-4 w-4 mr-1" />
+            进程负载
           </div>
         </Card>
       </div>

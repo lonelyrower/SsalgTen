@@ -4,23 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   Settings,
+  Clock,
+  Activity,
+  Database,
+  Shield,
+  Globe,
+  Zap,
   Save,
   RefreshCw,
+  AlertCircle,
+  MapIcon,
   RotateCcw,
   Search,
   Filter,
-  ChevronDown,
-  AlertCircle,
   CheckCircle,
-  Clock,
-  Database,
-  Shield,
-  Bell,
-  Globe,
-  Zap,
-  Map as MapIcon,
+  ChevronDown,
   Info,
-  Activity
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -46,15 +45,14 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
   const [changedConfigs, setChangedConfigs] = useState<globalThis.Map<string, string>>(new globalThis.Map());
 
-  // 定义分类显示顺序（按重要性排序，其他设置放在最后）
+  // 定义分类显示顺序（按使用频率排序，常用的放前面）
   const CATEGORY_ORDER = React.useMemo(() => [
-    'system',       // 系统设置
-    'monitoring',   // 监控配置
-    'diagnostics',  // 诊断配置
-    'security',     // 安全配置
-    'api',          // API设置
-    'map',          // 地图配置
-    'notifications',// 通知设置
+    'map',          // 地图配置 - 最常用
+    'monitoring',   // 监控配置 - 常用
+    'diagnostics',  // 诊断配置 - 常用
+    'system',       // 系统设置 - 较常用
+    'security',     // 安全配置 - 中等
+    'api',          // API设置 - 中等
     'other'         // 其他设置（最后）
   ], []);
 
@@ -196,8 +194,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return <Database className="h-5 w-5 text-purple-500" />;
       case 'security':
         return <Shield className="h-5 w-5 text-red-500" />;
-      case 'notifications':
-        return <Bell className="h-5 w-5 text-yellow-500" />;
       case 'api':
         return <Globe className="h-5 w-5 text-indigo-500" />;
       case 'performance':
@@ -221,8 +217,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return '数据库设置';
       case 'security':
         return '安全配置';
-      case 'notifications':
-        return '通知设置';
       case 'api':
         return 'API设置';
       case 'performance':
@@ -246,8 +240,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return '数据库连接池、性能优化和存储参数';
       case 'security':
         return 'JWT认证、登录限制、密码策略、SSH监控设置';
-      case 'notifications':
-        return '告警通知、邮件发送、Webhook集成配置';
       case 'api':
         return 'API速率限制、CORS跨域、日志级别设置';
       case 'performance':
@@ -456,11 +448,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       'api.cors_enabled': '是否启用跨域资源共享，关闭后仅允许同源请求',
       'api.log_level': 'API日志记录级别，debug级别会记录更详细的信息，适用于开发调试',
       
-      // 通知配置
-      'notifications.email_enabled': '是否启用邮件通知功能（需配置SMTP服务器）',
-      'notifications.webhook_enabled': '是否启用Webhook推送功能',
-      'notifications.alert_threshold': '连续失败达到此次数后发送告警通知',
-      
       // 地图配置
       'map.provider': '地图图层提供商。Carto免费无需密钥；Mapbox需要API密钥但提供更丰富的样式',
       'map.api_key': 'Mapbox的API访问密钥，在Mapbox官网申请。选择其他提供商时可留空',
@@ -645,155 +632,182 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         </Card>
       )}
 
-      {/* 优化的配置分组 */}
-      <div className="space-y-6">
-        {filteredGroups.map((group, groupIndex) => (
+      {/* 优化的配置分组 - 紧凑网格布局 */}
+      <div className="space-y-4">
+        {filteredGroups.map((group, groupIndex) => {
+          // 为每个分组定义颜色主题
+          const colorClasses = [
+            'from-cyan-500/20 to-cyan-500/40', // cyan - map
+            'from-green-500/20 to-green-500/40', // green - monitoring
+            'from-purple-500/20 to-purple-500/40', // purple - diagnostics
+            'from-blue-500/20 to-blue-500/40', // blue - system
+            'from-red-500/20 to-red-500/40', // red - security
+            'from-indigo-500/20 to-indigo-500/40', // indigo - api
+            'from-gray-500/20 to-gray-500/40', // gray - other
+          ][groupIndex % 7];
+
+          return (
           <Card 
             key={group.category} 
-            className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border-l-4"
-            style={{
-              borderLeftColor: [
-                '#3b82f6', // blue - system
-                '#10b981', // green - monitoring  
-                '#a855f7', // purple - diagnostics
-                '#ef4444', // red - security
-                '#6366f1', // indigo - api
-                '#06b6d4', // cyan - map
-                '#eab308', // yellow - notifications
-                '#6b7280', // gray - other
-              ][groupIndex % 8]
-            }}
+            className="bg-white dark:bg-gray-800 shadow-md hover:shadow-lg overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700"
           >
-            {/* 分组标题 */}
-            <div 
-              className="p-5 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent dark:hover:from-gray-700/50 dark:hover:to-transparent transition-all group"
+            {/* 紧凑的分组标题 */}
+            <button 
+              className="w-full p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group text-left"
               onClick={() => toggleGroup(group.category)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="flex-shrink-0 p-2 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-xl group-hover:scale-110 transition-transform">
+                <div className="flex items-center space-x-3 flex-1">
+                  {/* 彩色图标 */}
+                  <div 
+                    className={`flex-shrink-0 p-2 rounded-lg group-hover:scale-110 transition-transform bg-gradient-to-br ${colorClasses}`}
+                  >
                     {group.icon}
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                      {group.title}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  
+                  {/* 标题和描述 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {group.title}
+                      </h2>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                        {group.configs.length}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
                       {group.description}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 ml-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full">
-                      {group.configs.length}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
-                      配置项
-                    </span>
-                  </div>
-                  <div className={`transition-transform duration-300 ${
-                    expandedGroups.has(group.category) ? 'rotate-180' : ''
-                  }`}>
-                    <ChevronDown className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-                  </div>
+                
+                {/* 展开图标 */}
+                <div className={`flex-shrink-0 ml-3 transition-transform duration-300 ${
+                  expandedGroups.has(group.category) ? 'rotate-180' : ''
+                }`}>
+                  <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
                 </div>
               </div>
-            </div>
+            </button>
 
-            {/* 配置项列表 - 带展开动画 */}
+            {/* 配置项列表 - 紧凑的网格布局 */}
             {expandedGroups.has(group.category) && (
-              <div className="p-6 space-y-4">
-                {group.configs.map(config => {
-                  const hasChanged = changedConfigs.has(config.key);
-                  const displayName = config.displayName || formatConfigKey(config.key);
-                  const helpText = getConfigHelp(config.key);
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {group.configs.map(config => {
+                    const hasChanged = changedConfigs.has(config.key);
+                    const displayName = config.displayName || formatConfigKey(config.key);
+                    const helpText = getConfigHelp(config.key);
 
-                  return (
-                    <div 
-                      key={config.id} 
-                      className={`border rounded-xl p-5 transition-all duration-200 ${
-                        hasChanged 
-                          ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-lg' 
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                        {/* 左侧：配置信息 */}
-                        <div className="flex-1 min-w-0 space-y-3">
-                          {/* 标题行 */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                    return (
+                      <div 
+                        key={config.id} 
+                        className={`group relative border rounded-lg p-4 transition-all duration-200 hover:shadow-md ${
+                          hasChanged 
+                            ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-md ring-2 ring-blue-200 dark:ring-blue-800' 
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-900/30'
+                        }`}
+                      >
+                        {/* 已修改标记 */}
+                        {hasChanged && (
+                          <div className="absolute -top-2 -right-2 z-10">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold shadow-lg animate-pulse">
+                              ●
+                            </span>
+                          </div>
+                        )}
+
+                        {/* 配置标题和帮助 */}
+                        <div className="mb-3">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight flex-1">
                               {displayName}
                             </h3>
-                            {hasChanged && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white shadow-sm animate-pulse">
-                                ● 已修改
-                              </span>
+                            
+                            {/* 帮助按钮 - 悬停或点击显示技术细节 */}
+                            {(config.key || helpText) && (
+                              <div className="relative group/help flex-shrink-0">
+                                <button
+                                  type="button"
+                                  className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-center transition-colors"
+                                  title="查看技术详情"
+                                >
+                                  <Info className="h-3.5 w-3.5" />
+                                </button>
+                                
+                                {/* 悬停显示的技术信息 */}
+                                <div className="absolute right-0 top-8 z-50 w-72 p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all duration-200">
+                                  {/* 小箭头 */}
+                                  <div className="absolute -top-2 right-2 w-4 h-4 bg-white dark:bg-gray-800 border-l-2 border-t-2 border-gray-200 dark:border-gray-600 transform rotate-45"></div>
+                                  
+                                  <div className="relative space-y-2">
+                                    {/* 技术键名 */}
+                                    <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">技术键名</p>
+                                      <code className="text-xs text-gray-700 dark:text-gray-300 font-mono bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">
+                                        {config.key}
+                                      </code>
+                                    </div>
+                                    
+                                    {/* 详细帮助 */}
+                                    {helpText && (
+                                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                                        <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                                          💡 {helpText}
+                                        </p>
+                                      </div>
+                                    )}
+                                    
+                                    {/* 更新时间 */}
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200 dark:border-gray-700">
+                                      <Clock className="h-3 w-3" />
+                                      更新: {new Date(config.updatedAt).toLocaleString('zh-CN')}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
-                          
-                          {/* 键名 */}
-                          <div className="flex items-center gap-2">
-                            <code className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
-                              {config.key}
-                            </code>
-                          </div>
-                          
-                          {/* 官方描述 */}
+
+                          {/* 中文描述 - 默认显示 */}
                           {config.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-2">
                               {config.description}
                             </p>
                           )}
-                          
-                          {/* 详细帮助信息 */}
-                          {helpText && (
-                            <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                              <p className="text-sm text-blue-800 dark:text-blue-200">
-                                {helpText}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {/* 更新时间 */}
-                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5" />
-                              更新: {new Date(config.updatedAt).toLocaleString('zh-CN')}
-                            </span>
-                            {hasChanged && (
-                              <button
-                                onClick={() => {
-                                  const newChanges = new globalThis.Map(changedConfigs);
-                                  newChanges.delete(config.key);
-                                  setChangedConfigs(newChanges);
-                                }}
-                                className="flex items-center gap-1 px-2 py-1 rounded-md text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all font-medium"
-                                title="撤销此项修改"
-                              >
-                                <RotateCcw className="h-3.5 w-3.5" />
-                                <span>撤销修改</span>
-                              </button>
-                            )}
-                          </div>
                         </div>
                         
-                        {/* 右侧：输入控件 */}
-                        <div className="flex-shrink-0 w-full lg:w-80 xl:w-96">
-                          <div className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                            {renderConfigInput(config)}
-                          </div>
+                        {/* 输入控件 */}
+                        <div className="mb-3">
+                          {renderConfigInput(config)}
                         </div>
+                        
+                        {/* 底部操作栏 */}
+                        {hasChanged && (
+                          <div className="flex items-center justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                              onClick={() => {
+                                const newChanges = new globalThis.Map(changedConfigs);
+                                newChanges.delete(config.key);
+                                setChangedConfigs(newChanges);
+                              }}
+                              className="flex items-center gap-1 px-2 py-1 text-xs rounded-md text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all font-medium"
+                              title="撤销此项修改"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              撤销
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </Card>
-        ))}
+        );
+        })}
       </div>
 
       {filteredGroups.length === 0 && (

@@ -284,31 +284,6 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
     options: ["debug", "info", "warn", "error"],
   },
 
-  // 通知配置
-  "notifications.email_enabled": {
-    value: false,
-    category: "notifications",
-    description: "Enable email notifications",
-    displayName: "启用邮件通知",
-    inputType: "boolean",
-  },
-  "notifications.webhook_enabled": {
-    value: false,
-    category: "notifications",
-    description: "Enable webhook notifications",
-    displayName: "启用 Webhook 通知",
-    inputType: "boolean",
-  },
-  "notifications.alert_threshold": {
-    value: 3,
-    category: "notifications",
-    description: "Number of failures before sending alert",
-    displayName: "告警阈值",
-    inputType: "number",
-    min: 1,
-    max: 20,
-  },
-
   // 地图配置
   "map.provider": {
     value: "carto",

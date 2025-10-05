@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
   Globe,
   Users,
-  TrendingUp,
   MapPin,
   Server,
   RefreshCw,
@@ -196,37 +195,42 @@ export const VisitorStatsCard: React.FC = () => {
         </div>
 
         {/* 访问量概览 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <Users className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <Users className="h-10 w-10 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
               {stats?.totalVisitors.toLocaleString()}
             </div>
-            <div className="text-sm text-blue-700 dark:text-blue-300">总访问量</div>
-            <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              独立IP {stats?.uniqueIPs.toLocaleString()}
+            <div className="text-base text-blue-700 dark:text-blue-300 mb-2">总访问量</div>
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="text-blue-600 dark:text-blue-400">
+                <span className="font-semibold">{stats?.uniqueIPs.toLocaleString()}</span> 独立IP
+              </div>
+              <div className="text-blue-500 dark:text-blue-500">
+                <span className="font-semibold">
+                  {stats?.uniqueIPs && stats.totalVisitors 
+                    ? (stats.totalVisitors / stats.uniqueIPs).toFixed(1)
+                    : '0'}
+                </span> 平均访问
+              </div>
             </div>
           </div>
 
-          <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-            <TrendingUp className="h-8 w-8 text-green-600 dark:text-green-400 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100">
-              {stats?.recentVisitors.length || 0}
-            </div>
-            <div className="text-sm text-green-700 dark:text-green-300">最近访问</div>
-            <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-              活跃用户
-            </div>
-          </div>
-
-          <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-            <Activity className="h-8 w-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">
+          <div className="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <Globe className="h-10 w-10 text-green-600 dark:text-green-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
               {enrichedCountries.length}
             </div>
-            <div className="text-sm text-orange-700 dark:text-orange-300">覆盖国家</div>
-            <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-              ASN: {enrichedASNs.length}
+            <div className="text-base text-green-700 dark:text-green-300 mb-2">覆盖国家</div>
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="text-green-600 dark:text-green-400">
+                <span className="font-semibold">{enrichedASNs.length}</span> ASN网络
+              </div>
+              <div className="text-green-500 dark:text-green-500">
+                <span className="font-semibold">
+                  {((enrichedCountries.length / 195) * 100).toFixed(1)}%
+                </span> 覆盖率
+              </div>
             </div>
           </div>
         </div>

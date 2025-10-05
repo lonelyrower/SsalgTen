@@ -118,7 +118,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       node.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
       node.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       node.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (node.ipv4 && node.ipv4.includes(searchTerm));
+      (node.ipv4 && node.ipv4.includes(searchTerm)) ||
+      (node.ipv6 && node.ipv6.includes(searchTerm));
     
     const matchesStatus = filterStatus === 'all' || (node.status || '').toLowerCase() === filterStatus;
     
@@ -233,7 +234,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="搜索节点名称或位置..."
+              placeholder="搜索节点名称、国家或服务商..."
               className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,6 +293,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   <input
                     type="file"
                     accept=".txt,.json"
+                    aria-label="选择节点导入文件"
+                    placeholder="选择 .txt 或 .json 文件"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -397,25 +400,25 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       {/* 节点表格 */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-fixed">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '5%' }}>
+                <th className="w-[5%] px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {/* 状态指示 */}
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '28%' }}>
+                <th className="w-[28%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   节点信息
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '25%' }}>
+                <th className="w-[25%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   位置
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '15%' }}>
+                <th className="w-[15%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   状态
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '20%' }}>
+                <th className="w-[20%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   最后在线
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: '7%' }}>
+                <th className="w-[7%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
@@ -423,24 +426,29 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredNodes.map((node) => (
                 <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-2 py-4 text-center" style={{ width: '5%' }}>
+                  <td className="w-[5%] px-2 py-4 text-center">
                     {getStatusIcon(node.status)}
                   </td>
-                  <td className="px-4 py-4 text-center" style={{ width: '28%' }}>
+                  <td className="w-[28%] px-4 py-4 text-center">
                     <div className="inline-flex items-center">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {node.name}
                         </div>
                         {node.ipv4 && (
-                          <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                            {node.ipv4}
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                            IPv4: {node.ipv4}
+                          </div>
+                        )}
+                        {node.ipv6 && node.ipv6.includes(':') && node.ipv6.length > 15 && (
+                          <div className="text-xs text-purple-600 dark:text-purple-400 font-mono">
+                            IPv6: {node.ipv6}
                           </div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-center" style={{ width: '25%' }}>
+                  <td className="w-[25%] px-4 py-4 text-center">
                     <div className="text-sm text-gray-900 dark:text-white inline-flex items-center justify-center gap-1">
                       <CountryFlagSvg country={node.country} />
                       <span>{node.city}, {node.country}</span>
@@ -449,15 +457,15 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       {node.provider}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-center" style={{ width: '15%' }}>
+                  <td className="w-[15%] px-4 py-4 text-center">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(node.status)}`}>
                       {getStatusText(node.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-center text-gray-500 dark:text-gray-400" style={{ width: '20%' }}>
+                  <td className="w-[20%] px-4 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
                     {node.lastSeen ? new Date(node.lastSeen).toLocaleDateString('zh-CN') : '未知'}
                   </td>
-                  <td className="px-4 py-4 text-center text-sm font-medium" style={{ width: '10%' }}>
+                  <td className="w-[7%] px-4 py-4 text-center text-sm font-medium">
                     <div className="inline-flex items-center justify-center space-x-2">
                       <Button
                         variant="ghost"
