@@ -143,6 +143,14 @@ echo ""
 echo "🔧 正在重置管理员密码..."
 echo ""
 
+# 检查并生成 Prisma Client
+echo "📦 检查 Prisma Client..."
+if ! $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && node -e \"require('@prisma/client')\"" 2>/dev/null; then
+    echo "⚙️  生成 Prisma Client..."
+    $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && npx prisma generate" 2>&1 | grep -E "(✔|Generated|Database)"
+    echo "✅ Prisma Client 已生成"
+fi
+
 # 方法1: 尝试使用 npm script
 if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && npm run reset-admin" 2>&1 | grep -q "✅"; then
     :
