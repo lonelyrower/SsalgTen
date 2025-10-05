@@ -3,6 +3,7 @@ import { apiService } from '@/services/api';
 import type { VisitorStats as VisitorStatsT } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { getCountryFlag } from '@/utils/countryFlags';
 import {
   Globe,
   Users,
@@ -113,16 +114,6 @@ export const VisitorStatsCard: React.FC = () => {
   // 计算百分比
   const calculatePercentage = (count: number, total: number) => {
     return total > 0 ? ((count / total) * 100).toFixed(1) : '0';
-  };
-
-  // 国家代码转国旗 emoji
-  const getCountryFlag = (countryCode: string): string => {
-    if (!countryCode || countryCode.length !== 2) return '';
-    const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
   };
 
   // 处理国家数据
