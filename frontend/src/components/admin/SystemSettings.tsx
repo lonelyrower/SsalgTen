@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import {
   Settings,
   Database,
-  Zap,
   Save,
   RefreshCw,
   AlertCircle,
@@ -44,7 +43,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const CATEGORY_ORDER = React.useMemo(() => [
     'basic',      // 基础配置
     'data',       // 数据管理
-    'features',   // 功能开关
     'map',        // 地图配置
   ], []);
 
@@ -184,8 +182,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return <Settings className="h-5 w-5 text-blue-500" />;
       case 'data':
         return <Database className="h-5 w-5 text-purple-500" />;
-      case 'features':
-        return <Zap className="h-5 w-5 text-orange-500" />;
       case 'map':
         return <MapIcon className="h-5 w-5 text-cyan-500" />;
       default:
@@ -199,8 +195,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return '🎨 基础配置';
       case 'data':
         return '📊 数据管理';
-      case 'features':
-        return '🚀 功能开关';
       case 'map':
         return '🗺️ 地图配置';
       default:
@@ -214,8 +208,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         return '站点名称等基本信息';
       case 'data':
         return '数据保留策略，控制存储空间';
-      case 'features':
-        return '启用或禁用特定功能';
       case 'map':
         return 'Mapbox API 密钥配置（地图样式可在地图页面直接切换）';
       default:
@@ -423,9 +415,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       // 数据管理
       'monitoring.retention_days': '数据保留天数',
       
-      // 功能开关
-      'diagnostics.speedtest_enabled': '启用速度测试',
-      
       // 地图配置
       'map.api_key': 'Mapbox API 密钥',
     };
@@ -441,10 +430,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       
       // 数据管理
       'monitoring.retention_days': '历史监控数据保留天数，超过此时间的数据将被自动清理',
-      
-      // 功能开关
-      'diagnostics.speedtest_enabled': '是否允许节点执行速度测试（会消耗较多流量和资源）',
 
+      // 地图配置
       'map.api_key': '可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥',
     };
 

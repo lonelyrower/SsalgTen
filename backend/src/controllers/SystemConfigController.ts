@@ -66,16 +66,7 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
     max: 365,
   },
 
-  // 🚀 功能开关
-  "diagnostics.speedtest_enabled": {
-    value: true,
-    category: "features",
-    description: "是否允许节点执行速度测试（会消耗较多流量和资源）",
-    displayName: "启用速度测试",
-    inputType: "boolean",
-  },
-
-  // 🗺️ 地图配置
+  // ️ 地图配置
   "map.api_key": {
     value: "",
     category: "map",
@@ -243,8 +234,9 @@ export class SystemConfigController {
         return;
       }
 
-      // 将值序列化为JSON字符串
-      const serializedValue = JSON.stringify(value);
+      // 如果已经是字符串，直接使用；否则序列化
+      const serializedValue =
+        typeof value === "string" ? value : JSON.stringify(value);
 
       const updatedConfig = await prisma.setting.upsert({
         where: { key },
@@ -460,7 +452,10 @@ export class SystemConfigController {
 
       await prisma.$transaction(async (tx) => {
         for (const [key, defaultConfig] of Object.entries(configsToReset)) {
-          const serializedValue = JSON.stringify(defaultConfig.value);
+          const serializedValue =
+            typeof defaultConfig.value === "string"
+              ? defaultConfig.value
+              : JSON.stringify(defaultConfig.value);
 
           const updatedConfig = await tx.setting.upsert({
             where: { key },
