@@ -139,6 +139,32 @@ export interface SystemInfo {
     frps?: boolean;
     frpc?: boolean;
   };
+
+  // 安全监控数据
+  security?: {
+    ssh?: {
+      enabled: boolean;
+      alerts: Array<{
+        ip: string;
+        count: number;
+        windowMinutes: number;
+      }>;
+    };
+    processes?: {
+      enabled: boolean;
+      totalProcesses: number;
+      suspiciousProcesses: Array<any>;
+      summary: {
+        highCpu: number;
+        highMemory: number;
+        suspiciousPath: number;
+        hidden: number;
+        miners: number;
+      };
+    };
+    network?: any;
+    files?: any;
+  };
 }
 
 export interface HeartbeatData {

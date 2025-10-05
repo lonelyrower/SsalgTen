@@ -254,6 +254,20 @@ export class NodeService {
         },
       });
 
+      // 记录节点创建事件
+      const eventService = (await import("./EventService")).eventService;
+      await eventService.createEvent(
+        node.id,
+        "NODE_CREATED",
+        `节点创建: ${node.name}`,
+        {
+          city: node.city,
+          country: node.country,
+          provider: node.provider,
+          asnNumber: asnInfo.asnNumber,
+        },
+      );
+
       logger.info(
         `Node created: ${node.name} (${node.id}) with ASN: ${asnInfo.asnNumber}`,
       );
@@ -395,6 +409,12 @@ export class NodeService {
   // 更新节点信息
   async updateNode(id: string, input: UpdateNodeInput): Promise<ManagedNode> {
     try {
+      // 获取更新前的节点信息，用于比对重要变更
+      const oldNode = await prisma.node.findUnique({
+        where: { id },
+        select: { id: true, name: true },
+      });
+
       const node = await prisma.node.update({
         where: { id },
         data: {
@@ -403,6 +423,21 @@ export class NodeService {
         },
         select: BASE_NODE_SELECT,
       });
+
+      // 记录节点名称更新事件
+      if (oldNode && input.name && input.name !== oldNode.name) {
+        try {
+          const eventService = (await import("./EventService")).eventService;
+          await eventService.createEvent(
+            node.id,
+            "NODE_UPDATED",
+            `节点名称更新: ${oldNode.name} -> ${input.name}`,
+            { oldName: oldNode.name, newName: input.name },
+          );
+        } catch (eventError) {
+          logger.warn("Failed to create update event:", eventError);
+        }
+      }
 
       logger.info(`Node updated: ${node.name} (${node.id})`);
 
@@ -423,6 +458,32 @@ export class NodeService {
   // 删除节点
   async deleteNode(id: string): Promise<void> {
     try {
+      // 先获取节点信息用于记录事件
+      const node = await prisma.node.findUnique({
+        where: { id },
+        select: { id: true, name: true, city: true, country: true },
+      });
+
+      if (!node) {
+        throw new Error("Node not found");
+      }
+
+      // 记录删除事件（在删除前记录，因为删除后节点就不存在了）
+      try {
+        const eventService = (await import("./EventService")).eventService;
+        await eventService.createEvent(
+          node.id,
+          "NODE_DELETED",
+          `节点删除: ${node.name}`,
+          {
+            city: node.city,
+            country: node.country,
+          },
+        );
+      } catch (eventError) {
+        logger.warn("Failed to create delete event:", eventError);
+      }
+
       await prisma.node.delete({
         where: { id },
         select: { id: true },
@@ -859,6 +920,12 @@ export class NodeService {
     },
   ): Promise<void> {
     try {
+      // 获取节点信息
+      const node = await this.getNodeByAgentId(agentId);
+      if (!node) {
+        throw new Error(`Node with agentId ${agentId} not found`);
+      }
+
       await prisma.diagnosticRecord.create({
         data: {
           node: {
@@ -873,6 +940,23 @@ export class NodeService {
           timestamp: new Date(),
         },
       });
+
+      // 记录诊断事件
+      const eventService = (await import("./EventService")).eventService;
+      const statusText = diagnosticData.success ? "成功" : "失败";
+      const targetText = diagnosticData.target ? ` -> ${diagnosticData.target}` : "";
+      await eventService.createEvent(
+        node.id,
+        "DIAGNOSTIC_TEST",
+        `${diagnosticData.type} ${statusText}${targetText}`,
+        {
+          type: diagnosticData.type,
+          target: diagnosticData.target,
+          success: diagnosticData.success,
+          duration: diagnosticData.duration,
+          error: diagnosticData.error,
+        },
+      );
 
       logger.debug(
         `Diagnostic recorded for agent: ${agentId}, type: ${diagnosticData.type}`,

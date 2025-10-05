@@ -115,6 +115,16 @@ export const VisitorStatsCard: React.FC = () => {
     return total > 0 ? ((count / total) * 100).toFixed(1) : '0';
   };
 
+  // 国家代码转国旗 emoji
+  const getCountryFlag = (countryCode: string): string => {
+    if (!countryCode || countryCode.length !== 2) return '';
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  };
+
   // 处理国家数据
   const enrichedCountries = stats?.topCountries.map(country => ({
     ...country,
@@ -251,7 +261,7 @@ export const VisitorStatsCard: React.FC = () => {
                       #{index + 1}
                     </span>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {country.country}
+                      {getCountryFlag(country.country)} {country.country}
                     </span>
                   </div>
                   <div className="text-right">
@@ -280,14 +290,9 @@ export const VisitorStatsCard: React.FC = () => {
                     <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">
                       #{index + 1}
                     </span>
-                    <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {asn.asn}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {asn.org}
-                      </div>
-                    </div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {asn.asn}
+                    </span>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">

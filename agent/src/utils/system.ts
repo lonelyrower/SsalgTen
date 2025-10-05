@@ -627,7 +627,11 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     services,
     basicCpuUsage,
     basicDiskUsage,
-    osDistro
+    osDistro,
+    securitySummary,
+    processScan,
+    networkScan,
+    fileChanges
   ] = await Promise.all([
     getCPUInfo(),
     getDetailedMemoryInfo(),
@@ -638,11 +642,64 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     getServicesStatus(),
     getCpuUsage(),
     getDiskUsage(),
-    getOSDistro()
+    getOSDistro(),
+    // 安全监控数据
+    (async () => {
+      try {
+        const { securityMonitor } = await import('../services/SecurityMonitor');
+        return await securityMonitor.checkSshBruteforce();
+      } catch {
+        return null;
+      }
+    })(),
+    (async () => {
+      try {
+        const { processMonitor } = await import('../services/ProcessMonitor');
+        return await processMonitor.scanProcesses();
+      } catch {
+        return null;
+      }
+    })(),
+    (async () => {
+      try {
+        const { networkMonitor } = await import('../services/NetworkMonitor');
+        return await networkMonitor.monitor();
+      } catch {
+        return null;
+      }
+    })(),
+    (async () => {
+      try {
+        const { fileMonitor } = await import('../services/FileMonitor');
+        return await fileMonitor.checkIntegrity();
+      } catch {
+        return null;
+      }
+    })()
   ]);
 
   // 可选的 Xray 自检：通过环境变量启用
   const xrayDetail = await getXrayCheck();
+
+  // 构建安全数据对象
+  const security: any = {};
+  if (securitySummary) {
+    security.ssh = securitySummary.ssh;
+  }
+  if (processScan) {
+    security.processes = {
+      enabled: processScan.enabled,
+      totalProcesses: processScan.totalProcesses,
+      suspiciousProcesses: processScan.suspiciousProcesses,
+      summary: processScan.summary
+    };
+  }
+  if (networkScan) {
+    security.network = networkScan;
+  }
+  if (fileChanges) {
+    security.files = fileChanges;
+  }
 
   return {
     // 基本系统信息 - 使用友好的发行版名称
@@ -652,28 +709,28 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     version: os.version ? os.version() : os.release(),
     uptime: Math.round(os.uptime()),
     nodeVersion: process.version,
-    
+
     // CPU信息
     cpu: cpuInfo,
     cpuUsage: basicCpuUsage, // 兼容性保留
     cpuCount: cpuInfo.cores, // 兼容性保留
-    
+
     // 内存信息
     memory: memoryInfo,
     memoryUsage: memoryInfo.usage, // 兼容性保留
-    
+
     // 磁盘信息
     disk: diskInfo,
     diskUsage: diskInfo.usage, // 兼容性保留
-    
+
     // 网络信息
     network: networkStats,
     networkInterface: getNetworkInterface(), // 兼容性保留
-    
+
     // 系统负载和进程
     loadAverage: os.loadavg(),
     processes: processInfo,
-    
+
     // 虚拟化和服务信息
     virtualization,
     services: (() => {
@@ -684,6 +741,9 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
       }
       return svc;
     })(),
+
+    // 安全监控数据
+    security: Object.keys(security).length > 0 ? security : undefined,
   };
 };
 

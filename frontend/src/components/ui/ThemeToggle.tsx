@@ -126,21 +126,25 @@ export const ThemeToggle: React.FC = () => {
           <div
             ref={menuRef}
             className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[101]"
-            role="listbox"
-            aria-labelledby="theme-toggle-button"
-            aria-orientation="vertical"
             onKeyDown={handleKeyDown}
           >
-            <div className="py-2">
-              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700" role="presentation">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                  主题设置
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  选择你喜欢的主题外观
-                </p>
+            {/* 标题区域 */}
+            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+              <div className="text-sm font-medium text-gray-900 dark:text-white" id="theme-menu-label">
+                主题设置
               </div>
-              
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                选择你喜欢的主题外观
+              </div>
+            </div>
+
+            {/* 主题选项列表 */}
+            <div
+              className="py-2"
+              role="listbox"
+              aria-labelledby="theme-menu-label"
+              aria-orientation="vertical"
+            >
               {themes.map((themeOption, index) => {
                 const Icon = themeOption.icon;
                 const isSelected = theme === themeOption.value;
@@ -200,23 +204,23 @@ export const ThemeToggle: React.FC = () => {
                   </button>
                 );
               })}
-              
-              {/* 当前主题状态 */}
-              <div
-                className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
-                aria-live="polite"
-              >
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`w-2 h-2 rounded-full ${
-                      actualTheme === 'dark' ? 'bg-gray-800 dark:bg-white' : 'bg-yellow-400'
-                    }`}
-                    aria-hidden="true"
-                  ></div>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    当前: {actualTheme === 'dark' ? '深色模式' : '浅色模式'}
-                  </span>
-                </div>
+            </div>
+
+            {/* 当前主题状态 */}
+            <div
+              className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+              aria-live="polite"
+            >
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    actualTheme === 'dark' ? 'bg-gray-800 dark:bg-white' : 'bg-yellow-400'
+                  }`}
+                  aria-hidden="true"
+                ></div>
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  当前: {actualTheme === 'dark' ? '深色模式' : '浅色模式'}
+                </span>
               </div>
             </div>
           </div>
