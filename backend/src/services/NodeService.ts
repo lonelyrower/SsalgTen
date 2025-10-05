@@ -944,7 +944,9 @@ export class NodeService {
       // 记录诊断事件
       const eventService = (await import("./EventService")).eventService;
       const statusText = diagnosticData.success ? "成功" : "失败";
-      const targetText = diagnosticData.target ? ` -> ${diagnosticData.target}` : "";
+      const targetText = diagnosticData.target
+        ? ` -> ${diagnosticData.target}`
+        : "";
       await eventService.createEvent(
         node.id,
         "DIAGNOSTIC_TEST",
