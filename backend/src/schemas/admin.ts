@@ -17,6 +17,7 @@ export const UpdateUserSchema = z
     email: z.string().email().optional(),
     name: z.string().min(1).optional(),
     avatar: z.string().url().optional(),
+    password: z.string().min(6).optional(),
     role: z.enum(["ADMIN", "OPERATOR", "VIEWER"]).optional(),
     active: z.boolean().optional(),
   })

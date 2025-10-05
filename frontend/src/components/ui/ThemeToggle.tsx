@@ -100,24 +100,24 @@ export const ThemeToggle: React.FC = () => {
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-white/10 border border-white/20 hover:border-white/30 transition-all duration-300"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`主题设置：当前为${currentTheme?.label}，点击打开主题选择菜单`}
         id="theme-toggle-button"
       >
-        <CurrentIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-        <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400">
+        <CurrentIcon className="h-4 w-4 text-white/90" />
+        <span className="hidden sm:inline text-sm text-white/90 font-medium">
           {currentTheme?.label}
         </span>
-        <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-3 w-3 text-white/70 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </Button>
 
       {isOpen && (
         <>
           {/* 背景遮罩 */}
           <div 
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[100]"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />
@@ -125,7 +125,7 @@ export const ThemeToggle: React.FC = () => {
           {/* 下拉菜单 */}
           <div 
             ref={menuRef}
-            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[101] max-h-96 overflow-y-auto"
             role="listbox"
             aria-labelledby="theme-toggle-button"
             aria-orientation="vertical"
@@ -161,7 +161,7 @@ export const ThemeToggle: React.FC = () => {
                     }}
                     onMouseEnter={() => setFocusedIndex(index)}
                     role="option"
-                    aria-selected={isSelected}
+                    aria-selected={isSelected ? 'true' : 'false'}
                     aria-describedby={`theme-${themeOption.value}-desc`}
                     tabIndex={isFocused ? 0 : -1}
                   >

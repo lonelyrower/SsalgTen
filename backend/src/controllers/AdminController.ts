@@ -51,6 +51,7 @@ export interface UpdateUserRequest {
   email?: string;
   name?: string;
   avatar?: string;
+  password?: string;
   role?: "ADMIN" | "OPERATOR" | "VIEWER";
   active?: boolean;
 }
@@ -619,9 +620,25 @@ export class AdminController {
         }
       }
 
+      // 准备更新数据
+      const dataToUpdate: Record<string, unknown> = { ...updateData };
+
+      // 如果包含密码，需要加密
+      if (updateData.password) {
+        if (updateData.password.length < 6) {
+          const response: ApiResponse = {
+            success: false,
+            error: "Password must be at least 6 characters long",
+          };
+          res.status(400).json(response);
+          return;
+        }
+        dataToUpdate.password = await bcrypt.hash(updateData.password, 12);
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id },
-        data: updateData,
+        data: dataToUpdate,
         select: {
           id: true,
           username: true,
