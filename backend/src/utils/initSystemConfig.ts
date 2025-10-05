@@ -37,7 +37,10 @@ export async function initSystemConfig(): Promise<void> {
           await prisma.setting.create({
             data: {
               key,
-              value: JSON.stringify(defaultConfig.value),
+              value:
+                typeof defaultConfig.value === "string"
+                  ? defaultConfig.value
+                  : JSON.stringify(defaultConfig.value),
               category: defaultConfig.category || "other",
               description: defaultConfig.description,
             },
