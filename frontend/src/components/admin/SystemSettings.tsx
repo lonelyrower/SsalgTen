@@ -19,7 +19,6 @@ import {
   Filter,
   CheckCircle,
   ChevronDown,
-  Info,
 } from 'lucide-react';
 
 interface SystemSettingsProps {
@@ -453,7 +452,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       'api.log_level': 'API 日志级别',
 
       // 地图配置
-      'map.api_key': 'Mapbox API 密钥（仅当地图切换到 Mapbox 时需要）',
+      'map.api_key': 'Mapbox API 密钥',
     };
 
     return displayNames[key] || formatConfigKey(key);
@@ -499,7 +498,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       'api.log_level': 'API日志记录级别，debug级别会记录更详细的信息，适用于开发调试',
 
       // 地图配置
-      'map.api_key': 'Mapbox 的 API 访问密钥，在 Mapbox 官网申请。用户可以在地图页面直接切换地图样式（CARTO、OpenStreetMap、Mapbox），此密钥仅用于启用 Mapbox 图层',
+      'map.api_key': '可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥',
     };
 
     return helpTexts[key] || '';
@@ -789,7 +788,6 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                   {group.configs.map(config => {
                     const hasChanged = changedConfigs.has(config.key);
                     const chineseDisplayName = getConfigDisplayName(config.key);
-                    const englishDisplayName = config.displayName || formatConfigKey(config.key);
                     const helpText = getConfigHelp(config.key);
 
                     return (
@@ -810,67 +808,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                           </div>
                         )}
 
-                        {/* 配置标题和帮助 */}
+                        {/* 配置标题 */}
                         <div className="mb-3">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight flex-1">
-                              {chineseDisplayName}
-                            </h3>
-                            
-                            {/* 帮助按钮 - 悬停或点击显示技术细节 */}
-                            {(config.key || helpText) && (
-                              <div className="relative group/help flex-shrink-0">
-                                <button
-                                  type="button"
-                                  className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-center transition-colors"
-                                  title="查看技术详情"
-                                >
-                                  <Info className="h-3.5 w-3.5" />
-                                </button>
-                                
-                                {/* 悬停显示的技术信息 */}
-                                <div className="absolute right-0 top-8 z-[100] w-80 p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-2xl opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all duration-200">
-                                  {/* 小箭头 */}
-                                  <div className="absolute -top-2 right-2 w-4 h-4 bg-white dark:bg-gray-800 border-l-2 border-t-2 border-gray-200 dark:border-gray-600 transform rotate-45"></div>
-
-                                  <div className="relative space-y-2">
-                                    {/* 英文显示名称 */}
-                                    {englishDisplayName && (
-                                      <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">英文名称</p>
-                                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
-                                          {englishDisplayName}
-                                        </p>
-                                      </div>
-                                    )}
-
-                                    {/* 技术键名 */}
-                                    <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">技术键名</p>
-                                      <code className="text-xs text-gray-700 dark:text-gray-300 font-mono bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded block">
-                                        {config.key}
-                                      </code>
-                                    </div>
-
-                                    {/* 详细帮助 */}
-                                    {helpText && (
-                                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
-                                        <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                                          💡 {helpText}
-                                        </p>
-                                      </div>
-                                    )}
-
-                                    {/* 更新时间 */}
-                                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200 dark:border-gray-700">
-                                      <Clock className="h-3 w-3" />
-                                      更新: {new Date(config.updatedAt).toLocaleString('zh-CN')}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight mb-2">
+                            {chineseDisplayName}
+                          </h3>
 
                           {/* 中文详细说明 - 默认显示 */}
                           {helpText && (
