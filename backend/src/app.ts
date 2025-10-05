@@ -33,6 +33,8 @@ const app = express();
 })();
 
 // 安全中间件
+const isDevelopment = process.env.NODE_ENV === "development";
+
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
@@ -40,8 +42,14 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
+        // 开发环境需要 'unsafe-eval' 以支持 Vite HMR (Hot Module Replacement)
+        // 生产环境移除以提高安全性
+        scriptSrc: isDevelopment ? ["'self'", "'unsafe-eval'"] : ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
+        // 开发环境允许连接到 Vite 开发服务器的 WebSocket
+        connectSrc: isDevelopment
+          ? ["'self'", "ws:", "wss:", "http:", "https:"]
+          : ["'self'"],
       },
     },
   }),
