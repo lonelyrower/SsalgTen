@@ -251,8 +251,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         </Card>
       )}
 
-      {/* 配置项列表 */}
-      <div className="grid gap-6">
+      {/* 配置项列表 - 3列布局 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {configs.map((config) => {
           const info = getConfigInfo(config.key);
           const hasChanged = changedConfigs.has(config.key);
