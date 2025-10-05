@@ -384,7 +384,9 @@ export const EnhancedWorldMap = memo(({
   const [currentProvider, setCurrentProvider] = useState<MapProvider>(() => {
     const w: any = typeof window !== 'undefined' ? (window as any) : {};
     const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'carto').toString().toLowerCase();
-    return provider as MapProvider;
+    // 验证提供商是否有效，如果无效则使用默认值
+    const validProviders: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
+    return validProviders.includes(provider as MapProvider) ? (provider as MapProvider) : 'carto';
   });
   const [currentLayerId, setCurrentLayerId] = useState<string>('carto-light'); // 默认图层ID
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -398,11 +400,23 @@ export const EnhancedWorldMap = memo(({
   // 获取所有图层
   const allLayers = useMemo(() => getAllLayers(apiKey), [apiKey]);
   
-  // 获取当前提供商的所有图层
-  const currentProviderLayers = useMemo(() => allLayers[currentProvider], [allLayers, currentProvider]);
+  // 获取当前提供商的所有图层（带安全检查）
+  const currentProviderLayers = useMemo(() => {
+    return allLayers[currentProvider] || allLayers.carto || [];
+  }, [allLayers, currentProvider]);
   
-  // 获取当前选中的图层配置
+  // 获取当前选中的图层配置（带安全检查）
   const currentLayerConfig = useMemo(() => {
+    if (!currentProviderLayers || currentProviderLayers.length === 0) {
+      // 如果没有可用图层，返回一个默认配置
+      return {
+        id: 'carto-light',
+        name: 'Light 亮色',
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
+        subdomains: ['a', 'b', 'c', 'd'],
+      };
+    }
     const layer = currentProviderLayers.find(l => l.id === currentLayerId);
     return layer || currentProviderLayers[0]; // 如果找不到，返回第一个
   }, [currentProviderLayers, currentLayerId]);
@@ -662,14 +676,17 @@ export const EnhancedWorldMap = memo(({
             </Button>
           </div>
         </div>
-        
-        {/* 图层切换按钮 */}
+      </div>
+      )}
+
+      {/* 图层切换按钮 - 始终显示 */}
+      <div className="absolute top-4 right-4 z-40">
         <div className="layer-menu-container relative">
           <Button
             variant="secondary"
             size="sm"
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="w-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
           >
             <Layers className="h-4 w-4" />
             <span>图层</span>
@@ -701,13 +718,13 @@ export const EnhancedWorldMap = memo(({
                         }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
                           currentProvider === 'carto' && currentLayerId === layer.id
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            ? 'bg-purple-600 dark:bg-purple-600 text-white font-medium shadow-md'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
                         {currentProvider === 'carto' && currentLayerId === layer.id && (
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                         )}
                       </button>
                     ))}
@@ -731,13 +748,13 @@ export const EnhancedWorldMap = memo(({
                         }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
                           currentProvider === 'openstreetmap' && currentLayerId === layer.id
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            ? 'bg-green-600 dark:bg-green-600 text-white font-medium shadow-md'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
                         {currentProvider === 'openstreetmap' && currentLayerId === layer.id && (
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                         )}
                       </button>
                     ))}
@@ -771,13 +788,13 @@ export const EnhancedWorldMap = memo(({
                           !apiKey
                             ? 'opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-600'
                             : currentProvider === 'mapbox' && currentLayerId === layer.id
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            ? 'bg-blue-600 dark:bg-blue-600 text-white font-medium shadow-md'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
                         {apiKey && currentProvider === 'mapbox' && currentLayerId === layer.id && (
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                         )}
                       </button>
                     ))}
@@ -788,7 +805,6 @@ export const EnhancedWorldMap = memo(({
           )}
         </div>
       </div>
-      )}
 
       {/* 地图容器：占满可用空间，保底高度避免过小 */}
       <div className="flex-1 min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">

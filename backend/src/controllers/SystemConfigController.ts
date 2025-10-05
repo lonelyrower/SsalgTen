@@ -37,6 +37,7 @@ interface ConfigMetadata {
   displayName: string; // 中文名称
   inputType?: "text" | "number" | "boolean" | "select" | "textarea"; // 输入类型
   options?: string[]; // 下拉框选项
+  optionLabels?: Record<string, string>; // 选项的显示标签
   unit?: string; // 单位
   min?: number; // 最小值（数字类型）
   max?: number; // 最大值（数字类型）
@@ -288,15 +289,20 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
   "map.provider": {
     value: "carto",
     category: "map",
-    description: "Map tile provider (carto, openstreetmap, mapbox)",
+    description: "地图图层提供商（CARTO、OpenStreetMap、Mapbox）",
     displayName: "地图提供商",
     inputType: "select",
     options: ["carto", "openstreetmap", "mapbox"],
+    optionLabels: {
+      carto: "CARTO（推荐，免费）",
+      openstreetmap: "OpenStreetMap（开源）",
+      mapbox: "Mapbox（需要API密钥）",
+    },
   },
   "map.api_key": {
     value: "",
     category: "map",
-    description: "Map API key (required for mapbox)",
+    description: "Mapbox API 密钥（仅使用 Mapbox 时需要）",
     displayName: "地图 API 密钥",
     inputType: "text",
   },

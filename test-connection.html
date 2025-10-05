@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SsalgTen 连接测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            background: #f9f9f9;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .success {
+            background: #4CAF50;
+            color: white;
+        }
+        .error {
+            background: #f44336;
+            color: white;
+        }
+        .pending {
+            background: #FF9800;
+            color: white;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0b7dda;
+        }
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .log-entry {
+            margin: 3px 0;
+        }
+        .log-success { color: #4CAF50; }
+        .log-error { color: #f44336; }
+        .log-info { color: #2196F3; }
+        .log-warning { color: #FF9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 SsalgTen 服务连接测试</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ 后端 API 测试</h3>
+            <p>测试地址: <code id="api-url">http://localhost:3001/api/health</code></p>
+            <p>状态: <span id="api-status" class="status pending">等待测试</span></p>
+            <button onclick="testAPI()">测试 API</button>
+        </div>
+
+        <div class="test-section">
+            <h3>2️⃣ Socket.IO 连接测试</h3>
+            <p>测试地址: <code id="socket-url">http://localhost:3001</code></p>
+            <p>状态: <span id="socket-status" class="status pending">等待测试</span></p>
+            <button onclick="testSocket()">测试 Socket.IO</button>
+            <button onclick="disconnectSocket()">断开连接</button>
+        </div>
+
+        <div class="test-section">
+            <h3>3️⃣ WebSocket 升级测试</h3>
+            <p>测试 WebSocket 协议升级</p>
+            <p>状态: <span id="ws-status" class="status pending">等待测试</span></p>
+            <button onclick="testWebSocket()">测试 WebSocket</button>
+        </div>
+
+        <div class="test-section">
+            <h3>4️⃣ 运行所有测试</h3>
+            <button onclick="runAllTests()">🚀 运行所有测试</button>
+            <button onclick="clearLogs()">🗑️ 清除日志</button>
+        </div>
+
+        <h3>📋 测试日志</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        const logEl = document.getElementById('log');
+
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${time}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(message);
+        }
+
+        function setStatus(elementId, text, success) {
+            const el = document.getElementById(elementId);
+            el.textContent = text;
+            el.className = 'status ' + (success ? 'success' : 'error');
+        }
+
+        async function testAPI() {
+            log('开始测试后端 API...', 'info');
+            const url = document.getElementById('api-url').textContent;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    setStatus('api-status', '✅ 连接成功', true);
+                    log(`✅ API 测试成功: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    setStatus('api-status', '❌ 响应错误', false);
+                    log(`❌ API 返回错误: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                setStatus('api-status', '❌ 连接失败', false);
+                log(`❌ API 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testSocket() {
+            log('开始测试 Socket.IO 连接...', 'info');
+            const url = document.getElementById('socket-url').textContent;
+            
+            try {
+                if (socket) {
+                    socket.disconnect();
+                }
+
+                socket = io(url, {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    timeout: 10000,
+                });
+
+                socket.on('connect', () => {
+                    setStatus('socket-status', '✅ 连接成功', true);
+                    log(`✅ Socket.IO 连接成功 (ID: ${socket.id})`, 'success');
+                    log(`   传输方式: ${socket.io.engine.transport.name}`, 'info');
+                });
+
+                socket.on('connect_error', (error) => {
+                    setStatus('socket-status', '❌ 连接失败', false);
+                    log(`❌ Socket.IO 连接错误: ${error.message}`, 'error');
+                });
+
+                socket.on('disconnect', (reason) => {
+                    log(`⚠️ Socket.IO 断开连接: ${reason}`, 'warning');
+                    if (reason === 'io server disconnect') {
+                        socket.connect();
+                    }
+                });
+
+                socket.on('error', (error) => {
+                    log(`❌ Socket.IO 错误: ${error}`, 'error');
+                });
+
+                // 监听传输升级
+                socket.io.engine.on('upgrade', (transport) => {
+                    log(`🚀 传输方式升级到: ${transport.name}`, 'success');
+                });
+
+            } catch (error) {
+                setStatus('socket-status', '❌ 初始化失败', false);
+                log(`❌ Socket.IO 初始化失败: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                setStatus('socket-status', '已断开', false);
+                log('ℹ️ Socket.IO 已手动断开', 'info');
+            } else {
+                log('⚠️ Socket.IO 未连接', 'warning');
+            }
+        }
+
+        function testWebSocket() {
+            log('开始测试原生 WebSocket...', 'info');
+            const url = 'ws://localhost:3001/socket.io/?EIO=4&transport=websocket';
+            
+            try {
+                const ws = new WebSocket(url);
+
+                ws.onopen = () => {
+                    setStatus('ws-status', '✅ 连接成功', true);
+                    log('✅ WebSocket 连接成功', 'success');
+                    ws.close();
+                };
+
+                ws.onerror = (error) => {
+                    setStatus('ws-status', '❌ 连接失败', false);
+                    log(`❌ WebSocket 错误: ${error}`, 'error');
+                };
+
+                ws.onclose = (event) => {
+                    log(`ℹ️ WebSocket 关闭: Code=${event.code}, Reason=${event.reason}`, 'info');
+                };
+
+            } catch (error) {
+                setStatus('ws-status', '❌ 初始化失败', false);
+                log(`❌ WebSocket 初始化失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function runAllTests() {
+            log('========================================', 'info');
+            log('开始运行所有测试...', 'info');
+            log('========================================', 'info');
+            
+            await testAPI();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            testSocket();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            testWebSocket();
+            
+            log('========================================', 'info');
+            log('所有测试完成', 'info');
+            log('========================================', 'info');
+        }
+
+        function clearLogs() {
+            logEl.innerHTML = '';
+            log('日志已清除', 'info');
+        }
+
+        // 页面加载时显示环境信息
+        window.addEventListener('load', () => {
+            log('========================================', 'info');
+            log('SsalgTen 服务连接测试工具', 'info');
+            log('========================================', 'info');
+            log(`浏览器: ${navigator.userAgent}`, 'info');
+            log(`当前地址: ${window.location.href}`, 'info');
+            log(`Socket.IO 版本: ${io.version}`, 'info');
+            log('========================================', 'info');
+            log('', 'info');
+            log('💡 提示: 请确保后端服务运行在 localhost:3001', 'warning');
+            log('💡 提示: 点击"运行所有测试"开始诊断', 'warning');
+        });
+    </script>
+</body>
+</html>

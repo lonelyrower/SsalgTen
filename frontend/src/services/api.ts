@@ -210,6 +210,7 @@ export interface SystemConfig {
   displayName?: string;
   inputType?: 'text' | 'number' | 'boolean' | 'select' | 'textarea';
   options?: string[];
+  optionLabels?: Record<string, string>; // 选项的显示标签
   unit?: string;
   min?: number;
   max?: number;

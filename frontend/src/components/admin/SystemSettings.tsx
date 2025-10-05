@@ -109,11 +109,15 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
             onChange={(e) => handleChange(e.target.value)}
             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            {config.options.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
+            {config.options.map((option) => {
+              // 如果有 optionLabels，使用标签；否则使用原值
+              const label = config.optionLabels?.[option] || option;
+              return (
+                <option key={option} value={option}>
+                  {label}
+                </option>
+              );
+            })}
           </select>
         </>
       );
@@ -245,7 +249,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       case 'performance':
         return '缓存策略、并发限制、资源优化配置';
       case 'map':
-        return '地图服务商选择、API密钥配置（支持Mapbox/OpenStreetMap/Carto）';
+        return '地图服务商选择、API密钥配置（支持 CARTO/OpenStreetMap/Mapbox）';
       default:
         return '未分类的其他配置选项';
     }
@@ -449,8 +453,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       'api.log_level': 'API日志记录级别，debug级别会记录更详细的信息，适用于开发调试',
       
       // 地图配置
-      'map.provider': '地图图层提供商。Carto免费无需密钥；Mapbox需要API密钥但提供更丰富的样式',
-      'map.api_key': 'Mapbox的API访问密钥，在Mapbox官网申请。选择其他提供商时可留空',
+      'map.provider': '地图图层提供商。CARTO（免费无需密钥）、OpenStreetMap（免费开源）、Mapbox（需要API密钥，提供更丰富的样式）',
+      'map.api_key': 'Mapbox 的 API 访问密钥，在 Mapbox 官网申请。选择 CARTO 或 OpenStreetMap 时可留空',
     };
     
     return helpTexts[key] || '';
@@ -553,7 +557,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                 >
                   全部
                 </button>
-                {groupedConfigs.slice(0, 6).map(group => (
+                {/* 显示所有分类 */}
+                {groupedConfigs.map(group => (
                   <button
                     key={group.category}
                     onClick={() => setSelectedCategory(group.category)}

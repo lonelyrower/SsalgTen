@@ -35,8 +35,15 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     const initCesium = async () => {
       // 读取地图配置
       const w: any = typeof window !== 'undefined' ? (window as any) : {};
-      const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
+      let provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
       const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+      
+      // 验证提供商是否有效（3D 地球支持的提供商）
+      const validProviders = ['carto', 'mapbox', 'openstreetmap'];
+      if (!validProviders.includes(provider)) {
+        console.warn(`⚠️ 无效的地图提供商: ${provider}，使用默认值 openstreetmap`);
+        provider = 'openstreetmap';
+      }
       
       // 读取Cesium Ion配置
       const cesiumIonToken = w.APP_CONFIG?.CESIUM_ION_TOKEN || import.meta.env.VITE_CESIUM_ION_TOKEN || '';
@@ -58,49 +65,53 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       }
 
       try {
-        // 根据配置选择地图源
-        let imageryProvider;
+        // 根据配置选择地图源（使用异步创建，更可靠）
+        let imageryProviderPromise: Promise<Cesium.ImageryProvider>;
         
         switch (provider) {
           case 'carto':
-            imageryProvider = new Cesium.UrlTemplateImageryProvider({
+            imageryProviderPromise = Promise.resolve(new Cesium.UrlTemplateImageryProvider({
               url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
               credit: '© CARTO © OpenStreetMap contributors',
               subdomains: ['a', 'b', 'c', 'd']
-            });
+            }));
             break;
             
           case 'mapbox':
             if (apiKey) {
-              imageryProvider = new Cesium.UrlTemplateImageryProvider({
+              imageryProviderPromise = Promise.resolve(new Cesium.UrlTemplateImageryProvider({
                 url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
                 credit: '© Mapbox © OpenStreetMap contributors'
-              });
+              }));
             } else {
               console.warn('Mapbox 需要 API key，回退到 OpenStreetMap');
-              imageryProvider = new Cesium.OpenStreetMapImageryProvider({
-                url: 'https://tile.openstreetmap.org/'
-              });
+              imageryProviderPromise = Promise.resolve(
+                new Cesium.OpenStreetMapImageryProvider({
+                  url: 'https://tile.openstreetmap.org/'
+                })
+              );
             }
             break;
             
           case 'openstreetmap':
-            imageryProvider = new Cesium.OpenStreetMapImageryProvider({
-              url: 'https://tile.openstreetmap.org/'
-            });
+            imageryProviderPromise = Promise.resolve(
+              new Cesium.OpenStreetMapImageryProvider({
+                url: 'https://tile.openstreetmap.org/'
+              })
+            );
             break;
             
           default:
             // 使用更可靠的默认地图源（ArcGIS World Imagery）
-            imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-              url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-            } as any);
+            imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
+              'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+            );
         }
 
         // 创建 Cesium Viewer
         const viewer = new Cesium.Viewer(containerRef.current!, {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-            Promise.resolve(imageryProvider)
+            imageryProviderPromise
           ),
           
           // 如果有Cesium Ion token，使用高质量地形数据
@@ -370,8 +381,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     }
   }, [showLayerMenu]);
 
-  // 图层切换功能 - 3D 地球专用
-  const switchLayer = (layerType: 'satellite' | 'terrain' | 'bluemarble' | 'natgeo') => {
+  // 图层切换功能 - 3D 地球专用（修复异步问题）
+  const switchLayer = async (layerType: 'satellite' | 'terrain' | 'bluemarble' | 'natgeo') => {
     const viewer = viewerRef.current;
     if (!viewer || viewer.isDestroyed()) return;
 
@@ -381,41 +392,55 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     // 移除当前图层
     viewer.imageryLayers.removeAll();
 
-    let imageryProvider: Cesium.ImageryProvider | null = null;
+    let imageryProviderPromise: Promise<Cesium.ImageryProvider> | null = null;
 
     switch (layerType) {
       case 'satellite':
         // 高清卫星影像（Esri 世界影像）
-        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-        } as any);
+        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        );
         break;
 
       case 'terrain':
         // 地形底图（Esri 世界地形）
-        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer'
-        } as any);
+        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer'
+        );
         break;
 
       case 'bluemarble':
         // 蓝色大理石（夜景+白天）
-        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-        } as any);
+        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+        );
         break;
 
       case 'natgeo':
       default:
         // National Geographic 风格（清晰的地理标注）
-        imageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer'
-        } as any);
+        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer'
+        );
         break;
     }
 
-    if (imageryProvider) {
-      viewer.imageryLayers.addImageryProvider(imageryProvider);
+    if (imageryProviderPromise) {
+      try {
+        const imageryProvider = await imageryProviderPromise;
+        if (viewer && !viewer.isDestroyed()) {
+          viewer.imageryLayers.addImageryProvider(imageryProvider);
+        }
+      } catch (error) {
+        console.error('图层加载失败:', error);
+        // 失败时回退到 OpenStreetMap
+        const fallbackProvider = new Cesium.OpenStreetMapImageryProvider({
+          url: 'https://tile.openstreetmap.org/'
+        });
+        if (viewer && !viewer.isDestroyed()) {
+          viewer.imageryLayers.addImageryProvider(fallbackProvider);
+        }
+      }
     }
   };
 
@@ -519,12 +544,12 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => switchLayer('satellite')}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'satellite'
-                      ? 'bg-blue-500 text-white shadow-md scale-[1.02]'
+                      ? 'bg-blue-600 text-white shadow-md scale-[1.02]'
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <Satellite className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'satellite' ? 'text-white' : 'text-blue-500'
+                    currentLayer === 'satellite' ? 'text-white' : 'text-blue-600 dark:text-blue-400'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">卫星影像</p>
@@ -542,12 +567,12 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => switchLayer('terrain')}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'terrain'
-                      ? 'bg-green-500 text-white shadow-md scale-[1.02]'
+                      ? 'bg-green-600 text-white shadow-md scale-[1.02]'
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <Map className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'terrain' ? 'text-white' : 'text-green-500'
+                    currentLayer === 'terrain' ? 'text-white' : 'text-green-600 dark:text-green-400'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">地形图</p>
@@ -565,12 +590,12 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => switchLayer('bluemarble')}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'bluemarble'
-                      ? 'bg-indigo-500 text-white shadow-md scale-[1.02]'
+                      ? 'bg-indigo-600 text-white shadow-md scale-[1.02]'
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <MapPin className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'bluemarble' ? 'text-white' : 'text-indigo-500'
+                    currentLayer === 'bluemarble' ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">街道底图</p>
@@ -588,12 +613,12 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => switchLayer('natgeo')}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'natgeo'
-                      ? 'bg-amber-500 text-white shadow-md scale-[1.02]'
+                      ? 'bg-amber-600 text-white shadow-md scale-[1.02]'
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <Globe className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'natgeo' ? 'text-white' : 'text-amber-500'
+                    currentLayer === 'natgeo' ? 'text-white' : 'text-amber-600 dark:text-amber-400'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">国家地理</p>
