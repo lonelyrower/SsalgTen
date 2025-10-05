@@ -684,7 +684,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
       {/* 优化的配置分组 - 紧凑网格布局 */}
       <div className="space-y-6">
-        {filteredGroups.map((group, groupIndex) => {
+        {filteredGroups.map((group) => {
           // 为每个分组定义更鲜明的颜色主题
           const colorSchemes = {
             map: {
