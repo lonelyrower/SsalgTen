@@ -123,9 +123,9 @@ export const ThemeToggle: React.FC = () => {
           />
           
           {/* 下拉菜单 */}
-          <div 
+          <div
             ref={menuRef}
-            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[101] max-h-96 overflow-y-auto"
+            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[101]"
             role="listbox"
             aria-labelledby="theme-toggle-button"
             aria-orientation="vertical"

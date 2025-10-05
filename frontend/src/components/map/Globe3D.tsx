@@ -3,11 +3,41 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Cesium from 'cesium';
 import type { NodeData } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { Globe, ZoomIn, ZoomOut, Home, Layers, MapPin, Satellite, Map } from 'lucide-react';
+import { Globe, ZoomIn, ZoomOut, Home, Layers, MapPin, Satellite, Map, Pause, Play } from 'lucide-react';
 
 interface Globe3DProps {
   nodes: NodeData[];
   onNodeClick?: (node: NodeData) => void;
+}
+
+// 创建聚合节点图标
+function createClusterIcon(size: number, count: number, color: Cesium.Color): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  if (ctx) {
+    // 绘制圆形背景
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fillStyle = color.toCssColorString();
+    ctx.fill();
+
+    // 绘制白色边框
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 绘制数字
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.min(size / 2.5, 24)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(count.toString(), size / 2, size / 2);
+  }
+
+  return canvas;
 }
 
 export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
@@ -15,10 +45,14 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const initializingRef = useRef(false); // 防止重复初始化
-  
+
   // 图层状态 - 3D 地球专用图层
   const [currentLayer, setCurrentLayer] = useState<'satellite' | 'terrain' | 'bluemarble' | 'natgeo'>('satellite');
   const [showLayerMenu, setShowLayerMenu] = useState(false);
+
+  // 自转控制状态
+  const [isRotating, setIsRotating] = useState(true);
+  const rotationEnabledRef = useRef(true);
 
   // 使用 useMemo 缓存节点ID列表，只有当节点ID变化时才重新渲染
   const nodeIds = useMemo(() => nodes.map(n => n.id).join(','), [nodes]);
@@ -197,43 +231,78 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           },
         });
 
-        // 添加点击事件监听器
+        // 添加点击事件监听器（只触发节点选择，不弹窗）
         viewer.screenSpaceEventHandler.setInputAction((movement: any) => {
           const pickedObject = viewer.scene.pick(movement.position);
           if (Cesium.defined(pickedObject) && pickedObject.id) {
             const entity = pickedObject.id;
             const nodeData = (entity as any)._nodeData;
 
-            if (nodeData) {
-              viewer.flyTo(entity, {
-                duration: 2,
-                offset: new Cesium.HeadingPitchRange(
-                  0,
-                  Cesium.Math.toRadians(-45),
-                  5000000
-                ),
-              });
-
-              if (onNodeClick) {
-                onNodeClick(nodeData);
-              }
+            if (nodeData && onNodeClick) {
+              // 只触发节点选择回调，显示右侧详情面板
+              onNodeClick(nodeData);
             }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        // 慢速自动旋转地球
+        // 慢速自动旋转地球（可控制）
         let lastTime = Date.now();
         const tickListener = () => {
           const now = Date.now();
           const deltaTime = (now - lastTime) / 1000;
           lastTime = now;
-          
-          if (viewer && !viewer.isDestroyed()) {
+
+          if (viewer && !viewer.isDestroyed() && rotationEnabledRef.current) {
             viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.02 * deltaTime);
           }
         };
-        
+
         viewer.clock.onTick.addEventListener(tickListener);
+
+        // 启用节点聚合功能
+        const entityCollection = viewer.entities as any;
+        if (entityCollection.clustering) {
+          entityCollection.clustering.enabled = true;
+          entityCollection.clustering.pixelRange = 80; // 聚合距离（像素）
+          entityCollection.clustering.minimumClusterSize = 2; // 最小聚合数量
+
+          // 自定义聚合样式
+          entityCollection.clustering.clusterEvent.addEventListener((entities: any[], cluster: any) => {
+            cluster.billboard.show = true;
+            cluster.billboard.id = cluster.label.id;
+            cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+
+            const count = entities.length;
+            const size = Math.min(80, 40 + count * 2);
+
+            // 统计在线/离线节点
+            let onlineCount = 0;
+            let offlineCount = 0;
+            entities.forEach((entity: any) => {
+              const nodeData = entity._nodeData;
+              if (nodeData) {
+                if (nodeData.status === 'online') onlineCount++;
+                else if (nodeData.status === 'offline') offlineCount++;
+              }
+            });
+
+            // 根据节点状态决定聚合颜色
+            let clusterColor;
+            if (onlineCount > offlineCount) {
+              clusterColor = Cesium.Color.fromCssColorString('#10b981').withAlpha(0.8);
+            } else if (offlineCount > onlineCount) {
+              clusterColor = Cesium.Color.fromCssColorString('#ef4444').withAlpha(0.8);
+            } else {
+              clusterColor = Cesium.Color.fromCssColorString('#f59e0b').withAlpha(0.8);
+            }
+
+            // 创建聚合图标
+            cluster.billboard.image = createClusterIcon(size, count, clusterColor);
+            cluster.billboard.width = size;
+            cluster.billboard.height = size;
+            cluster.label.show = false;
+          });
+        }
 
         setIsLoading(false);
         initializingRef.current = false;
@@ -268,24 +337,19 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     // 添加节点标记
     nodes.forEach((node) => {
       let color: Cesium.Color;
-      let statusText: string;
-      
+
       switch (node.status) {
         case 'online':
           color = Cesium.Color.fromCssColorString('#10b981');
-          statusText = '在线';
           break;
         case 'offline':
           color = Cesium.Color.fromCssColorString('#ef4444');
-          statusText = '离线';
           break;
         case 'warning':
           color = Cesium.Color.fromCssColorString('#f59e0b');
-          statusText = '警告';
           break;
         default:
           color = Cesium.Color.fromCssColorString('#6b7280');
-          statusText = '未知';
       }
 
       const entity = viewer.entities.add({
@@ -294,9 +358,9 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         position: Cesium.Cartesian3.fromDegrees(
           node.longitude,
           node.latitude,
-          500000
+          100000
         ),
-        
+
         point: {
           pixelSize: 12,
           color: color,
@@ -309,32 +373,21 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
             }, false) as any,
           }),
         },
-        
-        label: {
-          text: node.name,
-          font: '14px sans-serif',
-          fillColor: Cesium.Color.WHITE,
-          outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 2,
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -15),
-          heightReference: Cesium.HeightReference.NONE,
-        },
-        
-        description: `
-          <div style="padding: 10px; font-family: sans-serif;">
-            <h3 style="margin: 0 0 10px 0; color: #1f2937;">${node.name}</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 4px; color: #6b7280;">状态:</td><td style="padding: 4px; font-weight: bold; color: ${color.toCssColorString()};">${statusText}</td></tr>
-              <tr><td style="padding: 4px; color: #6b7280;">位置:</td><td style="padding: 4px;">${node.city}, ${node.country}</td></tr>
-              <tr><td style="padding: 4px; color: #6b7280;">坐标:</td><td style="padding: 4px;">${node.latitude.toFixed(4)}°N, ${node.longitude.toFixed(4)}°E</td></tr>
-              ${node.ipv4 ? `<tr><td style="padding: 4px; color: #6b7280;">IPv4:</td><td style="padding: 4px;">${node.ipv4}</td></tr>` : ''}
-              ${node.provider ? `<tr><td style="padding: 4px; color: #6b7280;">提供商:</td><td style="padding: 4px;">${node.provider}</td></tr>` : ''}
-              ${node.asnName ? `<tr><td style="padding: 4px; color: #6b7280;">ASN:</td><td style="padding: 4px;">${node.asnName}</td></tr>` : ''}
-            </table>
-          </div>
-        `,
+
+        // 移除节点名称标签和弹窗描述
+        // label: {
+        //   text: node.name,
+        //   font: '14px sans-serif',
+        //   fillColor: Cesium.Color.WHITE,
+        //   outlineColor: Cesium.Color.BLACK,
+        //   outlineWidth: 2,
+        //   style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        //   verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        //   pixelOffset: new Cesium.Cartesian2(0, -15),
+        //   heightReference: Cesium.HeightReference.NONE,
+        // },
+
+        // description: 已禁用 infoBox，不需要弹窗内容
       });
 
       (entity as any)._nodeData = node;
@@ -350,8 +403,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           viewer.entities.add({
             polyline: {
               positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                node1.longitude, node1.latitude, 500000,
-                node2.longitude, node2.latitude, 500000,
+                node1.longitude, node1.latitude, 100000,
+                node2.longitude, node2.latitude, 100000,
               ]),
               width: 2,
               material: new Cesium.PolylineGlowMaterialProperty({
@@ -471,6 +524,11 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     }
   };
 
+  const toggleRotation = () => {
+    rotationEnabledRef.current = !rotationEnabledRef.current;
+    setIsRotating(rotationEnabledRef.current);
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* 3D 地球容器 */}
@@ -488,6 +546,23 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
       {/* 控制按钮 */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={toggleRotation}
+          title={isRotating ? "暂停自转" : "恢复自转"}
+          className={`${
+            isRotating
+              ? 'bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800'
+              : 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
+          } shadow-lg border border-gray-200/50 dark:border-gray-600/50`}
+        >
+          {isRotating ? (
+            <Pause className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+          ) : (
+            <Play className="h-4 w-4 text-white" />
+          )}
+        </Button>
         <Button
           variant="secondary"
           size="icon"

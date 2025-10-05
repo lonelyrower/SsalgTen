@@ -537,36 +537,116 @@ export const getServicesStatus = async () => {
   return services;
 };
 
+// 获取操作系统发行版信息（友好显示名称）
+export const getOSDistro = async (): Promise<string> => {
+  try {
+    if (os.platform() === 'linux') {
+      // 优先尝试 /etc/os-release (现代Linux发行版标准)
+      try {
+        const osRelease = await readFile('/etc/os-release', 'utf8');
+        const prettyName = osRelease.match(/PRETTY_NAME="(.+)"/);
+        if (prettyName) {
+          return prettyName[1];
+        }
+
+        // 回退：尝试提取 NAME 和 VERSION
+        const name = osRelease.match(/^NAME="?(.+?)"?$/m);
+        const version = osRelease.match(/^VERSION="?(.+?)"?$/m);
+        if (name) {
+          const distro = name[1].replace(/"/g, '');
+          const ver = version ? version[1].replace(/"/g, '') : '';
+          return ver ? `${distro} ${ver}` : distro;
+        }
+      } catch {}
+
+      // 回退：尝试 lsb_release 命令
+      try {
+        const { stdout } = await exec('lsb_release -d 2>/dev/null');
+        const match = stdout.match(/Description:\s*(.+)/);
+        if (match) {
+          return match[1].trim();
+        }
+      } catch {}
+
+      // 回退：检查特定发行版文件
+      const distroFiles = [
+        { file: '/etc/redhat-release', name: 'RedHat/CentOS' },
+        { file: '/etc/debian_version', name: 'Debian' },
+        { file: '/etc/alpine-release', name: 'Alpine Linux' },
+      ];
+
+      for (const { file, name } of distroFiles) {
+        try {
+          const content = await readFile(file, 'utf8');
+          const version = content.trim();
+          return name === 'Debian' ? `Debian ${version}` : version || name;
+        } catch {}
+      }
+
+      // 最后回退：返回内核信息
+      return `${os.type()} ${os.release()}`;
+    } else if (os.platform() === 'win32') {
+      // Windows: 尝试获取友好版本名称
+      try {
+        const { stdout } = await exec('wmic os get Caption /value');
+        const match = stdout.match(/Caption=(.+)/);
+        if (match) {
+          return match[1].trim();
+        }
+      } catch {}
+
+      return `${os.type()} ${os.release()}`;
+    } else if (os.platform() === 'darwin') {
+      // macOS
+      try {
+        const { stdout } = await exec('sw_vers -productName && sw_vers -productVersion');
+        const lines = stdout.trim().split('\n');
+        if (lines.length >= 2) {
+          return `${lines[0]} ${lines[1]}`;
+        }
+      } catch {}
+
+      return `${os.type()} ${os.release()}`;
+    }
+
+    return `${os.type()} ${os.release()}`;
+  } catch {
+    return `${os.type()} ${os.release()}`;
+  }
+};
+
 // 获取完整系统信息
 export const getSystemInfo = async (): Promise<SystemInfo> => {
   const [
     cpuInfo,
-    memoryInfo, 
+    memoryInfo,
     diskInfo,
     networkStats,
     processInfo,
     virtualization,
     services,
     basicCpuUsage,
-    basicDiskUsage
+    basicDiskUsage,
+    osDistro
   ] = await Promise.all([
     getCPUInfo(),
     getDetailedMemoryInfo(),
-    getDetailedDiskInfo(), 
+    getDetailedDiskInfo(),
     getNetworkStats(),
     getProcessInfo(),
     getVirtualizationInfo(),
     getServicesStatus(),
     getCpuUsage(),
-    getDiskUsage()
+    getDiskUsage(),
+    getOSDistro()
   ]);
 
   // 可选的 Xray 自检：通过环境变量启用
   const xrayDetail = await getXrayCheck();
-  
+
   return {
-    // 基本系统信息
-    platform: `${os.type()} ${os.release()}`,
+    // 基本系统信息 - 使用友好的发行版名称
+    platform: osDistro,
     arch: os.arch(),
     hostname: os.hostname(),
     version: os.version ? os.version() : os.release(),

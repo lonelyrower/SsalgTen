@@ -380,15 +380,24 @@ export const EnhancedWorldMap = memo(({
   const [showClusterModal, setShowClusterModal] = useState(false);
   const [clusterNodes, setClusterNodes] = useState<NodeData[]>([]);
   
-  // 图层切换状态
+  // 图层切换状态 - 从 localStorage 读取用户偏好
   const [currentProvider, setCurrentProvider] = useState<MapProvider>(() => {
-    const w: any = typeof window !== 'undefined' ? (window as any) : {};
-    const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'carto').toString().toLowerCase();
-    // 验证提供商是否有效，如果无效则使用默认值
-    const validProviders: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
-    return validProviders.includes(provider as MapProvider) ? (provider as MapProvider) : 'carto';
+    // 优先从 localStorage 读取用户偏好
+    const savedProvider = localStorage.getItem('map_provider');
+    if (savedProvider) {
+      const validProviders: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
+      if (validProviders.includes(savedProvider as MapProvider)) {
+        return savedProvider as MapProvider;
+      }
+    }
+    // 如果没有保存的偏好，使用默认值
+    return 'carto';
   });
-  const [currentLayerId, setCurrentLayerId] = useState<string>('carto-light'); // 默认图层ID
+
+  const [currentLayerId, setCurrentLayerId] = useState<string>(() => {
+    // 从 localStorage 读取保存的图层ID
+    return localStorage.getItem('map_layer_id') || 'carto-light';
+  });
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   
   // 获取API key（用于Mapbox）
@@ -420,7 +429,16 @@ export const EnhancedWorldMap = memo(({
     const layer = currentProviderLayers.find(l => l.id === currentLayerId);
     return layer || currentProviderLayers[0]; // 如果找不到，返回第一个
   }, [currentProviderLayers, currentLayerId]);
-  
+
+  // 切换地图提供商和图层，并保存到 localStorage
+  const switchMapLayer = (provider: MapProvider, layerId: string) => {
+    setCurrentProvider(provider);
+    setCurrentLayerId(layerId);
+    // 保存用户偏好到 localStorage
+    localStorage.setItem('map_provider', provider);
+    localStorage.setItem('map_layer_id', layerId);
+  };
+
   // 点击外部关闭图层菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -712,8 +730,7 @@ export const EnhancedWorldMap = memo(({
                       <button
                         key={layer.id}
                         onClick={() => {
-                          setCurrentProvider('carto');
-                          setCurrentLayerId(layer.id);
+                          switchMapLayer('carto', layer.id);
                           setShowLayerMenu(false);
                         }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
@@ -742,8 +759,7 @@ export const EnhancedWorldMap = memo(({
                       <button
                         key={layer.id}
                         onClick={() => {
-                          setCurrentProvider('openstreetmap');
-                          setCurrentLayerId(layer.id);
+                          switchMapLayer('openstreetmap', layer.id);
                           setShowLayerMenu(false);
                         }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
@@ -776,11 +792,10 @@ export const EnhancedWorldMap = memo(({
                         key={layer.id}
                         onClick={() => {
                           if (!apiKey) {
-                            alert('Mapbox需要API密钥，请在系统设置中配置 MAP_API_KEY');
+                            alert('Mapbox需要API密钥。如需使用Mapbox，请联系管理员配置环境变量 VITE_MAP_API_KEY');
                             return;
                           }
-                          setCurrentProvider('mapbox');
-                          setCurrentLayerId(layer.id);
+                          switchMapLayer('mapbox', layer.id);
                           setShowLayerMenu(false);
                         }}
                         disabled={!apiKey}

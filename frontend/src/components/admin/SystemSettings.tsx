@@ -47,12 +47,12 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   // 定义分类显示顺序（按使用频率排序，常用的放前面）
   const CATEGORY_ORDER = React.useMemo(() => [
-    'map',          // 地图配置 - 最常用
-    'monitoring',   // 监控配置 - 常用
+    'monitoring',   // 监控配置 - 最常用
     'diagnostics',  // 诊断配置 - 常用
     'system',       // 系统设置 - 较常用
     'security',     // 安全配置 - 中等
     'api',          // API设置 - 中等
+    'map',          // 地图配置 - API密钥等
     'other'         // 其他设置（最后）
   ], []);
 
@@ -249,7 +249,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       case 'performance':
         return '缓存策略、并发限制、资源优化配置';
       case 'map':
-        return '地图服务商选择、API密钥配置（支持 CARTO/OpenStreetMap/Mapbox）';
+        return 'Mapbox API 密钥配置（地图样式可在地图页面直接切换）';
       default:
         return '未分类的其他配置选项';
     }
@@ -413,6 +413,52 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
     return key.split('.').pop()?.replace(/_/g, ' ') || key;
   };
 
+  // 获取配置项的中文显示名称
+  const getConfigDisplayName = (key: string): string => {
+    const displayNames: Record<string, string> = {
+      // 系统设置
+      'system.name': '系统名称',
+      'system.version': '系统版本',
+      'system.timezone': '系统时区',
+      'system.maintenance_mode': '维护模式',
+
+      // 监控配置
+      'monitoring.heartbeat_interval': '心跳间隔',
+      'monitoring.heartbeat_timeout': '心跳超时',
+      'monitoring.max_offline_time': '最大离线时间',
+      'monitoring.cleanup_interval': '清理间隔',
+      'monitoring.retention_days': '数据保留天数',
+
+      // 诊断配置
+      'diagnostics.default_ping_count': 'Ping 发包数量',
+      'diagnostics.default_traceroute_hops': 'Traceroute 最大跳数',
+      'diagnostics.default_mtr_count': 'MTR 循环次数',
+      'diagnostics.speedtest_enabled': '启用速度测试',
+      'diagnostics.max_concurrent_tests': '最大并发测试数',
+      'diagnostics.proxy_enabled': '启用后端代理',
+
+      // 安全配置
+      'security.jwt_expires_in': 'JWT 令牌有效期',
+      'security.max_login_attempts': '最大登录尝试次数',
+      'security.lockout_duration': '账户锁定时长',
+      'security.require_strong_passwords': '要求强密码',
+      'security.ssh_monitor_default_enabled': 'SSH 监控默认启用',
+      'security.ssh_monitor_default_window_min': 'SSH 监控时间窗口',
+      'security.ssh_monitor_default_threshold': 'SSH 失败登录阈值',
+
+      // API配置
+      'api.rate_limit_requests': '速率限制请求数',
+      'api.rate_limit_window': '速率限制时间窗口',
+      'api.cors_enabled': '启用 CORS',
+      'api.log_level': 'API 日志级别',
+
+      // 地图配置
+      'map.api_key': 'Mapbox API 密钥',
+    };
+
+    return displayNames[key] || formatConfigKey(key);
+  };
+
   // 获取配置项的详细说明
   const getConfigHelp = (key: string): string => {
     const helpTexts: Record<string, string> = {
@@ -451,12 +497,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       'api.rate_limit_window': 'API速率限制的时间窗口长度',
       'api.cors_enabled': '是否启用跨域资源共享，关闭后仅允许同源请求',
       'api.log_level': 'API日志记录级别，debug级别会记录更详细的信息，适用于开发调试',
-      
+
       // 地图配置
-      'map.provider': '地图图层提供商。CARTO（免费无需密钥）、OpenStreetMap（免费开源）、Mapbox（需要API密钥，提供更丰富的样式）',
-      'map.api_key': 'Mapbox 的 API 访问密钥，在 Mapbox 官网申请。选择 CARTO 或 OpenStreetMap 时可留空',
+      'map.api_key': 'Mapbox 的 API 访问密钥，在 Mapbox 官网申请。用户可以在地图页面直接切换地图样式（CARTO、OpenStreetMap、Mapbox），此密钥仅用于启用 Mapbox 图层',
     };
-    
+
     return helpTexts[key] || '';
   };
 
@@ -638,62 +683,104 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       )}
 
       {/* 优化的配置分组 - 紧凑网格布局 */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {filteredGroups.map((group, groupIndex) => {
-          // 为每个分组定义颜色主题
-          const colorClasses = [
-            'from-cyan-500/20 to-cyan-500/40', // cyan - map
-            'from-green-500/20 to-green-500/40', // green - monitoring
-            'from-purple-500/20 to-purple-500/40', // purple - diagnostics
-            'from-blue-500/20 to-blue-500/40', // blue - system
-            'from-red-500/20 to-red-500/40', // red - security
-            'from-indigo-500/20 to-indigo-500/40', // indigo - api
-            'from-gray-500/20 to-gray-500/40', // gray - other
-          ][groupIndex % 7];
+          // 为每个分组定义更鲜明的颜色主题
+          const colorSchemes = {
+            map: {
+              gradient: 'from-cyan-500/10 via-cyan-500/5 to-transparent',
+              iconBg: 'bg-gradient-to-br from-cyan-400 to-cyan-600',
+              border: 'border-cyan-200 dark:border-cyan-800',
+              count: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300'
+            },
+            monitoring: {
+              gradient: 'from-green-500/10 via-green-500/5 to-transparent',
+              iconBg: 'bg-gradient-to-br from-green-400 to-green-600',
+              border: 'border-green-200 dark:border-green-800',
+              count: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+            },
+            diagnostics: {
+              gradient: 'from-purple-500/10 via-purple-500/5 to-transparent',
+              iconBg: 'bg-gradient-to-br from-purple-400 to-purple-600',
+              border: 'border-purple-200 dark:border-purple-800',
+              count: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+            },
+            system: {
+              gradient: 'from-blue-500/10 via-blue-500/5 to-transparent',
+              iconBg: 'bg-gradient-to-br from-blue-400 to-blue-600',
+              border: 'border-blue-200 dark:border-blue-800',
+              count: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+            },
+            security: {
+              gradient: 'from-red-500/10 via-red-500/5 to-transparent',
+              iconBg: 'bg-gradient-to-br from-red-400 to-red-600',
+              border: 'border-red-200 dark:border-red-800',
+              count: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+            },
+            api: {
+              gradient: 'from-indigo-500/10 via-indigo-500/5 to-transparent',
+              iconBg: 'bg-gradient-to-br from-indigo-400 to-indigo-600',
+              border: 'border-indigo-200 dark:border-indigo-800',
+              count: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+            },
+          };
+
+          const defaultScheme = {
+            gradient: 'from-gray-500/10 via-gray-500/5 to-transparent',
+            iconBg: 'bg-gradient-to-br from-gray-400 to-gray-600',
+            border: 'border-gray-200 dark:border-gray-700',
+            count: 'bg-gray-100 dark:bg-gray-900/40 text-gray-700 dark:text-gray-300'
+          };
+
+          const colorScheme = colorSchemes[group.category as keyof typeof colorSchemes] || defaultScheme;
 
           return (
-          <Card 
-            key={group.category} 
-            className="bg-white dark:bg-gray-800 shadow-md hover:shadow-lg overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700"
+          <Card
+            key={group.category}
+            className={`bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${colorScheme.border} rounded-lg`}
           >
-            {/* 紧凑的分组标题 */}
-            <button 
-              className="w-full p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group text-left"
-              onClick={() => toggleGroup(group.category)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 flex-1">
-                  {/* 彩色图标 */}
-                  <div 
-                    className={`flex-shrink-0 p-2 rounded-lg group-hover:scale-110 transition-transform bg-gradient-to-br ${colorClasses}`}
-                  >
-                    {group.icon}
-                  </div>
-                  
-                  {/* 标题和描述 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                        {group.title}
-                      </h2>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                        {group.configs.length}
-                      </span>
+            {/* 优化的分组标题 - 添加渐变背景 */}
+            <div className={`relative bg-gradient-to-r ${colorScheme.gradient} rounded-t-lg`}>
+              <button
+                className="w-full p-5 hover:bg-white/50 dark:hover:bg-gray-700/30 transition-all group text-left relative"
+                onClick={() => toggleGroup(group.category)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 flex-1">
+                    {/* 彩色图标 - 更大更醒目 */}
+                    <div
+                      className={`flex-shrink-0 p-3 rounded-xl group-hover:scale-110 transition-transform shadow-md ${colorScheme.iconBg}`}
+                    >
+                      <div className="text-white">
+                        {group.icon}
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {group.description}
-                    </p>
+
+                    {/* 标题和描述 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                          {group.title}
+                        </h2>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${colorScheme.count}`}>
+                          {group.configs.length}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {group.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 展开图标 */}
+                  <div className={`flex-shrink-0 ml-4 transition-transform duration-300 ${
+                    expandedGroups.has(group.category) ? 'rotate-180' : ''
+                  }`}>
+                    <ChevronDown className="h-6 w-6 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
                   </div>
                 </div>
-                
-                {/* 展开图标 */}
-                <div className={`flex-shrink-0 ml-3 transition-transform duration-300 ${
-                  expandedGroups.has(group.category) ? 'rotate-180' : ''
-                }`}>
-                  <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-                </div>
-              </div>
-            </button>
+              </button>
+            </div>
 
             {/* 配置项列表 - 紧凑的网格布局 */}
             {expandedGroups.has(group.category) && (
@@ -701,15 +788,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {group.configs.map(config => {
                     const hasChanged = changedConfigs.has(config.key);
-                    const displayName = config.displayName || formatConfigKey(config.key);
+                    const chineseDisplayName = getConfigDisplayName(config.key);
+                    const englishDisplayName = config.displayName || formatConfigKey(config.key);
                     const helpText = getConfigHelp(config.key);
 
                     return (
-                      <div 
-                        key={config.id} 
-                        className={`group relative border rounded-lg p-4 transition-all duration-200 hover:shadow-md ${
-                          hasChanged 
-                            ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-md ring-2 ring-blue-200 dark:ring-blue-800' 
+                      <div
+                        key={config.id}
+                        className={`group relative border rounded-lg p-4 transition-all duration-200 hover:shadow-md overflow-visible ${
+                          hasChanged
+                            ? 'border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10 shadow-md ring-2 ring-blue-200 dark:ring-blue-800'
                             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-900/30'
                         }`}
                       >
@@ -726,7 +814,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                         <div className="mb-3">
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight flex-1">
-                              {displayName}
+                              {chineseDisplayName}
                             </h3>
                             
                             {/* 帮助按钮 - 悬停或点击显示技术细节 */}
@@ -741,19 +829,29 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                 </button>
                                 
                                 {/* 悬停显示的技术信息 */}
-                                <div className="absolute right-0 top-8 z-50 w-72 p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all duration-200">
+                                <div className="absolute right-0 top-8 z-[100] w-80 p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-2xl opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all duration-200">
                                   {/* 小箭头 */}
                                   <div className="absolute -top-2 right-2 w-4 h-4 bg-white dark:bg-gray-800 border-l-2 border-t-2 border-gray-200 dark:border-gray-600 transform rotate-45"></div>
-                                  
+
                                   <div className="relative space-y-2">
+                                    {/* 英文显示名称 */}
+                                    {englishDisplayName && (
+                                      <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">英文名称</p>
+                                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                                          {englishDisplayName}
+                                        </p>
+                                      </div>
+                                    )}
+
                                     {/* 技术键名 */}
                                     <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
                                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">技术键名</p>
-                                      <code className="text-xs text-gray-700 dark:text-gray-300 font-mono bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">
+                                      <code className="text-xs text-gray-700 dark:text-gray-300 font-mono bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded block">
                                         {config.key}
                                       </code>
                                     </div>
-                                    
+
                                     {/* 详细帮助 */}
                                     {helpText && (
                                       <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
@@ -762,7 +860,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                                         </p>
                                       </div>
                                     )}
-                                    
+
                                     {/* 更新时间 */}
                                     <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200 dark:border-gray-700">
                                       <Clock className="h-3 w-3" />
@@ -846,8 +944,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                   <span className="font-medium">修改项:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {Array.from(changedConfigs.keys()).slice(0, 5).map(key => {
-                      const config = configs.find(c => c.key === key);
-                      const displayName = config?.displayName || key.split('.').pop();
+                      const displayName = getConfigDisplayName(key);
                       return (
                         <span key={key} className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                           {displayName}
