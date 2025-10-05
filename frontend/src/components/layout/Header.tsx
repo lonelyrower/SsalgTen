@@ -89,9 +89,7 @@ export const Header = () => {
         <div className="flex items-center space-x-2 sm:space-x-3">
           {/* 主题切换器 */}
           <div className="hidden sm:block">
-            <div className="glass rounded-lg p-1">
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
           </div>
 
           {/* 如果已认证，显示简化的用户操作 */}

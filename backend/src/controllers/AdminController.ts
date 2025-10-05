@@ -4,6 +4,7 @@ import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";
 import { AuthenticatedRequest } from "../middleware/auth";
 import bcrypt from "bcryptjs";
+import os from "os";
 
 export interface CreateNodeRequest {
   name: string;
@@ -829,13 +830,14 @@ export class AdminController {
       // 系统信息
       const startTime = process.uptime(); // 后端进程运行时间（秒）
 
-      // 获取系统资源使用情况
-      const memUsage = process.memoryUsage();
-      const memUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
-      const memTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
-      const memUsagePercent = Math.round(
-        (memUsage.heapUsed / memUsage.heapTotal) * 100,
-      );
+      // 获取系统资源使用情况（真实系统内存，而非 Node.js 进程堆内存）
+      const memTotalBytes = os.totalmem();
+      const memFreeBytes = os.freemem();
+      const memUsedBytes = memTotalBytes - memFreeBytes;
+
+      const memUsedMB = Math.round(memUsedBytes / 1024 / 1024);
+      const memTotalMB = Math.round(memTotalBytes / 1024 / 1024);
+      const memUsagePercent = Math.round((memUsedBytes / memTotalBytes) * 100);
 
       // CPU使用率 (简化实现，使用进程CPU时间)
       const cpuUsage = process.cpuUsage();

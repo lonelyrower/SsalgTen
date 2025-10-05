@@ -493,27 +493,27 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={zoomIn}
           title="放大"
-          className="bg-white/90 hover:bg-white shadow-lg"
+          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
         >
-          <ZoomIn className="h-4 w-4" />
+          <ZoomIn className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
         <Button
           variant="secondary"
           size="icon"
           onClick={zoomOut}
           title="缩小"
-          className="bg-white/90 hover:bg-white shadow-lg"
+          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
         >
-          <ZoomOut className="h-4 w-4" />
+          <ZoomOut className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
         <Button
           variant="secondary"
           size="icon"
           onClick={resetView}
           title="重置视图"
-          className="bg-white/90 hover:bg-white shadow-lg"
+          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
         >
-          <Home className="h-4 w-4" />
+          <Home className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
       </div>
 
@@ -524,10 +524,10 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
             variant="secondary"
             size="sm"
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/90 hover:bg-white shadow-lg flex items-center gap-2"
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
           >
-            <Layers className="h-4 w-4" />
-            <span className="hidden sm:inline">图层</span>
+            <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+            <span className="hidden sm:inline text-gray-700 dark:text-gray-200">图层</span>
           </Button>
 
           {/* 图层选择菜单 */}
@@ -545,11 +545,11 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'satellite'
                       ? 'bg-blue-600 text-white shadow-md scale-[1.02]'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
+                      : 'bg-white/50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-gray-600/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <Satellite className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'satellite' ? 'text-white' : 'text-blue-600 dark:text-blue-400'
+                    currentLayer === 'satellite' ? 'text-white' : 'text-blue-600 dark:text-blue-300'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">卫星影像</p>
@@ -568,11 +568,11 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'terrain'
                       ? 'bg-green-600 text-white shadow-md scale-[1.02]'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
+                      : 'bg-white/50 dark:bg-gray-700/50 hover:bg-green-50 dark:hover:bg-gray-600/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <Map className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'terrain' ? 'text-white' : 'text-green-600 dark:text-green-400'
+                    currentLayer === 'terrain' ? 'text-white' : 'text-green-600 dark:text-green-300'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">地形图</p>
@@ -591,11 +591,11 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'bluemarble'
                       ? 'bg-indigo-600 text-white shadow-md scale-[1.02]'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
+                      : 'bg-white/50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-gray-600/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <MapPin className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'bluemarble' ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'
+                    currentLayer === 'bluemarble' ? 'text-white' : 'text-indigo-600 dark:text-indigo-300'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">街道底图</p>
@@ -614,11 +614,11 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                     currentLayer === 'natgeo'
                       ? 'bg-amber-600 text-white shadow-md scale-[1.02]'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-900 dark:text-gray-100'
+                      : 'bg-white/50 dark:bg-gray-700/50 hover:bg-amber-50 dark:hover:bg-gray-600/50 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <Globe className={`h-5 w-5 flex-shrink-0 ${
-                    currentLayer === 'natgeo' ? 'text-white' : 'text-amber-600 dark:text-amber-400'
+                    currentLayer === 'natgeo' ? 'text-white' : 'text-amber-600 dark:text-amber-300'
                   }`} />
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold">国家地理</p>

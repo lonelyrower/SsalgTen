@@ -688,8 +688,8 @@ export const EnhancedWorldMap = memo(({
             onClick={() => setShowLayerMenu(!showLayerMenu)}
             className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
           >
-            <Layers className="h-4 w-4" />
-            <span>图层</span>
+            <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+            <span className="text-gray-700 dark:text-gray-200">图层</span>
           </Button>
 
           {/* 图层选择菜单 */}
@@ -719,7 +719,7 @@ export const EnhancedWorldMap = memo(({
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
                           currentProvider === 'carto' && currentLayerId === layer.id
                             ? 'bg-purple-600 dark:bg-purple-600 text-white font-medium shadow-md'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
+                            : 'bg-white/50 dark:bg-gray-700/40 hover:bg-purple-50 dark:hover:bg-gray-600/50 text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
@@ -749,7 +749,7 @@ export const EnhancedWorldMap = memo(({
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
                           currentProvider === 'openstreetmap' && currentLayerId === layer.id
                             ? 'bg-green-600 dark:bg-green-600 text-white font-medium shadow-md'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
+                            : 'bg-white/50 dark:bg-gray-700/40 hover:bg-green-50 dark:hover:bg-gray-600/50 text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
@@ -789,7 +789,7 @@ export const EnhancedWorldMap = memo(({
                             ? 'opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-600'
                             : currentProvider === 'mapbox' && currentLayerId === layer.id
                             ? 'bg-blue-600 dark:bg-blue-600 text-white font-medium shadow-md'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
+                            : 'bg-white/50 dark:bg-gray-700/40 hover:bg-blue-50 dark:hover:bg-gray-600/50 text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
