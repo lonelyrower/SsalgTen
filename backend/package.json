@@ -14,7 +14,7 @@
     "db:seed": "node dist/utils/seed.js",
     "db:update-asn": "tsx src/scripts/update-asn.ts",
     "migrate:map-config": "tsx src/scripts/migrate-map-config.ts",
-    "reset-admin": "node scripts/reset-admin-password.js",
+    "reset-admin": "tsx src/scripts/reset-admin.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
