@@ -43,253 +43,44 @@ interface ConfigMetadata {
   max?: number; // 最大值（数字类型）
 }
 
-// 预定义的系统配置项
+// 预定义的系统配置项（仅保留用户真正需要的配置）
 export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
-  // 系统基础配置
+  // 🎨 基础配置
   "system.name": {
     value: "SsalgTen Network Monitor",
-    category: "system",
-    description: "System display name",
-    displayName: "系统名称",
+    category: "basic",
+    description: "在页面标题和导航栏中显示的系统名称",
+    displayName: "站点名称",
     inputType: "text",
-  },
-  "system.version": {
-    value: "1.0.0",
-    category: "system",
-    description: "Current system version",
-    displayName: "系统版本",
-    inputType: "text",
-  },
-  "system.timezone": {
-    value: "UTC",
-    category: "system",
-    description: "System timezone",
-    displayName: "系统时区",
-    inputType: "select",
-    options: [
-      "UTC",
-      "Asia/Shanghai",
-      "Asia/Tokyo",
-      "America/New_York",
-      "Europe/London",
-    ],
-  },
-  "system.maintenance_mode": {
-    value: false,
-    category: "system",
-    description: "Enable maintenance mode",
-    displayName: "维护模式",
-    inputType: "boolean",
   },
 
-  // 监控配置
-  "monitoring.heartbeat_interval": {
-    value: 30000,
-    category: "monitoring",
-    description: "Agent heartbeat interval in milliseconds",
-    displayName: "心跳间隔",
-    inputType: "number",
-    unit: "毫秒",
-    min: 5000,
-    max: 300000,
-  },
-  "monitoring.heartbeat_timeout": {
-    value: 90000,
-    category: "monitoring",
-    description: "Agent heartbeat timeout in milliseconds",
-    displayName: "心跳超时",
-    inputType: "number",
-    unit: "毫秒",
-    min: 10000,
-    max: 600000,
-  },
-  "monitoring.max_offline_time": {
-    value: 300000,
-    category: "monitoring",
-    description: "Maximum offline time before marking node as offline",
-    displayName: "最大离线时间",
-    inputType: "number",
-    unit: "毫秒",
-    min: 60000,
-    max: 3600000,
-  },
-  "monitoring.cleanup_interval": {
-    value: 86400000,
-    category: "monitoring",
-    description: "Cleanup interval for old records in milliseconds",
-    displayName: "清理间隔",
-    inputType: "number",
-    unit: "毫秒",
-    min: 3600000,
-  },
+  // 📊 数据管理
   "monitoring.retention_days": {
     value: 30,
-    category: "monitoring",
-    description: "Data retention period in days",
+    category: "data",
+    description: "历史监控数据保留天数，超过此时间的数据将被自动清理",
     displayName: "数据保留天数",
     inputType: "number",
     unit: "天",
-    min: 1,
+    min: 7,
     max: 365,
   },
 
-  // 诊断配置
-  "diagnostics.default_ping_count": {
-    value: 4,
-    category: "diagnostics",
-    description: "Default ping count for diagnostic tests",
-    displayName: "默认 Ping 次数",
-    inputType: "number",
-    min: 1,
-    max: 100,
-  },
-  "diagnostics.default_traceroute_hops": {
-    value: 30,
-    category: "diagnostics",
-    description: "Default maximum hops for traceroute",
-    displayName: "默认跳数上限",
-    inputType: "number",
-    min: 1,
-    max: 64,
-  },
-  "diagnostics.default_mtr_count": {
-    value: 10,
-    category: "diagnostics",
-    description: "Default MTR test count",
-    displayName: "默认 MTR 测试次数",
-    inputType: "number",
-    min: 1,
-    max: 100,
-  },
+  // 🚀 功能开关
   "diagnostics.speedtest_enabled": {
     value: true,
-    category: "diagnostics",
-    description: "Enable speedtest functionality",
+    category: "features",
+    description: "是否允许节点执行速度测试（会消耗较多流量和资源）",
     displayName: "启用速度测试",
     inputType: "boolean",
   },
-  "diagnostics.max_concurrent_tests": {
-    value: 5,
-    category: "diagnostics",
-    description: "Maximum concurrent diagnostic tests per agent",
-    displayName: "最大并发诊断数",
-    inputType: "number",
-    min: 1,
-    max: 20,
-  },
-  "diagnostics.proxy_enabled": {
-    value: false,
-    category: "diagnostics",
-    description: "Enable backend diagnostics proxy endpoints",
-    displayName: "启用诊断代理",
-    inputType: "boolean",
-  },
 
-  // 安全配置
-  "security.jwt_expires_in": {
-    value: "7d",
-    category: "security",
-    description: "JWT token expiration time",
-    displayName: "JWT 过期时间",
-    inputType: "select",
-    options: ["1h", "6h", "12h", "1d", "3d", "7d", "30d"],
-  },
-  "security.max_login_attempts": {
-    value: 5,
-    category: "security",
-    description: "Maximum login attempts before lockout",
-    displayName: "最大登录尝试次数",
-    inputType: "number",
-    min: 1,
-    max: 20,
-  },
-  "security.lockout_duration": {
-    value: 900000,
-    category: "security",
-    description: "Account lockout duration in milliseconds",
-    displayName: "账户锁定时长",
-    inputType: "number",
-    unit: "毫秒",
-    min: 60000,
-    max: 86400000,
-  },
-  "security.require_strong_passwords": {
-    value: true,
-    category: "security",
-    description: "Require strong passwords for new users",
-    displayName: "要求强密码",
-    inputType: "boolean",
-  },
-  "security.ssh_monitor_default_enabled": {
-    value: false,
-    category: "security",
-    description:
-      "Default enabled state for SSH brute-force monitoring on new agents (for installer templates)",
-    displayName: "默认启用 SSH 监控",
-    inputType: "boolean",
-  },
-  "security.ssh_monitor_default_window_min": {
-    value: 10,
-    category: "security",
-    description: "Default window minutes for SSH monitoring template",
-    displayName: "SSH 监控时间窗口",
-    inputType: "number",
-    unit: "分钟",
-    min: 1,
-    max: 60,
-  },
-  "security.ssh_monitor_default_threshold": {
-    value: 10,
-    category: "security",
-    description:
-      "Default threshold of attempts in window for SSH monitoring template",
-    displayName: "SSH 监控阈值",
-    inputType: "number",
-    min: 1,
-    max: 100,
-  },
-
-  // API配置
-  "api.rate_limit_requests": {
-    value: 100,
-    category: "api",
-    description: "API rate limit requests per window",
-    displayName: "速率限制请求数",
-    inputType: "number",
-    min: 10,
-    max: 10000,
-  },
-  "api.rate_limit_window": {
-    value: 900000,
-    category: "api",
-    description: "API rate limit window in milliseconds",
-    displayName: "速率限制窗口",
-    inputType: "number",
-    unit: "毫秒",
-    min: 60000,
-    max: 3600000,
-  },
-  "api.cors_enabled": {
-    value: true,
-    category: "api",
-    description: "Enable CORS for API requests",
-    displayName: "启用 CORS",
-    inputType: "boolean",
-  },
-  "api.log_level": {
-    value: "info",
-    category: "api",
-    description: "API logging level (debug, info, warn, error)",
-    displayName: "日志级别",
-    inputType: "select",
-    options: ["debug", "info", "warn", "error"],
-  },
-
-  // 地图配置
+  // 🗺️ 地图配置
   "map.api_key": {
     value: "",
     category: "map",
-    description: "Mapbox API key (only required when using Mapbox provider)",
+    description:
+      "可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥",
     displayName: "Mapbox API 密钥",
     inputType: "text",
   },

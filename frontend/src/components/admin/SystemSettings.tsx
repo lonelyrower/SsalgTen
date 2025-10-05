@@ -4,11 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   Settings,
-  Clock,
-  Activity,
   Database,
-  Shield,
-  Globe,
   Zap,
   Save,
   RefreshCw,
@@ -41,18 +37,15 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['system']));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['basic']));
   const [changedConfigs, setChangedConfigs] = useState<globalThis.Map<string, string>>(new globalThis.Map());
 
-  // 定义分类显示顺序（按使用频率排序，常用的放前面）
+  // 定义分类显示顺序
   const CATEGORY_ORDER = React.useMemo(() => [
-    'monitoring',   // 监控配置 - 最常用
-    'diagnostics',  // 诊断配置 - 常用
-    'system',       // 系统设置 - 较常用
-    'security',     // 安全配置 - 中等
-    'api',          // API设置 - 中等
-    'map',          // 地图配置 - API密钥等
-    'other'         // 其他设置（最后）
+    'basic',      // 基础配置
+    'data',       // 数据管理
+    'features',   // 功能开关
+    'map',        // 地图配置
   ], []);
 
   // 渲染配置输入控件
@@ -187,19 +180,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'system':
+      case 'basic':
         return <Settings className="h-5 w-5 text-blue-500" />;
-      case 'monitoring':
-        return <Clock className="h-5 w-5 text-green-500" />;
-      case 'diagnostics':
-        return <Activity className="h-5 w-5 text-purple-500" />;
-      case 'database':
+      case 'data':
         return <Database className="h-5 w-5 text-purple-500" />;
-      case 'security':
-        return <Shield className="h-5 w-5 text-red-500" />;
-      case 'api':
-        return <Globe className="h-5 w-5 text-indigo-500" />;
-      case 'performance':
+      case 'features':
         return <Zap className="h-5 w-5 text-orange-500" />;
       case 'map':
         return <MapIcon className="h-5 w-5 text-cyan-500" />;
@@ -210,22 +195,14 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   const getCategoryTitle = (category: string) => {
     switch (category) {
-      case 'system':
-        return '系统设置';
-      case 'monitoring':
-        return '监控配置';
-      case 'diagnostics':
-        return '诊断配置';
-      case 'database':
-        return '数据库设置';
-      case 'security':
-        return '安全配置';
-      case 'api':
-        return 'API设置';
-      case 'performance':
-        return '性能配置';
+      case 'basic':
+        return '🎨 基础配置';
+      case 'data':
+        return '📊 数据管理';
+      case 'features':
+        return '🚀 功能开关';
       case 'map':
-        return '地图配置';
+        return '🗺️ 地图配置';
       default:
         return '其他设置';
     }
@@ -233,20 +210,12 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
   const getCategoryDescription = (category: string) => {
     switch (category) {
-      case 'system':
-        return '系统基础参数、名称、时区等全局配置';
-      case 'monitoring':
-        return '节点心跳检测、超时设置、数据保留策略';
-      case 'diagnostics':
-        return 'Ping、Traceroute、MTR 等诊断工具的默认参数';
-      case 'database':
-        return '数据库连接池、性能优化和存储参数';
-      case 'security':
-        return 'JWT认证、登录限制、密码策略、SSH监控设置';
-      case 'api':
-        return 'API速率限制、CORS跨域、日志级别设置';
-      case 'performance':
-        return '缓存策略、并发限制、资源优化配置';
+      case 'basic':
+        return '站点名称等基本信息';
+      case 'data':
+        return '数据保留策略，控制存储空间';
+      case 'features':
+        return '启用或禁用特定功能';
       case 'map':
         return 'Mapbox API 密钥配置（地图样式可在地图页面直接切换）';
       default:
@@ -415,42 +384,15 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   // 获取配置项的中文显示名称
   const getConfigDisplayName = (key: string): string => {
     const displayNames: Record<string, string> = {
-      // 系统设置
-      'system.name': '系统名称',
-      'system.version': '系统版本',
-      'system.timezone': '系统时区',
-      'system.maintenance_mode': '维护模式',
-
-      // 监控配置
-      'monitoring.heartbeat_interval': '心跳间隔',
-      'monitoring.heartbeat_timeout': '心跳超时',
-      'monitoring.max_offline_time': '最大离线时间',
-      'monitoring.cleanup_interval': '清理间隔',
+      // 基础配置
+      'system.name': '站点名称',
+      
+      // 数据管理
       'monitoring.retention_days': '数据保留天数',
-
-      // 诊断配置
-      'diagnostics.default_ping_count': 'Ping 发包数量',
-      'diagnostics.default_traceroute_hops': 'Traceroute 最大跳数',
-      'diagnostics.default_mtr_count': 'MTR 循环次数',
+      
+      // 功能开关
       'diagnostics.speedtest_enabled': '启用速度测试',
-      'diagnostics.max_concurrent_tests': '最大并发测试数',
-      'diagnostics.proxy_enabled': '启用后端代理',
-
-      // 安全配置
-      'security.jwt_expires_in': 'JWT 令牌有效期',
-      'security.max_login_attempts': '最大登录尝试次数',
-      'security.lockout_duration': '账户锁定时长',
-      'security.require_strong_passwords': '要求强密码',
-      'security.ssh_monitor_default_enabled': 'SSH 监控默认启用',
-      'security.ssh_monitor_default_window_min': 'SSH 监控时间窗口',
-      'security.ssh_monitor_default_threshold': 'SSH 失败登录阈值',
-
-      // API配置
-      'api.rate_limit_requests': '速率限制请求数',
-      'api.rate_limit_window': '速率限制时间窗口',
-      'api.cors_enabled': '启用 CORS',
-      'api.log_level': 'API 日志级别',
-
+      
       // 地图配置
       'map.api_key': 'Mapbox API 密钥',
     };
@@ -461,43 +403,15 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   // 获取配置项的详细说明
   const getConfigHelp = (key: string): string => {
     const helpTexts: Record<string, string> = {
-      // 系统设置
+      // 基础配置
       'system.name': '在页面标题和导航栏中显示的系统名称',
-      'system.version': '当前系统版本号，用于版本追踪和兼容性检查',
-      'system.timezone': '系统默认时区，影响所有时间戳的显示格式',
-      'system.maintenance_mode': '开启后将限制系统访问，仅管理员可登录，用于系统维护期间',
       
-      // 监控配置
-      'monitoring.heartbeat_interval': 'Agent向服务器发送心跳的间隔时间，过短会增加网络负载',
-      'monitoring.heartbeat_timeout': '超过此时间未收到心跳则判定Agent离线，应大于心跳间隔的2-3倍',
-      'monitoring.max_offline_time': '节点持续离线超过此时间将被标记为不可用状态',
-      'monitoring.cleanup_interval': '系统自动清理过期数据的时间间隔',
-      'monitoring.retention_days': '历史监控数据的保留天数，过期数据将被自动清理以节省存储空间',
+      // 数据管理
+      'monitoring.retention_days': '历史监控数据保留天数，超过此时间的数据将被自动清理',
       
-      // 诊断配置
-      'diagnostics.default_ping_count': '执行Ping测试时的默认发包数量',
-      'diagnostics.default_traceroute_hops': 'Traceroute测试的最大跳数限制，防止无限循环',
-      'diagnostics.default_mtr_count': 'MTR测试的默认循环次数，影响测试精确度',
-      'diagnostics.speedtest_enabled': '是否启用网络速度测试功能（需要Agent支持）',
-      'diagnostics.max_concurrent_tests': '每个Agent同时执行的诊断任务数量上限，防止资源耗尽',
-      'diagnostics.proxy_enabled': '是否允许后端代理诊断请求，关闭后诊断将直接由Agent执行',
-      
-      // 安全配置
-      'security.jwt_expires_in': '用户登录令牌的有效期，过期后需要重新登录',
-      'security.max_login_attempts': '允许的最大连续登录失败次数，超过后账户将被临时锁定',
-      'security.lockout_duration': '账户被锁定后的冷却时间',
-      'security.require_strong_passwords': '强制要求新用户使用强密码（包含大小写字母、数字和特殊字符）',
-      'security.ssh_monitor_default_enabled': '新建Agent时是否默认启用SSH暴力破解监控功能',
-      'security.ssh_monitor_default_window_min': 'SSH监控的时间窗口，在此时间内统计失败登录次数',
-      'security.ssh_monitor_default_threshold': '时间窗口内失败登录次数达到此值时触发告警',
-      
-      // API配置
-      'api.rate_limit_requests': '时间窗口内允许的最大API请求次数',
-      'api.rate_limit_window': 'API速率限制的时间窗口长度',
-      'api.cors_enabled': '是否启用跨域资源共享，关闭后仅允许同源请求',
-      'api.log_level': 'API日志记录级别，debug级别会记录更详细的信息，适用于开发调试',
+      // 功能开关
+      'diagnostics.speedtest_enabled': '是否允许节点执行速度测试（会消耗较多流量和资源）',
 
-      // 地图配置
       'map.api_key': '可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥',
     };
 

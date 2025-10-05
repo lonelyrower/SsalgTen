@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
 import { PageErrorBoundary } from '@/components/error/ErrorBoundaryUtils';
+import { apiService } from '@/services/api';
 import './App.css';
 
 // Lazy load pages for better performance
@@ -19,6 +20,23 @@ const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({
 const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
 
 function App() {
+  // 动态加载系统名称并更新页面标题
+  useEffect(() => {
+    const loadSystemName = async () => {
+      try {
+        const response = await apiService.getSystemConfig('system.name');
+        if (response.success && response.data?.value) {
+          document.title = response.data.value;
+        }
+      } catch (error) {
+        // 加载失败时保持默认标题
+        console.debug('Failed to load system name:', error);
+      }
+    };
+    
+    loadSystemName();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
