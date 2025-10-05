@@ -96,6 +96,7 @@ const getAllLayers = (apiKey: string = ''): Record<MapProvider, LayerConfig[]> =
           : '',
         attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
         requiresApiKey: true,
+        subdomains: [],
       },
       {
         id: 'mapbox-satellite',
@@ -105,6 +106,7 @@ const getAllLayers = (apiKey: string = ''): Record<MapProvider, LayerConfig[]> =
           : '',
         attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
         requiresApiKey: true,
+        subdomains: [],
       },
       {
         id: 'mapbox-dark',
@@ -114,6 +116,7 @@ const getAllLayers = (apiKey: string = ''): Record<MapProvider, LayerConfig[]> =
           : '',
         attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
         requiresApiKey: true,
+        subdomains: [],
       },
       {
         id: 'mapbox-light',
@@ -123,6 +126,7 @@ const getAllLayers = (apiKey: string = ''): Record<MapProvider, LayerConfig[]> =
           : '',
         attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
         requiresApiKey: true,
+        subdomains: [],
       },
     ],
   };
