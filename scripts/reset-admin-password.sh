@@ -136,73 +136,68 @@ else
     fi
     
     echo "✅ 找到容器: $BACKEND_CONTAINER"
-    EXEC_CMD="docker exec -i"
+    EXEC_CMD="docker exec"
 fi
 
 echo ""
 echo "🔧 正在重置管理员密码..."
 echo ""
 
-# 确保 Prisma Client 已生成（静默执行，避免输出过多）
-echo "📦 准备 Prisma Client..."
-$EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && npx prisma generate --silent" >/dev/null 2>&1 || true
-
-# 方法1: 尝试使用 npm script
-echo "🔄 执行密码重置..."
-if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && npm run reset-admin" 2>&1 | grep -q "✅"; then
-    :
+# 直接尝试重置（如果 Prisma Client 缺失，后面的备用方案会处理）
+if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && timeout 30 npm run reset-admin 2>&1" | grep -q "✅"; then
+    # 成功
+    echo ""
 else
-    # 方法2: 使用临时文件方式执行 Node.js 脚本
+    # 备用方案：先确保生成 Prisma Client，然后使用内联脚本
     echo "⚠️  使用备用方案..."
+    echo "� 生成 Prisma Client（这可能需要几秒钟）..."
     
-    # 创建临时重置脚本
-    TEMP_SCRIPT="/tmp/reset-admin-$$.js"
+    # 使用 timeout 防止卡死
+    if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && timeout 60 npx prisma generate" 2>&1 | tail -5; then
+        echo "✅ Prisma Client 已生成"
+    fi
     
-    # 写入脚本内容到容器
-    $EXEC_CMD $BACKEND_CONTAINER sh -c "cat > $TEMP_SCRIPT" <<'SCRIPT_EOF'
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
-
+    echo "🔄 重新尝试重置..."
+    
+    # 创建临时重置脚本内容
+    RESET_CODE='const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
-
 async function reset() {
   try {
-    const hashedPassword = await bcrypt.hash('admin123', 12);
+    const hashedPassword = await bcrypt.hash("admin123", 12);
     const result = await prisma.user.updateMany({
-      where: { role: 'ADMIN' },
+      where: { role: "ADMIN" },
       data: { password: hashedPassword, active: true }
     });
-    
     if (result.count > 0) {
-      console.log('✅ 成功重置 ' + result.count + ' 个管理员用户的密码');
+      console.log("✅ 成功重置 " + result.count + " 个管理员用户的密码");
     } else {
-      console.log('🆕 创建默认管理员账户...');
+      console.log("🆕 创建默认管理员账户...");
       await prisma.user.create({
         data: {
-          username: 'admin',
-          email: 'admin@ssalgten.local',
+          username: "admin",
+          email: "admin@ssalgten.local",
           password: hashedPassword,
-          name: 'Administrator',
-          role: 'ADMIN',
+          name: "Administrator",
+          role: "ADMIN",
           active: true
         }
       });
-      console.log('✅ 成功创建管理员用户');
+      console.log("✅ 成功创建管理员用户");
     }
     process.exit(0);
   } catch (error) {
-    console.error('❌ 重置失败:', error.message);
+    console.error("❌ 重置失败:", error.message);
     process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
-
-reset();
-SCRIPT_EOF
+reset();'
     
-    # 执行脚本并清理
-    if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && node $TEMP_SCRIPT; rm -f $TEMP_SCRIPT" 2>&1; then
+    # 执行内联脚本
+    if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && node -e '$RESET_CODE'" 2>&1; then
         echo ""
     else
         echo ""
