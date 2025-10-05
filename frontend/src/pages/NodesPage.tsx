@@ -305,7 +305,9 @@ export const NodesPage: React.FC = () => {
                            node.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            node.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (node.ipv4 && node.ipv4.includes(searchTerm)) ||
-                           (node.ipv6 && node.ipv6.includes(searchTerm));
+                           (node.ipv6 && node.ipv6.includes(searchTerm)) ||
+                           (node.asnNumber && node.asnNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                           (node.asnName && node.asnName.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesStatus = statusFilter === 'all' || 
                            (statusFilter === 'online' && node.status === 'online') ||
@@ -432,7 +434,7 @@ export const NodesPage: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="搜索节点名称、国家或服务商..."
+                  placeholder="搜索节点名称、国家、服务商或ASN..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
