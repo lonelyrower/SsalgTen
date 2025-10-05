@@ -368,24 +368,17 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       setSaving(true);
       setError('');
       
-      const response = await fetch('/api/admin/configs/cleanup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      const data = await response.json();
+      const response = await apiService.cleanupOldConfigs();
       
-      if (data.success) {
-        setSuccess(`已清理 ${data.data?.deleted || 0} 个旧配置项`);
+      if (response.success) {
+        setSuccess(`已清理 ${response.data?.deleted || 0} 个旧配置项`);
         await loadConfigs();
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || '清理配置失败');
+        setError(response.error || '清理配置失败');
       }
-    } catch {
+    } catch (err) {
+      console.error('清理配置错误:', err);
       setError('清理配置失败');
     } finally {
       setSaving(false);

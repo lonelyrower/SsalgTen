@@ -773,6 +773,12 @@ class ApiService {
     }, true);
   }
 
+  async cleanupOldConfigs(): Promise<ApiResponse<{ deleted: number; deletedKeys: string[]; remaining: number }>> {
+    return this.request<{ deleted: number; deletedKeys: string[]; remaining: number }>('/admin/configs/cleanup', {
+      method: 'POST',
+    }, true);
+  }
+
   async deleteSystemConfig(key: string): Promise<ApiResponse<void>> {
     return this.request<void>(`/admin/configs/${key}`, {
       method: 'DELETE',
