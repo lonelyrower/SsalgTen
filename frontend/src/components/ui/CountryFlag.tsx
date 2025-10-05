@@ -118,9 +118,9 @@ const countryCodeMap: Record<string, string> = {
   '乌兹别克斯坦': 'uz',
   'New Zealand': 'nz',
   '新西兰': 'nz',
-  // 默认值（使用空字符串代替null）
-  'Unknown': '',
-  '未知': ''
+  // 默认值（使用问号代替，避免与挪威 NO 冲突）
+  'Unknown': '❓',
+  '未知': '❓'
 };
 
 interface CountryFlagProps {
@@ -139,7 +139,7 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
   // 获取国家代码
   const getCountryCode = (countryName: string): string => {
     if (!countryName || countryName.toLowerCase() === 'unknown') {
-      return '';
+      return '❓';
     }
     
     // 1. 直接精确匹配
@@ -191,6 +191,20 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
     md: 'text-sm',
     lg: 'text-base'
   };
+
+  // 如果是问号 emoji（Unknown），直接显示
+  if (countryCode === '❓') {
+    return (
+      <div className={`flex items-center space-x-2 ${className}`}>
+        <span className="text-base">❓</span>
+        {showName && (
+          <span className={`${textSizeClasses[size]} text-gray-700 dark:text-gray-300`}>
+            {country}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   if (!countryCode || countryCode === '') {
     // 如果没有找到国家代码，显示地球图标

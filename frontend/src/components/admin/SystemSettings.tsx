@@ -140,7 +140,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
   };
 
   const renderInput = (config: SystemConfig) => {
-    const currentValue = changedConfigs.get(config.key) ?? config.value;
+    let currentValue = changedConfigs.get(config.key) ?? config.value;
+    // 去除值两端的双引号（如果存在）
+    if (typeof currentValue === 'string' && currentValue.startsWith('"') && currentValue.endsWith('"')) {
+      currentValue = currentValue.slice(1, -1);
+    }
     const info = getConfigInfo(config.key);
     const inputType = config.inputType || 'text';
 
@@ -248,35 +252,50 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       )}
 
       {/* 配置项列表 */}
-      <div className="space-y-6">
+      <div className="grid gap-6">
         {configs.map((config) => {
           const info = getConfigInfo(config.key);
           const hasChanged = changedConfigs.has(config.key);
+          
+          // 根据配置类型设置图标和颜色
+          const configStyle = {
+            'system.name': { icon: '🏷️', color: 'from-blue-500 to-cyan-500', bg: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' },
+            'monitoring.retention_days': { icon: '📊', color: 'from-purple-500 to-pink-500', bg: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' },
+            'map.api_key': { icon: '🗺️', color: 'from-green-500 to-emerald-500', bg: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' },
+          }[config.key] || { icon: '⚙️', color: 'from-gray-500 to-slate-500', bg: 'bg-gray-50 dark:bg-gray-800' };
 
           return (
             <Card
               key={config.id}
-              className={`p-6 ${
+              className={`overflow-hidden transition-all duration-200 ${
                 hasChanged
-                  ? 'border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10'
-                  : 'border border-gray-200 dark:border-gray-700'
+                  ? 'border-2 border-blue-500 dark:border-blue-400 shadow-lg shadow-blue-500/20'
+                  : 'border border-gray-200 dark:border-gray-700 hover:shadow-md'
               }`}
             >
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    {info.name}
-                  </label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {info.desc}
-                  </p>
+              <div className={`h-2 bg-gradient-to-r ${configStyle.color}`}></div>
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl ${configStyle.bg} flex items-center justify-center text-2xl`}>
+                    {configStyle.icon}
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                        {info.name}
+                      </label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {info.desc}
+                      </p>
+                    </div>
+                    {renderInput(config)}
+                    {config.unit && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        单位：{config.unit}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {renderInput(config)}
-                {config.unit && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    单位：{config.unit}
-                  </p>
-                )}
               </div>
             </Card>
           );
