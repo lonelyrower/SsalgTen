@@ -4,11 +4,14 @@
 # 适用于所有环境：开发环境和生产环境
 # 
 # 使用方法:
-#   chmod +x scripts/reset-admin-password.sh
-#   ./scripts/reset-admin-password.sh
+#   方式1 - 在项目目录执行:
+#     bash scripts/reset-admin-password.sh
 #
-# 或者从项目根目录:
-#   bash scripts/reset-admin-password.sh
+#   方式2 - 远程执行:
+#     curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/reset-admin-password.sh | bash
+#
+#   方式3 - 指定项目目录:
+#     SSALGTEN_DIR=/path/to/project bash scripts/reset-admin-password.sh
 
 set -e
 
@@ -17,35 +20,123 @@ echo "🔑 SsalgTen 管理员密码重置工具"
 echo "=================================="
 echo ""
 
-# 检测 docker-compose 命令
-if command -v docker-compose &> /dev/null; then
-    DOCKER_COMPOSE="docker-compose"
-elif docker compose version &> /dev/null 2>&1; then
-    DOCKER_COMPOSE="docker compose"
+# 查找项目目录
+find_project_dir() {
+    # 如果已设置环境变量
+    if [ -n "$SSALGTEN_DIR" ] && [ -f "$SSALGTEN_DIR/docker-compose.yml" ]; then
+        echo "$SSALGTEN_DIR"
+        return 0
+    fi
+    
+    # 检查当前目录
+    if [ -f "docker-compose.yml" ]; then
+        pwd
+        return 0
+    fi
+    
+    # 检查父目录
+    if [ -f "../docker-compose.yml" ]; then
+        cd .. && pwd
+        return 0
+    fi
+    
+    # 在常见位置查找
+    for dir in \
+        "$HOME/SsalgTen" \
+        "$HOME/ssalgten" \
+        "$HOME/projects/SsalgTen" \
+        "$HOME/Projects/SsalgTen" \
+        "/opt/SsalgTen" \
+        "/srv/SsalgTen" \
+        "/var/www/SsalgTen"; do
+        if [ -f "$dir/docker-compose.yml" ]; then
+            echo "$dir"
+            return 0
+        fi
+    done
+    
+    return 1
+}
+
+# 查找 SsalgTen 后端容器
+find_backend_container() {
+    # 尝试不同的容器名称模式
+    for pattern in \
+        "ssalgten.*backend" \
+        "SsalgTen.*backend" \
+        "backend.*ssalgten" \
+        "*backend*"; do
+        local container=$(docker ps --filter "name=$pattern" --format "{{.Names}}" 2>/dev/null | head -n1)
+        if [ -n "$container" ]; then
+            echo "$container"
+            return 0
+        fi
+    done
+    return 1
+}
+
+echo "🔍 正在查找 SsalgTen 部署..."
+
+# 尝试找到项目目录
+PROJECT_DIR=""
+if PROJECT_DIR=$(find_project_dir); then
+    echo "✅ 找到项目目录: $PROJECT_DIR"
+    cd "$PROJECT_DIR"
+    USE_DOCKER_COMPOSE=true
 else
-    echo "❌ 错误: 未找到 docker-compose 或 docker compose 命令"
-    echo "请先安装 Docker 和 Docker Compose"
-    exit 1
+    echo "⚠️  未找到项目目录，尝试直接使用 Docker 容器..."
+    USE_DOCKER_COMPOSE=false
 fi
 
-# 检查后端容器状态
-echo "📋 检查容器状态..."
-BACKEND_RUNNING=$($DOCKER_COMPOSE ps backend 2>/dev/null | grep -c "Up" || echo "0")
-
-if [ "$BACKEND_RUNNING" = "0" ]; then
-    echo "⚠️  backend 容器未运行"
-    echo ""
-    read -p "是否启动 backend 容器? (y/n): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "🚀 正在启动 backend 容器..."
-        $DOCKER_COMPOSE up -d backend
-        echo "⏳ 等待容器完全启动..."
-        sleep 10
+# 检测 docker-compose 命令
+if [ "$USE_DOCKER_COMPOSE" = true ]; then
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE="docker-compose"
+    elif docker compose version &> /dev/null 2>&1; then
+        DOCKER_COMPOSE="docker compose"
     else
-        echo "❌ 已取消操作"
+        echo "❌ 错误: 未找到 docker-compose 或 docker compose 命令"
+        echo "请先安装 Docker Compose 或手动进入项目目录"
         exit 1
     fi
+    
+    # 检查后端容器状态
+    echo "📋 检查容器状态..."
+    BACKEND_RUNNING=$($DOCKER_COMPOSE ps backend 2>/dev/null | grep -c "Up" || echo "0")
+    
+    if [ "$BACKEND_RUNNING" = "0" ]; then
+        echo "⚠️  backend 容器未运行"
+        echo ""
+        read -p "是否启动 backend 容器? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "🚀 正在启动 backend 容器..."
+            $DOCKER_COMPOSE up -d backend
+            echo "⏳ 等待容器完全启动..."
+            sleep 10
+        else
+            echo "❌ 已取消操作"
+            exit 1
+        fi
+    fi
+    
+    BACKEND_CONTAINER="backend"
+    EXEC_CMD="$DOCKER_COMPOSE exec -T"
+else
+    # 直接使用 Docker 查找容器
+    echo "📋 查找 backend 容器..."
+    if ! BACKEND_CONTAINER=$(find_backend_container); then
+        echo "❌ 错误: 未找到 SsalgTen backend 容器"
+        echo ""
+        echo "请确保："
+        echo "  1. Docker 容器正在运行"
+        echo "  2. 或者在 SsalgTen 项目目录中执行此脚本"
+        echo "  3. 或者设置环境变量: export SSALGTEN_DIR=/path/to/project"
+        exit 1
+    fi
+    
+    echo "✅ 找到容器: $BACKEND_CONTAINER"
+    EXEC_CMD="docker exec -i"
 fi
 
 echo ""
@@ -53,7 +144,7 @@ echo "🔧 正在重置管理员密码..."
 echo ""
 
 # 尝试使用 npm script 重置
-if $DOCKER_COMPOSE exec -T backend npm run reset-admin 2>/dev/null; then
+if $EXEC_CMD $BACKEND_CONTAINER npm run reset-admin 2>/dev/null; then
     echo ""
     echo "✅ 密码重置成功！"
 else
@@ -63,7 +154,7 @@ else
     # admin123 的 bcrypt 哈希 (12轮)
     HASHED_PASSWORD='$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIR.yvGuUS'
     
-    $DOCKER_COMPOSE exec -T backend npx prisma db execute \
+    $EXEC_CMD $BACKEND_CONTAINER npx prisma db execute \
         --stdin <<EOF
 UPDATE "User" 
 SET 
@@ -72,8 +163,18 @@ SET
 WHERE username = 'admin';
 EOF
     
-    echo ""
-    echo "✅ 密码重置成功！"
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "✅ 密码重置成功！"
+    else
+        echo ""
+        echo "❌ 密码重置失败"
+        echo ""
+        echo "请尝试："
+        echo "  1. 进入项目目录后再执行此脚本"
+        echo "  2. 或手动执行: docker exec -i <容器名> npm run reset-admin"
+        exit 1
+    fi
 fi
 
 echo ""
