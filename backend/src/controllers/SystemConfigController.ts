@@ -286,24 +286,11 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
   },
 
   // 地图配置
-  "map.provider": {
-    value: "carto",
-    category: "map",
-    description: "地图图层提供商（CARTO、OpenStreetMap、Mapbox）",
-    displayName: "地图提供商",
-    inputType: "select",
-    options: ["carto", "openstreetmap", "mapbox"],
-    optionLabels: {
-      carto: "CARTO（推荐，免费）",
-      openstreetmap: "OpenStreetMap（开源）",
-      mapbox: "Mapbox（需要API密钥）",
-    },
-  },
   "map.api_key": {
     value: "",
     category: "map",
-    description: "Mapbox API 密钥（仅使用 Mapbox 时需要）",
-    displayName: "地图 API 密钥",
+    description: "Mapbox API key (only required when using Mapbox provider)",
+    displayName: "Mapbox API 密钥",
     inputType: "text",
   },
 };
@@ -313,9 +300,6 @@ export class SystemConfigController {
   async getPublicMapConfig(req: Request, res: Response): Promise<void> {
     try {
       // 获取地图相关配置
-      const mapProvider = await prisma.setting.findUnique({
-        where: { key: "map.provider" },
-      });
       const mapApiKey = await prisma.setting.findUnique({
         where: { key: "map.api_key" },
       });
@@ -323,9 +307,6 @@ export class SystemConfigController {
       const response: ApiResponse = {
         success: true,
         data: {
-          provider: mapProvider?.value
-            ? JSON.parse(mapProvider.value)
-            : "carto",
           apiKey: mapApiKey?.value ? JSON.parse(mapApiKey.value) : "",
         },
       };

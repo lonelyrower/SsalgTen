@@ -453,7 +453,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       'api.log_level': 'API 日志级别',
 
       // 地图配置
-      'map.api_key': 'Mapbox API 密钥',
+      'map.api_key': 'Mapbox API 密钥（仅当地图切换到 Mapbox 时需要）',
     };
 
     return displayNames[key] || formatConfigKey(key);
@@ -872,10 +872,10 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
                             )}
                           </div>
 
-                          {/* 中文描述 - 默认显示 */}
-                          {config.description && (
+                          {/* 中文详细说明 - 默认显示 */}
+                          {helpText && (
                             <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-2">
-                              {config.description}
+                              {helpText}
                             </p>
                           )}
                         </div>
