@@ -143,36 +143,69 @@ echo ""
 echo "🔧 正在重置管理员密码..."
 echo ""
 
-# 尝试使用 npm script 重置
-if $EXEC_CMD $BACKEND_CONTAINER npm run reset-admin 2>/dev/null; then
-    echo ""
-    echo "✅ 密码重置成功！"
+# 方法1: 尝试使用 npm script
+if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && npm run reset-admin" 2>&1 | grep -q "✅"; then
+    :
 else
-    # 如果 npm script 失败，使用 Prisma 直接重置
+    # 方法2: 直接使用 Node.js 内联脚本 (不依赖 tsx)
     echo "⚠️  使用备用方案重置密码..."
     
-    # admin123 的 bcrypt 哈希 (12轮)
-    HASHED_PASSWORD='$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIR.yvGuUS'
+    RESET_SCRIPT="
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+
+const prisma = new PrismaClient();
+
+async function reset() {
+  try {
+    const hashedPassword = await bcrypt.hash('admin123', 12);
+    const result = await prisma.user.updateMany({
+      where: { role: 'ADMIN' },
+      data: { password: hashedPassword, active: true }
+    });
     
-    $EXEC_CMD $BACKEND_CONTAINER npx prisma db execute \
-        --stdin <<EOF
-UPDATE "User" 
-SET 
-    password = '${HASHED_PASSWORD}',
-    "updatedAt" = NOW()
-WHERE username = 'admin';
-EOF
+    if (result.count > 0) {
+      console.log('✅ 成功重置 ' + result.count + ' 个管理员用户的密码');
+    } else {
+      console.log('🆕 创建默认管理员账户...');
+      await prisma.user.create({
+        data: {
+          username: 'admin',
+          email: 'admin@ssalgten.local',
+          password: hashedPassword,
+          name: 'Administrator',
+          role: 'ADMIN',
+          active: true
+        }
+      });
+      console.log('✅ 成功创建管理员用户');
+    }
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ 重置失败:', error.message);
+    process.exit(1);
+  } finally {
+    await prisma.\$disconnect();
+  }
+}
+
+reset();
+"
     
-    if [ $? -eq 0 ]; then
+    if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && node -e \"$RESET_SCRIPT\"" 2>&1; then
         echo ""
-        echo "✅ 密码重置成功！"
     else
         echo ""
         echo "❌ 密码重置失败"
         echo ""
-        echo "请尝试："
-        echo "  1. 进入项目目录后再执行此脚本"
-        echo "  2. 或手动执行: docker exec -i <容器名> npm run reset-admin"
+        echo "可能的原因:"
+        echo "  1. Prisma Client 未生成"
+        echo "  2. 数据库连接失败"
+        echo ""
+        echo "请尝试手动操作:"
+        echo "  docker exec -it $BACKEND_CONTAINER sh"
+        echo "  cd /app && npx prisma generate"
+        echo "  npm run reset-admin"
         exit 1
     fi
 fi
