@@ -7,11 +7,9 @@ import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
 import { NodeManagement } from '@/components/admin/NodeManagement';
 import { SystemSettings } from '@/components/admin/SystemSettings';
 import { SystemOverview } from '@/components/admin/SystemOverview';
-import { VisitorStatsCard } from '@/components/admin/VisitorStatsCard';
 import { ApiKeyManagement } from '@/components/admin/ApiKeyManagement';
 import { UserManagement } from '@/components/admin/UserManagement';
-import { ActivityLog } from '@/components/dashboard/ActivityLog';
-import { Shield, Server, BarChart3, Settings, Users, Key } from 'lucide-react';
+import { Shield, Server, Settings, Users, Key } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
   const { user, hasRole } = useAuth();
@@ -22,7 +20,6 @@ export const AdminPage: React.FC = () => {
   // 定义标签页配置
   const adminTabs = [
     { id: 'overview', label: '系统概览', icon: Shield },
-    { id: 'statistics', label: '统计分析', icon: BarChart3 },
     { id: 'system', label: '系统配置', icon: Settings },
     { id: 'nodes', label: '节点管理', icon: Server },
     { id: 'users', label: '用户管理', icon: Users },
@@ -82,15 +79,6 @@ export const AdminPage: React.FC = () => {
         {/* 标签页内容 */}
         {activeTab === 'overview' && (
           <SystemOverview />
-        )}
-
-        {activeTab === 'statistics' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              <VisitorStatsCard />
-              <ActivityLog />
-            </div>
-          </div>
         )}
 
         {activeTab === 'system' && (

@@ -4,7 +4,6 @@ import { nodeController } from "../controllers/NodeController";
 import { authController } from "../controllers/AuthController";
 import { adminController } from "../controllers/AdminController";
 import { systemConfigController } from "../controllers/SystemConfigController";
-import { visitorController } from "../controllers/VisitorController";
 import { clientLatencyController } from "../controllers/ClientLatencyController";
 import { authenticateToken, requireAdmin } from "../middleware/auth";
 import {
@@ -233,18 +232,6 @@ router.get(
   nodeController.getInstallCommand.bind(nodeController),
 );
 
-// 访问者IP信息路由（公开访问）
-router.get(
-  "/visitor/info",
-  publicLimiter,
-  visitorController.getVisitorInfo.bind(visitorController),
-);
-router.get(
-  "/visitor/ip/:ip",
-  publicLimiter,
-  visitorController.getIPDetails.bind(visitorController),
-);
-
 // 认证相关路由
 router.post(
   "/auth/login",
@@ -408,32 +395,6 @@ router.post(
   authenticateToken,
   requireAdmin,
   systemConfigController.cleanupOldConfigs.bind(systemConfigController),
-);
-
-// 访问者统计（管理员专用）
-router.get(
-  "/admin/visitors/stats",
-  authenticateToken,
-  requireAdmin,
-  visitorController.getVisitorStats.bind(visitorController),
-);
-router.get(
-  "/admin/visitors/cache",
-  authenticateToken,
-  requireAdmin,
-  visitorController.getCacheStats.bind(visitorController),
-);
-router.post(
-  "/admin/visitors/cache/clear",
-  authenticateToken,
-  requireAdmin,
-  visitorController.clearCache.bind(visitorController),
-);
-router.delete(
-  "/admin/visitors/logs",
-  authenticateToken,
-  requireAdmin,
-  visitorController.clearAllLogs.bind(visitorController),
 );
 
 // API密钥管理（管理员专用）

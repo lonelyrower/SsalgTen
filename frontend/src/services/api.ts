@@ -327,22 +327,6 @@ export interface LatencyTestResults {
   timestamp: string;
 }
 
-// 访问者统计接口
-export interface VisitorStats {
-  totalVisitors: number;
-  uniqueIPs: number;
-  topCountries: Array<{ country: string; count: number }>;
-  topASNs: Array<{ asn: string; count: number }>;
-  recentVisitors: Array<{
-    ip: string;
-    country?: string;
-    city?: string;
-    asnName?: string;
-    userAgent: string;
-    createdAt: string;
-  }>;
-}
-
 // API密钥管理接口
 export interface ApiKeyInfo {
   id: string;
@@ -827,29 +811,6 @@ class ApiService {
 
   async getIPInfo(ip: string): Promise<ApiResponse<IPInfo>> {
     return this.request<IPInfo>(`/visitor/ip/${encodeURIComponent(ip)}`);
-  }
-
-  
-
-  // 访问者统计API（管理员专用）
-  async getVisitorStats(days: number = 7): Promise<ApiResponse<VisitorStats>> {
-    return this.request<VisitorStats>(`/admin/visitors/stats?days=${days}`, {}, true);
-  }
-
-  async getVisitorCacheStats(): Promise<ApiResponse<{ size: number; ttl: number }>> {
-    return this.request<{ size: number; ttl: number }>('/admin/visitors/cache', {}, true);
-  }
-
-  async clearVisitorCache(): Promise<ApiResponse<void>> {
-    return this.request<void>('/admin/visitors/cache/clear', {
-      method: 'POST'
-    }, true);
-  }
-
-  async clearVisitorLogs(): Promise<ApiResponse<{ deletedCount: number }>> {
-    return this.request<{ deletedCount: number }>('/admin/visitors/logs', {
-      method: 'DELETE'
-    }, true);
   }
 
   // API密钥管理 API（管理员专用）
