@@ -4,6 +4,7 @@ services:
     image: postgres:16-alpine
     container_name: ssalgten-database
     restart: unless-stopped
+    command: postgres -c max_connections=200 -c shared_buffers=256MB
     environment:
       POSTGRES_DB: ssalgten
       POSTGRES_USER: ssalgten
@@ -60,8 +61,8 @@ services:
       APP_VERSION: ${APP_VERSION:-0.1.0}
       
       # Database Configuration
-      # Increase Prisma pool for ~150 agents; extend wait time to reduce timeouts
-      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=30&pool_timeout=30
+      # Optimized for ~400 agents: larger connection pool and timeout
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=100&pool_timeout=60
       
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
@@ -104,10 +105,10 @@ services:
       # Redis (optional)
       REDIS_URL: redis://:${REDIS_PASSWORD:-ssalgten_redis}@redis:6379
       
-      # Backend performance tuning
+      # Backend performance tuning (optimized for 400+ agents)
       BROADCAST_MIN_INTERVAL_MS: ${BROADCAST_MIN_INTERVAL_MS:-2000}
       NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS: ${NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS:-3000}
-      AGENT_KEY_CACHE_TTL_SECONDS: ${AGENT_KEY_CACHE_TTL_SECONDS:-120}
+      AGENT_KEY_CACHE_TTL_SECONDS: ${AGENT_KEY_CACHE_TTL_SECONDS:-300}
       API_KEY_USAGE_MIN_INTERVAL_MS: ${API_KEY_USAGE_MIN_INTERVAL_MS:-60000}
     volumes:
       - backend_logs:/app/logs

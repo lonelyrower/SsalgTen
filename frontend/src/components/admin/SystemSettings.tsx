@@ -33,7 +33,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       const response = await apiService.getSystemConfigs();
       if (response.success && response.data) {
         // 只显示当前版本定义的配置项
-        const validKeys = ['system.name', 'monitoring.retention_days', 'map.api_key'];
+        const validKeys = ['system.name', 'monitoring.retention_days', 'map.api_key', 'cesium.ion_token'];
         const filteredConfigs = response.data.filter(config => validKeys.includes(config.key));
         setConfigs(filteredConfigs);
         setChangedConfigs(new Map());
@@ -134,6 +134,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         name: 'Mapbox API 密钥',
         desc: '可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥',
         placeholder: 'pk.ey...',
+      },
+      'cesium.ion_token': {
+        name: 'Cesium Ion API Token',
+        desc: '可选配置。用于访问 Cesium Ion 的高质量 3D 地形和影像数据。在 cesium.com/ion 免费注册获取（每月 5万次免费加载）',
+        placeholder: 'eyJhbGciOiJ...',
       },
     };
     return configInfo[key] || { name: key, desc: '' };
@@ -262,6 +267,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
             'system.name': { icon: '🏷️', color: 'from-blue-500 to-cyan-500', bg: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' },
             'monitoring.retention_days': { icon: '📊', color: 'from-purple-500 to-pink-500', bg: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' },
             'map.api_key': { icon: '🗺️', color: 'from-green-500 to-emerald-500', bg: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' },
+            'cesium.ion_token': { icon: '🌍', color: 'from-orange-500 to-amber-500', bg: 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20' },
           }[config.key] || { icon: '⚙️', color: 'from-gray-500 to-slate-500', bg: 'bg-gray-50 dark:bg-gray-800' };
 
           return (

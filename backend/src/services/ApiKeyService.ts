@@ -31,7 +31,8 @@ export class ApiKeyService {
     fetchedAt?: number;
   } = {};
   private keyCacheTtlMs =
-    parseInt(process.env.AGENT_KEY_CACHE_TTL_SECONDS || "120") * 1000;
+    parseInt(process.env.AGENT_KEY_CACHE_TTL_SECONDS || "300") * 1000; // 增加到 5 分钟
+  private keyCacheRefreshing = false; // 防止并发刷新缓存
 
   // 使用统计写入节流（避免心跳高频写 DB）
   private lastUsageUpdateMs = 0;
@@ -549,6 +550,8 @@ export class ApiKeyService {
     previousKeyExpires?: string;
   }> {
     const now = Date.now();
+
+    // 如果缓存仍然有效，直接返回
     if (
       this.keyCache.fetchedAt &&
       now - (this.keyCache.fetchedAt || 0) < this.keyCacheTtlMs
@@ -559,26 +562,47 @@ export class ApiKeyService {
         previousKeyExpires: this.keyCache.previousKeyExpires,
       };
     }
-    const [keyRec, prevRec, prevExpRec] = await Promise.all([
-      prisma.setting.findUnique({ where: { key: "SYSTEM_AGENT_API_KEY" } }),
-      prisma.setting.findUnique({
-        where: { key: "SYSTEM_AGENT_API_KEY_PREVIOUS" },
-      }),
-      prisma.setting.findUnique({
-        where: { key: "SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES" },
-      }),
-    ]);
-    this.keyCache = {
-      systemKey: keyRec?.value,
-      previousKey: prevRec?.value,
-      previousKeyExpires: prevExpRec?.value,
-      fetchedAt: now,
-    };
-    return {
-      systemKey: keyRec?.value,
-      previousKey: prevRec?.value,
-      previousKeyExpires: prevExpRec?.value,
-    };
+
+    // 防止并发刷新：如果已有请求在刷新，等待并返回旧缓存
+    if (this.keyCacheRefreshing) {
+      // 返回旧缓存（即使过期也比等待数据库查询好）
+      return {
+        systemKey: this.keyCache.systemKey,
+        previousKey: this.keyCache.previousKey,
+        previousKeyExpires: this.keyCache.previousKeyExpires,
+      };
+    }
+
+    // 标记正在刷新
+    this.keyCacheRefreshing = true;
+
+    try {
+      const [keyRec, prevRec, prevExpRec] = await Promise.all([
+        prisma.setting.findUnique({ where: { key: "SYSTEM_AGENT_API_KEY" } }),
+        prisma.setting.findUnique({
+          where: { key: "SYSTEM_AGENT_API_KEY_PREVIOUS" },
+        }),
+        prisma.setting.findUnique({
+          where: { key: "SYSTEM_AGENT_API_KEY_PREVIOUS_EXPIRES" },
+        }),
+      ]);
+
+      this.keyCache = {
+        systemKey: keyRec?.value,
+        previousKey: prevRec?.value,
+        previousKeyExpires: prevExpRec?.value,
+        fetchedAt: now,
+      };
+
+      return {
+        systemKey: keyRec?.value,
+        previousKey: prevRec?.value,
+        previousKeyExpires: prevExpRec?.value,
+      };
+    } finally {
+      // 确保释放锁
+      this.keyCacheRefreshing = false;
+    }
   }
 }
 

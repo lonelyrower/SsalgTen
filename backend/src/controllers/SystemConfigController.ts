@@ -66,13 +66,23 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
     max: 365,
   },
 
-  // ️ 地图配置
+  // 🗺️ 地图配置
   "map.api_key": {
     value: "",
     category: "map",
     description:
       "可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥",
     displayName: "Mapbox API 密钥",
+    inputType: "text",
+  },
+
+  // 🌍 Cesium 3D 地球配置
+  "cesium.ion_token": {
+    value: "",
+    category: "map",
+    description:
+      "可选配置。用于访问 Cesium Ion 的高质量 3D 地形和影像数据。在 cesium.com/ion 免费注册获取（每月 5万次免费加载）",
+    displayName: "Cesium Ion API Token",
     inputType: "text",
   },
 };
@@ -82,14 +92,16 @@ export class SystemConfigController {
   async getPublicMapConfig(req: Request, res: Response): Promise<void> {
     try {
       // 获取地图相关配置
-      const mapApiKey = await prisma.setting.findUnique({
-        where: { key: "map.api_key" },
-      });
+      const [mapApiKey, cesiumToken] = await Promise.all([
+        prisma.setting.findUnique({ where: { key: "map.api_key" } }),
+        prisma.setting.findUnique({ where: { key: "cesium.ion_token" } }),
+      ]);
 
       const response: ApiResponse = {
         success: true,
         data: {
           apiKey: mapApiKey?.value ? JSON.parse(mapApiKey.value) : "",
+          cesiumIonToken: cesiumToken?.value ? JSON.parse(cesiumToken.value) : "",
         },
       };
       res.json(response);
