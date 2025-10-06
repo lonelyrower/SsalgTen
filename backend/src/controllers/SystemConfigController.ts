@@ -56,14 +56,14 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
 
   // 📊 数据管理
   "monitoring.retention_days": {
-    value: 30,
+    value: 1,
     category: "data",
-    description: "历史监控数据保留天数，超过此时间的数据将被自动清理",
+    description: "历史监控数据保留天数（心跳日志、诊断记录）。⚠️ 数值越大，数据库占用越大。推荐 1-3 天，足够查看节点状态。",
     displayName: "数据保留天数",
     inputType: "number",
     unit: "天",
-    min: 7,
-    max: 365,
+    min: 1,
+    max: 7,
   },
 
   // 🗺️ 地图配置

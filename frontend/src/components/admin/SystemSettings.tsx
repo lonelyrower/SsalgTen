@@ -127,8 +127,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       },
       'monitoring.retention_days': {
         name: '数据保留天数',
-        desc: '历史监控数据保留天数，超过此时间的数据将被自动清理',
-        placeholder: '30',
+        desc: '历史监控数据保留天数（心跳日志、诊断记录）。⚠️ 数值越大，数据库占用越大。推荐 1-3 天。',
+        placeholder: '1',
       },
       'map.api_key': {
         name: 'Mapbox API 密钥',
