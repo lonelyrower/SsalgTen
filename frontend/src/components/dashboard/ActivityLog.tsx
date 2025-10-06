@@ -206,22 +206,22 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
         </div>
       </div>
 
-      <div className="max-h-96 overflow-y-auto">
-        {filteredActivities.length === 0 ? (
-          <div className="p-8 text-center">
-            <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            {!hasRealData ? (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-2">活动日志功能尚未配置</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  系统将在有实际活动数据时自动显示
-                </p>
-              </div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400">暂无活动记录</p>
-            )}
-          </div>
-        ) : (
+      {filteredActivities.length === 0 ? (
+        <div className="p-8 text-center">
+          <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          {!hasRealData ? (
+            <div>
+              <p className="text-gray-500 dark:text-gray-400 mb-2">活动日志功能尚未配置</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                系统将在有实际活动数据时自动显示
+              </p>
+            </div>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400">暂无活动记录</p>
+          )}
+        </div>
+      ) : (
+        <div className="max-h-[600px] overflow-y-auto">
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredActivities.map((activity) => {
               const severityClasses = getSeverityClasses(activity.severity);
@@ -285,8 +285,8 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </Card>
   );
 };
