@@ -1399,6 +1399,43 @@ update_heartbeat_config() {
         return
     fi
 
+    # 检查并修复 systemd 服务配置
+    log_info "检查 systemd 服务配置..."
+    if [ -f /etc/systemd/system/ssalgten-agent.service ]; then
+        # 检查是否是旧的 Type=forking 配置
+        if grep -q "Type=forking" /etc/systemd/system/ssalgten-agent.service; then
+            log_warning "检测到旧版本的 systemd 配置，正在修复..."
+
+            # 修复 systemd 配置
+            sudo tee /etc/systemd/system/ssalgten-agent.service > /dev/null << 'SYSTEMD_EOF'
+[Unit]
+Description=SsalgTen Agent Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+Group=root
+WorkingDirectory=/opt/ssalgten-agent
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD_EOF
+
+            sudo systemctl daemon-reload
+            log_success "systemd 配置已修复（Type=forking → Type=oneshot）"
+        else
+            log_success "systemd 配置正常"
+        fi
+    fi
+
     # 备份配置文件
     log_info "备份配置文件..."
     cp "$APP_DIR/.env" "$APP_DIR/.env.backup.$(date +%Y%m%d_%H%M%S)"
