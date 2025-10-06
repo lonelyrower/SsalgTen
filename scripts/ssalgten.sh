@@ -76,7 +76,7 @@ detect_default_image_namespace() {
     
     if [[ -n "$git_url" ]]; then
         local parsed
-        parsed=$(echo "$git_url" | sed -E 's#(git@|https://|http://)?github.com[:/]+##; s#\.git$##')
+        parsed=$(echo "$git_url" | sed -E 's#(git@|https://|http://)?github.com[:/]+##; s#\.git$##' | tr '[:upper:]' '[:lower:]')
         if [[ "$parsed" == */* ]]; then
             echo "$parsed"
             return
