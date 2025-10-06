@@ -1,472 +1,239 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Shield, 
-  AlertTriangle, 
-  Zap, 
-  Eye, 
-  Target, 
-  Activity,
-  TrendingUp,
-  Clock,
-  MapPin,
-  Wifi
-} from 'lucide-react';
+import { Shield, AlertTriangle, Clock, MapPin } from 'lucide-react';
 
-// 威胁数据类型
-interface ThreatData {
+// SSH 暴力破解事件类型
+interface SshBruteforceEvent {
   id: string;
-  type: 'ddos' | 'bruteforce' | 'malware' | 'intrusion' | 'anomaly';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  sourceIp: string;
-  targetNode: string;
-  country: string;
+  nodeId: string;
+  nodeName: string;
+  nodeCountry: string;
+  ip: string;
+  count: number;
+  windowMinutes: number;
   timestamp: Date;
-  status: 'active' | 'blocked' | 'investigating';
-  attackVector: string;
-  volume?: number;
 }
 
-
-// 威胁类型配置
-const getThreatConfig = (type: ThreatData['type']) => {
-  const configs = {
-    ddos: {
-      name: 'DDoS攻击',
-      icon: Zap,
-      color: 'from-red-500 to-orange-500',
-      bgColor: 'from-red-500/10 to-orange-500/10',
-      description: '分布式拒绝服务攻击'
-    },
-    bruteforce: {
-      name: '暴力破解',
-      icon: Target,
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'from-purple-500/10 to-pink-500/10',
-      description: '密码暴力破解尝试'
-    },
-    malware: {
-      name: '恶意软件',
-      icon: Shield,
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'from-orange-500/10 to-red-500/10',
-      description: '恶意代码检测'
-    },
-    intrusion: {
-      name: '入侵检测',
-      icon: Eye,
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'from-blue-500/10 to-cyan-500/10',
-      description: '系统入侵尝试'
-    },
-    anomaly: {
-      name: '异常行为',
-      icon: Activity,
-      color: 'from-yellow-500 to-orange-500',
-      bgColor: 'from-yellow-500/10 to-orange-500/10',
-      description: '网络流量异常'
-    }
-  };
-  return configs[type];
-};
-
-// 严重性配置
-const getSeverityConfig = (severity: ThreatData['severity']) => {
-  const configs = {
-    low: { label: '低', color: 'bg-green-500/20 text-green-300 border-green-500/30' },
-    medium: { label: '中', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
-    high: { label: '高', color: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
-    critical: { label: '严重', color: 'bg-red-500/20 text-red-300 border-red-500/30' }
-  };
-  return configs[severity];
-};
-
-// 状态配置
-const getStatusConfig = (status: ThreatData['status']) => {
-  const configs = {
-    active: { label: '活跃', color: 'bg-red-500/20 text-red-300 border-red-500/30', pulse: true },
-    blocked: { label: '已阻止', color: 'bg-green-500/20 text-green-300 border-green-500/30', pulse: false },
-    investigating: { label: '调查中', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30', pulse: false }
-  };
-  return configs[status];
-};
-
-interface ThreatVisualizationProps {
-  className?: string;
-}
-
-interface ActivityEventDetails {
-  ip?: string;
-  previous?: {
-    ipv4?: string;
-    [key: string]: unknown;
-  };
-  to?: string;
-  success?: boolean;
-  [key: string]: unknown;
-}
-
-interface ActivityEventNode {
-  name?: string;
-  country?: string;
-  [key: string]: unknown;
-}
-
+// 活动日志类型
 interface ActivityEvent {
-  id?: string;
-  type?: string;
-  details?: ActivityEventDetails;
-  node?: ActivityEventNode;
-  nodeName?: string;
-  timestamp?: string | number | Date;
-  success?: boolean;
-  [key: string]: unknown;
+  id: string;
+  type: string;
+  message: string;
+  details?: {
+    ip?: string;
+    count?: number;
+    windowMinutes?: number;
+  };
+  node?: {
+    id: string;
+    name: string;
+    country: string;
+  };
+  timestamp: string;
 }
 
-interface ActivitiesResponse {
-  success?: boolean;
-  data?: ActivityEvent[];
-  [key: string]: unknown;
-}
+export const ThreatVisualization: React.FC = () => {
+  const [events, setEvents] = useState<SshBruteforceEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const isActivitiesResponse = (value: unknown): value is ActivitiesResponse => {
-  if (!value || typeof value !== 'object') return false;
-  return 'data' in value;
-};
-
-export const ThreatVisualization: React.FC<ThreatVisualizationProps> = ({ className = '' }) => {
-  const [threats, setThreats] = useState<ThreatData[]>([]);
-  const [selectedThreat, setSelectedThreat] = useState<ThreatData | null>(null);
-  const [isLiveMode, setIsLiveMode] = useState(true);
-  const [filter, setFilter] = useState<'all' | ThreatData['type']>('all');
-
-  // 将后端活动日志转换为威胁项（简单映射）
-  const mapActivityToThreat = useCallback((ev: ActivityEvent): ThreatData | null => {
-    const now = new Date();
-    const base = {
-      id: ev.id || `ev-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
-      sourceIp: ev.details?.ip || ev.details?.previous?.ipv4 || '0.0.0.0',
-      targetNode: ev.node?.name || ev.nodeName || 'Unknown',
-      country: ev.node?.country || 'Unknown',
-      timestamp: ev.timestamp ? new Date(ev.timestamp) : now,
-      status: 'active' as const,
-      attackVector: 'Anomaly'
-    };
-    const type = (ev.type || '').toUpperCase();
-    if (type.includes('SSH_BRUTEFORCE')) {
-      return { ...base, type: 'bruteforce', severity: 'high', attackVector: 'SSH Brute Force' };
-    }
-    if (type.includes('STATUS_CHANGED')) {
-      const to = (ev.details?.to || '').toUpperCase();
-      return {
-        ...base,
-        type: 'anomaly',
-        severity: to === 'OFFLINE' ? 'high' : 'low'
-      };
-    }
-    if (type.includes('IP_CHANGED')) {
-      return { ...base, type: 'anomaly', severity: 'medium' };
-    }
-    if (type.includes('PING') || type.includes('TRACEROUTE') || type.includes('MTR') || type.includes('SPEEDTEST')) {
-      const ok = ev.success !== false && ev.details?.success !== false;
-      return ok ? null : { ...base, type: 'anomaly', severity: 'medium' };
-    }
-    if (type.includes('AGENT_REGISTERED')) {
-      return { ...base, type: 'intrusion', severity: 'low', attackVector: 'New Agent' };
-    }
-    return null;
+  useEffect(() => {
+    fetchSecurityEvents();
+    // 每 30 秒刷新一次
+    const interval = setInterval(fetchSecurityEvents, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  // 数据更新（仅使用后端活动日志）
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | undefined;
-    const fetchActivities = async () => {
-      try {
-        const res = await apiService.getGlobalActivities?.();
-        if (isActivitiesResponse(res) && res.success && Array.isArray(res.data)) {
-          const items = res.data
-            .map(mapActivityToThreat)
-            .filter((item): item is ThreatData => item !== null);
-          // 若无数据，展示空状态
-          setThreats(items);
-        } else {
-          setThreats([]);
-        }
-      } catch (e) {
-        console.warn('Fetch activities failed:', e);
-        setThreats([]);
+  const fetchSecurityEvents = async () => {
+    try {
+      const response = await apiService.getActivities();
+      if (response.success && response.data) {
+        // 过滤出 SSH 暴力破解事件
+        const sshEvents = response.data
+          .filter((event: ActivityEvent) => event.type === 'SSH_BRUTEFORCE')
+          .map((event: ActivityEvent): SshBruteforceEvent => ({
+            id: event.id,
+            nodeId: event.node?.id || '',
+            nodeName: event.node?.name || 'Unknown',
+            nodeCountry: event.node?.country || 'Unknown',
+            ip: event.details?.ip || 'Unknown',
+            count: event.details?.count || 0,
+            windowMinutes: event.details?.windowMinutes || 10,
+            timestamp: new Date(event.timestamp),
+          }));
+
+        setEvents(sshEvents);
       }
-    };
-    fetchActivities();
-    if (isLiveMode) {
-      interval = setInterval(fetchActivities, 5000);
+    } catch (error) {
+      console.error('Failed to fetch security events:', error);
+    } finally {
+      setLoading(false);
     }
-    
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isLiveMode, mapActivityToThreat]);
+  };
 
-  // 统计信息
-  const stats = useMemo(() => {
-    const active = threats.filter(t => t.status === 'active').length;
-    const critical = threats.filter(t => t.severity === 'critical').length;
-    const blocked = threats.filter(t => t.status === 'blocked').length;
-    const investigating = threats.filter(t => t.status === 'investigating').length;
-    
-    return { active, critical, blocked, investigating, total: threats.length };
-  }, [threats]);
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-  // 过滤威胁
-  const filteredThreats = useMemo(() => {
-    if (filter === 'all') return threats;
-    return threats.filter(t => t.type === filter);
-  }, [threats, filter]);
+    if (days > 0) return `${days}天前`;
+    if (hours > 0) return `${hours}小时前`;
+    if (minutes > 0) return `${minutes}分钟前`;
+    return '刚刚';
+  };
+
+  // 统计数据
+  const stats = {
+    total: events.length,
+    last24h: events.filter(e => new Date().getTime() - e.timestamp.getTime() < 86400000).length,
+    uniqueIps: new Set(events.map(e => e.ip)).size,
+    affectedNodes: new Set(events.map(e => e.nodeId)).size,
+  };
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* 威胁概览 */}
-      <GlassCard variant="tech" className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-xl">
-              <Shield className="h-6 w-6 text-red-400" />
+    <div className="space-y-6">
+      {/* 标题 */}
+      <div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+          威胁监控
+        </h1>
+        <p className="mt-2 text-gray-400">
+          实时监控 SSH 暴力破解攻击
+        </p>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <GlassCard className="p-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-lg">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold gradient-text">网络威胁监控</h2>
-              <p className="text-gray-700 dark:text-white/70 text-sm">实时检测和分析网络安全威胁</p>
+              <p className="text-sm text-gray-400">总攻击次数</p>
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <Button
-              variant={isLiveMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsLiveMode(!isLiveMode)}
-              className="gradient-btn"
-            >
-              {isLiveMode ? (
-                <>
-                  <div className="status-indicator bg-green-400 mr-2" />
-                  实时监控
-                </>
-              ) : (
-                <>
-                  <Clock className="h-4 w-4 mr-2" />
-                  暂停
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        </GlassCard>
 
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="glass rounded-lg p-4 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-red-400">{stats.active}</div>
-                <div className="text-xs text-gray-600 dark:text-white/60">活跃威胁</div>
-              </div>
-              <AlertTriangle className="h-6 w-6 text-red-400" />
+        <GlassCard className="p-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
+              <Clock className="w-6 h-6 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">24小时内</p>
+              <p className="text-2xl font-bold text-white">{stats.last24h}</p>
             </div>
           </div>
-          
-          <div className="glass rounded-lg p-4 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-orange-400">{stats.critical}</div>
-                <div className="text-xs text-gray-600 dark:text-white/60">严重威胁</div>
-              </div>
-              <Zap className="h-6 w-6 text-orange-400" />
-            </div>
-          </div>
-          
-          <div className="glass rounded-lg p-4 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-green-400">{stats.blocked}</div>
-                <div className="text-xs text-gray-600 dark:text-white/60">已阻止</div>
-              </div>
-              <Shield className="h-6 w-6 text-green-400" />
-            </div>
-          </div>
-          
-          <div className="glass rounded-lg p-4 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-blue-400">{stats.total}</div>
-                <div className="text-xs text-gray-600 dark:text-white/60">总检测数</div>
-              </div>
-              <TrendingUp className="h-6 w-6 text-blue-400" />
-            </div>
-          </div>
-        </div>
+        </GlassCard>
 
-        {/* 威胁类型过滤 */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('all')}
-            className="text-xs"
-          >
-            全部 ({threats.length})
-          </Button>
-          {(['ddos', 'bruteforce', 'malware', 'intrusion', 'anomaly'] as const).map((type) => {
-            const count = threats.filter(t => t.type === type).length;
-            const config = getThreatConfig(type);
-            return (
-              <Button
-                key={type}
-                variant={filter === type ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter(type)}
-                className="text-xs"
-              >
-                {config.name} ({count})
-              </Button>
-            );
-          })}
-        </div>
-      </GlassCard>
+        <GlassCard className="p-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
+              <MapPin className="w-6 h-6 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">攻击 IP 数</p>
+              <p className="text-2xl font-bold text-white">{stats.uniqueIps}</p>
+            </div>
+          </div>
+        </GlassCard>
 
-      {/* 威胁列表 */}
-      <GlassCard variant="gradient" className="p-6">
-        <h3 className="text-lg font-bold gradient-text mb-4">实时威胁动态</h3>
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {filteredThreats.map((threat) => {
-            const threatConfig = getThreatConfig(threat.type);
-            const severityConfig = getSeverityConfig(threat.severity);
-            const statusConfig = getStatusConfig(threat.status);
-            const ThreatIcon = threatConfig.icon;
-            
-            return (
+        <GlassCard className="p-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg">
+              <Shield className="w-6 h-6 text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">受影响节点</p>
+              <p className="text-2xl font-bold text-white">{stats.affectedNodes}</p>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* 事件列表 */}
+      <GlassCard className="p-6">
+        <h2 className="text-xl font-bold text-white mb-4">SSH 暴力破解事件</h2>
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <p className="mt-4 text-gray-400">加载中...</p>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="text-center py-12">
+            <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400">暂无安全威胁</p>
+            <p className="text-sm text-gray-500 mt-2">系统运行正常</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {events.map((event) => (
               <div
-                key={threat.id}
-                onClick={() => setSelectedThreat(threat)}
-                className={`glass rounded-lg p-4 border border-white/20 cursor-pointer transition-all duration-300 hover:bg-white/10 group ${
-                  selectedThreat?.id === threat.id ? 'ring-2 ring-blue-400/50' : ''
-                }`}
+                key={event.id}
+                className="p-4 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all"
               >
-                <div className="flex items-start space-x-4">
-                  <div className={`p-2 rounded-lg bg-gradient-to-br ${threatConfig.bgColor}`}>
-                    <ThreatIcon className="h-5 w-5 text-gray-800 dark:text-white" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900 dark:text-white">{threatConfig.name}</span>
-                        <Badge className={`text-xs ${severityConfig.color} border`}>
-                          {severityConfig.label}
-                        </Badge>
-                        <Badge className={`text-xs ${statusConfig.color} border ${statusConfig.pulse ? 'animate-pulse' : ''}`}>
-                          {statusConfig.label}
-                        </Badge>
-                      </div>
-                      <span className="text-xs text-gray-600 dark:text-white/60">
-                        {threat.timestamp.toLocaleTimeString()}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+                        SSH 暴力破解
+                      </Badge>
+                      <span className="text-sm text-gray-400">
+                        {formatTime(event.timestamp)}
                       </span>
                     </div>
-                    
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
-                      <div className="flex items-center space-x-1">
-                        <Wifi className="h-3 w-3 text-cyan-400" />
-                        <span className="text-gray-700 dark:text-white/70 font-mono text-xs">{threat.sourceIp}</span>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                      <div>
+                        <p className="text-xs text-gray-500">攻击 IP</p>
+                        <p className="text-sm text-white font-mono">{event.ip}</p>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Target className="h-3 w-3 text-purple-400" />
-                        <span className="text-gray-700 dark:text-white/70 text-xs">{threat.targetNode}</span>
+                      <div>
+                        <p className="text-xs text-gray-500">失败次数</p>
+                        <p className="text-sm text-white">
+                          {event.count} 次 / {event.windowMinutes} 分钟
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="h-3 w-3 text-green-400" />
-                        <span className="text-gray-700 dark:text-white/70 text-xs">{threat.country}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Activity className="h-3 w-3 text-orange-400" />
-                        <span className="text-gray-700 dark:text-white/70 text-xs">{threat.attackVector}</span>
+                      <div>
+                        <p className="text-xs text-gray-500">目标节点</p>
+                        <p className="text-sm text-white">
+                          {event.nodeName}
+                          <span className="ml-2 text-xs text-gray-400">({event.nodeCountry})</span>
+                        </p>
                       </div>
                     </div>
                   </div>
-                  
-                  {threat.status === 'active' && (
-                    <div className="status-indicator bg-red-400" />
-                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-        
-        {filteredThreats.length === 0 && (
-          <div className="text-center py-8">
-            <Shield className="h-12 w-12 text-green-400 mx-auto mb-2" />
-            <div className="text-gray-700 dark:text-white/70">暂无数据</div>
-            <div className="text-gray-500 dark:text-white/50 text-sm">未检测到威胁事件</div>
+            ))}
           </div>
         )}
       </GlassCard>
 
-      {/* 威胁详情面板 */}
-      {selectedThreat && (
-        <GlassCard variant="tech" className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold gradient-text">威胁详情分析</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedThreat(null)}
-              aria-label="关闭威胁详情"
-              title="关闭威胁详情"
-              className="text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
-            >
-              ×
-            </Button>
+      {/* 说明 */}
+      <GlassCard className="p-6 bg-blue-500/5 border-blue-500/20">
+        <div className="flex items-start space-x-3">
+          <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-blue-300 mb-1">关于 SSH 暴力破解检测</h3>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              系统自动监控 SSH 登录失败尝试。当检测到短时间内多次失败登录（默认：10分钟内5次），
+              会记录攻击来源 IP 并生成告警。建议：
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-gray-400 list-disc list-inside">
+              <li>禁用 root 密码登录，改用 SSH 密钥认证</li>
+              <li>修改 SSH 默认端口（22）</li>
+              <li>使用 fail2ban 等工具自动封禁攻击 IP</li>
+            </ul>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">威胁类型</div>
-                <div className="font-medium text-gray-900 dark:text-white">{getThreatConfig(selectedThreat.type).name}</div>
-              </div>
-              
-              <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">攻击来源</div>
-                <div className="font-mono text-gray-900 dark:text-white">{selectedThreat.sourceIp}</div>
-              </div>
-              
-              <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">攻击目标</div>
-                <div className="font-medium text-gray-900 dark:text-white">{selectedThreat.targetNode}</div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">严重等级</div>
-                <div className="font-medium text-gray-900 dark:text-white">{getSeverityConfig(selectedThreat.severity).label}风险</div>
-              </div>
-              
-              <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">检测时间</div>
-                <div className="font-medium text-gray-900 dark:text-white">{selectedThreat.timestamp.toLocaleString()}</div>
-              </div>
-              
-              <div className="glass rounded-lg p-4 border border-white/20">
-                <div className="text-xs text-gray-600 dark:text-white/60 mb-1">处理状态</div>
-                <div className="font-medium text-gray-900 dark:text-white">{getStatusConfig(selectedThreat.status).label}</div>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-      )}
+        </div>
+      </GlassCard>
     </div>
   );
 };

@@ -780,7 +780,7 @@ export class NodeController {
         } else {
           const security = (heartbeatData as any)?.security;
 
-          // 1. SSH暴力破解
+          // SSH暴力破解监控
           if (security?.ssh?.alerts?.length) {
             for (const alert of security.ssh.alerts) {
               await eventService.createEvent(
@@ -796,125 +796,6 @@ export class NodeController {
             }
             logger.info(
               `Recorded ${security.ssh.alerts.length} SSH brute force alerts for node ${node.name}`,
-            );
-          }
-
-          // 2. 进程异常/恶意软件
-          if (security?.processes?.suspiciousProcesses?.length) {
-            for (const proc of security.processes.suspiciousProcesses) {
-              // 挖矿程序 → MALWARE_DETECTED
-              if (
-                proc.reason.includes("miner") ||
-                proc.reason.includes("crypto")
-              ) {
-                await eventService.createEvent(
-                  node.id,
-                  "MALWARE_DETECTED",
-                  `Cryptocurrency miner detected: ${proc.process.name}`,
-                  {
-                    process: proc.process,
-                    reason: proc.reason,
-                    severity: proc.severity,
-                  },
-                );
-              }
-              // 其他可疑进程 → ANOMALY_DETECTED
-              else if (
-                proc.severity === "critical" ||
-                proc.severity === "high"
-              ) {
-                await eventService.createEvent(
-                  node.id,
-                  "ANOMALY_DETECTED",
-                  `Suspicious process: ${proc.process.name}`,
-                  {
-                    process: proc.process,
-                    reason: proc.reason,
-                    severity: proc.severity,
-                  },
-                );
-              }
-            }
-            logger.info(
-              `Recorded ${security.processes.suspiciousProcesses.length} process alerts for node ${node.name}`,
-            );
-          }
-
-          // 3. 网络异常/DDoS攻击
-          if (security?.network?.alerts?.length) {
-            for (const alert of security.network.alerts) {
-              // SYN Flood / 连接洪水 → DDOS_ATTACK
-              if (
-                alert.type === "connection_flood" &&
-                alert.severity === "critical"
-              ) {
-                await eventService.createEvent(
-                  node.id,
-                  "DDOS_ATTACK",
-                  alert.message,
-                  {
-                    type: alert.type,
-                    severity: alert.severity,
-                    details: alert.details,
-                  },
-                );
-              }
-              // 流量异常 → ANOMALY_DETECTED
-              else if (alert.type === "traffic_spike") {
-                await eventService.createEvent(
-                  node.id,
-                  "ANOMALY_DETECTED",
-                  alert.message,
-                  {
-                    type: alert.type,
-                    severity: alert.severity,
-                    details: alert.details,
-                  },
-                );
-              }
-            }
-            logger.info(
-              `Recorded ${security.network.alerts.length} network alerts for node ${node.name}`,
-            );
-          }
-
-          // 4. 文件完整性变更
-          if (security?.files?.changes?.length) {
-            for (const change of security.files.changes) {
-              // Critical文件或修改 → INTRUSION_DETECTED
-              if (
-                change.severity === "critical" ||
-                change.changeType === "modified"
-              ) {
-                await eventService.createEvent(
-                  node.id,
-                  "INTRUSION_DETECTED",
-                  `Critical file ${change.changeType}: ${change.path}`,
-                  {
-                    path: change.path,
-                    changeType: change.changeType,
-                    severity: change.severity,
-                    oldHash: change.oldInfo?.hash,
-                    newHash: change.newInfo?.hash,
-                  },
-                );
-              }
-              // 权限变更 → ANOMALY_DETECTED
-              else if (change.changeType === "permissions") {
-                await eventService.createEvent(
-                  node.id,
-                  "ANOMALY_DETECTED",
-                  `File permissions changed: ${change.path}`,
-                  {
-                    path: change.path,
-                    oldPermissions: change.oldInfo?.permissions,
-                    newPermissions: change.newInfo?.permissions,
-                  },
-                );
-              }
-            }
-            logger.info(
-              `Recorded ${security.files.changes.length} file integrity alerts for node ${node.name}`,
             );
           }
         }

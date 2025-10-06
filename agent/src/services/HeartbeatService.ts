@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { HeartbeatData } from '../types';
 import { buildSignedHeaders } from '../utils/signing';
 import { http } from '../utils/http';
+import { securityMonitor } from './SecurityMonitor';
 
 export class HeartbeatService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -37,12 +38,16 @@ export class HeartbeatService {
   private async sendHeartbeat(): Promise<void> {
     try {
       const systemInfo = await getSystemInfo();
-      
+
+      // 检查 SSH 暴力破解
+      const securityData = await securityMonitor.checkSshBruteforce();
+
       const heartbeatData: HeartbeatData = {
         agentId: config.id,
         timestamp: new Date(),
         status: 'online',
         systemInfo,
+        security: securityData || undefined,
         version: '0.1.0'
       };
 
