@@ -49,8 +49,7 @@ export default defineConfig({
           
           // Dashboard components chunk
           'dashboard': [
-            './src/components/dashboard/EnhancedStats',
-            './src/components/dashboard/ActivityLog'
+            './src/components/dashboard/EnhancedStats'
           ]
         }
       }
