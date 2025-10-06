@@ -706,7 +706,7 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
     platform: osDistro,
     arch: os.arch(),
     hostname: os.hostname(),
-    version: os.version ? os.version() : os.release(),
+    version: osDistro, // 使用发行版信息而不是内核版本
     uptime: Math.round(os.uptime()),
     nodeVersion: process.version,
 

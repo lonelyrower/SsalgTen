@@ -530,6 +530,7 @@ export class NodeController {
             osType: systemInfo?.platform || "Unknown",
             osVersion: systemInfo?.version || "Unknown",
             status: NodeStatus.ONLINE,
+            nameCustomized: false, // 新创建的节点名称未被用户自定义
           });
 
           logger.info(`New node created: ${node.name} (${node.id})`);
