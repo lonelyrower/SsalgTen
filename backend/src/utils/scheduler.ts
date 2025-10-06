@@ -2,10 +2,10 @@ import { nodeService } from "../services/NodeService";
 import { logger } from "./logger";
 
 const CLEANUP_INTERVAL_HOURS = parseInt(
-  process.env.CLEANUP_INTERVAL_HOURS || "24",
+  process.env.CLEANUP_INTERVAL_HOURS || "1", // Run cleanup every 1 hour
 );
 const HEARTBEAT_RETENTION_DAYS = parseInt(
-  process.env.HEARTBEAT_RETENTION_DAYS || "30",
+  process.env.HEARTBEAT_RETENTION_DAYS || "1", // Keep only 1 day of heartbeat data
 );
 const OFFLINE_CHECK_INTERVAL_MINUTES = parseInt(
   process.env.OFFLINE_CHECK_INTERVAL_MINUTES || "5",
