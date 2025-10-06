@@ -4162,38 +4162,51 @@ uninstall_system() {
 enhanced_update_system() {
     log_header "⚡ 系统更新"
     echo ""
-    
+
     echo "请选择更新模式："
-    echo "1. 智能更新 (自动选择最佳方式)"
-    echo "2. 镜像快速更新 (仅更新Docker镜像)"
-    echo "3. 完整更新 (包含代码、配置、数据库)"
-    echo "4. 返回主菜单"
     echo ""
-    
+    echo -e "${GREEN}1. 🚀 镜像快速更新 (推荐)${NC}"
+    echo "   ✓ 从 GHCR 拉取最新预构建镜像"
+    echo "   ✓ 更新时间：1-2 分钟"
+    echo "   ✓ 适合：生产环境快速更新"
+    echo ""
+    echo -e "${YELLOW}2. 🔧 源码完整更新${NC}"
+    echo "   • Git 拉取最新代码并本地构建"
+    echo "   • 更新时间：10-30 分钟"
+    echo "   • 适合：需要自定义修改或测试最新代码"
+    echo ""
+    echo -e "${BLUE}3. 📦 归档包更新${NC}"
+    echo "   • 下载源码压缩包并构建（无需 Git）"
+    echo "   • 更新时间：10-30 分钟"
+    echo "   • 适合：服务器无法访问 Git 或网络受限"
+    echo ""
+    echo "0. 返回主菜单"
+    echo ""
+
     local update_choice
     while true; do
-        read -p "请选择 [1-4]: " update_choice
+        read -p "请选择 [0-3]: " update_choice
         case "$update_choice" in
             1)
-                log_info "执行智能更新..."
-                update_system
-                break
-                ;;
-            2)
                 log_info "执行镜像快速更新..."
                 update_system --image
                 break
                 ;;
-            3)
-                log_info "执行完整更新..."
-                update_system --full
+            2)
+                log_info "执行源码完整更新..."
+                update_system --source
                 break
                 ;;
-            4)
+            3)
+                log_info "执行归档包更新..."
+                update_system_from_archive
+                break
+                ;;
+            0)
                 log_info "返回主菜单"
                 return 0
                 ;;
-            *) echo "请输入有效选项 (1-4)" ;;
+            *) echo "请输入有效选项 (0-3)" ;;
         esac
     done
 }
