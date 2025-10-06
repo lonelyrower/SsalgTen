@@ -101,7 +101,9 @@ export class SystemConfigController {
         success: true,
         data: {
           apiKey: mapApiKey?.value ? JSON.parse(mapApiKey.value) : "",
-          cesiumIonToken: cesiumToken?.value ? JSON.parse(cesiumToken.value) : "",
+          cesiumIonToken: cesiumToken?.value
+            ? JSON.parse(cesiumToken.value)
+            : "",
         },
       };
       res.json(response);
