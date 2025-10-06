@@ -33,8 +33,23 @@ function App() {
         console.debug('Failed to load system name:', error);
       }
     };
-    
+
     loadSystemName();
+  }, []);
+
+  // 记录访问者信息（仅在首次加载时）
+  useEffect(() => {
+    const recordVisit = async () => {
+      try {
+        // 调用访问者信息 API，自动记录访问
+        await apiService.getVisitorInfo();
+      } catch (error) {
+        // 记录失败不影响应用运行
+        console.debug('Failed to record visitor info:', error);
+      }
+    };
+
+    recordVisit();
   }, []);
 
   return (

@@ -15,20 +15,13 @@ export async function visitorTrackingMiddleware(
   // 异步记录访问信息，不阻塞请求
   setImmediate(async () => {
     try {
-      // 只记录访问前台的请求，排除后台管理、API、静态资源等
-      const excludePaths = [
-        "/health",
-        "/favicon.ico",
-        "/robots.txt",
-        "/api/", // 排除所有 API 请求（包括 Agent、管理后台等）
-        "/config.js",
-      ];
+      // 只记录访问者信息 API，排除其他所有请求
+      // /api/visitor/info 是唯一用于记录访问者的端点
+      const allowedPaths = ["/api/visitor/info"];
 
-      const shouldSkip =
-        excludePaths.some((path) => req.path.startsWith(path)) ||
-        req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$/);
+      const isAllowed = allowedPaths.some((path) => req.path === path);
 
-      if (shouldSkip) {
+      if (!isAllowed) {
         return;
       }
 
