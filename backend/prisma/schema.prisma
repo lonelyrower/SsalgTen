@@ -72,6 +72,10 @@ model Node {
   @@index([ipv4])
   @@index([ipv6])
   @@index([isPlaceholder, neverAdopt])
+  @@index([agentId])
+  @@index([status])
+  @@index([lastSeen(sort: Desc)])
+  @@index([status, lastSeen(sort: Desc)])
 }
 
 // 网络诊断记录
