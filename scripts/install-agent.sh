@@ -1086,15 +1086,16 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-Type=forking
-Restart=always
-RestartSec=10
+Type=oneshot
+RemainAfterExit=yes
 User=$USER
 Group=$USER
 WorkingDirectory=$APP_DIR
 ExecStart=/usr/bin/docker compose up -d
 ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0
+Restart=on-failure
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
@@ -1425,25 +1426,31 @@ update_heartbeat_config() {
     # 重启服务
     log_info "重启 Agent 服务..."
 
+    # 先停止服务（oneshot 类型需要先 stop）
     if systemctl is-active --quiet ssalgten-agent.service 2>/dev/null; then
-        systemctl restart ssalgten-agent.service
-        sleep 2
+        systemctl stop ssalgten-agent.service
+        sleep 1
+    fi
 
-        if systemctl is-active --quiet ssalgten-agent.service; then
-            log_success "服务已重启，新配置已生效"
-        else
-            log_error "服务重启失败"
-            log_info "查看日志: journalctl -u ssalgten-agent -n 50"
-        fi
+    # 启动服务
+    systemctl start ssalgten-agent.service
+    sleep 2
+
+    # 验证 Docker 容器状态（更可靠）
+    cd "$APP_DIR"
+    if docker compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
+        log_success "服务已重启，新配置已生效"
+        log_info "容器状态:"
+        docker compose ps
     else
-        log_warning "服务未运行，启动服务..."
-        systemctl start ssalgten-agent.service
+        log_warning "systemd 服务已启动，正在验证容器状态..."
         sleep 2
-
-        if systemctl is-active --quiet ssalgten-agent.service; then
-            log_success "服务已启动"
+        if docker compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
+            log_success "容器已启动"
         else
-            log_error "服务启动失败"
+            log_error "容器启动失败，请手动检查"
+            log_info "查看容器状态: cd $APP_DIR && docker compose ps"
+            log_info "查看容器日志: cd $APP_DIR && docker compose logs --tail 50"
         fi
     fi
 
