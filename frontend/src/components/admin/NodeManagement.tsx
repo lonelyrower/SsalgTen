@@ -402,25 +402,25 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       {/* 节点表格 */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed">
+          <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="w-[5%] px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-12 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {/* 状态指示 */}
                 </th>
-                <th className="w-[28%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   节点信息
                 </th>
-                <th className="w-[25%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   位置
                 </th>
-                <th className="w-[15%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-20 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   状态
                 </th>
-                <th className="w-[20%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-32 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   最后在线
                 </th>
-                <th className="w-[7%] px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-24 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
@@ -428,52 +428,50 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredNodes.map((node) => (
                 <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="w-[5%] px-2 py-4 text-center">
+                  <td className="w-12 px-2 py-4 text-center">
                     {getStatusIcon(node.status)}
                   </td>
-                  <td className="w-[28%] px-4 py-4 text-center">
-                    <div className="inline-flex items-center">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {node.name}
-                        </div>
-                        {node.ipv4 && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                            IPv4: {node.ipv4}
-                          </div>
-                        )}
-                        {node.ipv6 && node.ipv6.includes(':') && node.ipv6.length > 15 && (
-                          <div className="text-xs text-purple-600 dark:text-purple-400 font-mono">
-                            IPv6: {node.ipv6}
-                          </div>
-                        )}
+                  <td className="px-3 py-4 text-center">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {node.name}
                       </div>
+                      {node.ipv4 && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                          IPv4: {node.ipv4}
+                        </div>
+                      )}
+                      {node.ipv6 && node.ipv6.includes(':') && node.ipv6.length > 15 && (
+                        <div className="text-xs text-purple-600 dark:text-purple-400 font-mono truncate" title={node.ipv6}>
+                          IPv6: {node.ipv6}
+                        </div>
+                      )}
                     </div>
                   </td>
-                  <td className="w-[25%] px-4 py-4 text-center">
-                    <div className="text-sm text-gray-900 dark:text-white inline-flex items-center justify-center gap-1">
+                  <td className="px-3 py-4 text-center">
+                    <div className="text-sm text-gray-900 dark:text-white inline-flex items-center gap-1.5">
                       <CountryFlagSvg country={node.country} />
-                      <span>{node.city}, {node.country}</span>
+                      <span className="truncate">{node.city}, {node.country}</span>
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate" title={node.provider}>
                       {node.provider}
                     </div>
                   </td>
-                  <td className="w-[15%] px-4 py-4 text-center">
+                  <td className="w-20 px-2 py-4 text-center">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(node.status)}`}>
                       {getStatusText(node.status)}
                     </span>
                   </td>
-                  <td className="w-[20%] px-4 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
+                  <td className="w-32 px-2 py-4 text-xs text-center text-gray-500 dark:text-gray-400">
                     {node.lastSeen ? new Date(node.lastSeen).toLocaleDateString('zh-CN') : '未知'}
                   </td>
-                  <td className="w-[7%] px-4 py-4 text-center text-sm font-medium">
-                    <div className="inline-flex items-center justify-center space-x-2">
+                  <td className="w-24 px-2 py-4 text-center text-sm font-medium">
+                    <div className="inline-flex items-center justify-center space-x-1">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => openRenameModal(node.id, node.name)}
-                        className="text-gray-400 hover:text-blue-600"
+                        className="text-gray-400 hover:text-blue-600 p-1"
                         title="重命名节点"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -482,7 +480,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowDeleteConfirm(node.id)}
-                        className="text-gray-400 hover:text-red-600"
+                        className="text-gray-400 hover:text-red-600 p-1"
                         title="删除节点"
                       >
                         <Trash2 className="h-4 w-4" />
