@@ -1301,6 +1301,114 @@ EOF
     log_success "管理脚本创建完成: $APP_DIR/manage-agent.sh"
 }
 
+# 更新 Agent 版本
+update_agent() {
+    clear
+    echo -e "${CYAN}"
+    echo "========================================"
+    echo "    更新 Agent 到最新版本"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+
+    # 设置应用目录
+    APP_DIR="/opt/ssalgten-agent"
+
+    # 检查 Agent 是否已安装
+    if [ ! -d "$APP_DIR" ]; then
+        log_error "未找到 Agent 安装目录: $APP_DIR"
+        log_info "请先安装 Agent"
+        echo ""
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    log_info "当前 Agent 目录: $APP_DIR"
+    echo ""
+    log_warning "更新操作将："
+    echo "  1. 拉取最新代码"
+    echo "  2. 重新构建 Docker 镜像"
+    echo "  3. 重启 Agent 服务"
+    echo "  4. 保留现有配置（.env 文件）"
+    echo ""
+
+    confirm=$(read_from_tty "确认更新 Agent？[y/N]: ")
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        log_info "已取消操作"
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    # 进入应用目录
+    cd "$APP_DIR"
+
+    # 1. 备份当前配置
+    log_info "备份配置文件..."
+    if [ -f ".env" ]; then
+        cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
+        log_success "配置已备份"
+    fi
+
+    # 2. 拉取最新代码
+    log_info "拉取最新代码..."
+    if git pull origin main 2>&1 | tee /tmp/git-pull.log | grep -q "Already up to date"; then
+        log_success "已是最新版本"
+    else
+        if grep -q "error\|fatal" /tmp/git-pull.log; then
+            log_error "代码拉取失败"
+            log_info "尝试强制更新..."
+            git fetch origin main
+            git reset --hard origin/main
+            log_success "强制更新完成"
+        else
+            log_success "代码拉取成功"
+        fi
+    fi
+
+    # 3. 重新构建镜像
+    log_info "重新构建 Agent 镜像（可能需要几分钟）..."
+    if docker compose build; then
+        log_success "镜像构建完成"
+    else
+        log_error "镜像构建失败"
+        log_info "请检查 Docker 日志: docker compose logs"
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    # 4. 重启服务
+    log_info "重启 Agent 服务..."
+
+    # 停止服务
+    if systemctl is-active --quiet ssalgten-agent.service 2>/dev/null; then
+        systemctl stop ssalgten-agent.service
+        sleep 1
+    fi
+
+    # 启动服务
+    systemctl start ssalgten-agent.service
+    sleep 3
+
+    # 验证容器状态
+    if docker compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
+        log_success "Agent 已成功更新并启动"
+        echo ""
+        log_info "容器状态:"
+        docker compose ps
+    else
+        log_error "Agent 启动失败"
+        log_info "查看日志: docker compose logs --tail 50"
+    fi
+
+    echo ""
+    log_success "✅ Agent 更新完成！"
+    echo ""
+    log_info "验证服务状态: systemctl status ssalgten-agent"
+    log_info "查看 Agent 日志: docker compose logs -f"
+    echo ""
+    read -p "按回车键返回主菜单..." -r
+}
+
 # 更新心跳配置
 update_heartbeat_config() {
     clear
@@ -1676,8 +1784,9 @@ show_main_menu() {
     else
         echo -e "${GREEN}1.${NC} 安装监控节点"
     fi
-    echo -e "${BLUE}2.${NC} 更新心跳配置"
-    echo -e "${RED}3.${NC} 卸载监控节点"
+    echo -e "${BLUE}2.${NC} 更新 Agent 版本"
+    echo -e "${BLUE}3.${NC} 更新心跳配置"
+    echo -e "${RED}4.${NC} 卸载监控节点"
     echo -e "${YELLOW}0.${NC} 退出"
     echo ""
 }
@@ -1733,7 +1842,7 @@ main() {
                 show_main_menu
                 
                 while true; do
-                    choice=$(read_from_tty "请输入选项 [0-3]: ")
+                    choice=$(read_from_tty "请输入选项 [0-4]: ")
                     case $choice in
                         1)
                             log_info "开始安装监控节点..."
@@ -1748,12 +1857,18 @@ main() {
                             break
                             ;;
                         2)
+                            log_info "更新 Agent 版本..."
+                            update_agent
+                            # 更新完成后返回菜单
+                            show_main_menu
+                            ;;
+                        3)
                             log_info "更新心跳配置..."
                             update_heartbeat_config
                             # 更新完成后返回菜单
                             show_main_menu
                             ;;
-                        3)
+                        4)
                             log_info "开始卸载监控节点..."
                             uninstall_agent
                             return
@@ -1764,7 +1879,7 @@ main() {
                             exit 0
                             ;;
                         *)
-                            echo -e "${RED}无效选项，请输入 1、2、3 或 0${NC}"
+                            echo -e "${RED}无效选项，请输入 1、2、3、4 或 0${NC}"
                             continue
                             ;;
                     esac
