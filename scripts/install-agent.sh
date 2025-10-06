@@ -45,7 +45,7 @@ docker_compose() {
 }
 
 # 版本信息
-SCRIPT_VERSION="1.1.0"
+SCRIPT_VERSION="1.2.0"
 SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh"
 AGENT_VERSION="latest"
 
@@ -133,6 +133,7 @@ show_welcome() {
     echo -e "${YELLOW}使用方法:${NC}"
     echo "  交互式安装: curl -fsSL ... | bash"
     echo "  自动化安装: curl -fsSL ... | bash -s -- --auto-config --master-url URL --api-key KEY"
+    echo "  更新心跳配置: curl -fsSL ... | bash (选择菜单选项 2)"
     echo "  卸载Agent: curl -fsSL ... | bash -s -- --uninstall"
     echo ""
     echo -e "${GREEN}💡 温馨提示:${NC}"
@@ -1299,6 +1300,161 @@ EOF
     log_success "管理脚本创建完成: $APP_DIR/manage-agent.sh"
 }
 
+# 更新心跳配置
+update_heartbeat_config() {
+    clear
+    echo -e "${CYAN}"
+    echo "========================================"
+    echo "    更新 Agent 心跳配置"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+
+    # 设置应用目录
+    APP_DIR="/opt/ssalgten-agent"
+
+    # 检查 Agent 是否已安装
+    if [ ! -d "$APP_DIR" ]; then
+        log_error "未找到 Agent 安装目录: $APP_DIR"
+        log_info "请先安装 Agent"
+        echo ""
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    if [ ! -f "$APP_DIR/.env" ]; then
+        log_error "未找到配置文件: $APP_DIR/.env"
+        echo ""
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    # 显示当前配置
+    CURRENT_INTERVAL=$(grep '^HEARTBEAT_INTERVAL=' "$APP_DIR/.env" 2>/dev/null | cut -d'=' -f2 || echo "30000")
+    CURRENT_MINUTES=$((CURRENT_INTERVAL / 1000 / 60))
+
+    log_info "当前心跳间隔: $CURRENT_INTERVAL ms ($CURRENT_MINUTES 分钟)"
+    echo ""
+    echo "推荐配置："
+    echo "  • 5 分钟 (300000 ms) - 推荐，适合大规模部署"
+    echo "  • 3 分钟 (180000 ms) - 更频繁的状态更新"
+    echo "  • 1 分钟 (60000 ms)  - 实时监控，数据量较大"
+    echo ""
+
+    # 询问用户选择
+    echo "请选择新的心跳间隔："
+    echo "  1. 5 分钟 (300000 ms) ${GREEN}[推荐]${NC}"
+    echo "  2. 3 分钟 (180000 ms)"
+    echo "  3. 1 分钟 (60000 ms)"
+    echo "  4. 自定义"
+    echo "  0. 取消"
+    echo ""
+
+    choice=$(read_from_tty "请输入选项 [0-4]: ")
+
+    case $choice in
+        1)
+            NEW_INTERVAL=300000
+            ;;
+        2)
+            NEW_INTERVAL=180000
+            ;;
+        3)
+            NEW_INTERVAL=60000
+            ;;
+        4)
+            custom_minutes=$(read_from_tty "请输入心跳间隔（分钟）: ")
+            if ! [[ "$custom_minutes" =~ ^[0-9]+$ ]]; then
+                log_error "无效输入，必须是数字"
+                read -p "按回车键返回主菜单..." -r
+                return
+            fi
+            NEW_INTERVAL=$((custom_minutes * 60 * 1000))
+            ;;
+        0)
+            log_info "已取消操作"
+            read -p "按回车键返回主菜单..." -r
+            return
+            ;;
+        *)
+            log_error "无效选项"
+            read -p "按回车键返回主菜单..." -r
+            return
+            ;;
+    esac
+
+    # 确认修改
+    NEW_MINUTES=$((NEW_INTERVAL / 1000 / 60))
+    echo ""
+    log_info "即将修改心跳间隔："
+    echo "  当前: $CURRENT_INTERVAL ms ($CURRENT_MINUTES 分钟)"
+    echo "  新值: $NEW_INTERVAL ms ($NEW_MINUTES 分钟)"
+    echo ""
+
+    confirm=$(read_from_tty "确认修改并重启 Agent？[y/N]: ")
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        log_info "已取消操作"
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    # 备份配置文件
+    log_info "备份配置文件..."
+    cp "$APP_DIR/.env" "$APP_DIR/.env.backup.$(date +%Y%m%d_%H%M%S)"
+
+    # 修改配置
+    log_info "修改心跳间隔配置..."
+    if grep -q '^HEARTBEAT_INTERVAL=' "$APP_DIR/.env"; then
+        # 已存在，替换
+        sed -i "s/^HEARTBEAT_INTERVAL=.*/HEARTBEAT_INTERVAL=$NEW_INTERVAL/" "$APP_DIR/.env"
+    else
+        # 不存在，追加
+        echo "HEARTBEAT_INTERVAL=$NEW_INTERVAL" >> "$APP_DIR/.env"
+    fi
+
+    # 验证修改
+    NEW_VALUE=$(grep '^HEARTBEAT_INTERVAL=' "$APP_DIR/.env" | cut -d'=' -f2)
+    if [ "$NEW_VALUE" = "$NEW_INTERVAL" ]; then
+        log_success "配置已更新: HEARTBEAT_INTERVAL=$NEW_INTERVAL"
+    else
+        log_error "配置更新失败"
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+
+    # 重启服务
+    log_info "重启 Agent 服务..."
+
+    if systemctl is-active --quiet ssalgten-agent.service 2>/dev/null; then
+        systemctl restart ssalgten-agent.service
+        sleep 2
+
+        if systemctl is-active --quiet ssalgten-agent.service; then
+            log_success "服务已重启，新配置已生效"
+        else
+            log_error "服务重启失败"
+            log_info "查看日志: journalctl -u ssalgten-agent -n 50"
+        fi
+    else
+        log_warning "服务未运行，启动服务..."
+        systemctl start ssalgten-agent.service
+        sleep 2
+
+        if systemctl is-active --quiet ssalgten-agent.service; then
+            log_success "服务已启动"
+        else
+            log_error "服务启动失败"
+        fi
+    fi
+
+    echo ""
+    log_success "✅ 心跳配置更新完成！"
+    echo ""
+    log_info "验证服务状态: systemctl status ssalgten-agent"
+    echo ""
+    read -p "按回车键返回主菜单..." -r
+}
+
 # 卸载Agent
 uninstall_agent() {
     clear
@@ -1476,7 +1632,8 @@ show_main_menu() {
     else
         echo -e "${GREEN}1.${NC} 安装监控节点"
     fi
-    echo -e "${RED}2.${NC} 卸载监控节点"
+    echo -e "${BLUE}2.${NC} 更新心跳配置"
+    echo -e "${RED}3.${NC} 卸载监控节点"
     echo -e "${YELLOW}0.${NC} 退出"
     echo ""
 }
@@ -1532,7 +1689,7 @@ main() {
                 show_main_menu
                 
                 while true; do
-                    choice=$(read_from_tty "请输入选项 [0-2]: ")
+                    choice=$(read_from_tty "请输入选项 [0-3]: ")
                     case $choice in
                         1)
                             log_info "开始安装监控节点..."
@@ -1547,6 +1704,12 @@ main() {
                             break
                             ;;
                         2)
+                            log_info "更新心跳配置..."
+                            update_heartbeat_config
+                            # 更新完成后返回菜单
+                            show_main_menu
+                            ;;
+                        3)
                             log_info "开始卸载监控节点..."
                             uninstall_agent
                             return
@@ -1557,7 +1720,7 @@ main() {
                             exit 0
                             ;;
                         *)
-                            echo -e "${RED}无效选项，请输入 1、2 或 0${NC}"
+                            echo -e "${RED}无效选项，请输入 1、2、3 或 0${NC}"
                             continue
                             ;;
                     esac
