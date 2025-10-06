@@ -15,15 +15,13 @@ export async function visitorTrackingMiddleware(
   // 异步记录访问信息，不阻塞请求
   setImmediate(async () => {
     try {
-      // 排除健康检查、静态资源、Agent API 等不需要记录的请求
+      // 只记录访问前台的请求，排除后台管理、API、静态资源等
       const excludePaths = [
         "/health",
         "/favicon.ico",
         "/robots.txt",
-        "/api/socket.io",
+        "/api/", // 排除所有 API 请求（包括 Agent、管理后台等）
         "/config.js",
-        "/api/agents/",           // Agent 注册、心跳、诊断上报
-        "/api/system/version",    // 版本检查
       ];
 
       const shouldSkip =
