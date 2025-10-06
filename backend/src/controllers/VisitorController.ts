@@ -12,33 +12,38 @@ export class VisitorController {
       const visitorInfo = await ipInfoService.getVisitorInfo(req);
 
       // 记录访问者信息到数据库
-      try {
-        const [lat, lng] = (visitorInfo.loc || "0,0")
-          .split(",")
-          .map(parseFloat);
+      // 只记录前台访问，不记录管理后台访问（/api/admin/**）
+      const isAdminEndpoint = req.originalUrl.includes("/api/admin");
 
-        await prisma.visitorLog.create({
-          data: {
-            ip: visitorInfo.ip,
-            userAgent: visitorInfo.userAgent,
-            city: visitorInfo.city,
-            region: visitorInfo.region,
-            country: visitorInfo.country,
-            latitude: isNaN(lat) ? null : lat,
-            longitude: isNaN(lng) ? null : lng,
-            timezone: visitorInfo.timezone,
-            asnNumber: visitorInfo.asn?.asn,
-            asnName: visitorInfo.asn?.name,
-            asnOrg: visitorInfo.asn?.org,
-            company: visitorInfo.company?.name,
-            endpoint: req.originalUrl,
-            method: req.method,
-            referer: req.headers.referer,
-          },
-        });
-      } catch (dbError) {
-        // 数据库记录失败不影响API响应
-        logger.warn("Failed to log visitor info:", dbError);
+      if (!isAdminEndpoint) {
+        try {
+          const [lat, lng] = (visitorInfo.loc || "0,0")
+            .split(",")
+            .map(parseFloat);
+
+          await prisma.visitorLog.create({
+            data: {
+              ip: visitorInfo.ip,
+              userAgent: visitorInfo.userAgent,
+              city: visitorInfo.city,
+              region: visitorInfo.region,
+              country: visitorInfo.country,
+              latitude: isNaN(lat) ? null : lat,
+              longitude: isNaN(lng) ? null : lng,
+              timezone: visitorInfo.timezone,
+              asnNumber: visitorInfo.asn?.asn,
+              asnName: visitorInfo.asn?.name,
+              asnOrg: visitorInfo.asn?.org,
+              company: visitorInfo.company?.name,
+              endpoint: req.originalUrl,
+              method: req.method,
+              referer: req.headers.referer,
+            },
+          });
+        } catch (dbError) {
+          // 数据库记录失败不影响API响应
+          logger.warn("Failed to log visitor info:", dbError);
+        }
       }
 
       res.json({
@@ -135,24 +140,26 @@ export class VisitorController {
             distinct: ["ip"],
           }),
 
-          // 访问量最多的国家
+          // 访问量最多的国家（排除Unknown）
           prisma.visitorLog.groupBy({
             by: ["country"],
             where: {
               createdAt: { gte: cutoffDate },
               country: { not: null },
+              AND: [{ country: { not: "Unknown" } }, { country: { not: "" } }],
             },
             _count: true,
             orderBy: { _count: { ip: "desc" } },
             take: 10,
           }),
 
-          // 访问量最多的ASN
+          // 访问量最多的ASN（排除Unknown）
           prisma.visitorLog.groupBy({
             by: ["asnName"],
             where: {
               createdAt: { gte: cutoffDate },
               asnName: { not: null },
+              AND: [{ asnName: { not: "Unknown" } }, { asnName: { not: "" } }],
             },
             _count: true,
             orderBy: { _count: { ip: "desc" } },

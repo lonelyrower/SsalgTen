@@ -221,7 +221,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
           )}
         </div>
       ) : (
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto">
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredActivities.map((activity) => {
               const severityClasses = getSeverityClasses(activity.severity);
