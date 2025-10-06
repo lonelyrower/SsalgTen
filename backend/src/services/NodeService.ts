@@ -34,6 +34,7 @@ export interface CreateNodeInput {
   osType?: string;
   osVersion?: string;
   status?: NodeStatus; // 允许指定初始状态
+  nameCustomized?: boolean; // 名称是否被用户自定义过
   // ASN信息（可选，如果不提供将自动查询）
   asnNumber?: string;
   asnName?: string;

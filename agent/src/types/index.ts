@@ -204,5 +204,14 @@ export interface HeartbeatData {
     };
     loadAverage?: number[];
   };
+  security?: {
+    ssh?: {
+      alerts?: Array<{
+        ip: string;
+        count: number;
+        windowMinutes: number;
+      }>;
+    };
+  };
   version?: string;
 }

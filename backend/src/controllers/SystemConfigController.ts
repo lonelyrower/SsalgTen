@@ -58,7 +58,8 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
   "monitoring.retention_days": {
     value: 1,
     category: "data",
-    description: "历史监控数据保留天数（心跳日志、诊断记录）。⚠️ 数值越大，数据库占用越大。推荐 1-3 天，足够查看节点状态。",
+    description:
+      "历史监控数据保留天数（心跳日志、诊断记录）。⚠️ 数值越大，数据库占用越大。推荐 1-3 天，足够查看节点状态。",
     displayName: "数据保留天数",
     inputType: "number",
     unit: "天",

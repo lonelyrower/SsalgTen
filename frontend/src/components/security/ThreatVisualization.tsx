@@ -20,12 +20,8 @@ interface SshBruteforceEvent {
 interface ActivityEvent {
   id: string;
   type: string;
-  message: string;
-  details?: {
-    ip?: string;
-    count?: number;
-    windowMinutes?: number;
-  };
+  message?: string;
+  details?: unknown;
   node?: {
     id: string;
     name: string;
@@ -47,21 +43,24 @@ export const ThreatVisualization: React.FC = () => {
 
   const fetchSecurityEvents = async () => {
     try {
-      const response = await apiService.getActivities();
+      const response = await apiService.getGlobalActivities(100);
       if (response.success && response.data) {
         // 过滤出 SSH 暴力破解事件
         const sshEvents = response.data
           .filter((event: ActivityEvent) => event.type === 'SSH_BRUTEFORCE')
-          .map((event: ActivityEvent): SshBruteforceEvent => ({
-            id: event.id,
-            nodeId: event.node?.id || '',
-            nodeName: event.node?.name || 'Unknown',
-            nodeCountry: event.node?.country || 'Unknown',
-            ip: event.details?.ip || 'Unknown',
-            count: event.details?.count || 0,
-            windowMinutes: event.details?.windowMinutes || 10,
-            timestamp: new Date(event.timestamp),
-          }));
+          .map((event: ActivityEvent): SshBruteforceEvent => {
+            const details = event.details as { ip?: string; count?: number; windowMinutes?: number } | undefined;
+            return {
+              id: event.id,
+              nodeId: event.node?.id || '',
+              nodeName: event.node?.name || 'Unknown',
+              nodeCountry: event.node?.country || 'Unknown',
+              ip: details?.ip || 'Unknown',
+              count: details?.count || 0,
+              windowMinutes: details?.windowMinutes || 10,
+              timestamp: new Date(event.timestamp),
+            };
+          });
 
         setEvents(sshEvents);
       }
