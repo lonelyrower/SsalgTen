@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart } from 'lucide-react';
@@ -77,6 +77,36 @@ export const MonitoringPage: React.FC = () => {
   const { nodes, connected, lastUpdate, refreshData } = useRealTime();
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 布局模式
+  const [visibleCount, setVisibleCount] = useState(60); // 初始显示60个节点
+  const loadMoreRef = useRef<HTMLDivElement>(null); // 加载更多的观察目标
+
+  // 懒加载：当滚动到底部时加载更多节点
+  const loadMore = useCallback(() => {
+    setVisibleCount(prev => Math.min(prev + 40, nodes.length)); // 每次加载40个
+  }, [nodes.length]);
+
+  // 使用 Intersection Observer 监听滚动
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < nodes.length) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [loadMore, visibleCount, nodes.length]);
 
   useEffect(() => {
     // Set loading to false once we have data or after a short delay
@@ -388,12 +418,13 @@ export const MonitoringPage: React.FC = () => {
         {/* 节点显示区域 */}
         {viewMode === 'grid' ? (
           /* 网格布局 */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {nodes.map((node) => (
-            <div
-              key={node.id}
-              className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 p-6 transition-all duration-200 hover:shadow-lg ${getStatusColor(node.status)}`}
-            >
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {nodes.slice(0, visibleCount).map((node) => (
+              <div
+                key={node.id}
+                className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 p-6 transition-all duration-200 hover:shadow-lg ${getStatusColor(node.status)}`}
+              >
               {/* 节点头部信息 */}
               <div className="mb-4">
                 <div className="flex items-center justify-center mb-2">
@@ -488,6 +519,17 @@ export const MonitoringPage: React.FC = () => {
             </div>
             ))}
           </div>
+          
+          {/* 加载更多触发器 - 网格布局 */}
+          {visibleCount < nodes.length && (
+            <div ref={loadMoreRef} className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                加载中... ({visibleCount}/{nodes.length})
+              </p>
+            </div>
+          )}
+          </>
         ) : (
           /* 列表布局 */
           <div className="space-y-3">
@@ -504,7 +546,7 @@ export const MonitoringPage: React.FC = () => {
                 </div>
               </div>
               <div className="divide-y divide-gray-200 dark:divide-gray-600">
-                {nodes.map((node) => (
+                {nodes.slice(0, visibleCount).map((node) => (
                   <div
                     key={node.id}
                     className={`px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
@@ -611,6 +653,16 @@ export const MonitoringPage: React.FC = () => {
                 ))}
               </div>
             </div>
+            
+            {/* 加载更多触发器 - 列表布局 */}
+            {visibleCount < nodes.length && (
+              <div ref={loadMoreRef} className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  加载中... ({visibleCount}/{nodes.length})
+                </p>
+              </div>
+            )}
           </div>
         )}
 
