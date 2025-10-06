@@ -287,14 +287,6 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ className = '' }) => {
           </div>
         )}
       </div>
-      
-      {filteredActivities.length > 0 && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <div className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-            <span>显示 {filteredActivities.length} 条活动</span>
-          </div>
-        </div>
-      )}
     </Card>
   );
 };

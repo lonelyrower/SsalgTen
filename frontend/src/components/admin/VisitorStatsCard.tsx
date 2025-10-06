@@ -72,7 +72,7 @@ export const VisitorStatsCard: React.FC = () => {
       setSuccess(null);
 
       const response = await apiService.clearVisitorCache();
-      
+
       if (response.success) {
         setSuccess('缓存清理成功');
         await fetchStats(); // 重新获取统计数据
@@ -83,6 +83,33 @@ export const VisitorStatsCard: React.FC = () => {
     } catch (err) {
       console.error('Failed to clear cache:', err);
       setError('缓存清理失败');
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const handleClearLogs = async () => {
+    if (!confirm('确定要清空所有访问记录吗？此操作不可恢复！')) {
+      return;
+    }
+
+    try {
+      setClearing(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await apiService.clearVisitorLogs();
+
+      if (response.success) {
+        setSuccess(`已清空 ${response.data?.deletedCount || 0} 条访问记录`);
+        await fetchStats(); // 重新获取统计数据
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(response.error || '清空记录失败');
+      }
+    } catch (err) {
+      console.error('Failed to clear logs:', err);
+      setError('清空记录失败');
     } finally {
       setClearing(false);
     }
@@ -380,24 +407,44 @@ export const VisitorStatsCard: React.FC = () => {
               IP地理位置和ASN信息缓存统计
             </p>
           </div>
-          <Button 
-            onClick={handleClearCache} 
-            disabled={clearing}
-            variant="outline"
-            className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
-          >
-            {clearing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
-                清理中...
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4 mr-2" />
-                清空缓存
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleClearLogs}
+              disabled={clearing}
+              variant="outline"
+              className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
+            >
+              {clearing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                  清理中...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  清空记录
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleClearCache}
+              disabled={clearing}
+              variant="outline"
+              className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-600 dark:hover:bg-orange-900/20"
+            >
+              {clearing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600 mr-2"></div>
+                  清理中...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  清空缓存
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {cacheStats && (

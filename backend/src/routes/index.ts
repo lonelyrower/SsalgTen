@@ -429,6 +429,12 @@ router.post(
   requireAdmin,
   visitorController.clearCache.bind(visitorController),
 );
+router.delete(
+  "/admin/visitors/logs",
+  authenticateToken,
+  requireAdmin,
+  visitorController.clearAllLogs.bind(visitorController),
+);
 
 // API密钥管理（管理员专用）
 router.get(

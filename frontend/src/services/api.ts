@@ -846,6 +846,12 @@ class ApiService {
     }, true);
   }
 
+  async clearVisitorLogs(): Promise<ApiResponse<{ deletedCount: number }>> {
+    return this.request<{ deletedCount: number }>('/admin/visitors/logs', {
+      method: 'DELETE'
+    }, true);
+  }
+
   // API密钥管理 API（管理员专用）
   async getApiKeyInfo(): Promise<ApiResponse<ApiKeyInfo>> {
     return this.request<ApiKeyInfo>('/admin/api-key/info', {}, true);

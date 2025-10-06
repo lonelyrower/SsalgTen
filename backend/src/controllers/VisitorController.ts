@@ -247,6 +247,29 @@ export class VisitorController {
       });
     }
   }
+
+  /**
+   * 清空所有访问记录
+   */
+  async clearAllLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await prisma.visitorLog.deleteMany({});
+
+      res.json({
+        success: true,
+        message: "All visitor logs cleared successfully",
+        data: {
+          deletedCount: result.count,
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to clear visitor logs:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to clear visitor logs",
+      });
+    }
+  }
 }
 
 export const visitorController = new VisitorController();
