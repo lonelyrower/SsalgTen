@@ -1224,10 +1224,10 @@ show_installation_result() {
     echo "  - 主服务器: $MASTER_URL"
     echo ""
     echo "🔧 管理命令:"
-    echo "  - 查看状态: cd $APP_DIR && docker_compose ps"
-    echo "  - 查看日志: cd $APP_DIR && docker_compose logs -f"
-    echo "  - 重启服务: cd $APP_DIR && docker_compose restart"
-    echo "  - 停止服务: cd $APP_DIR && docker_compose down"
+    echo "  - 查看状态: cd $APP_DIR && docker compose ps"
+    echo "  - 查看日志: cd $APP_DIR && docker compose logs -f"
+    echo "  - 重启服务: cd $APP_DIR && docker compose restart"
+    echo "  - 停止服务: cd $APP_DIR && docker compose down"
     echo "  - 系统服务: sudo systemctl status ssalgten-agent"
     echo ""
     echo "🌐 访问地址:"
@@ -1251,7 +1251,7 @@ show_installation_result() {
     echo -e "${YELLOW}⚠️ 下一步:${NC}"
     echo "1. 检查防火墙是否开放端口 $AGENT_PORT"
     echo "2. 在主服务器控制台查看节点是否上线"
-    echo "3. 如有问题，查看日志: docker_compose logs -f"
+    echo "3. 如有问题，查看日志: docker compose logs -f"
     echo ""
 }
 
@@ -1326,7 +1326,7 @@ update_agent() {
     log_info "当前 Agent 目录: $APP_DIR"
     echo ""
     log_warning "更新操作将："
-    echo "  1. 拉取最新代码"
+    echo "  1. 下载最新代码"
     echo "  2. 重新构建 Docker 镜像"
     echo "  3. 重启 Agent 服务"
     echo "  4. 保留现有配置（.env 文件）"
@@ -1339,39 +1339,125 @@ update_agent() {
         return
     fi
 
-    # 进入应用目录
-    cd "$APP_DIR"
-
     # 1. 备份当前配置
     log_info "备份配置文件..."
-    if [ -f ".env" ]; then
-        cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
+    if [ -f "$APP_DIR/.env" ]; then
+        cp "$APP_DIR/.env" "$APP_DIR/.env.backup.$(date +%Y%m%d_%H%M%S)"
         log_success "配置已备份"
     fi
 
-    # 2. 拉取最新代码
-    log_info "拉取最新代码..."
-    if git pull origin main 2>&1 | tee /tmp/git-pull.log | grep -q "Already up to date"; then
-        log_success "已是最新版本"
-    else
-        if grep -q "error\|fatal" /tmp/git-pull.log; then
-            log_error "代码拉取失败"
-            log_info "尝试强制更新..."
-            git fetch origin main
-            git reset --hard origin/main
-            log_success "强制更新完成"
+    # 2. 下载最新代码
+    log_info "下载最新 Agent 代码..."
+    
+    # 创建临时目录
+    TEMP_DIR="/tmp/ssalgten-agent-update-$(date +%s)"
+    rm -rf "$TEMP_DIR"
+    mkdir -p "$TEMP_DIR"
+    
+    cd "$TEMP_DIR"
+    
+    # 尝试多种下载方式
+    local download_success=false
+    local methods=(
+        "git clone --depth 1 https://github.com/lonelyrower/SsalgTen.git ."
+        "git clone --depth 1 https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git ."
+        "git clone --depth 1 https://hub.fastgit.xyz/lonelyrower/SsalgTen.git ."
+    )
+    
+    # 尝试Git克隆
+    for method in "${methods[@]}"; do
+        log_info "尝试: $method"
+        if eval "$method" 2>/dev/null; then
+            download_success=true
+            log_success "代码下载成功"
+            break
         else
-            log_success "代码拉取成功"
+            log_warning "下载失败，尝试下一种方法..."
         fi
+    done
+    
+    # 如果Git克隆都失败，使用wget下载ZIP包
+    if [[ "$download_success" == false ]]; then
+        log_warning "Git克隆失败，使用wget下载ZIP包..."
+        
+        local zip_urls=(
+            "https://github.com/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+            "https://github.com.cnpmjs.org/lonelyrower/SsalgTen/archive/refs/heads/main.zip"
+        )
+        
+        for zip_url in "${zip_urls[@]}"; do
+            log_info "尝试下载: $zip_url"
+            if wget -q "$zip_url" -O main.zip 2>/dev/null; then
+                if unzip -q main.zip 2>/dev/null; then
+                    mv SsalgTen-main/* . 2>/dev/null
+                    mv SsalgTen-main/.* . 2>/dev/null || true
+                    rmdir SsalgTen-main 2>/dev/null
+                    rm -f main.zip
+                    download_success=true
+                    log_success "ZIP包下载成功"
+                    break
+                fi
+            fi
+        done
     fi
+    
+    if [[ "$download_success" == false ]]; then
+        log_error "所有下载方法都失败了"
+        rm -rf "$TEMP_DIR"
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+    
+    # 检查agent目录是否存在
+    if [[ ! -d "agent" ]]; then
+        log_error "下载的代码中未找到agent目录"
+        rm -rf "$TEMP_DIR"
+        read -p "按回车键返回主菜单..." -r
+        return
+    fi
+    
+    # 备份旧代码（保留.env和docker-compose.yml）
+    log_info "备份旧代码..."
+    BACKUP_DIR="/tmp/ssalgten-agent-backup-$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$BACKUP_DIR"
+    cp -r "$APP_DIR"/* "$BACKUP_DIR/" 2>/dev/null || true
+    
+    # 更新代码（保留.env和docker-compose.yml文件）
+    log_info "更新代码文件..."
+    # 删除旧文件（除了.env和docker-compose.yml备份文件）
+    find "$APP_DIR" -mindepth 1 -not -name '.env*' -not -name 'docker-compose.yml' -delete 2>/dev/null || true
+    
+    # 复制新的Agent文件
+    cp -r agent/* "$APP_DIR/"
+    
+    # 恢复 .env 和 docker-compose.yml 配置文件
+    if [ -f "$BACKUP_DIR/.env" ]; then
+        cp "$BACKUP_DIR/.env" "$APP_DIR/"
+        log_success ".env 配置已保留"
+    fi
+    
+    if [ -f "$BACKUP_DIR/docker-compose.yml" ]; then
+        cp "$BACKUP_DIR/docker-compose.yml" "$APP_DIR/"
+        log_success "docker-compose.yml 配置已保留"
+    fi
+    
+    # 清理临时目录
+    rm -rf "$TEMP_DIR"
+    
+    cd "$APP_DIR"
+    log_success "代码更新完成"
 
     # 3. 重新构建镜像
     log_info "重新构建 Agent 镜像（可能需要几分钟）..."
-    if docker compose build; then
+    if docker_compose build; then
         log_success "镜像构建完成"
     else
         log_error "镜像构建失败"
-        log_info "请检查 Docker 日志: docker compose logs"
+        log_info "正在恢复备份..."
+        rm -rf "$APP_DIR"/*
+        cp -r "$BACKUP_DIR"/* "$APP_DIR/"
+        log_info "已恢复到更新前的状态"
+        log_info "备份位置: $BACKUP_DIR"
         read -p "按回车键返回主菜单..." -r
         return
     fi
@@ -1390,21 +1476,29 @@ update_agent() {
     sleep 3
 
     # 验证容器状态
-    if docker compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
+    if docker_compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
         log_success "Agent 已成功更新并启动"
         echo ""
         log_info "容器状态:"
-        docker compose ps
+        docker_compose ps
+        echo ""
+        log_info "旧版本备份位置: $BACKUP_DIR"
+        log_info "如果一切正常，可以删除备份: rm -rf $BACKUP_DIR"
     else
         log_error "Agent 启动失败"
         log_info "查看日志: docker compose logs --tail 50"
+        log_warning "正在恢复备份..."
+        rm -rf "$APP_DIR"/*
+        cp -r "$BACKUP_DIR"/* "$APP_DIR/"
+        systemctl restart ssalgten-agent.service
+        log_info "已恢复到更新前的状态"
     fi
 
     echo ""
     log_success "✅ Agent 更新完成！"
     echo ""
     log_info "验证服务状态: systemctl status ssalgten-agent"
-    log_info "查看 Agent 日志: docker compose logs -f"
+    log_info "查看 Agent 日志: cd $APP_DIR && docker compose logs -f"
     echo ""
     read -p "按回车键返回主菜单..." -r
 }
@@ -1583,14 +1677,14 @@ SYSTEMD_EOF
 
     # 验证 Docker 容器状态（更可靠）
     cd "$APP_DIR"
-    if docker compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
+    if docker_compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
         log_success "服务已重启，新配置已生效"
         log_info "容器状态:"
-        docker compose ps
+        docker_compose ps
     else
         log_warning "systemd 服务已启动，正在验证容器状态..."
         sleep 2
-        if docker compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
+        if docker_compose ps --format json 2>/dev/null | grep -q '"State":"running"'; then
             log_success "容器已启动"
         else
             log_error "容器启动失败，请手动检查"
