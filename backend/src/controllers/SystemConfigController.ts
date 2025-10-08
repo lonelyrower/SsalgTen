@@ -93,18 +93,47 @@ export class SystemConfigController {
   async getPublicMapConfig(req: Request, res: Response): Promise<void> {
     try {
       // 获取地图相关配置
-      const [mapApiKey, cesiumToken] = await Promise.all([
+      const [mapApiKey, cesiumToken, mapProvider] = await Promise.all([
         prisma.setting.findUnique({ where: { key: "map.api_key" } }),
         prisma.setting.findUnique({ where: { key: "cesium.ion_token" } }),
+        prisma.setting.findUnique({ where: { key: "map.provider" } }),
       ]);
+
+      const parseSettingValue = <T>(
+        setting: { value: string } | null,
+        fallback: T,
+        key: string,
+      ): T => {
+        if (!setting?.value) return fallback;
+        try {
+          return JSON.parse(setting.value) as T;
+        } catch (err) {
+          logger.warn(
+            `Invalid JSON stored for system config "${key}", falling back to raw string`,
+            err,
+          );
+          return setting.value as unknown as T;
+        }
+      };
+
+      const provider = parseSettingValue<string>(
+        mapProvider,
+        "carto",
+        "map.provider",
+      );
+      const apiKey = parseSettingValue<string>(mapApiKey, "", "map.api_key");
+      const cesiumIonToken = parseSettingValue<string>(
+        cesiumToken,
+        "",
+        "cesium.ion_token",
+      );
 
       const response: ApiResponse = {
         success: true,
         data: {
-          apiKey: mapApiKey?.value ? JSON.parse(mapApiKey.value) : "",
-          cesiumIonToken: cesiumToken?.value
-            ? JSON.parse(cesiumToken.value)
-            : "",
+          provider,
+          apiKey,
+          cesiumIonToken,
         },
       };
       res.json(response);
