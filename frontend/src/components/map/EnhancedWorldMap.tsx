@@ -704,15 +704,28 @@ export const EnhancedWorldMap = memo(({
       {/* 图层切换按钮 - 始终显示 */}
       <div className="absolute top-4 right-4 z-40">
         <div className="layer-menu-container relative">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
-          >
-            <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-            <span className="text-gray-700 dark:text-gray-200">图层</span>
-          </Button>
+          {(() => {
+            const providerLabel = currentProvider === 'carto' ? 'Carto' : currentProvider === 'openstreetmap' ? 'OSM' : 'Mapbox';
+            const layerLabel = currentLayerConfig?.name || '';
+            const colorClass = currentProvider === 'carto' ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30'
+              : currentProvider === 'openstreetmap' ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30'
+              : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30';
+            return (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowLayerMenu(!showLayerMenu)}
+                className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
+                aria-expanded={showLayerMenu}
+                aria-haspopup="menu"
+              >
+                <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                <span className="text-gray-700 dark:text-gray-200">图层</span>
+                <span className={`ml-1 px-1.5 py-0.5 rounded text-xs font-medium ${colorClass}`}>{providerLabel}</span>
+                <span className="hidden sm:inline text-xs text-gray-600 dark:text-gray-300">{layerLabel}</span>
+              </Button>
+            );
+          })()}
 
           {/* 图层选择菜单 */}
           {showLayerMenu && (
