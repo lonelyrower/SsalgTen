@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { memo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Server, Building, Shield, TrendingUp } from 'lucide-react';
+import { Globe, Server, Building, Shield } from 'lucide-react';
 
 interface StatsCardsProps {
   totalNodes?: number;
@@ -70,65 +69,43 @@ const StatsCardsComponent = ({
         <GlassCard 
           key={index} 
           variant="tech" 
-          animated={true} 
+          animated={false} 
           glow={false}
-          className="p-6 group cursor-pointer"
+          className="p-6 hover:border-white/30 transition-colors"
         >
-          {/* 科技感背景效果 */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700">
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} rounded-xl`} />
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-          </div>
-
-          {/* 动态粒子效果 */}
-          <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            <div className="w-1 h-1 bg-white/60 rounded-full absolute -top-2 -right-1 animate-ping" />
-          </div>
-          
-          <div className="relative z-20">
-            {/* 头部 */}
-            <div className="flex items-center justify-between mb-6">
+          <div className="relative">
+            {/* 简洁头部 - 只保留图标和标题 */}
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="relative p-3 rounded-xl bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm border border-white/20">
+                <div className="p-2.5 rounded-lg bg-white/10">
                   {stat.icon}
-                  {/* 图标发光效果 */}
-                  <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90 mb-1">
-                    {stat.title}
-                  </h3>
-                  <div className="flex items-center space-x-1">
-                    <div className="status-indicator bg-green-400" />
-                    <span className="text-xs text-gray-700 dark:text-white/60">ACTIVE</span>
-                  </div>
-                </div>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </h3>
               </div>
               
-              <Badge 
-                variant={stat.badgeVariant as any} 
-                className="text-xs font-medium backdrop-blur-sm bg-white/10 border-white/20 text-gray-900 dark:text-white/90"
-              >
-                {stat.badge}
-              </Badge>
+              {/* 只为安全事件保留动态徽章 */}
+              {stat.title === '安全事件' && securityEvents > 0 && (
+                <Badge 
+                  variant="default" 
+                  className="text-xs font-medium bg-red-500/20 text-red-400 border-red-500/30 animate-pulse"
+                >
+                  {stat.badge}
+                </Badge>
+              )}
             </div>
             
-            {/* 数值显示 */}
-            <div className="space-y-3">
-              <div className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent drop-shadow-sm`}>
+            {/* 数值显示 - 简洁版 */}
+            <div className="space-y-2">
+              <div className="text-3xl font-bold text-foreground">
                 {stat.value}
               </div>
-              <div className="text-sm text-gray-700 dark:text-white/70 font-medium flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2 text-green-400" />
+              <div className="text-sm text-muted-foreground">
                 {stat.subtitle}
               </div>
             </div>
-
           </div>
-          
-          {/* 底部数据流效果 */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent data-flow" />
         </GlassCard>
       ))}
     </div>

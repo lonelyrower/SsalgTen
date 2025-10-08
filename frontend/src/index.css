@@ -144,32 +144,58 @@
 
 /* 现代化工具类 */
 @layer components {
-  /* 毛玻璃效果 */
+  /* 毛玻璃效果 - 性能优化版 */
   .glass {
     background: var(--glass-bg);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
+    
+    /* 桌面设备：使用轻量模糊 */
+    @media (min-width: 1024px) {
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+    
+    /* 移动设备：禁用模糊，增加不透明度 */
+    @media (max-width: 1023px) {
+      background: hsl(var(--background) / 0.85);
+    }
   }
   
-  /* 科技感卡片 */
+  /* 科技感卡片 - 性能优化版 */
   .tech-card {
     position: relative;
     overflow: hidden;
     border-radius: 1rem;
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow:
       0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    /* 桌面设备：轻量模糊 + 半透明 */
+    @media (min-width: 1024px) {
+      background-color: rgba(255, 255, 255, 0.85);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+    
+    /* 移动设备：不透明背景，无模糊 */
+    @media (max-width: 1023px) {
+      background-color: rgba(255, 255, 255, 0.95);
+    }
   }
 
   .dark .tech-card {
-    background-color: rgba(17, 24, 39, 0.8);
     border-color: rgba(55, 65, 81, 0.2);
+    
+    @media (min-width: 1024px) {
+      background-color: rgba(17, 24, 39, 0.85);
+    }
+    
+    @media (max-width: 1023px) {
+      background-color: rgba(17, 24, 39, 0.95);
+    }
   }
   
   /* 渐变按钮 */
@@ -209,6 +235,70 @@
     opacity: 0.75;
     animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
     background: inherit;
+  }
+
+  /* 语义化状态徽章 */
+  .status-badge-online {
+    background: hsl(var(--success) / 0.2);
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.3);
+  }
+
+  .dark .status-badge-online {
+    background: hsl(var(--success) / 0.2);
+    color: hsl(var(--success-foreground));
+    border: 1px solid hsl(var(--success) / 0.3);
+  }
+
+  .status-badge-offline {
+    background: hsl(var(--error) / 0.2);
+    color: hsl(var(--error));
+    border: 1px solid hsl(var(--error) / 0.3);
+  }
+
+  .dark .status-badge-offline {
+    background: hsl(var(--error) / 0.2);
+    color: hsl(var(--error-foreground));
+    border: 1px solid hsl(var(--error) / 0.3);
+  }
+
+  .status-badge-warning {
+    background: hsl(var(--warning) / 0.2);
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.3);
+  }
+
+  .dark .status-badge-warning {
+    background: hsl(var(--warning) / 0.2);
+    color: hsl(var(--warning-foreground));
+    border: 1px solid hsl(var(--warning) / 0.3);
+  }
+
+  /* 性能优化：轻量模糊工具类 */
+  .glass-lite {
+    background: hsl(var(--background) / 0.9);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  /* 仅桌面设备启用模糊 */
+  @media (min-width: 1024px) {
+    .glass-lite {
+      background: hsl(var(--background) / 0.75);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  /* 尊重用户的动画偏好设置 */
+  @media (prefers-reduced-motion: reduce) {
+    .glass,
+    .glass-lite,
+    .tech-card {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background: hsl(var(--background) / 0.95);
+    }
   }
 
   @keyframes ping {
@@ -454,8 +544,6 @@
   position: relative;
   overflow: hidden;
   border-radius: 1rem;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
@@ -465,11 +553,25 @@
   overflow-x: hidden;
   /* 移动端最小高度 */
   min-height: 300px;
+  
+  /* 移动设备：高不透明度，无模糊 */
+  background-color: rgba(255, 255, 255, 0.95);
+  
+  /* 桌面设备：轻量模糊 */
+  @media (min-width: 1024px) {
+    background-color: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
 }
 
 .dark .map-container {
-  background-color: rgba(17, 24, 39, 0.8);
   border-color: rgba(55, 65, 81, 0.2);
+  background-color: rgba(17, 24, 39, 0.95);
+  
+  @media (min-width: 1024px) {
+    background-color: rgba(17, 24, 39, 0.85);
+  }
 }
 
 @media (max-width: 640px) {

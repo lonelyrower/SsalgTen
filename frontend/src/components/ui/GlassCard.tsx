@@ -17,11 +17,20 @@ export const GlassCard = memo(({
   glow = false
 }: GlassCardProps) => {
   const variants = {
+    // 默认：轻量模糊（桌面10px，移动禁用）
     default: 'glass border-white/20 dark:border-white/10',
-    subtle: 'bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-white/10 dark:border-white/5',
-    strong: 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-white/30 dark:border-white/20',
+    
+    // 微妙：移动优先，无模糊
+    subtle: 'bg-white/90 dark:bg-gray-900/90 border-white/10 dark:border-white/5 lg:bg-white/70 lg:dark:bg-gray-900/70 lg:backdrop-blur-[8px]',
+    
+    // 强烈：仅桌面使用模糊，移动使用高不透明度
+    strong: 'bg-white/95 dark:bg-gray-900/95 border-white/30 dark:border-white/20 lg:bg-white/80 lg:dark:bg-gray-900/80 lg:backdrop-blur-[12px]',
+    
+    // 科技：响应式模糊
     tech: 'tech-card border-gradient-to-r from-blue-500/30 via-purple-500/20 to-blue-500/30',
-    gradient: 'bg-gradient-to-br from-white/90 via-blue-50/80 to-purple-50/70 dark:from-gray-900/90 dark:via-blue-900/20 dark:to-purple-900/20 backdrop-blur-xl border-white/20 dark:border-white/10'
+    
+    // 渐变：桌面模糊，移动纯色
+    gradient: 'bg-gradient-to-br from-white/95 via-blue-50/90 to-purple-50/85 dark:from-gray-900/95 dark:via-blue-900/30 dark:to-purple-900/30 border-white/20 dark:border-white/10 lg:from-white/80 lg:via-blue-50/70 lg:to-purple-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]'
   };
 
   const animationClass = animated 

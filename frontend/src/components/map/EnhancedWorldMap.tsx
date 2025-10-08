@@ -635,7 +635,7 @@ export const EnhancedWorldMap = memo(({
       <div className="absolute top-4 right-4 z-40 space-y-3">
         {/* 统计信息卡片 */}
         {showStats && (
-          <div className="glass rounded-lg p-4 border border-white/20 backdrop-blur-xl">
+          <div className="glass rounded-lg p-4 border border-white/20">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-sm text-gray-900 dark:text-white/90 flex items-center">
                 <Activity className="h-4 w-4 mr-2 text-blue-400" />
@@ -685,7 +685,7 @@ export const EnhancedWorldMap = memo(({
         )}
 
         {/* 快速操作 */}
-        <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg p-3 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl shadow-lg">
+        <div className="bg-white/95 dark:bg-gray-800/95 lg:bg-white/90 lg:dark:bg-gray-800/90 rounded-lg p-3 border border-gray-200/50 dark:border-gray-600/50 lg:backdrop-blur-[10px] shadow-lg">
           <div className="space-y-1">
             <Button
               variant="ghost"
@@ -708,7 +708,7 @@ export const EnhancedWorldMap = memo(({
             variant="secondary"
             size="sm"
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
           >
             <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
             <span className="text-gray-700 dark:text-gray-200">图层</span>

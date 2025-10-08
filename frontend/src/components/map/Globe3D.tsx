@@ -599,7 +599,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
             variant="secondary"
             size="sm"
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-xl"
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
           >
             <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
             <span className="hidden sm:inline text-gray-700 dark:text-gray-200">图层</span>

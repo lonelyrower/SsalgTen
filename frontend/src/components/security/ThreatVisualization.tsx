@@ -96,10 +96,10 @@ export const ThreatVisualization: React.FC = () => {
     <div className="space-y-6">
       {/* 标题 */}
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
           威胁监控
         </h1>
-        <p className="mt-2 text-gray-400">
+        <p className="mt-2 text-muted-foreground">
           实时监控 SSH 暴力破解攻击
         </p>
       </div>
@@ -112,8 +112,8 @@ export const ThreatVisualization: React.FC = () => {
               <AlertTriangle className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">总攻击次数</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">总攻击次数</p>
+              <p className="text-2xl font-bold text-foreground">{stats.total}</p>
             </div>
           </div>
         </GlassCard>
@@ -124,8 +124,8 @@ export const ThreatVisualization: React.FC = () => {
               <Clock className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">24小时内</p>
-              <p className="text-2xl font-bold text-white">{stats.last24h}</p>
+              <p className="text-sm text-muted-foreground">24小时内</p>
+              <p className="text-2xl font-bold text-foreground">{stats.last24h}</p>
             </div>
           </div>
         </GlassCard>
@@ -136,8 +136,8 @@ export const ThreatVisualization: React.FC = () => {
               <MapPin className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">攻击 IP 数</p>
-              <p className="text-2xl font-bold text-white">{stats.uniqueIps}</p>
+              <p className="text-sm text-muted-foreground">攻击 IP 数</p>
+              <p className="text-2xl font-bold text-foreground">{stats.uniqueIps}</p>
             </div>
           </div>
         </GlassCard>
@@ -148,8 +148,8 @@ export const ThreatVisualization: React.FC = () => {
               <Shield className="w-6 h-6 text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">受影响节点</p>
-              <p className="text-2xl font-bold text-white">{stats.affectedNodes}</p>
+              <p className="text-sm text-muted-foreground">受影响节点</p>
+              <p className="text-2xl font-bold text-foreground">{stats.affectedNodes}</p>
             </div>
           </div>
         </GlassCard>
@@ -157,18 +157,18 @@ export const ThreatVisualization: React.FC = () => {
 
       {/* 事件列表 */}
       <GlassCard className="p-6">
-        <h2 className="text-xl font-bold text-white mb-4">SSH 暴力破解事件</h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">SSH 暴力破解事件</h2>
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            <p className="mt-4 text-gray-400">加载中...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+            <p className="mt-4 text-muted-foreground">加载中...</p>
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-12">
-            <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">暂无安全威胁</p>
-            <p className="text-sm text-gray-500 mt-2">系统运行正常</p>
+            <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">暂无安全威胁</p>
+            <p className="text-sm text-muted-foreground/70 mt-2">系统运行正常</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -183,27 +183,27 @@ export const ThreatVisualization: React.FC = () => {
                       <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
                         SSH 暴力破解
                       </Badge>
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-muted-foreground">
                         {formatTime(event.timestamp)}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
                       <div>
-                        <p className="text-xs text-gray-500">攻击 IP</p>
-                        <p className="text-sm text-white font-mono">{event.ip}</p>
+                        <p className="text-xs text-muted-foreground/70">攻击 IP</p>
+                        <p className="text-sm text-foreground font-mono">{event.ip}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">失败次数</p>
-                        <p className="text-sm text-white">
+                        <p className="text-xs text-muted-foreground/70">失败次数</p>
+                        <p className="text-sm text-foreground">
                           {event.count} 次 / {event.windowMinutes} 分钟
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">目标节点</p>
-                        <p className="text-sm text-white">
+                        <p className="text-xs text-muted-foreground/70">目标节点</p>
+                        <p className="text-sm text-foreground">
                           {event.nodeName}
-                          <span className="ml-2 text-xs text-gray-400">({event.nodeCountry})</span>
+                          <span className="ml-2 text-xs text-muted-foreground">({event.nodeCountry})</span>
                         </p>
                       </div>
                     </div>
@@ -221,11 +221,11 @@ export const ThreatVisualization: React.FC = () => {
           <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-sm font-medium text-blue-300 mb-1">关于 SSH 暴力破解检测</h3>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               系统自动监控 SSH 登录失败尝试。当检测到短时间内多次失败登录（默认：10分钟内5次），
               会记录攻击来源 IP 并生成告警。建议：
             </p>
-            <ul className="mt-2 space-y-1 text-sm text-gray-400 list-disc list-inside">
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc list-inside">
               <li>禁用 root 密码登录，改用 SSH 密钥认证</li>
               <li>修改 SSH 默认端口（22）</li>
               <li>使用 fail2ban 等工具自动封禁攻击 IP</li>

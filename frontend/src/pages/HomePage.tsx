@@ -32,7 +32,7 @@ const MapSkeleton = () => (
       <div className="animate-pulse">
         <Globe className="w-16 h-16 mx-auto text-blue-400" />
       </div>
-      <p className="text-gray-500 dark:text-gray-400">正在加载地图组件...</p>
+      <p className="text-muted-foreground">正在加载地图组件...</p>
     </div>
   </div>
 );
@@ -143,7 +143,7 @@ export const HomePage = () => {
                     <h2 className="text-2xl font-bold gradient-text">
                       全球节点网络
                     </h2>
-                    <p className="text-gray-600 dark:text-white/70 text-sm font-medium flex items-center">
+                    <p className="text-muted-foreground text-sm font-medium flex items-center">
                       <Activity className="h-4 w-4 mr-2 text-green-400" />
                       实时监控全球网络节点状态和性能
                     </p>
@@ -176,15 +176,15 @@ export const HomePage = () => {
                 {/* 状态统计 */}
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-green-400" />
-                  <span className="font-medium text-gray-900 dark:text-white/90">在线 {stats?.onlineNodes || 0}</span>
+                  <span className="font-medium text-foreground">在线 {stats?.onlineNodes || 0}</span>
                 </div>
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-red-400" />
-                  <span className="font-medium text-gray-900 dark:text-white/90">离线 {stats?.offlineNodes || 0}</span>
+                  <span className="font-medium text-foreground">离线 {stats?.offlineNodes || 0}</span>
                 </div>
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
                   <div className="status-indicator bg-gray-400" />
-                  <span className="font-medium text-gray-900 dark:text-white/90">未知 {(stats?.totalNodes || 0) - (stats?.onlineNodes || 0) - (stats?.offlineNodes || 0)}</span>
+                  <span className="font-medium text-foreground">未知 {(stats?.totalNodes || 0) - (stats?.onlineNodes || 0) - (stats?.offlineNodes || 0)}</span>
                 </div>
               </div>
             </div>
@@ -214,101 +214,111 @@ export const HomePage = () => {
         {/* 选中节点信息 */}
         {selectedNode && (
           <div className="mb-8">
-            <GlassCard variant="tech" animated={true} glow={true} className="p-6">
+            <GlassCard variant="tech" animated={false} glow={false} className="p-6">
               <div>
                 <div className="flex-1">
-                  {/* 节点头部信息 */}
+                  {/* 节点头部信息 - 简化版 */}
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="relative">
-                      <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm border border-white/20">
+                      <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-white/10">
                         <Activity className="h-8 w-8 text-blue-400" />
                       </div>
-                      <div className="absolute -top-1 -right-1 status-indicator bg-green-400" />
+                      {/* 只为在线节点保留脉冲动画 */}
+                      {selectedNode.status === 'online' && (
+                        <div className="absolute -top-1 -right-1 status-indicator bg-green-400" />
+                      )}
                     </div>
                     <div className="space-y-1">
                       <h3 className="text-2xl font-bold gradient-text">
                         {selectedNode.name}
                       </h3>
-                      <p className="text-gray-600 dark:text-white/70 text-sm font-medium flex items-center">
+                      <p className="text-muted-foreground text-sm font-medium flex items-center">
                         <Activity className="h-4 w-4 mr-2 text-purple-400" />
                         已选中网络节点 • 正在监控
                       </p>
                     </div>
                   </div>
                   
-                  {/* 节点详细信息网格 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="glass rounded-lg p-4 border border-white/20 relative group text-center">
-                      <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">地理位置</div>
-                      <div className="flex items-center justify-center space-x-2 mb-2">
-                        <CountryFlagSvg country={selectedNode.country} />
-                        <div className="font-bold text-gray-900 dark:text-white/90 text-lg">
-                          {selectedNode.city}, {selectedNode.country}
+                  {/* 节点详细信息 - 分组优化 */}
+                  <div className="space-y-6">
+                    {/* 基础信息组 */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">基础信息</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div className="glass rounded-lg p-4 border border-white/10">
+                          <div className="text-xs text-muted-foreground/70 mb-1.5">地理位置</div>
+                          <div className="flex items-center space-x-2">
+                            <CountryFlagSvg country={selectedNode.country} />
+                            <div className="font-semibold text-foreground text-sm">
+                              {selectedNode.city}, {selectedNode.country}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="glass rounded-lg p-4 border border-white/10">
+                          <div className="text-xs text-muted-foreground/70 mb-1.5">服务提供商</div>
+                          <div className="font-semibold text-foreground text-sm">
+                            {selectedNode.provider}
+                          </div>
+                        </div>
+                        
+                        <div className="glass rounded-lg p-4 border border-white/10">
+                          <div className="text-xs text-muted-foreground/70 mb-1.5">运行状态</div>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
+                            selectedNode.status === 'online' 
+                              ? 'status-badge-online' 
+                              : selectedNode.status === 'offline' 
+                              ? 'status-badge-offline'
+                              : 'status-badge-warning'
+                          }`}>
+                            {selectedNode.status.toUpperCase()}
+                          </span>
                         </div>
                       </div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    
-                    <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                      <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">服务提供商</div>
-                      <div className="font-bold text-gray-900 dark:text-white/90 text-lg">
-                        {selectedNode.provider}
-                      </div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    
-                    <div className="glass rounded-lg p-4 border border-white/20 relative group text-center">
-                      <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">运行状态</div>
-                      <div className="flex items-center justify-center space-x-2">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          selectedNode.status === 'online' 
-                            ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
-                            : selectedNode.status === 'offline' 
-                            ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                            : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
-                        }`}>
-                          {selectedNode.status.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity animate-pulse" />
-                    </div>
-                    
-                    {user && selectedNode.ipv4 && (
-                      <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                        <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">IPv4 地址</div>
-                        <div className="font-mono text-sm text-cyan-300 font-bold">
-                          {selectedNode.ipv4}
-                        </div>
-                        <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    )}
 
-                    {user && selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6.length > 15 && (
-                      <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                        <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">IPv6 地址</div>
-                        <div className="font-mono text-sm text-indigo-300 font-bold break-all">
-                          {selectedNode.ipv6}
+                    {/* 网络信息组 - 仅登录用户可见 */}
+                    {user && (selectedNode.ipv4 || (selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6.length > 15)) && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">网络配置</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {selectedNode.ipv4 && (
+                            <div className="glass rounded-lg p-4 border border-white/10">
+                              <div className="text-xs text-muted-foreground/70 mb-1.5">IPv4 地址</div>
+                              <div className="font-mono text-sm text-primary font-semibold">
+                                {selectedNode.ipv4}
+                              </div>
+                            </div>
+                          )}
+
+                          {selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6.length > 15 && (
+                            <div className="glass rounded-lg p-4 border border-white/10">
+                              <div className="text-xs text-muted-foreground/70 mb-1.5">IPv6 地址</div>
+                              <div className="font-mono text-sm text-accent font-semibold break-all">
+                                {selectedNode.ipv6}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="absolute top-2 right-2 w-2 h-2 bg-indigo-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                       </div>
                     )}
                     
+                    {/* 状态信息组 */}
                     {selectedNode.lastSeen && (
-                      <div className="glass rounded-lg p-4 border border-white/20 relative group">
-                        <div className="text-xs text-gray-500 dark:text-white/60 mb-2 font-medium">最后在线时间</div>
-                        <div className="font-medium text-sm text-gray-900 dark:text-white/90">
-                          {new Date(selectedNode.lastSeen).toLocaleString('zh-CN')}
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">状态记录</h4>
+                        <div className="glass rounded-lg p-4 border border-white/10">
+                          <div className="text-xs text-muted-foreground/70 mb-1.5">最后在线时间</div>
+                          <div className="font-medium text-sm text-foreground">
+                            {new Date(selectedNode.lastSeen).toLocaleString('zh-CN')}
+                          </div>
                         </div>
-                        <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
                       </div>
                     )}
                   </div>
                 </div>
                 
               </div>
-              
-              {/* 底部装饰效果 */}
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent data-flow" />
             </GlassCard>
           </div>
         )}
