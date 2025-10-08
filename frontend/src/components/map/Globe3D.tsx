@@ -538,7 +538,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm z-50">
           <div className="flex flex-col items-center gap-4">
-            <Globe className="w-12 h-12 animate-spin text-blue-500" />
+            <Globe className="w-12 h-12 animate-spin text-primary" />
             <p className="text-white text-lg">加载 3D 地球...</p>
           </div>
         </div>

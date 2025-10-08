@@ -95,11 +95,11 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
             <AgentInstallCommands />
 
             {/* 安装说明 */}
-            <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+            <Card className="p-4 bg-primary/10 border-primary/30">
+              <h4 className="font-medium text-primary mb-2">
                 安装说明
               </h4>
-              <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
+              <ol className="text-sm text-primary space-y-1 list-decimal list-inside">
                 <li>确保您有VPS的root权限或sudo权限</li>
                 <li>将上述命令复制到您的VPS终端中</li>
                 <li>按回车键执行安装脚本</li>
@@ -112,10 +112,7 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
               <Button variant="outline" onClick={onClose}>
                 关闭
               </Button>
-              <Button 
-                onClick={handleDeploymentComplete}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
+              <Button onClick={handleDeploymentComplete}>
                 完成，查看节点列表
               </Button>
             </div>

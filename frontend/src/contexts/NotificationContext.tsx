@@ -113,7 +113,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRem
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
       case 'info':
       default:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -127,7 +127,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRem
         return 'border-yellow-200 dark:border-yellow-800';
       case 'info':
       default:
-        return 'border-blue-200 dark:border-blue-800';
+        return 'border-primary/30';
     }
   };
 

@@ -123,7 +123,7 @@ export const MonitoringPage: React.FC = () => {
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         </main>
       </div>
@@ -261,8 +261,8 @@ export const MonitoringPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-80">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <PieChart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="p-2 bg-primary/15 rounded-lg">
+                  <PieChart className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                   节点状态分布
@@ -343,7 +343,7 @@ export const MonitoringPage: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-2">
-                    <Cpu className="h-4 w-4 text-blue-500" />
+                    <Cpu className="h-4 w-4 text-primary" />
                     <span className="text-sm text-gray-600 dark:text-gray-400">CPU</span>
                   </div>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">

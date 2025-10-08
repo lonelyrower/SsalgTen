@@ -39,9 +39,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       case 'elegant':
         return (
           <div className="relative">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-100 dark:border-blue-900"></div>
-            <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-600 dark:text-blue-400 relative z-10`} />
-            <div className="absolute inset-0 rounded-full border-t-4 border-blue-600 dark:border-blue-400 animate-spin"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <Loader2 className={`${sizeClasses[size]} animate-spin text-primary relative z-10`} />
+            <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin"></div>
           </div>
         );
       case 'minimal':
@@ -50,7 +50,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         );
       default:
         return (
-          <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-600 dark:text-blue-400 drop-shadow-sm`} />
+          <Loader2 className={`${sizeClasses[size]} animate-spin text-primary drop-shadow-sm`} />
         );
     }
   };

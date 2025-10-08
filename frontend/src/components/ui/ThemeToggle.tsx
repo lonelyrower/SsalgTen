@@ -154,9 +154,9 @@ export const ThemeToggle: React.FC = () => {
                   <button
                     key={themeOption.value}
                     className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between ${
-                      isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      isSelected ? 'bg-primary/10' : ''
                     } ${
-                      isFocused ? 'ring-2 ring-blue-500 ring-inset' : ''
+                      isFocused ? 'ring-2 ring-primary ring-inset' : ''
                     }`}
                     onClick={() => {
                       setTheme(themeOption.value);
@@ -172,19 +172,19 @@ export const ThemeToggle: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className={`p-2 rounded-lg ${
                         isSelected 
-                          ? 'bg-blue-100 dark:bg-blue-900/40' 
+                          ? 'bg-primary/15' 
                           : 'bg-gray-100 dark:bg-gray-700'
                       }`}>
                         <Icon className={`h-4 w-4 ${
                           isSelected 
-                            ? 'text-blue-600 dark:text-blue-400' 
+                            ? 'text-primary' 
                             : 'text-gray-600 dark:text-gray-400'
                         }`} />
                       </div>
                       <div>
                         <p className={`text-sm font-medium ${
                           isSelected 
-                            ? 'text-blue-900 dark:text-blue-100' 
+                            ? 'text-primary' 
                             : 'text-gray-900 dark:text-white'
                         }`}>
                           {themeOption.label}
@@ -199,7 +199,7 @@ export const ThemeToggle: React.FC = () => {
                     </div>
                     
                     {isSelected && (
-                      <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <Check className="h-4 w-4 text-primary" />
                     )}
                   </button>
                 );

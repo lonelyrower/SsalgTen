@@ -196,7 +196,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             </p>
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-500">
               共 {filteredNodes.length} 个节点 • {filteredNodes.filter(n => n.status === 'online').length} 在线 • 
-              <a href="/nodes" className="text-blue-600 hover:text-blue-700 ml-1 inline-flex items-center">
+              <a href="/nodes" className="text-primary hover:opacity-80 ml-1 inline-flex items-center">
                 查看详细监控 <ExternalLink className="h-3 w-3 ml-1" />
               </a>
             </div>

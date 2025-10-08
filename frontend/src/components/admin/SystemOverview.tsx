@@ -113,7 +113,7 @@ export const SystemOverview: React.FC = () => {
         </h3>
         <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
         <Button onClick={fetchStats} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 mr-2 text-primary" />
           重新加载
         </Button>
       </Card>

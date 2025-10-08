@@ -28,10 +28,10 @@ const Globe3D = lazy(() =>
 // 地图加载骨架屏组件
 const MapSkeleton = () => (
   <div className="w-full h-[600px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-    <div className="text-center space-y-4">
-      <div className="animate-pulse">
-        <Globe className="w-16 h-16 mx-auto text-blue-400" />
-      </div>
+      <div className="text-center space-y-4">
+        <div className="animate-pulse">
+          <Globe className="w-16 h-16 mx-auto text-primary" />
+        </div>
       <p className="text-muted-foreground">正在加载地图组件...</p>
     </div>
   </div>

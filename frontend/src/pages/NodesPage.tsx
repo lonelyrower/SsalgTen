@@ -379,10 +379,7 @@ export const NodesPage: React.FC = () => {
               </div>
 
               {hasRole('ADMIN') && (
-                <Button 
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={handleAddNode}
-                >
+                <Button onClick={handleAddNode}>
                   <Plus className="h-4 w-4 mr-2" />
                   部署节点
                 </Button>
@@ -392,7 +389,6 @@ export const NodesPage: React.FC = () => {
                   variant="outline"
                   onClick={() => handleExportNodes('csv')}
                   disabled={exportingNodes}
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
                 >
                   {exportingNodes ? (
                     <LoadingSpinner size="xs" center={false} className="mr-2" />
@@ -416,7 +412,6 @@ export const NodesPage: React.FC = () => {
                 variant="outline" 
                 onClick={startLatencyTest}
                 disabled={isTestingInProgress}
-                className="border-purple-200 text-purple-700 hover:bg-purple-50"
               >
                 {isTestingInProgress ? (
                   <LoadingSpinner size="xs" center={false} className="mr-2" />
@@ -575,14 +570,14 @@ export const NodesPage: React.FC = () => {
                       {selectedNode.ipv4 && (
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600 dark:text-gray-400">IPv4:</span>
-                          <span className="text-sm font-mono text-blue-600">{selectedNode.ipv4}</span>
+                          <span className="text-sm font-mono text-primary">{selectedNode.ipv4}</span>
                         </div>
                       )}
                       
                       {selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6.length > 15 && (
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600 dark:text-gray-400">IPv6:</span>
-                          <span className="text-xs font-mono text-blue-600 break-all">{selectedNode.ipv6}</span>
+                          <span className="text-xs font-mono text-primary break-all">{selectedNode.ipv6}</span>
                         </div>
                       )}
                       
@@ -680,7 +675,7 @@ export const NodesPage: React.FC = () => {
                               <span>{node.city}, {node.country}</span>
                             </div>
                             {node.ipv4 && (
-                              <p className="text-xs text-blue-600 dark:text-blue-400 font-mono mb-1 text-center">
+                              <p className="text-xs text-primary font-mono mb-1 text-center">
                                 {node.ipv4}
                               </p>
                             )}
@@ -825,7 +820,7 @@ export const NodesPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="font-medium">
                             <span className={`px-2 py-0.5 rounded text-xs mr-2 ${
-                              ev.type === 'STATUS_CHANGED' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                              ev.type === 'STATUS_CHANGED' ? 'bg-primary/10 text-primary' : 
                               ev.type === 'IP_CHANGED' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 
                               'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                             }`}>

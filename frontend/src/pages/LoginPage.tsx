@@ -165,7 +165,7 @@ export const LoginPage: React.FC = () => {
           {/* 登录按钮 */}
           <Button
             type="submit"
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            className="w-full py-3"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -180,14 +180,14 @@ export const LoginPage: React.FC = () => {
         </form>
 
           {/* 默认账户提示 */}
-          <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
+          <div className="mt-8 p-4 bg-primary/10 rounded-lg">
+            <p className="text-sm text-primary text-center">
               <strong>默认管理员账户：</strong>
             </p>
-            <p className="text-sm text-blue-600 dark:text-blue-400 text-center mt-1">
+            <p className="text-sm text-primary text-center mt-1">
               用户名: admin | 密码: admin123
             </p>
-            <p className="text-xs text-blue-500 dark:text-blue-500 text-center mt-2">
+            <p className="text-xs text-primary text-center mt-2">
               ⚠️ 首次登录后请立即更改密码
             </p>
           </div>

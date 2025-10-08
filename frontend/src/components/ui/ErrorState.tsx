@@ -134,7 +134,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
                 shadow-lg hover:shadow-xl transform hover:scale-105
               `}
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4 text-primary" />
               <span>重新加载</span>
             </Button>
           )}

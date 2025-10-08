@@ -39,7 +39,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
                     flex items-center space-x-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap
                     transition-all duration-200 rounded-t-lg
                     ${activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                      ? 'border-primary text-primary bg-primary/10'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800/50'
                     }
                   `}
@@ -61,7 +61,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
         >
           <div className="flex items-center space-x-3">
             {activeTabInfo?.icon && (
-              <activeTabInfo.icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <activeTabInfo.icon className="h-5 w-5 text-primary" />
             )}
             <span className="font-medium text-gray-900 dark:text-white">
               {activeTabInfo?.label}
@@ -96,7 +96,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
                     className={`
                       w-full flex items-center space-x-3 p-3 text-left transition-colors duration-200
                       ${activeTab === tab.id
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        ? 'bg-primary/10 text-primary'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                       }
                     `}
