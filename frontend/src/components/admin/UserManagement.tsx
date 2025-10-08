@@ -147,7 +147,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
               variant="outline"
               size="sm"
               onClick={loadUsers}
-              className="flex items-center space-x-2 flex-1 sm:flex-none justify-center border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-600/40 dark:text-blue-300 dark:hover:bg-blue-900/20"
+              className="flex items-center space-x-2 flex-1 sm:flex-none justify-center"
             >
               <RefreshCw className="h-4 w-4" />
               <span>刷新</span>

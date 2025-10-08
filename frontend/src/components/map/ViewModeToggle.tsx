@@ -44,7 +44,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
             : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
         )}
       >
-        <MapIcon className={cn('h-4 w-4', value === '2d' ? 'text-blue-600 dark:text-blue-300' : '')} />
+        <MapIcon className={cn('h-4 w-4', value === '2d' ? 'text-primary' : '')} />
         2D 地图
       </button>
       <button
@@ -60,7 +60,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
             : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
         )}
       >
-        <Globe className={cn('h-4 w-4', value === '3d' ? 'text-blue-600 dark:text-blue-300' : '')} />
+        <Globe className={cn('h-4 w-4', value === '3d' ? 'text-primary' : '')} />
         3D 地球
       </button>
     </div>

@@ -237,7 +237,6 @@ export const MonitoringPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={refreshData}
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-600/40 dark:text-blue-300 dark:hover:bg-blue-900/20"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   刷新

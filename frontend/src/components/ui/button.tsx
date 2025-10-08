@@ -11,11 +11,13 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 shadow-sm",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 shadow-sm",
+        // Outline follows brand primary color semantics
         outline:
-          "border-2 border-border bg-background hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+          "border-2 border-primary/30 text-primary bg-background hover:bg-primary/10 active:bg-primary/20",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 shadow-sm",
-        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+        // Ghost keeps text in primary, subtle bg on hover/active
+        ghost: "text-primary hover:bg-primary/10 active:bg-primary/15",
         // 链接样式的按钮保留手形指针
         link: "text-primary underline-offset-4 hover:underline active:opacity-80 cursor-pointer",
       },
