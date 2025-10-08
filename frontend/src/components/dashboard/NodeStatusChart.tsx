@@ -8,6 +8,22 @@ interface NodeStatusChartProps {
   className?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomTooltip = ({ active, payload, total }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+        <p className="font-medium text-gray-900 dark:text-white">{data.name}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          数量: {data.value} ({total > 0 ? Math.round((data.value / total) * 100) : 0}%)
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
   onlineNodes,
   offlineNodes,
@@ -21,22 +37,6 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
   const total = onlineNodes + offlineNodes;
   const progressRef = useRef<HTMLDivElement>(null);
   const availabilityPercent = useMemo(() => (total > 0 ? Math.min(100, Math.max(0, (onlineNodes / total) * 100)) : 0), [onlineNodes, total]);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      return (
-        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
-          <p className="font-medium text-gray-900 dark:text-white">{data.name}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            数量: {data.value} ({total > 0 ? Math.round((data.value / total) * 100) : 0}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   useEffect(() => {
     const progressElement = progressRef.current;
@@ -76,7 +76,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip total={total} />} />
               </PieChart>
             </ResponsiveContainer>
           </div>

@@ -154,35 +154,67 @@
   
   /* 科技感卡片 */
   .tech-card {
-    @apply relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 dark:border-gray-700/20;
-    box-shadow: 
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
       0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
+
+  .dark .tech-card {
+    background-color: rgba(17, 24, 39, 0.8);
+    border-color: rgba(55, 65, 81, 0.2);
+  }
   
   /* 渐变按钮 */
   .gradient-btn {
-    @apply bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg;
+    background: linear-gradient(to right, rgb(59 130 246), rgb(168 85 247), rgb(37 99 235));
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transform: perspective(1000px) rotateX(0deg);
   }
-  
+
   .gradient-btn:hover {
-    @apply shadow-2xl scale-105;
-    transform: perspective(1000px) rotateX(-2deg);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: perspective(1000px) rotateX(-2deg) scale(1.05);
     background: linear-gradient(135deg, hsl(217 91% 65%) 0%, hsl(280 100% 75%) 50%, hsl(217 91% 65%) 100%);
   }
   
   /* 状态指示器 */
   .status-indicator {
-    @apply relative inline-flex h-3 w-3 rounded-full;
+    position: relative;
+    display: inline-flex;
+    height: 0.75rem;
+    width: 0.75rem;
+    border-radius: 9999px;
   }
-  
+
   .status-indicator::before {
-    @apply absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping;
     content: '';
+    position: absolute;
+    display: inline-flex;
+    height: 100%;
+    width: 100%;
+    border-radius: 9999px;
+    opacity: 0.75;
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
     background: inherit;
+  }
+
+  @keyframes ping {
+    75%, 100% {
+      transform: scale(2);
+      opacity: 0;
+    }
   }
   
   /* 数据流动动画 */
@@ -233,7 +265,10 @@
   
   /* 渐变文字 */
   .gradient-text {
-    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent;
+    background: linear-gradient(to right, rgb(37 99 235), rgb(147 51 234), rgb(30 64 175));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
   
   /* 网络连接线动画 */
@@ -415,10 +450,25 @@
 }
 
 .map-container {
-  @apply tech-card mobile-safe;
   position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 100vw;
+  overflow-x: hidden;
   /* 移动端最小高度 */
   min-height: 300px;
+}
+
+.dark .map-container {
+  background-color: rgba(17, 24, 39, 0.8);
+  border-color: rgba(55, 65, 81, 0.2);
 }
 
 @media (max-width: 640px) {

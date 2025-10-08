@@ -24,6 +24,22 @@ const LegendItem: React.FC<{ color?: string; name?: string; value?: number }> = 
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+        <p className="font-medium text-gray-900 dark:text-white">{label}</p>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {payload.map((entry: any, index: number) => (
+          <LegendItem key={index} color={entry.color} name={entry.name} value={entry.value} />
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   nodes,
   className = ''
@@ -60,23 +76,6 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
       totalCountries: allCountryStats.length // 实际覆盖的国家总数
     };
   }, [nodes]);
-
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
-          <p className="font-medium text-gray-900 dark:text-white">{label}</p>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {payload.map((entry: any, index: number) => (
-            <LegendItem key={index} color={entry.color} name={entry.name} value={entry.value} />
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}>
