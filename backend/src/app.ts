@@ -90,7 +90,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api", router);
 
 // 404 处理
-app.use("*", (req: Request, res: Response) => {
+// NOTE: Express v5 path-to-regexp disallows bare '*' routes; use catch-all handler without path.
+app.use((req: Request, res: Response) => {
   const response: ApiResponse = {
     success: false,
     error: "API endpoint not found",
