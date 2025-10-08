@@ -2,7 +2,6 @@
   "name": "ssalgten-backend",
   "version": "0.1.0",
   "description": "SsalgTen Backend API Server",
-  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon",
