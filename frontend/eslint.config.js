@@ -24,6 +24,7 @@ export default tseslint.config([
       'react-hooks/static-components': 'warn',
       'react-hooks/purity': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
     },
   },
 ])
