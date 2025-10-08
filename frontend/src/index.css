@@ -1,8 +1,13 @@
+@import 'tailwindcss';
 @import 'leaflet/dist/leaflet.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  /* Container configuration */
+  --breakpoint-2xl: 1400px;
+
+  /* Border radius - Tailwind v4 CSS variables */
+  --radius: 0.75rem;
+}
 
 @layer base {
   :root {
