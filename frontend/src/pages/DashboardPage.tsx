@@ -24,11 +24,11 @@ export const DashboardPage: React.FC = () => {
   // 如果没有连接且没有数据，显示加载状态
   if (!connected && nodes.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-cyan-900/20">
+      <div className="min-h-screen">
         <Header />
-        <LoadingSpinner 
-          fullScreen 
-          text="正在连接实时服务器..." 
+        <LoadingSpinner
+          fullScreen
+          text="正在连接实时服务器..."
           size="xl"
           variant="elegant"
         />
@@ -38,7 +38,7 @@ export const DashboardPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/30 dark:from-gray-900 dark:via-indigo-900/10 dark:to-purple-900/10 mobile-safe">
+    <div className="min-h-screen mobile-safe">
       <Header />
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">

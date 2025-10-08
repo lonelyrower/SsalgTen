@@ -325,7 +325,7 @@ export const NodesPage: React.FC = () => {
   // 如果显示诊断界面且有选中节点
   if (showDiagnostics && selectedNode) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10">
+    <div className="min-h-screen">
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 连接性自检横幅 */}
@@ -354,7 +354,7 @@ export const NodesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10">
+    <div className="min-h-screen">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">

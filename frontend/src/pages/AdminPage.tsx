@@ -28,7 +28,7 @@ export const AdminPage: React.FC = () => {
 
   if (!hasRole('ADMIN')) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-orange-50 dark:from-gray-900 dark:via-red-900/20 dark:to-orange-900/20">
+      <div className="min-h-screen">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
@@ -44,7 +44,7 @@ export const AdminPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50/30 to-pink-50/30 dark:from-gray-900 dark:via-red-900/10 dark:to-pink-900/10">
+    <div className="min-h-screen">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-8">

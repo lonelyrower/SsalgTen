@@ -17,12 +17,9 @@ export const Header = () => {
 
   return (
     <header className="relative glass sticky top-0 z-50 border-b border-white/10">
-      {/* 动态背景效果 */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95" />
-      <div 
-        className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_25%_25%,_hsl(217_91%_60%_/_0.3)_0%,_transparent_50%),_radial-gradient(circle_at_75%_75%,_hsl(280_100%_70%_/_0.3)_0%,_transparent_50%)]"
-      />
-      
+      {/* 简化背景 - 单层渐变 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/98 via-purple-900/95 to-slate-900/98" />
+
       <div className="relative z-10 mobile-container py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto mobile-safe">
           {/* Logo - 科技感3D效果 */}

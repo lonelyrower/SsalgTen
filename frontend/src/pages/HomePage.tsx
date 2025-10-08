@@ -84,10 +84,10 @@ export const HomePage = () => {
   // 如果正在加载，显示加载状态
   if (isInitialLoad && nodes.length === 0 && !loadTimeout) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-cyan-900/20">
+      <div className="min-h-screen">
         <Header />
-        <LoadingSpinner 
-          fullScreen 
+        <LoadingSpinner
+          fullScreen
           text={connected ? "正在加载节点数据..." : "正在连接服务器..."}
           size="xl"
           variant="elegant"
@@ -99,7 +99,7 @@ export const HomePage = () => {
   // 如果有错误，显示错误状态
   if (error && nodes.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-orange-50 dark:from-gray-900 dark:via-red-900/20 dark:to-orange-900/20">
+      <div className="min-h-screen">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
@@ -118,7 +118,7 @@ export const HomePage = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10">
+    <div className="min-h-screen">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-8">
