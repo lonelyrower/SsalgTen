@@ -7,8 +7,9 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Activity, Globe, Map as MapIcon } from 'lucide-react';
+import { Activity, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ViewModeToggle } from '@/components/map/ViewModeToggle';
 import type { NodeData } from '@/services/api';
 
 // 懒加载地图组件以提升首屏加载速度
@@ -154,28 +155,7 @@ export const HomePage = () => {
               {/* 状态指示器 + 视图切换按钮 */}
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 {/* 2D/3D 切换按钮 */}
-                <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-                  <Button
-                    variant={viewMode === '2d' ? 'default' : 'outline'}
-                    size="sm"
-                    aria-pressed={viewMode === '2d'}
-                    onClick={() => setViewMode('2d')}
-                    className={`flex items-center gap-2 rounded-none ${viewMode === '2d' ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200 border-blue-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                  >
-                    <MapIcon className={`h-4 w-4 ${viewMode === '2d' ? 'text-blue-600 dark:text-blue-300' : ''}`} />
-                    2D 地图
-                  </Button>
-                  <Button
-                    variant={viewMode === '3d' ? 'default' : 'outline'}
-                    size="sm"
-                    aria-pressed={viewMode === '3d'}
-                    onClick={() => setViewMode('3d')}
-                    className={`flex items-center gap-2 rounded-none border-l border-gray-200 dark:border-gray-600 ${viewMode === '3d' ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200 border-blue-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                  >
-                    <Globe className={`h-4 w-4 ${viewMode === '3d' ? 'text-blue-600 dark:text-blue-300' : ''}`} />
-                    3D 地球
-                  </Button>
-                </div>
+                <ViewModeToggle value={viewMode} onChange={setViewMode} />
                 
                 {/* 状态统计 */}
                 <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">

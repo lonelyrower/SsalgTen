@@ -704,28 +704,17 @@ export const EnhancedWorldMap = memo(({
       {/* 图层切换按钮 - 始终显示 */}
       <div className="absolute top-4 right-4 z-40">
         <div className="layer-menu-container relative">
-          {(() => {
-            const providerLabel = currentProvider === 'carto' ? 'Carto' : currentProvider === 'openstreetmap' ? 'OSM' : 'Mapbox';
-            const layerLabel = currentLayerConfig?.name || '';
-            const colorClass = currentProvider === 'carto' ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30'
-              : currentProvider === 'openstreetmap' ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30'
-              : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30';
-            return (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowLayerMenu(!showLayerMenu)}
-                className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
-                aria-expanded={showLayerMenu}
-                aria-haspopup="menu"
-              >
-                <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-                <span className="text-gray-700 dark:text-gray-200">图层</span>
-                <span className={`ml-1 px-1.5 py-0.5 rounded text-xs font-medium ${colorClass}`}>{providerLabel}</span>
-                <span className="hidden sm:inline text-xs text-gray-600 dark:text-gray-300">{layerLabel}</span>
-              </Button>
-            );
-          })()}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowLayerMenu(!showLayerMenu)}
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
+            aria-expanded={showLayerMenu}
+            aria-haspopup="menu"
+          >
+            <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+            <span className="text-gray-700 dark:text-gray-200">图层</span>
+          </Button>
 
           {/* 图层选择菜单 */}
           {showLayerMenu && (
@@ -736,77 +725,83 @@ export const EnhancedWorldMap = memo(({
                 </p>
               </div>
               <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
-                {/* Carto 提供商 */}
-                <div>
-                  <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                {/* Carto 提供商组 */}
+                <div className="rounded-lg border border-purple-200 dark:border-purple-700/40 overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/50">
                     <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">CARTO</span>
+                    <span className="text-xs font-bold text-purple-700 dark:text-purple-300">CARTO</span>
                   </div>
-                  <div className="space-y-0.5">
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
                     {allLayers.carto.map((layer) => (
                       <button
                         key={layer.id}
+                        role="menuitemradio"
+                        aria-checked={currentProvider === 'carto' && currentLayerId === layer.id}
                         onClick={() => {
                           switchMapLayer('carto', layer.id);
                           setShowLayerMenu(false);
                         }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                           currentProvider === 'carto' && currentLayerId === layer.id
-                            ? 'bg-purple-600 dark:bg-purple-600 text-white font-medium shadow-md'
-                            : 'bg-white/50 dark:bg-gray-700/40 hover:bg-purple-50 dark:hover:bg-gray-600/50 text-gray-800 dark:text-gray-100'
+                            ? 'bg-purple-600/10 dark:bg-purple-900/30 border-l-2 border-purple-600 text-purple-800 dark:text-purple-200'
+                            : 'bg-white dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
                         {currentProvider === 'carto' && currentLayerId === layer.id && (
-                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-300 rounded-full"></div>
                         )}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* OpenStreetMap 提供商 */}
-                <div>
-                  <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                {/* OpenStreetMap 提供商组 */}
+                <div className="rounded-lg border border-green-200 dark:border-green-700/40 overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 border-b border-green-200 dark:border-green-800/50">
                     <MapIcon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">OPENSTREETMAP</span>
+                    <span className="text-xs font-bold text-green-700 dark:text-green-300">OPENSTREETMAP</span>
                   </div>
-                  <div className="space-y-0.5">
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
                     {allLayers.openstreetmap.map((layer) => (
                       <button
                         key={layer.id}
+                        role="menuitemradio"
+                        aria-checked={currentProvider === 'openstreetmap' && currentLayerId === layer.id}
                         onClick={() => {
                           switchMapLayer('openstreetmap', layer.id);
                           setShowLayerMenu(false);
                         }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                           currentProvider === 'openstreetmap' && currentLayerId === layer.id
-                            ? 'bg-green-600 dark:bg-green-600 text-white font-medium shadow-md'
-                            : 'bg-white/50 dark:bg-gray-700/40 hover:bg-green-50 dark:hover:bg-gray-600/50 text-gray-800 dark:text-gray-100'
+                            ? 'bg-green-600/10 dark:bg-green-900/30 border-l-2 border-green-600 text-green-800 dark:text-green-200'
+                            : 'bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
                         {currentProvider === 'openstreetmap' && currentLayerId === layer.id && (
-                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-green-600 dark:bg-green-300 rounded-full"></div>
                         )}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Mapbox 提供商 */}
-                <div>
-                  <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                {/* Mapbox 提供商组 */}
+                <div className="rounded-lg border border-blue-200 dark:border-blue-700/40 overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
                     <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">MAPBOX</span>
+                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300">MAPBOX</span>
                     {!apiKey && (
                       <span className="text-xs text-orange-600 dark:text-orange-400">(需要API密钥)</span>
                     )}
                   </div>
-                  <div className="space-y-0.5">
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
                     {allLayers.mapbox.map((layer) => (
                       <button
                         key={layer.id}
+                        role="menuitemradio"
+                        aria-checked={currentProvider === 'mapbox' && currentLayerId === layer.id}
                         onClick={() => {
                           if (!apiKey) {
                             alert('Mapbox需要API密钥。如需使用Mapbox，请联系管理员配置环境变量 VITE_MAP_API_KEY');
@@ -816,17 +811,17 @@ export const EnhancedWorldMap = memo(({
                           setShowLayerMenu(false);
                         }}
                         disabled={!apiKey}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm ${
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                           !apiKey
                             ? 'opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-600'
                             : currentProvider === 'mapbox' && currentLayerId === layer.id
-                            ? 'bg-blue-600 dark:bg-blue-600 text-white font-medium shadow-md'
-                            : 'bg-white/50 dark:bg-gray-700/40 hover:bg-blue-50 dark:hover:bg-gray-600/50 text-gray-800 dark:text-gray-100'
+                            ? 'bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200'
+                            : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         <span className="flex-1 text-left">{layer.name}</span>
                         {apiKey && currentProvider === 'mapbox' && currentLayerId === layer.id && (
-                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
                         )}
                       </button>
                     ))}

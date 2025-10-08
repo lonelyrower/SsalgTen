@@ -10,7 +10,8 @@ import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download, Map as MapIcon, Globe } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
+import { ViewModeToggle } from '@/components/map/ViewModeToggle';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
 import { apiService } from '@/services/api';
@@ -471,28 +472,7 @@ export const NodesPage: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布（{viewMode === '3d' ? '3D 地球' : '2D 地图'}）
                 </h2>
-                <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-                  <Button
-                    variant={viewMode === '2d' ? 'default' : 'outline'}
-                    size="sm"
-                    aria-pressed={viewMode === '2d'}
-                    onClick={() => setViewMode('2d')}
-                    className={`flex items-center gap-2 rounded-none ${viewMode === '2d' ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200 border-blue-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                  >
-                    <MapIcon className={`w-4 h-4 ${viewMode === '2d' ? 'text-blue-600 dark:text-blue-300' : ''}`} />
-                    <span>2D 地图</span>
-                  </Button>
-                  <Button
-                    variant={viewMode === '3d' ? 'default' : 'outline'}
-                    size="sm"
-                    aria-pressed={viewMode === '3d'}
-                    onClick={() => setViewMode('3d')}
-                    className={`flex items-center gap-2 rounded-none border-l border-gray-200 dark:border-gray-600 ${viewMode === '3d' ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200 border-blue-300' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                  >
-                    <Globe className={`w-4 h-4 ${viewMode === '3d' ? 'text-blue-600 dark:text-blue-300' : ''}`} />
-                    <span>3D 地球</span>
-                  </Button>
-                </div>
+                <ViewModeToggle value={viewMode} onChange={setViewMode} />
               </div>
               
               <div className="flex-1 min-h-0">
