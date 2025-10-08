@@ -1017,7 +1017,7 @@ create_dockerfile() {
     
     cat > Dockerfile << 'EOF'
 # SsalgTen Agent Dockerfile
-FROM node:18-alpine
+FROM node:24-alpine
 
 # Install system dependencies for network tools
 RUN apk add --no-cache \

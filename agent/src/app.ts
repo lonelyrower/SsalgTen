@@ -73,6 +73,33 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
+// 兼容旧的健康检查路径（部分编排使用 /api/health）
+app.get('/api/health', async (req: Request, res: Response) => {
+  try {
+    const systemInfo = await getSystemInfo();
+    
+    res.json({
+      success: true,
+      status: 'healthy',
+      agent: {
+        id: config.id,
+        name: config.name,
+        version: '0.1.0',
+        uptime: process.uptime()
+      },
+      system: systemInfo,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(500).json({
+      success: false,
+      status: 'unhealthy',
+      error: 'System information unavailable'
+    });
+  }
+});
+
 // Agent 信息
 app.get('/info', (req: Request, res: Response) => {
   res.json({
@@ -118,8 +145,9 @@ app.get('/api/latency-test', diagnosticController.latencyTest.bind(diagnosticCon
 app.get('/api/network-info', diagnosticController.networkInfo.bind(diagnosticController));
 app.get('/api/connectivity', diagnosticController.connectivity.bind(diagnosticController));
 
-// 404 处理
-app.use('*', (req: Request, res: Response) => {
+// 404 处理（Express 5 / router@2 不再支持 '*' 路由通配符）
+// 放在最后：不指定路径即可捕获所有未匹配的请求
+app.use((req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     error: 'API endpoint not found',

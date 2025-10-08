@@ -1,5 +1,7 @@
 # SsalgTen Agent Dockerfile - 监控代理节点
-FROM node:18-alpine
+# Use Active LTS. Node 18 is EOL (2025-04). 
+# Node 20 provides security updates and full compatibility with Express 5.
+FROM node:24-alpine
 
 # 安装系统依赖
 RUN apk add --no-cache \
