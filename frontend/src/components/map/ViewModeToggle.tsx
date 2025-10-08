@@ -1,4 +1,4 @@
-import React from 'react'
+// no default React import needed with react-jsx runtime
 import { Map as MapIcon, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -66,4 +66,3 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
     </div>
   )
 }
-
