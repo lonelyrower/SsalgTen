@@ -81,7 +81,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
     <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-          <Globe className="h-5 w-5 mr-2 text-blue-600" />
+          <Globe className="h-5 w-5 mr-2 text-primary" />
           国家/地区分布
         </h3>
         <div className="text-sm text-gray-500 dark:text-gray-400">

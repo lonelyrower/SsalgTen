@@ -554,7 +554,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           className={`${
             isRotating
               ? 'bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800'
-              : 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
+              : 'bg-primary hover:bg-primary/90'
           } shadow-lg border border-gray-200/50 dark:border-gray-600/50`}
         >
           {isRotating ? (

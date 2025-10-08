@@ -79,7 +79,7 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
       {/* 背景装饰 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200/20 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/15 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-purple-200/20 dark:bg-purple-600/10 rounded-full blur-2xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-indigo-200/20 dark:bg-indigo-600/10 rounded-full blur-xl animate-pulse delay-500"></div>
       </div>
@@ -110,14 +110,14 @@ export const LoginPage: React.FC = () => {
                 用户名
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400" />
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary" />
                 <input
                   type="text"
                   id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-gray-700/30 dark:text-white transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-primary/20 focus:border-primary dark:bg-gray-700/30 dark:text-white transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   placeholder="请输入用户名"
                   autoComplete="username"
                   disabled={isSubmitting}
@@ -138,7 +138,7 @@ export const LoginPage: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
                 placeholder="请输入密码"
                 autoComplete="current-password"
                 disabled={isSubmitting}

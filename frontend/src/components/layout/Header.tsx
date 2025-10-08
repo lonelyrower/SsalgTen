@@ -26,11 +26,11 @@ export const Header = () => {
           <Link to="/" className="flex items-center space-x-4 group">
             <div className="relative">
               {/* 外层光晕 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-75 group-hover:opacity-100 blur-sm group-hover:blur transition-all duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl opacity-50 group-hover:opacity-75 blur group-hover:blur-md transition-all duration-500" />
+              <div className="absolute inset-0 bg-primary/30 rounded-xl opacity-75 group-hover:opacity-100 blur-sm group-hover:blur transition-all duration-500" />
+              <div className="absolute inset-0 bg-primary/20 rounded-xl opacity-50 group-hover:opacity-75 blur group-hover:blur-md transition-all duration-500" />
               
               {/* 主Logo容器 */}
-              <div className="relative p-3 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 rounded-xl shadow-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+              <div className="relative p-3 bg-primary rounded-xl shadow-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
                 <Globe className="h-8 w-8 text-white drop-shadow-lg" />
                 
                 {/* 内部发光点 */}
@@ -43,7 +43,7 @@ export const Header = () => {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text drop-shadow-sm">
                   SsalgTen
                 </h1>
-                <p className="text-xs text-blue-200/80 font-medium tracking-wider hidden sm:block">
+                <p className="text-xs text-primary font-medium tracking-wider hidden sm:block">
                   GLOBAL NETWORK MONITOR
                 </p>
               </div>
@@ -56,7 +56,7 @@ export const Header = () => {
             <>
               <Link to="/dashboard" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
                 <span className="relative z-10">监控面板</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </Link>
               <Link to="/monitoring" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
                 <span className="relative z-10">监控概览</span>

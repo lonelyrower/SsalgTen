@@ -48,9 +48,9 @@ const errorConfig = {
   },
   server: {
     icon: Wifi,
-    color: 'text-blue-500 dark:text-blue-400',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-    borderColor: 'border-blue-200 dark:border-blue-800',
+    color: 'text-primary',
+    bgColor: 'bg-primary/10',
+    borderColor: 'border-primary/30',
     defaultTitle: '服务器连接失败',
     defaultMessage: '无法连接到服务器，请稍后重试。'
   }
@@ -130,7 +130,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               size="sm"
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
-                bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200
+                
                 shadow-lg hover:shadow-xl transform hover:scale-105
               `}
             >

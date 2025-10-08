@@ -202,7 +202,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
         {/* 头部 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <Server className="h-6 w-6 text-blue-600" />
+            <Server className="h-6 w-6 text-primary" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {node ? '编辑节点' : '添加节点'}
             </h2>
@@ -233,7 +233,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                  <Settings className="h-5 w-5 mr-2 text-blue-600" />
+                  <Settings className="h-5 w-5 mr-2 text-primary" />
                   基本信息
                 </h3>
                 
@@ -245,7 +245,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.name ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="输入节点名称"
@@ -264,7 +264,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       type="text"
                       value={formData.country}
                       onChange={(e) => handleInputChange('country', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                         validationErrors.country ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                       }`}
                       placeholder="中国"
@@ -282,7 +282,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       type="text"
                       value={formData.city}
                       onChange={(e) => handleInputChange('city', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                         validationErrors.city ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                       }`}
                       placeholder="北京"
@@ -301,7 +301,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.provider}
                     onChange={(e) => handleInputChange('provider', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.provider ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="阿里云"
@@ -319,7 +319,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="节点描述信息"
                   />
                 </div>
@@ -340,7 +340,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.ipv4}
                     onChange={(e) => handleInputChange('ipv4', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono ${
+                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.ipv4 ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="192.168.1.1"
@@ -358,7 +358,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.ipv6}
                     onChange={(e) => handleInputChange('ipv6', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono ${
+                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.ipv6 ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="2001:db8::1"
@@ -378,7 +378,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     onChange={(e) => handleInputChange('port', parseInt(e.target.value) || 0)}
                     min="1"
                     max="65535"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.port ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="3002"
@@ -396,7 +396,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.apiKey}
                     onChange={(e) => handleInputChange('apiKey', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.apiKey ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="agent-api-key-here"
@@ -427,7 +427,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     step="0.000001"
                     min="-90"
                     max="90"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.latitude ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="39.904211"
@@ -448,7 +448,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     step="0.000001"
                     min="-180"
                     max="180"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.longitude ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="116.407395"
@@ -473,7 +473,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   id="enabled"
                   checked={formData.enabled}
                   onChange={(e) => handleInputChange('enabled', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
                 />
                 <label htmlFor="enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   启用节点
@@ -500,7 +500,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             type="submit"
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className=""
           >
             {loading ? (
               <>

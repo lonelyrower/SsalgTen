@@ -56,7 +56,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
       case 'ADMIN':
         return <Shield className="h-4 w-4 text-red-500" />;
       case 'OPERATOR':
-        return <Settings className="h-4 w-4 text-blue-500" />;
+        return <Settings className="h-4 w-4 text-primary" />;
       case 'VIEWER':
         return <Eye className="h-4 w-4 text-green-500" />;
       default:
@@ -69,7 +69,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
       case 'ADMIN':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'OPERATOR':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-primary/10 text-primary';
       case 'VIEWER':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default:

@@ -283,15 +283,15 @@ export const ApiKeyManagement: React.FC = () => {
 
             {/* 使用统计 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <div className="bg-primary/10 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">使用次数</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                    <p className="text-sm text-primary">使用次数</p>
+                    <p className="text-2xl font-bold text-primary">
                       {apiKeyInfo.usageCount.toLocaleString()}
                     </p>
                   </div>
-                  <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                  <Activity className="h-8 w-8 text-primary" />
                 </div>
               </div>
 
@@ -340,14 +340,14 @@ export const ApiKeyManagement: React.FC = () => {
                   </Card>
                 )}
 
-                <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                  <h5 className="font-semibold text-blue-800 dark:text-blue-200 mb-3 flex items-center">
+                <Card className="p-4 bg-primary/10 border-primary/30">
+                  <h5 className="font-semibold text-primary mb-3 flex items-center">
                     <Info className="h-4 w-4 mr-2" />
                     Agent更新指南
                   </h5>
-                  <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                  <div className="text-sm text-primary space-y-2">
                     <p>如果您重新生成了API密钥，需要更新所有Agent节点的配置：</p>
-                    <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded font-mono text-xs">
+                    <div className="bg-primary/15 p-3 rounded font-mono text-xs">
                       # 1. 编辑Agent配置文件<br/>
                       nano /etc/ssalgten-agent/.env<br/><br/>
                       # 2. 更新API密钥<br/>

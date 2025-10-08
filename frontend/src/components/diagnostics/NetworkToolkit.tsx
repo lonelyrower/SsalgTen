@@ -285,7 +285,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'running':
-        return <Timer className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <Timer className="h-4 w-4 text-primary animate-spin" />;
       case 'success':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'failed':
@@ -300,7 +300,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
       return (
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
-            <Timer className="h-8 w-8 text-blue-500 animate-spin mx-auto mb-2" />
+            <Timer className="h-8 w-8 text-primary animate-spin mx-auto mb-2" />
             <p className="text-sm text-gray-600">正在执行 {result.tool}...</p>
           </div>
         </div>
@@ -348,7 +348,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
         {/* 目标节点信息 */}
         <Card className="p-4">
           <div className="flex items-center space-x-2 mb-3">
-            <Server className="h-5 w-5 text-blue-600" />
+            <Server className="h-5 w-5 text-primary" />
             <h3 className="font-semibold text-gray-900 dark:text-white">目标节点信息</h3>
           </div>
           <div className="space-y-2">
@@ -366,13 +366,13 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
             {selectedNode.ipv4 && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">IPv4:</span>
-                <span className="font-mono text-blue-600">{selectedNode.ipv4}</span>
+                <span className="font-mono text-primary">{selectedNode.ipv4}</span>
               </div>
             )}
             {selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6 !== selectedNode.ipv4 && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">IPv6:</span>
-                <span className="font-mono text-blue-600">{selectedNode.ipv6}</span>
+                <span className="font-mono text-primary">{selectedNode.ipv6}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
@@ -390,16 +390,16 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
 
         {/* 访问者信息 */}
         {/* 测试目标信息 */}
-        <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 shadow-lg border-blue-200 dark:border-blue-800 p-4">
+        <Card className="bg-primary/10 shadow-lg border-primary/30 p-4">
           <div className="flex items-center space-x-2 mb-3">
-            <Target className="h-5 w-5 text-blue-600" />
+            <Target className="h-5 w-5 text-primary" />
             <h3 className="font-semibold text-gray-900 dark:text-white">测试目标</h3>
           </div>
           <div className="text-sm bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
             <p className="text-gray-700 dark:text-gray-300">
               <span className="font-medium">Ping/MTR目标：</span>
               {visitorInfo?.ip && isPublicIP(visitorInfo.ip) ? (
-                <span className="text-blue-600 font-mono ml-1">{visitorInfo.ip} (您的IP)</span>
+                <span className="text-primary font-mono ml-1">{visitorInfo.ip} (您的IP)</span>
               ) : (
                 <span className="text-orange-600 font-mono ml-1">8.8.8.8 (Google DNS)</span>
               )}
@@ -417,7 +417,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
             <MapPin className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900 dark:text-white">您的IP信息</h3>
             {loadingVisitorInfo && (
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
             )}
           </div>
           {visitorInfo ? (
@@ -588,7 +588,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
               <p className="text-xs text-gray-600">状态</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-blue-600">{data.avg > 0 ? `${data.avg.toFixed(1)}ms` : 'N/A'}</p>
+              <p className="text-2xl font-bold text-primary">{data.avg > 0 ? `${data.avg.toFixed(1)}ms` : 'N/A'}</p>
               <p className="text-xs text-gray-600">平均延迟</p>
             </div>
             <div>
@@ -626,10 +626,10 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
-                <Upload className="h-5 w-5 text-blue-500 mr-2" />
+                <Upload className="h-5 w-5 text-primary mr-2" />
                 <span className="text-sm font-medium">上传速度</span>
               </div>
-              <p className="text-3xl font-bold text-blue-600">{data.upload?.toFixed(1) || '0.0'}</p>
+              <p className="text-3xl font-bold text-primary">{data.upload?.toFixed(1) || '0.0'}</p>
               <p className="text-sm text-gray-600">Mbps</p>
             </div>
           </div>
@@ -723,8 +723,8 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
           </div>
 
           {/* 延迟等级说明 */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
-            <h5 className="font-medium text-blue-900 dark:text-blue-300 mb-2">延迟等级说明</h5>
+          <div className="bg-primary/10 rounded-lg p-4 border border-primary/30">
+            <h5 className="font-medium text-primary mb-2">延迟等级说明</h5>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
               <div className="flex items-center space-x-1">
                 <span>🟢</span>
@@ -752,7 +752,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-blue-600">{data.totalHops || data.hops?.length || 0}</div>
+              <div className="text-xl font-bold text-primary">{data.totalHops || data.hops?.length || 0}</div>
               <div className="text-sm text-gray-600">跳数</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
@@ -807,7 +807,7 @@ const ResultDisplay: React.FC<{ toolId: string; data: any; duration?: number }> 
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
-              <div className="text-xl font-bold text-blue-600">{totalHops}</div>
+              <div className="text-xl font-bold text-primary">{totalHops}</div>
               <div className="text-sm text-gray-600">跳数</div>
             </div>
             <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">

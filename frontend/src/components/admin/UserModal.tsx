@@ -202,8 +202,8 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <UserIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-primary/15 rounded-lg">
+              <UserIcon className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -246,7 +246,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.username ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="请输入用户名"
@@ -270,7 +270,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="请输入邮箱地址"
@@ -292,7 +292,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="请输入显示名称（可选）"
               disabled={loading}
             />
@@ -310,7 +310,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder={isEditing ? "留空表示不修改密码" : "请输入密码"}
@@ -343,7 +343,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                     errors.confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="请再次输入密码"
@@ -376,7 +376,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 aria-label="用户角色"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={loading}
               >
                 <option value="VIEWER">查看者 - 只读权限</option>
@@ -394,7 +394,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
               name="active"
               checked={formData.active}
               onChange={handleInputChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               disabled={loading}
             />
             <label htmlFor="active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
@@ -415,7 +415,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className=""
             >
               {loading ? (
                 <div className="flex items-center space-x-2">

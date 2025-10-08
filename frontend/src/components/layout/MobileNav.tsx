@@ -53,7 +53,7 @@ export const MobileNav: React.FC = () => {
       case 'ADMIN':
         return <Shield className="h-4 w-4 text-red-500" />;
       case 'OPERATOR':
-        return <Settings className="h-4 w-4 text-blue-500" />;
+        return <Settings className="h-4 w-4 text-primary" />;
       case 'VIEWER':
         return <Users className="h-4 w-4 text-green-500" />;
       default:
@@ -107,7 +107,7 @@ export const MobileNav: React.FC = () => {
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0 h-12 w-12">
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
+                      <div className="h-12 w-12 rounded-full bg-primary/80 flex items-center justify-center text-white font-semibold text-lg">
                         {user?.name ? user.name.charAt(0).toUpperCase() : user?.username.charAt(0).toUpperCase()}
                       </div>
                     </div>
@@ -148,12 +148,12 @@ export const MobileNav: React.FC = () => {
                       onClick={() => setIsOpen(false)}
                       className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                          ? 'bg-primary/10 text-primary'
                           : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       <Icon className={`h-5 w-5 ${
-                        isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'
+                        isActive ? 'text-primary' : 'text-gray-400'
                       }`} />
                       <span>{item.label}</span>
                     </Link>

@@ -436,7 +436,7 @@ export const NodesPage: React.FC = () => {
                   placeholder="搜索节点名称、国家、服务商或ASN..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
               </div>
             </div>
@@ -447,7 +447,7 @@ export const NodesPage: React.FC = () => {
                 aria-label="筛选节点状态"
                 value={statusFilter}
                 onChange={handleStatusFilterChange}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">所有状态</option>
                 <option value="online">仅在线</option>
@@ -626,7 +626,7 @@ export const NodesPage: React.FC = () => {
                     <div className="space-y-2">
                       <Button
                         onClick={() => setShowDiagnostics(true)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        className="w-full"
                       >
                         <Activity className="h-4 w-4 mr-2" />
                         运行诊断
@@ -715,7 +715,7 @@ export const NodesPage: React.FC = () => {
                               if (latencyData && latencyData.status === 'testing') {
                                 return (
                                   <div className="mt-1 text-center">
-                                    <span className="text-xs text-blue-600">
+                                    <span className="text-xs text-primary">
                                       测试中...
                                     </span>
                                   </div>

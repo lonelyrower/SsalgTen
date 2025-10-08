@@ -137,7 +137,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
-            <Globe className="w-5 h-5 text-blue-400" />
+            <Globe className="w-5 h-5 text-primary" />
             网络延迟测试
           </CardTitle>
         </CardHeader>
@@ -169,7 +169,6 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
             <Button
               onClick={runLatencyTest}
               disabled={isLoading || !agentEndpoint}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isLoading ? (
                 <>
@@ -217,7 +216,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                 </div>
                 
                 <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
-                  <div className="text-2xl font-bold text-blue-400">
+                  <div className="text-2xl font-bold text-primary">
                     {testResult.summary.averageLatency.toFixed(1)}ms
                   </div>
                   <div className="text-sm text-gray-400">平均延迟</div>

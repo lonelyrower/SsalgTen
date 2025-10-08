@@ -182,8 +182,8 @@ export const MonitoringPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl">
-                <Server className="h-8 w-8 text-blue-500" />
+              <div className="p-3 bg-primary/15 rounded-xl">
+                <Server className="h-8 w-8 text-primary" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -213,7 +213,7 @@ export const MonitoringPage: React.FC = () => {
                     onClick={() => setViewMode('grid')}
                     className={`p-1.5 rounded transition-colors ${
                       viewMode === 'grid'
-                        ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
+                        ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                     }`}
                     title="网格布局"
@@ -224,7 +224,7 @@ export const MonitoringPage: React.FC = () => {
                     onClick={() => setViewMode('list')}
                     className={`p-1.5 rounded transition-colors ${
                       viewMode === 'list'
-                        ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
+                        ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                     }`}
                     title="列表布局"
@@ -396,7 +396,7 @@ export const MonitoringPage: React.FC = () => {
                 <div key={provider} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${
-                      index === 0 ? 'bg-blue-500' : 
+                      index === 0 ? 'bg-primary' : 
                       index === 1 ? 'bg-green-500' : 'bg-purple-500'
                     }`}></div>
                     <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -450,7 +450,7 @@ export const MonitoringPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <Cpu className="h-4 w-4 text-blue-500" />
+                      <Cpu className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">CPU</span>
                     </div>
                     <span className="text-sm font-mono text-gray-900 dark:text-white">
@@ -525,7 +525,7 @@ export const MonitoringPage: React.FC = () => {
           {/* 加载更多触发器 - 网格布局 */}
           {visibleCount < nodes.length && (
             <div ref={loadMoreRef} className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 加载中... ({visibleCount}/{nodes.length})
               </p>
@@ -659,7 +659,7 @@ export const MonitoringPage: React.FC = () => {
             {/* 加载更多触发器 - 列表布局 */}
             {visibleCount < nodes.length && (
               <div ref={loadMoreRef} className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   加载中... ({visibleCount}/{nodes.length})
                 </p>

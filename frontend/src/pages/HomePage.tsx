@@ -136,8 +136,8 @@ export const HomePage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm">
-                    <Globe className="h-6 w-6 text-blue-400" />
+                  <div className="p-2 bg-primary/15 rounded-xl backdrop-blur-sm">
+                    <Globe className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold gradient-text">
@@ -203,8 +203,8 @@ export const HomePage = () => {
                   {/* 节点头部信息 - 简化版 */}
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="relative">
-                      <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-white/10">
-                        <Activity className="h-8 w-8 text-blue-400" />
+                <div className="p-3 bg-primary/15 rounded-xl border border-white/10">
+                  <Activity className="h-8 w-8 text-primary" />
                       </div>
                       {/* 只为在线节点保留脉冲动画 */}
                       {selectedNode.status === 'online' && (

@@ -43,7 +43,7 @@ export const AgentInstaller: React.FC = () => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex items-center space-x-3 mb-4">
-          <Download className="h-8 w-8 text-blue-600" />
+          <Download className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               节点安装部署

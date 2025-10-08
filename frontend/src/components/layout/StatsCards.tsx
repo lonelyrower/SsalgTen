@@ -25,7 +25,7 @@ const StatsCardsComponent = ({
       title: '网络节点',
       value: totalNodes.toString(),
       subtitle: `${onlineNodes} 在线 · ${offlineNodes} 离线`,
-      icon: <Server className="h-6 w-6 text-blue-400" />,
+      icon: <Server className="h-6 w-6 text-primary" />,
       badge: '实时监控',
       badgeVariant: 'default',
       gradient: 'from-blue-500 to-cyan-500',

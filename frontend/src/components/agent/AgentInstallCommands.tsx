@@ -164,7 +164,7 @@ sudo systemctl reset-failed`,
     return (
       <div className="flex items-center justify-center h-32">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
           <p className="text-gray-600 dark:text-gray-400 text-sm">正在获取安装命令...</p>
         </div>
       </div>
@@ -237,7 +237,7 @@ sudo systemctl reset-failed`,
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <div className="flex items-center space-x-3">
-            <Server className="h-5 w-5 text-blue-600" />
+            <Server className="h-5 w-5 text-primary" />
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">主服务器地址</p>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">{installData.masterUrl}</p>
@@ -352,9 +352,9 @@ sudo systemctl reset-failed`,
           </Button>
         </div>
 
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">安装完成后：</h4>
-          <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+        <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+          <h4 className="font-medium text-primary mb-2">安装完成后：</h4>
+          <ul className="text-sm text-primary space-y-1">
             <li>• 节点将自动注册到当前主服务器</li>
             <li>• 自动检测服务器地理位置和网络信息</li>
             <li>• 配置为系统服务，开机自启动</li>
@@ -367,7 +367,7 @@ sudo systemctl reset-failed`,
       {installData.interactiveCommand && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Terminal className="h-6 w-6 text-blue-600" />
+            <Terminal className="h-6 w-6 text-primary" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               交互式安装
             </h2>
@@ -378,7 +378,7 @@ sudo systemctl reset-failed`,
           </p>
 
           <div className="relative">
-            <pre className="bg-gray-900 text-blue-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+            <pre className="bg-gray-900 text-primary p-4 rounded-lg overflow-x-auto text-sm font-mono">
               <code>{installData.interactiveCommand}</code>
             </pre>
             <Button
@@ -393,8 +393,8 @@ sudo systemctl reset-failed`,
             </Button>
           </div>
 
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">使用说明：</h4>
+          <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+            <h4 className="font-medium text-primary mb-2">使用说明：</h4>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <li>• 运行命令后将显示安装选项菜单</li>
               <li>• 选择"1"使用预置参数快速安装</li>

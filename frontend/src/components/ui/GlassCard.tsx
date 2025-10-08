@@ -27,10 +27,10 @@ export const GlassCard = memo(({
     strong: 'bg-white/95 dark:bg-gray-900/95 border-white/30 dark:border-white/20 lg:bg-white/80 lg:dark:bg-gray-900/80 lg:backdrop-blur-[12px]',
     
     // 科技：响应式模糊
-    tech: 'tech-card border-gradient-to-r from-blue-500/30 via-purple-500/20 to-blue-500/30',
+    tech: 'tech-card border-primary/20',
     
     // 渐变：桌面模糊，移动纯色
-    gradient: 'bg-gradient-to-br from-white/95 via-blue-50/90 to-purple-50/85 dark:from-gray-900/95 dark:via-blue-900/30 dark:to-purple-900/30 border-white/20 dark:border-white/10 lg:from-white/80 lg:via-blue-50/70 lg:to-purple-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]'
+    gradient: 'bg-gradient-to-br from-white/95 via-primary/10 to-purple-50/85 dark:from-gray-900/95 dark:to-purple-900/30 border-white/20 dark:border-white/10 lg:from-white/80 lg:via-primary/10 lg:to-purple-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]'
   };
 
   const animationClass = animated 
@@ -38,7 +38,7 @@ export const GlassCard = memo(({
     : 'transition-all duration-300';
 
   const glowClass = glow 
-    ? 'pulse-glow shadow-2xl shadow-blue-500/25 dark:shadow-blue-400/20'
+    ? 'pulse-glow shadow-2xl shadow-[hsl(var(--primary))]/25'
     : 'shadow-lg';
 
   return (
@@ -51,7 +51,7 @@ export const GlassCard = memo(({
     `}>
       {/* 顶部装饰线 */}
       {(variant === 'tech' || variant === 'gradient') && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-primary/30" />
       )}
       
       {/* 内容区域 */}
@@ -62,8 +62,8 @@ export const GlassCard = memo(({
       {/* 科技感背景效果 */}
       {variant === 'tech' && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-radial from-blue-400/10 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 pointer-events-none" />
         </>
       )}
     </Card>

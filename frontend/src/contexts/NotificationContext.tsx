@@ -141,7 +141,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRem
         return 'bg-yellow-50 dark:bg-yellow-900/20';
       case 'info':
       default:
-        return 'bg-blue-50 dark:bg-blue-900/20';
+        return 'bg-primary/10';
     }
   };
 

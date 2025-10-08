@@ -32,9 +32,9 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-50 dark:bg-blue-900/20',
-      icon: 'text-blue-600 dark:text-blue-400',
-      accent: 'border-blue-200 dark:border-blue-800',
+      bg: 'bg-primary/10',
+      icon: 'text-primary',
+      accent: 'border-primary/30',
     },
     green: {
       bg: 'bg-green-50 dark:bg-green-900/20',

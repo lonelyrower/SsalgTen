@@ -81,8 +81,8 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
       {/* 头部 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-            <Wifi className="h-5 w-5 text-blue-600" />
+          <div className="p-2 bg-primary/15 rounded-lg">
+            <Wifi className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -111,7 +111,6 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             size="sm"
             onClick={startLatencyTest}
             disabled={isLoading || isTestingInProgress}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isTestingInProgress ? (
               <>
@@ -145,13 +144,13 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             <span className="text-sm text-gray-600 dark:text-gray-400">
               测试进度: {progress.completed} / {progress.total}
             </span>
-            <span className="text-sm font-medium text-blue-600">
+            <span className="text-sm font-medium text-primary">
               {progress.percentage}%
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress.percentage}%` }}
             />
           </div>

@@ -139,7 +139,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showCurrentPassword ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
                     errors.currentPassword 
                       ? 'border-red-300 dark:border-red-600' 
                       : 'border-gray-300 dark:border-gray-600'
@@ -172,7 +172,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
                     errors.newPassword 
                       ? 'border-red-300 dark:border-red-600' 
                       : 'border-gray-300 dark:border-gray-600'
@@ -205,7 +205,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
                     errors.confirmPassword 
                       ? 'border-red-300 dark:border-red-600' 
                       : 'border-gray-300 dark:border-gray-600'
@@ -229,10 +229,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             </div>
 
             {/* 密码强度提示 */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <div className="bg-primary/10 p-3 rounded-lg">
               <div className="flex items-start">
-                <CheckCircle className="h-4 w-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-700 dark:text-blue-300">
+                <CheckCircle className="h-4 w-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-primary">
                   <p className="font-medium mb-1">密码安全建议：</p>
                   <ul className="text-xs space-y-1">
                     <li>• 使用至少6个字符</li>
@@ -256,7 +256,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1"
                 disabled={loading}
               >
                 {loading ? '修改中...' : '确认修改'}

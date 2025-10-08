@@ -565,7 +565,7 @@ export const EnhancedWorldMap = memo(({
                       <div className="text-xs mt-1">
                         状态: <span className={`font-semibold ${
                           (props.offline || 0) === 0 ? 'text-green-600' :
-                          (props.online || 0) === 0 ? 'text-red-600' : 'text-blue-600'
+                          (props.online || 0) === 0 ? 'text-red-600' : 'text-primary'
                         }`}>
                           {(props.offline || 0) === 0 ? '全部在线' :
                            (props.online || 0) === 0 ? '全部离线' : '混合状态'}
@@ -638,7 +638,7 @@ export const EnhancedWorldMap = memo(({
           <div className="glass rounded-lg p-4 border border-white/20">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-sm text-gray-900 dark:text-white/90 flex items-center">
-                <Activity className="h-4 w-4 mr-2 text-blue-400" />
+                <Activity className="h-4 w-4 mr-2 text-primary" />
                 节点统计
               </h4>
               <Button
@@ -662,7 +662,7 @@ export const EnhancedWorldMap = memo(({
                 <span className="text-gray-900 dark:text-white/90">离线: {stats.offline}</span>
               </div>
               <div className="flex items-center glass rounded p-2 border border-white/10">
-                <TrendingUp className="h-3 w-3 mr-2 text-blue-400" />
+                <TrendingUp className="h-3 w-3 mr-2 text-primary" />
                 <span className="text-gray-900 dark:text-white/90">可用率: {stats.uptime}%</span>
               </div>
               <div className="flex items-center glass rounded p-2 border border-white/10">
@@ -875,7 +875,7 @@ export const EnhancedWorldMap = memo(({
         <div className="flex items-center space-x-4">
           <span>共 {nodes.length} 个节点</span>
           {selectedNode && (
-            <span className="text-blue-600">
+            <span className="text-primary">
               已选择: {selectedNode.name}
             </span>
           )}
@@ -935,7 +935,7 @@ export const EnhancedWorldMap = memo(({
                       <div>位置: {node.city}, {node.country}</div>
                       <div>提供商: {node.provider}</div>
                       {node.ipv4 && (
-                        <div className="font-mono text-blue-600 dark:text-blue-400">
+                        <div className="font-mono text-primary">
                           {node.ipv4}
                         </div>
                       )}

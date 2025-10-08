@@ -155,7 +155,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
           value={currentValue}
           onChange={(e) => handleChange(config.key, e.target.value)}
           placeholder={info.placeholder}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
         />
       );
     }
@@ -166,7 +166,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         value={currentValue}
         onChange={(e) => handleChange(config.key, e.target.value)}
         placeholder={info.placeholder}
-        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
       />
     );
   };
@@ -191,7 +191,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Settings className="h-8 w-8 mr-3 text-blue-600" />
+              <Settings className="h-8 w-8 mr-3 text-primary" />
               系统配置
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">

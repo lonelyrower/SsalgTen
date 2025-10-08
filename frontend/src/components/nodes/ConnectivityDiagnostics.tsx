@@ -48,7 +48,7 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
                 <span className={`px-2 py-0.5 rounded text-xs ${socketConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>Socket {socketConnected ? '已连接' : '未连接'}</span>
                 <span className={`px-2 py-0.5 rounded text-xs ${authOk ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>认证 {authOk ? '正常' : '异常'}</span>
                 {typeof nodesCount === 'number' && (
-                  <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">节点 {nodesCount}</span>
+          <span className="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">节点 {nodesCount}</span>
                 )}
               </div>
               {issues.length > 0 ? (

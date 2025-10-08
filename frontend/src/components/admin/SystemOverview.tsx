@@ -78,7 +78,7 @@ export const SystemOverview: React.FC = () => {
       case 'excellent':
         return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800';
       case 'good':
-        return 'text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-800';
+        return 'text-primary bg-primary/10 border-primary/30';
       case 'warning':
         return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800';
       case 'critical':
@@ -191,8 +191,8 @@ export const SystemOverview: React.FC = () => {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">节点总数</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.nodes.totalNodes}</p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Server className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-primary/15 rounded-lg">
+              <Server className="h-6 w-6 text-primary" />
             </div>
           </div>
           <div className="mt-4 flex items-center space-x-4 text-sm">
