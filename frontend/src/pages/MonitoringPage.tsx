@@ -233,12 +233,15 @@ export const MonitoringPage: React.FC = () => {
                   </button>
                 </div>
                 
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={refreshData}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-600/40 dark:text-blue-300 dark:hover:bg-blue-900/20"
                 >
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   刷新
-                </button>
+                </Button>
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 最后更新: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '--'}
