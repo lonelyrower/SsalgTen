@@ -8,7 +8,6 @@ import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Activity, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ViewModeToggle } from '@/components/map/ViewModeToggle';
 import type { NodeData } from '@/services/api';
 
