@@ -50,30 +50,30 @@ export const Header = () => {
             </div>
           </Link>
 
-        {/* Navigation - 科技感导航 */}
-        <nav className="hidden md:flex items-center space-x-2">
+        {/* Navigation - 现代化扁平导航 */}
+        <nav className="hidden md:flex items-center space-x-1">
           {isAuthenticated ? (
             <>
-              <Link to="/dashboard" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
+              <Link to="/dashboard" className="relative px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors duration-200 group">
                 <span className="relative z-10">监控面板</span>
-                <div className="absolute inset-0 bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/80 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
               </Link>
-              <Link to="/monitoring" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
+              <Link to="/monitoring" className="relative px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors duration-200 group">
                 <span className="relative z-10">监控概览</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/80 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
               </Link>
-              <Link to="/nodes" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
+              <Link to="/nodes" className="relative px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors duration-200 group">
                 <span className="relative z-10">节点管理</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/80 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
               </Link>
-              <Link to="/security" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
+              <Link to="/security" className="relative px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors duration-200 group">
                 <span className="relative z-10">威胁监控</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/80 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
               </Link>
               {hasRole('ADMIN') && (
-                <Link to="/admin" className="relative px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/10 group">
+                <Link to="/admin" className="relative px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors duration-200 group">
                   <span className="relative z-10">系统管理</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/80 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
                   </Link>
               )}
             </>
@@ -92,22 +92,22 @@ export const Header = () => {
           {/* 如果已认证，显示简化的用户操作 */}
           {isAuthenticated && user ? (
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* 退出按钮 */}
+              {/* 退出按钮 - 扁平化样式 */}
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="relative overflow-hidden bg-transparent border-red-500/50 text-red-400 hover:text-white hover:border-red-500 group transition-all duration-300 mobile-touch-target"
+                className="relative text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-200 mobile-touch-target"
               >
-                <LogOut className="h-4 w-4 sm:mr-2 relative z-10" />
-                <span className="hidden sm:inline relative z-10">退出</span>
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">退出</span>
               </Button>
             </div>
           ) : (
             /* 如果未认证，显示登录按钮 */
             <div className="flex items-center space-x-2">
               <Link to="/login">
-                <Button className="gradient-btn mobile-touch-target">
+                <Button className="bg-primary hover:bg-primary/90 text-white transition-colors duration-200 mobile-touch-target">
                   <Activity className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">登录</span>
                 </Button>

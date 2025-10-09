@@ -67,19 +67,9 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
 
     // 使用异步函数初始化 Cesium
     const initCesium = async () => {
-      // 读取地图配置
-      const w: any = typeof window !== 'undefined' ? (window as any) : {};
-      let provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
-      const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
-      
-      // 验证提供商是否有效（3D 地球支持的提供商）
-      const validProviders = ['carto', 'mapbox', 'openstreetmap'];
-      if (!validProviders.includes(provider)) {
-        console.warn(`⚠️ 无效的地图提供商: ${provider}，使用默认值 openstreetmap`);
-        provider = 'openstreetmap';
-      }
-      
       // 读取Cesium Ion配置
+      const w: any = typeof window !== 'undefined' ? (window as any) : {};
+
       const cesiumIonToken = w.APP_CONFIG?.CESIUM_ION_TOKEN || import.meta.env.VITE_CESIUM_ION_TOKEN || '';
       
       // 配置 Cesium Ion（如果有token则启用，否则使用免费tiles）
@@ -99,48 +89,11 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
       }
 
       try {
-        // 根据配置选择地图源（使用异步创建，更可靠）
-        let imageryProviderPromise: Promise<Cesium.ImageryProvider>;
-        
-        switch (provider) {
-          case 'carto':
-            imageryProviderPromise = Promise.resolve(new Cesium.UrlTemplateImageryProvider({
-              url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-              credit: '© CARTO © OpenStreetMap contributors',
-              subdomains: ['a', 'b', 'c', 'd']
-            }));
-            break;
-            
-          case 'mapbox':
-            if (apiKey) {
-              imageryProviderPromise = Promise.resolve(new Cesium.UrlTemplateImageryProvider({
-                url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
-                credit: '© Mapbox © OpenStreetMap contributors'
-              }));
-            } else {
-              console.warn('Mapbox 需要 API key，回退到 OpenStreetMap');
-              imageryProviderPromise = Promise.resolve(
-                new Cesium.OpenStreetMapImageryProvider({
-                  url: 'https://tile.openstreetmap.org/'
-                })
-              );
-            }
-            break;
-            
-          case 'openstreetmap':
-            imageryProviderPromise = Promise.resolve(
-              new Cesium.OpenStreetMapImageryProvider({
-                url: 'https://tile.openstreetmap.org/'
-              })
-            );
-            break;
-            
-          default:
-            // 使用更可靠的默认地图源（ArcGIS World Imagery）
-            imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
-              'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-            );
-        }
+        // 3D 地球默认使用高清卫星图（忽略2D地图配置）
+        // 这样确保初始化时就能看到正确的卫星图层
+        const imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        );
 
         // 创建 Cesium Viewer
         const viewer = new Cesium.Viewer(containerRef.current!, {
@@ -551,6 +504,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={toggleRotation}
           title={isRotating ? "暂停自转" : "恢复自转"}
+          aria-label={isRotating ? "暂停地球自转" : "恢复地球自转"}
           className={`${
             isRotating
               ? 'bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800'
@@ -568,6 +522,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={zoomIn}
           title="放大"
+          aria-label="放大地图"
           className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
         >
           <ZoomIn className="h-4 w-4 text-gray-700 dark:text-gray-200" />
@@ -577,6 +532,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={zoomOut}
           title="缩小"
+          aria-label="缩小地图"
           className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
         >
           <ZoomOut className="h-4 w-4 text-gray-700 dark:text-gray-200" />
@@ -586,6 +542,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
           size="icon"
           onClick={resetView}
           title="重置视图"
+          aria-label="重置地图视图到初始位置"
           className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
         >
           <Home className="h-4 w-4 text-gray-700 dark:text-gray-200" />
@@ -605,87 +562,100 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
             <span className="hidden sm:inline text-gray-700 dark:text-gray-200">图层</span>
           </Button>
 
-          {/* 图层选择菜单（统一为分组列表样式） */}
+          {/* 图层选择菜单（与2D地图保持一致的分组列表样式） */}
           {showLayerMenu && (
-            <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200" role="menu">
               <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
-                  选择 3D 底图
+                  选择地图图层
                 </p>
               </div>
-              <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
-                <button
-                  role="menuitemradio"
-                  aria-checked={currentLayer === 'satellite'}
-                  onClick={() => { switchLayer('satellite'); setShowLayerMenu(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
-                    currentLayer === 'satellite'
-                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
-                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Satellite className="h-4 w-4" />
-                    高清卫星图
-                  </span>
-                  {currentLayer === 'satellite' && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  )}
-                </button>
-                <button
-                  role="menuitemradio"
-                  aria-checked={currentLayer === 'terrain'}
-                  onClick={() => { switchLayer('terrain'); setShowLayerMenu(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
-                    currentLayer === 'terrain'
-                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
-                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Map className="h-4 w-4" />
-                    立体地形
-                  </span>
-                  {currentLayer === 'terrain' && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  )}
-                </button>
-                <button
-                  role="menuitemradio"
-                  aria-checked={currentLayer === 'bluemarble'}
-                  onClick={() => { switchLayer('bluemarble'); setShowLayerMenu(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
-                    currentLayer === 'bluemarble'
-                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
-                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    街道标注
-                  </span>
-                  {currentLayer === 'bluemarble' && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  )}
-                </button>
-                <button
-                  role="menuitemradio"
-                  aria-checked={currentLayer === 'natgeo'}
-                  onClick={() => { switchLayer('natgeo'); setShowLayerMenu(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
-                    currentLayer === 'natgeo'
-                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
-                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    国家地理风格
-                  </span>
-                  {currentLayer === 'natgeo' && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  )}
-                </button>
+              <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
+                {/* 3D 地球专用图层组 */}
+                <div className="rounded-lg border border-blue-200 dark:border-blue-700/40 overflow-hidden" role="group">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
+                    <Globe className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300">3D 地球图层</span>
+                  </div>
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={currentLayer === 'satellite'}
+                      onClick={() => { switchLayer('satellite'); setShowLayerMenu(false); }}
+                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                        currentLayer === 'satellite'
+                          ? 'bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200'
+                          : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Satellite className="h-4 w-4" />
+                        高清卫星图
+                      </span>
+                      {currentLayer === 'satellite' && (
+                        <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={currentLayer === 'terrain'}
+                      onClick={() => { switchLayer('terrain'); setShowLayerMenu(false); }}
+                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                        currentLayer === 'terrain'
+                          ? 'bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200'
+                          : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Map className="h-4 w-4" />
+                        立体地形
+                      </span>
+                      {currentLayer === 'terrain' && (
+                        <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={currentLayer === 'bluemarble'}
+                      onClick={() => { switchLayer('bluemarble'); setShowLayerMenu(false); }}
+                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                        currentLayer === 'bluemarble'
+                          ? 'bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200'
+                          : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        街道标注
+                      </span>
+                      {currentLayer === 'bluemarble' && (
+                        <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={currentLayer === 'natgeo'}
+                      onClick={() => { switchLayer('natgeo'); setShowLayerMenu(false); }}
+                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                        currentLayer === 'natgeo'
+                          ? 'bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200'
+                          : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        国家地理风格
+                      </span>
+                      {currentLayer === 'natgeo' && (
+                        <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
