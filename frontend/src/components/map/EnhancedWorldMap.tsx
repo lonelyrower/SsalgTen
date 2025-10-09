@@ -386,21 +386,34 @@ export const EnhancedWorldMap = memo(({
   
   // 图层切换状态 - 从 localStorage 读取用户偏好
   const [currentProvider, setCurrentProvider] = useState<MapProvider>(() => {
-    // 优先从 localStorage 读取用户偏好
-    const savedProvider = localStorage.getItem('map_provider');
-    if (savedProvider) {
-      const validProviders: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
-      if (validProviders.includes(savedProvider as MapProvider)) {
-        return savedProvider as MapProvider;
+    try {
+      // 优先从 localStorage 读取用户偏好
+      const savedProvider = localStorage.getItem('map_provider');
+      if (savedProvider) {
+        const validProviders: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
+        if (validProviders.includes(savedProvider as MapProvider)) {
+          return savedProvider as MapProvider;
+        }
       }
+    } catch (error) {
+      console.warn('Failed to read map provider from localStorage', error);
     }
     // 如果没有保存的偏好，使用默认值
     return 'carto';
   });
 
   const [currentLayerId, setCurrentLayerId] = useState<string>(() => {
-    // 从 localStorage 读取保存的图层ID
-    return localStorage.getItem('map_layer_id') || 'carto-light';
+    try {
+      // 从 localStorage 读取保存的图层ID
+      const savedLayerId = localStorage.getItem('map_layer_id');
+      if (savedLayerId) {
+        return savedLayerId;
+      }
+    } catch (error) {
+      console.warn('Failed to read map layer ID from localStorage', error);
+    }
+    // 默认使用 carto-light
+    return 'carto-light';
   });
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   
@@ -439,9 +452,27 @@ export const EnhancedWorldMap = memo(({
     setCurrentProvider(provider);
     setCurrentLayerId(layerId);
     // 保存用户偏好到 localStorage
-    localStorage.setItem('map_provider', provider);
-    localStorage.setItem('map_layer_id', layerId);
+    try {
+      localStorage.setItem('map_provider', provider);
+      localStorage.setItem('map_layer_id', layerId);
+    } catch (error) {
+      console.warn('Failed to save map preferences to localStorage', error);
+    }
   };
+
+  // 初始化时保存默认值到localStorage（如果尚未保存）
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('map_provider')) {
+        localStorage.setItem('map_provider', currentProvider);
+      }
+      if (!localStorage.getItem('map_layer_id')) {
+        localStorage.setItem('map_layer_id', currentLayerId);
+      }
+    } catch (error) {
+      console.warn('Failed to initialize map preferences in localStorage', error);
+    }
+  }, []); // 只在组件挂载时执行一次
 
   // 点击外部关闭图层菜单
   useEffect(() => {
