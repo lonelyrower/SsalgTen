@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
 export const ThemeToggle: React.FC = () => {
-  const { theme, actualTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
