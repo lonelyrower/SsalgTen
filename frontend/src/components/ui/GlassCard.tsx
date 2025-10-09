@@ -29,8 +29,8 @@ export const GlassCard = memo(({
     // 科技：响应式模糊
     tech: 'tech-card border-primary/20',
     
-    // 渐变：桌面模糊，移动纯色
-    gradient: 'bg-gradient-to-br from-white/95 via-primary/10 to-purple-50/85 dark:from-gray-900/95 dark:to-purple-900/30 border-white/20 dark:border-white/10 lg:from-white/80 lg:via-primary/10 lg:to-purple-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]'
+    // 渐变：桌面模糊，移动纯色 - 纯蓝科技风
+    gradient: 'bg-gradient-to-br from-white/95 via-cyan-50/50 to-blue-50/85 dark:from-gray-900/95 dark:via-blue-950/30 dark:to-cyan-950/30 border-white/20 dark:border-cyan-500/10 lg:from-white/80 lg:via-cyan-50/40 lg:to-blue-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]'
   };
 
   const animationClass = animated 
