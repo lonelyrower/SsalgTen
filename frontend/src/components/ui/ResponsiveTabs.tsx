@@ -37,10 +37,10 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
                   onClick={() => onTabChange(tab.id)}
                   className={`
                     flex items-center space-x-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap
-                    transition-all duration-200 rounded-t-lg
+                    transition-all duration-200 rounded-t-lg transform
                     ${activeTab === tab.id
-                      ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-sm font-semibold'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800/50'
+                      ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-sm font-semibold scale-105'
+                      : 'border-transparent text-gray-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 dark:text-gray-400 dark:hover:text-primary hover:scale-105 hover:-translate-y-0.5 hover:shadow-sm'
                     }
                   `}
                 >
@@ -94,10 +94,10 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
                       setDropdownOpen(false);
                     }}
                     className={`
-                      w-full flex items-center space-x-3 p-3 text-left transition-colors duration-200
+                      w-full flex items-center space-x-3 p-3 text-left transition-all duration-200 transform
                       ${activeTab === tab.id
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-primary/5 hover:text-primary dark:hover:bg-gray-700/50 hover:translate-x-1'
                       }
                     `}
                   >
