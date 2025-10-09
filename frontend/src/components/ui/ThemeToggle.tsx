@@ -115,17 +115,10 @@ export const ThemeToggle: React.FC = () => {
 
       {isOpen && (
         <>
-          {/* 背景遮罩 */}
-          <div 
-            className="fixed inset-0 z-[100]"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-          />
-          
           {/* 下拉菜单 */}
           <div
             ref={menuRef}
-            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[101]"
+            className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
             onKeyDown={handleKeyDown}
           >
             {/* 标题区域 */}
