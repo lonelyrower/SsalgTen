@@ -613,106 +613,79 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   选择 3D 底图
                 </p>
               </div>
-              <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
-                {/* 卫星影像 组 */}
-                <div className="rounded-lg border border-blue-200 dark:border-blue-700/40 overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
-                    <Satellite className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300">卫星影像</span>
-                  </div>
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    <button
-                      role="menuitemradio"
-                      aria-checked={currentLayer === 'satellite'}
-                      onClick={() => { switchLayer('satellite'); setShowLayerMenu(false); }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
-                        currentLayer === 'satellite'
-                          ? 'bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200'
-                          : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                      }`}
-                    >
-                      <span className="flex-1 text-left">高清卫星图</span>
-                      {currentLayer === 'satellite' && (
-                        <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 地形 组 */}
-                <div className="rounded-lg border border-green-200 dark:border-green-700/40 overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 border-b border-green-200 dark:border-green-800/50">
-                    <Map className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                    <span className="text-xs font-bold text-green-700 dark:text-green-300">地形</span>
-                  </div>
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    <button
-                      role="menuitemradio"
-                      aria-checked={currentLayer === 'terrain'}
-                      onClick={() => { switchLayer('terrain'); setShowLayerMenu(false); }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
-                        currentLayer === 'terrain'
-                          ? 'bg-green-600/10 dark:bg-green-900/30 border-l-2 border-green-600 text-green-800 dark:text-green-200'
-                          : 'bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                      }`}
-                    >
-                      <span className="flex-1 text-left">立体地形</span>
-                      {currentLayer === 'terrain' && (
-                        <div className="w-1.5 h-1.5 bg-green-600 dark:bg-green-300 rounded-full"></div>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 街道 组 */}
-                <div className="rounded-lg border border-indigo-200 dark:border-indigo-700/40 overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/30 border-b border-indigo-200 dark:border-indigo-800/50">
-                    <MapPin className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">街道</span>
-                  </div>
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    <button
-                      role="menuitemradio"
-                      aria-checked={currentLayer === 'bluemarble'}
-                      onClick={() => { switchLayer('bluemarble'); setShowLayerMenu(false); }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
-                        currentLayer === 'bluemarble'
-                          ? 'bg-indigo-600/10 dark:bg-indigo-900/30 border-l-2 border-indigo-600 text-indigo-800 dark:text-indigo-200'
-                          : 'bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                      }`}
-                    >
-                      <span className="flex-1 text-left">街道标注</span>
-                      {currentLayer === 'bluemarble' && (
-                        <div className="w-1.5 h-1.5 bg-indigo-600 dark:bg-indigo-300 rounded-full"></div>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 专题 组 */}
-                <div className="rounded-lg border border-amber-200 dark:border-amber-700/40 overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800/50">
-                    <Globe className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">专题</span>
-                  </div>
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    <button
-                      role="menuitemradio"
-                      aria-checked={currentLayer === 'natgeo'}
-                      onClick={() => { switchLayer('natgeo'); setShowLayerMenu(false); }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
-                        currentLayer === 'natgeo'
-                          ? 'bg-amber-600/10 dark:bg-amber-900/30 border-l-2 border-amber-600 text-amber-800 dark:text-amber-200'
-                          : 'bg-white dark:bg-gray-800 hover:bg-amber-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
-                      }`}
-                    >
-                      <span className="flex-1 text-left">国家地理风格</span>
-                      {currentLayer === 'natgeo' && (
-                        <div className="w-1.5 h-1.5 bg-amber-600 dark:bg-amber-300 rounded-full"></div>
-                      )}
-                    </button>
-                  </div>
-                </div>
+              <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
+                <button
+                  role="menuitemradio"
+                  aria-checked={currentLayer === 'satellite'}
+                  onClick={() => { switchLayer('satellite'); setShowLayerMenu(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
+                    currentLayer === 'satellite'
+                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
+                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Satellite className="h-4 w-4" />
+                    高清卫星图
+                  </span>
+                  {currentLayer === 'satellite' && (
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  )}
+                </button>
+                <button
+                  role="menuitemradio"
+                  aria-checked={currentLayer === 'terrain'}
+                  onClick={() => { switchLayer('terrain'); setShowLayerMenu(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
+                    currentLayer === 'terrain'
+                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
+                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Map className="h-4 w-4" />
+                    立体地形
+                  </span>
+                  {currentLayer === 'terrain' && (
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  )}
+                </button>
+                <button
+                  role="menuitemradio"
+                  aria-checked={currentLayer === 'bluemarble'}
+                  onClick={() => { switchLayer('bluemarble'); setShowLayerMenu(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
+                    currentLayer === 'bluemarble'
+                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
+                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    街道标注
+                  </span>
+                  {currentLayer === 'bluemarble' && (
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  )}
+                </button>
+                <button
+                  role="menuitemradio"
+                  aria-checked={currentLayer === 'natgeo'}
+                  onClick={() => { switchLayer('natgeo'); setShowLayerMenu(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
+                    currentLayer === 'natgeo'
+                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
+                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    国家地理风格
+                  </span>
+                  {currentLayer === 'natgeo' && (
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  )}
+                </button>
               </div>
             </div>
           )}
