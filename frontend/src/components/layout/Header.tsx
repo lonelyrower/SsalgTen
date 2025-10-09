@@ -43,7 +43,7 @@ export const Header = () => {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text drop-shadow-sm">
                   SsalgTen
                 </h1>
-                <p className="text-xs text-primary font-medium tracking-wider hidden sm:block">
+                <p className="text-xs text-cyan-400 dark:text-cyan-300 font-medium tracking-wider hidden sm:block">
                   GLOBAL NETWORK MONITOR
                 </p>
               </div>
