@@ -28,7 +28,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
       {/* 桌面端标签页 */}
       <div className="hidden md:block">
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-6 overflow-x-auto">
+          <nav className="-mb-px flex space-x-6">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
