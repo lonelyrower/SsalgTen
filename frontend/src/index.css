@@ -11,32 +11,32 @@
 
 @layer base {
   :root {
-    /* 现代化主题色彩 - 网络科技风 */
+    /* 现代化主题色彩 - 纯蓝科技风 */
     --background: 240 10% 98%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 217 91% 60%;           /* 鲜艳蓝色 */
+    --primary: 217 91% 55%;           /* 深蓝科技色 */
     --primary-foreground: 210 40% 98%;
-    --secondary: 160 84% 39%;         /* 青绿色 */
+    --secondary: 189 94% 43%;         /* 青色强调 */
     --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 280 100% 70%;           /* 紫色强调色 */
+    --accent: 200 98% 48%;            /* 科技青蓝 */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --ring: 217 91% 55%;
     --radius: 0.75rem;                /* 更大的圆角 */
-    
-    /* 增强图表色彩 */
-    --chart-1: 217 91% 60%;           /* 主蓝 */
-    --chart-2: 160 84% 39%;           /* 青绿 */
-    --chart-3: 280 100% 70%;          /* 紫色 */
+
+    /* 增强图表色彩 - 蓝色系 */
+    --chart-1: 217 91% 55%;           /* 深蓝 */
+    --chart-2: 189 94% 43%;           /* 青色 */
+    --chart-3: 200 98% 48%;           /* 科技青蓝 */
     --chart-4: 38 92% 50%;            /* 橙色 */
     --chart-5: 142 76% 36%;           /* 绿色 */
     
@@ -57,31 +57,31 @@
   }
 
   .dark {
-    /* 深色模式 - 更科技感 */
+    /* 深色模式 - 纯蓝科技感 */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 70%;           /* 深色模式下更亮的蓝 */
+    --primary: 217 91% 65%;           /* 深色模式下更亮的深蓝 */
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 160 84% 50%;         /* 更亮的青绿 */
+    --secondary: 189 94% 53%;         /* 更亮的青色 */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 280 100% 80%;           /* 更亮的紫色 */
+    --accent: 200 98% 58%;            /* 更亮的科技青蓝 */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 70%;
-    
-    /* 深色模式图表色彩 */
-    --chart-1: 217 91% 70%;
-    --chart-2: 160 84% 50%;
-    --chart-3: 280 100% 80%;
+    --ring: 217 91% 65%;
+
+    /* 深色模式图表色彩 - 蓝色系 */
+    --chart-1: 217 91% 65%;
+    --chart-2: 189 94% 53%;
+    --chart-3: 200 98% 58%;
     --chart-4: 38 92% 60%;
     --chart-5: 142 76% 46%;
     

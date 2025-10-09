@@ -17,7 +17,7 @@ interface StatsCardProps {
   change?: number;
   changeLabel?: string;
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'indigo';
+  color: 'blue' | 'green' | 'yellow' | 'red' | 'cyan' | 'sky';
   trend?: 'up' | 'down' | 'stable';
 }
 
@@ -51,15 +51,15 @@ const StatsCard: React.FC<StatsCardProps> = ({
       icon: 'text-red-600 dark:text-red-400',
       accent: 'border-red-200 dark:border-red-800',
     },
-    purple: {
-      bg: 'bg-purple-50 dark:bg-purple-900/20',
-      icon: 'text-purple-600 dark:text-purple-400',
-      accent: 'border-purple-200 dark:border-purple-800',
+    cyan: {
+      bg: 'bg-cyan-50 dark:bg-cyan-900/20',
+      icon: 'text-cyan-600 dark:text-cyan-400',
+      accent: 'border-cyan-200 dark:border-cyan-800',
     },
-    indigo: {
-      bg: 'bg-indigo-50 dark:bg-indigo-900/20',
-      icon: 'text-indigo-600 dark:text-indigo-400',
-      accent: 'border-indigo-200 dark:border-indigo-800',
+    sky: {
+      bg: 'bg-sky-50 dark:bg-sky-900/20',
+      icon: 'text-sky-600 dark:text-sky-400',
+      accent: 'border-sky-200 dark:border-sky-800',
     },
   };
 
@@ -170,7 +170,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
         value={totalCountries}
         subValue={`分布在 ${totalCountries} 个国家/地区`}
         icon={<Globe className="h-6 w-6" />}
-        color="purple"
+        color="cyan"
         trend="stable"
         changeLabel={undefined}
       />
@@ -180,7 +180,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(({
         value={totalProviders}
         subValue={`${totalProviders} 个不同的云服务商`}
         icon={<Wifi className="h-6 w-6" />}
-        color="indigo"
+        color="sky"
         trend="up"
         changeLabel={undefined}
       />

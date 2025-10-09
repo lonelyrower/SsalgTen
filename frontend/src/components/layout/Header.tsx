@@ -16,9 +16,9 @@ export const Header = () => {
 
 
   return (
-    <header className="relative glass sticky top-0 z-50 border-b border-white/10">
-      {/* 简化背景 - 单层渐变 */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/98 via-purple-900/95 to-slate-900/98" />
+    <header className="relative glass sticky top-0 z-50 border-b border-white/10 rounded-b-2xl">
+      {/* 简化背景 - 纯蓝科技渐变 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/98 via-blue-900/95 to-slate-900/98 rounded-b-2xl" />
 
       <div className="relative z-10 mobile-container py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto mobile-safe">
