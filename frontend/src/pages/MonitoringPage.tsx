@@ -181,22 +181,24 @@ export const MonitoringPage: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 页面标题和状态 */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-primary/15 rounded-xl">
-                <Server className="h-8 w-8 text-primary" />
+          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg">
+                  <Server className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent">
+                    监控概览
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    实时监控 {totalNodes} 个节点的系统状态
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  监控概览
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  实时监控 {totalNodes} 个节点的系统状态
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center justify-end space-x-4 mb-2">
+              <div className="text-right">
+                <div className="flex items-center justify-end space-x-4 mb-2">
                 <div className="flex items-center space-x-2">
                   {connected ? (
                     <Wifi className="h-4 w-4 text-green-500" />
@@ -242,15 +244,16 @@ export const MonitoringPage: React.FC = () => {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   刷新
                 </Button>
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                最后更新: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '--'}
-              </div>
-              <div className="flex items-center space-x-2 mt-1">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {onlineNodes}/{totalNodes} 在线
-                </span>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  最后更新: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '--'}
+                </div>
+                <div className="flex items-center space-x-2 mt-1">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {onlineNodes}/{totalNodes} 在线
+                  </span>
+                </div>
               </div>
             </div>
           </div>

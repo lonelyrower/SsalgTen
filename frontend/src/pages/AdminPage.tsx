@@ -51,13 +51,13 @@ export const AdminPage: React.FC = () => {
         {/* 管理员欢迎信息 */}
         <div className="mb-8">
           <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-pink-500/5 to-purple-500/5 dark:from-red-400/5 dark:via-pink-400/5 dark:to-purple-400/5"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
             <div className="relative z-10 flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg">
                 <Shield className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-red-700 dark:from-white dark:to-red-300 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent">
                   系统管理
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">

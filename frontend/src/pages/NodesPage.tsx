@@ -10,7 +10,7 @@ import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download, Globe } from 'lucide-react';
 import { ViewModeToggle } from '@/components/map/ViewModeToggle';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
@@ -361,22 +361,29 @@ export const NodesPage: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 页面标题和操作 */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                节点管理
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                管理和监控网络中的所有代理节点
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              {/* 连接状态简述（保留） */}
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${connected ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
-                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} ${connected ? 'animate-pulse' : ''}`}></div>
-                <span className="text-sm font-medium">{connected ? '实时连接' : '连接断开'}</span>
+          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg">
+                  <Globe className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent">
+                    节点管理
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    管理和监控网络中的所有代理节点
+                  </p>
+                </div>
               </div>
+
+              <div className="flex items-center space-x-3">
+                {/* 连接状态简述（保留） */}
+                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${connected ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
+                  <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} ${connected ? 'animate-pulse' : ''}`}></div>
+                  <span className="text-sm font-medium">{connected ? '实时连接' : '连接断开'}</span>
+                </div>
 
               {hasRole('ADMIN') && (
                 <Button onClick={handleAddNode}>
@@ -420,6 +427,7 @@ export const NodesPage: React.FC = () => {
                 )}
                 {isTestingInProgress ? '测试中...' : '延迟测试'}
               </Button>
+              </div>
             </div>
           </div>
         </div>
