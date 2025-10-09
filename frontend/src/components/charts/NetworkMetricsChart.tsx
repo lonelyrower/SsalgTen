@@ -255,13 +255,13 @@ export const NetworkMetricsChart = memo(({
       {/* 图表标题和控制 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className="p-2 bg-primary/10 rounded-lg">
             {type === 'pie' ? (
-              <PieChartIcon className="h-5 w-5 text-blue-600" />
+              <PieChartIcon className="h-5 w-5 text-primary" />
             ) : type === 'bar' ? (
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <BarChart3 className="h-5 w-5 text-primary" />
             ) : (
-              <Activity className="h-5 w-5 text-blue-600" />
+              <Activity className="h-5 w-5 text-primary" />
             )}
           </div>
           <div>

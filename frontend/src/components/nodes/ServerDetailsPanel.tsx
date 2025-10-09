@@ -166,7 +166,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
   const getDiagnosticTypeColor = (type: string) => {
     switch (type) {
       case 'PING':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+        return 'bg-primary/10 text-primary';
       case 'TRACEROUTE':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       case 'MTR':
@@ -198,7 +198,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
               onClick={() => setActiveTab('system')}
               className={`flex-1 flex items-center justify-center py-2.5 px-4 rounded-md font-medium text-sm transition-all ${
                 activeTab === 'system'
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  ? 'bg-white dark:bg-gray-700 text-primary dark:text-blue-400 shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
@@ -209,7 +209,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
               onClick={() => setActiveTab('diagnostics')}
               className={`flex-1 flex items-center justify-center py-2.5 px-4 rounded-md font-medium text-sm transition-all ${
                 activeTab === 'diagnostics'
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  ? 'bg-white dark:bg-gray-700 text-primary dark:text-blue-400 shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
@@ -522,7 +522,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                   <div className="text-xs text-gray-600 dark:text-gray-400">总接收/发送速率</div>
                   <div className="flex items-center space-x-3 text-xs">
                     <span className="text-green-600">{formatBps(rxSeries[rxSeries.length - 1])} RX</span>
-                    <span className="text-blue-600">{formatBps(txSeries[txSeries.length - 1])} TX</span>
+                    <span className="text-primary">{formatBps(txSeries[txSeries.length - 1])} TX</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-3">
@@ -682,7 +682,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                   <select
                     value={diagnosticFilter}
                     onChange={(e) => setDiagnosticFilter(e.target.value as any)}
-                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                     aria-label="选择诊断类型"
                   >
                     <option value="ALL">全部</option>
@@ -719,7 +719,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
             <CardContent className="p-0">
               {loadingDiagnostics ? (
                 <div className="flex items-center justify-center py-12">
-                  <RefreshCw className="animate-spin h-6 w-6 text-blue-600 mr-2" />
+                  <RefreshCw className="animate-spin h-6 w-6 text-primary mr-2" />
                   <span className="text-gray-600 dark:text-gray-400">加载诊断记录中...</span>
                 </div>
               ) : filteredDiagnostics.length === 0 ? (
