@@ -283,7 +283,7 @@ export const ApiKeyManagement: React.FC = () => {
 
             {/* 使用统计 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-primary/10 p-4 rounded-lg">
+              <Card className="bg-primary/10 border-primary/30 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-primary">使用次数</p>
@@ -293,9 +293,9 @@ export const ApiKeyManagement: React.FC = () => {
                   </div>
                   <Activity className="h-8 w-8 text-primary" />
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+              <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-green-700 dark:text-green-300">最后使用</p>
@@ -305,9 +305,9 @@ export const ApiKeyManagement: React.FC = () => {
                   </div>
                   <Clock className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+              <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-purple-700 dark:text-purple-300">密钥类型</p>
@@ -317,7 +317,7 @@ export const ApiKeyManagement: React.FC = () => {
                   </div>
                   <Zap className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 </div>
-              </div>
+              </Card>
             </div>
 
             {/* 安全警告和建议 */}
