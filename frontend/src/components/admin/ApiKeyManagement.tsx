@@ -283,15 +283,15 @@ export const ApiKeyManagement: React.FC = () => {
 
             {/* 使用统计 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-primary/10 border-primary/30 p-4">
+              <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-primary">使用次数</p>
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">使用次数</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                       {apiKeyInfo.usageCount.toLocaleString()}
                     </p>
                   </div>
-                  <Activity className="h-8 w-8 text-primary" />
+                  <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
               </Card>
 
