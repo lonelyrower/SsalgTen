@@ -301,6 +301,27 @@
     }
   }
 
+  /* 统一的深色模式卡片样式 - 全局修复 */
+  .dark .bg-white {
+    background-color: rgb(31 41 55) !important; /* gray-800 */
+  }
+
+  .dark .text-gray-900 {
+    color: rgb(243 244 246) !important; /* gray-100 */
+  }
+
+  .dark .text-gray-800 {
+    color: rgb(229 231 235) !important; /* gray-200 */
+  }
+
+  .dark .text-gray-700 {
+    color: rgb(209 213 219) !important; /* gray-300 */
+  }
+
+  .dark .text-gray-600 {
+    color: rgb(156 163 175) !important; /* gray-400 */
+  }
+
   @keyframes ping {
     75%, 100% {
       transform: scale(2);
