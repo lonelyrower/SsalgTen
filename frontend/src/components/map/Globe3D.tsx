@@ -620,8 +620,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => { switchLayer('satellite'); setShowLayerMenu(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
                     currentLayer === 'satellite'
-                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -638,8 +638,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => { switchLayer('terrain'); setShowLayerMenu(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
                     currentLayer === 'terrain'
-                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -656,8 +656,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => { switchLayer('bluemarble'); setShowLayerMenu(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
                     currentLayer === 'bluemarble'
-                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -674,8 +674,8 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
                   onClick={() => { switchLayer('natgeo'); setShowLayerMenu(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-sm ${
                     currentLayer === 'natgeo'
-                      ? 'bg-primary/10 border-l-2 border-primary text-primary'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
+                      ? 'bg-primary/15 border-l-2 border-primary text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+                      : 'bg-white dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100'
                   }`}
                 >
                   <span className="flex items-center gap-2">
