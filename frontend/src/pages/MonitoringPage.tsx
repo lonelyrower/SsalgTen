@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { useRealTime } from '@/hooks/useRealTime';
-import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, Wifi, WifiOff, List, LayoutGrid, Globe, BarChart3, PieChart, RefreshCw } from 'lucide-react';
+import { Server, Cpu, HardDrive, Activity, Clock, AlertTriangle, CheckCircle, XCircle, List, LayoutGrid, Globe, BarChart3, PieChart, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
@@ -179,41 +179,38 @@ export const MonitoringPage: React.FC = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* 页面标题和状态 */}
-        <div className="mb-6 md:mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
-            <div className="relative z-10">
-              {/* 标题区域 - 移动端全宽 */}
-              <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-0">
-                <div className="p-2 md:p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg flex-shrink-0">
-                  <Server className="h-6 w-6 md:h-8 md:w-8 text-white" />
+        {/* 页面头部 - 紧凑设计 */}
+        <div className="mb-6">
+          <div className="bg-white dark:bg-gray-800 border-b-2 border-blue-500/20 dark:border-blue-400/20 px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* 左侧：图标 + 标题 + 节点数 */}
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg">
+                  <Server className="h-5 w-5 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent">
+                <div className="flex items-center space-x-3">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                     监控概览
                   </h1>
-                  <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-0.5 md:mt-1 hidden sm:block">
-                    实时监控 {totalNodes} 个节点的系统状态
-                  </p>
+                  <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                    {totalNodes} 节点
+                  </span>
                 </div>
               </div>
 
-              {/* 控制按钮区域 - 移动端换行 */}
-              <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-4 md:mt-0 md:absolute md:top-6 md:right-6">
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                  {connected ? (
-                    <Wifi className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
-                  ) : (
-                    <WifiOff className="h-3 w-3 md:h-4 md:w-4 text-red-500" />
-                  )}
-                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                    {connected ? '实时连接' : '离线模式'}
-                  </span>
+              {/* 右侧：状态和控制按钮 */}
+              <div className="flex items-center space-x-2">
+                <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                  connected
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                  <span className="hidden sm:inline">{connected ? '实时连接' : '离线'}</span>
                 </div>
 
-                {/* 布局切换按钮 */}
-                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                {/* 布局切换 */}
+                <div className="hidden md:flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-1.5 rounded transition-colors ${
@@ -224,7 +221,7 @@ export const MonitoringPage: React.FC = () => {
                     title="网格布局"
                     aria-label="网格布局"
                   >
-                    <LayoutGrid className="h-3 w-3 md:h-4 md:w-4" />
+                    <LayoutGrid className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
@@ -236,7 +233,7 @@ export const MonitoringPage: React.FC = () => {
                     title="列表布局"
                     aria-label="列表布局"
                   >
-                    <List className="h-3 w-3 md:h-4 md:w-4" />
+                    <List className="h-4 w-4" />
                   </button>
                 </div>
 
@@ -244,10 +241,10 @@ export const MonitoringPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={refreshData}
-                  className="flex-shrink-0"
+                  className="hidden sm:flex"
                 >
-                  <RefreshCw className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
-                  <span className="hidden md:inline">刷新</span>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  刷新
                 </Button>
               </div>
             </div>

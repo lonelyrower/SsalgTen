@@ -10,7 +10,7 @@ import { useRealTime } from '@/hooks/useRealTime';
 import { TrendingUp } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const { nodes, stats, lastUpdate, connected, refreshData } = useRealTime();
 
   // 下拉刷新处理
@@ -43,40 +43,33 @@ export const DashboardPage: React.FC = () => {
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
         <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe">
-        {/* 欢迎信息和实时状态 */}
-        <div className="mb-6 sm:mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4 sm:p-6 mobile-safe">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg flex-shrink-0">
-                  <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+        {/* 页面头部 - 紧凑设计 */}
+        <div className="mb-6">
+          <div className="bg-white dark:bg-gray-800 border-b-2 border-blue-500/20 dark:border-blue-400/20 px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* 左侧：图标 + 标题 */}
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-white" />
                 </div>
-                <div className="min-w-0 mobile-text-readable">
-                  <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent truncate">
-                    欢迎回来, {user?.name || user?.username}!
-                  </h1>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                    SsalgTen 网络监控管理系统 - {user?.role === 'ADMIN' ? '管理员' : user?.role === 'OPERATOR' ? '操作员' : '查看者'}
-                  </p>
-                </div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  监控面板
+                </h1>
               </div>
-            
-              {/* 实时连接状态指示器 */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mobile-safe">
-                <div className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-full shadow-sm transition-all duration-200 text-xs sm:text-sm ${
+
+              {/* 右侧：状态指示器 */}
+              <div className="flex items-center space-x-3">
+                <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium ${
                   connected
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                 }`}>
-                  <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} ${connected ? 'animate-pulse' : ''} shadow-sm`}></div>
-                  <span className="font-semibold whitespace-nowrap">
-                    {connected ? '实时连接' : '连接断开'}
-                  </span>
+                  <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                  <span>{connected ? '实时连接' : '连接断开'}</span>
                 </div>
                 {lastUpdate && (
-                  <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-2 sm:px-3 py-1 rounded-full">
-                    更新: {new Date(lastUpdate).toLocaleTimeString()}
+                  <div className="hidden sm:flex text-xs text-gray-500 dark:text-gray-400 px-3 py-1.5 bg-gray-100 dark:bg-gray-700/50 rounded-full">
+                    {new Date(lastUpdate).toLocaleTimeString()}
                   </div>
                 )}
               </div>
