@@ -472,7 +472,8 @@ export const EnhancedWorldMap = memo(({
     } catch (error) {
       console.warn('Failed to initialize map preferences in localStorage', error);
     }
-  }, []); // 只在组件挂载时执行一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 只在组件挂载时执行一次，使用初始值
 
   // 点击外部关闭图层菜单
   useEffect(() => {

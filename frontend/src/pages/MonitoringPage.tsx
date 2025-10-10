@@ -75,7 +75,7 @@ const ProgressBar: React.FC<{
 };
 
 export const MonitoringPage: React.FC = () => {
-  const { nodes, connected, lastUpdate, refreshData } = useRealTime();
+  const { nodes, connected, refreshData } = useRealTime();
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 布局模式
   const [visibleCount, setVisibleCount] = useState(60); // 初始显示60个节点
@@ -249,16 +249,6 @@ export const MonitoringPage: React.FC = () => {
                   <RefreshCw className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
                   <span className="hidden md:inline">刷新</span>
                 </Button>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  最后更新: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '--'}
-                </div>
-                <div className="flex items-center space-x-2 mt-1">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {onlineNodes}/{totalNodes} 在线
-                  </span>
-                </div>
               </div>
             </div>
           </div>
