@@ -81,7 +81,8 @@ export const MobileNav: React.FC = () => {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2"
+        className="p-2 text-white hover:text-cyan-300 hover:bg-white/10 transition-colors mobile-touch-target"
+        aria-label={isOpen ? "关闭菜单" : "打开菜单"}
       >
         {isOpen ? (
           <X className="h-5 w-5" />

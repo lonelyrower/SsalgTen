@@ -663,13 +663,13 @@ export const EnhancedWorldMap = memo(({
     <div className={`relative flex flex-col ${className}`}>
       {/* 地图控制面板 */}
       {showControlPanels && (
-      <div className="absolute top-4 right-4 z-40 space-y-3">
+      <div className="absolute top-2 md:top-4 left-2 md:left-auto md:right-4 z-40 space-y-2 md:space-y-3 max-w-[calc(100vw-200px)] md:max-w-none">
         {/* 统计信息卡片 */}
         {showStats && (
-          <div className="glass rounded-lg p-4 border border-white/20">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-sm text-gray-900 dark:text-white/90 flex items-center">
-                <Activity className="h-4 w-4 mr-2 text-primary" />
+          <div className="glass rounded-lg p-2 md:p-4 border border-white/20">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <h4 className="font-semibold text-xs md:text-sm text-gray-900 dark:text-white/90 flex items-center">
+                <Activity className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 text-primary" />
                 节点统计
               </h4>
               <Button
@@ -678,32 +678,32 @@ export const EnhancedWorldMap = memo(({
                 onClick={() => setShowStats(false)}
                 aria-label="关闭节点统计"
                 title="关闭节点统计"
-                className="h-6 w-6 p-0 text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
+                className="h-5 w-5 md:h-6 md:w-6 p-0 text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
               >
                 ×
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="flex items-center glass rounded p-2 border border-white/10">
-                <div className="status-indicator bg-green-400 mr-2"></div>
+            <div className="grid grid-cols-2 gap-2 md:gap-3 text-[10px] md:text-xs">
+              <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
+                <div className="status-indicator bg-green-400 mr-1 md:mr-2 scale-75 md:scale-100"></div>
                 <span className="text-gray-900 dark:text-white/90">在线: {stats.online}</span>
               </div>
-              <div className="flex items-center glass rounded p-2 border border-white/10">
-                <div className="status-indicator bg-red-400 mr-2"></div>
+              <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
+                <div className="status-indicator bg-red-400 mr-1 md:mr-2 scale-75 md:scale-100"></div>
                 <span className="text-gray-900 dark:text-white/90">离线: {stats.offline}</span>
               </div>
-              <div className="flex items-center glass rounded p-2 border border-white/10">
-                <TrendingUp className="h-3 w-3 mr-2 text-primary" />
+              <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
+                <TrendingUp className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2 text-primary" />
                 <span className="text-gray-900 dark:text-white/90">可用率: {stats.uptime}%</span>
               </div>
-              <div className="flex items-center glass rounded p-2 border border-white/10">
-                <Server className="h-3 w-3 mr-2 text-purple-400" />
+              <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
+                <Server className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2 text-purple-400" />
                 <span className="text-gray-900 dark:text-white/90">总计: {stats.total}</span>
               </div>
             </div>
-            
-            {/* 实时状态指示 */}
-            <div className="mt-3 pt-3 border-t border-white/10">
+
+            {/* 实时状态指示 - 移动端隐藏 */}
+            <div className="hidden md:block mt-3 pt-3 border-t border-white/10">
               <div className="flex items-center justify-between text-xs text-gray-700 dark:text-white/70">
                 <span>实时监控</span>
                 <div className="flex items-center space-x-1">
@@ -716,15 +716,15 @@ export const EnhancedWorldMap = memo(({
         )}
 
         {/* 快速操作 */}
-        <div className="bg-white/95 dark:bg-gray-800/95 lg:bg-white/90 lg:dark:bg-gray-800/90 rounded-lg p-3 border border-gray-200/50 dark:border-gray-600/50 lg:backdrop-blur-[10px] shadow-lg">
+        <div className="bg-white/95 dark:bg-gray-800/95 lg:bg-white/90 lg:dark:bg-gray-800/90 rounded-lg p-2 md:p-3 border border-gray-200/50 dark:border-gray-600/50 lg:backdrop-blur-[10px] shadow-lg">
           <div className="space-y-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowStats(!showStats)}
-              className="w-full justify-start text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="w-full justify-start text-[10px] md:text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 py-1 md:py-2"
             >
-              <Eye className="h-3 w-3 mr-2" />
+              <Eye className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
               {showStats ? '隐藏' : '显示'}统计
             </Button>
           </div>
@@ -732,19 +732,19 @@ export const EnhancedWorldMap = memo(({
       </div>
       )}
 
-      {/* 图层切换按钮 - 始终显示 */}
-      <div className="absolute top-4 right-4 z-40">
+      {/* 图层切换按钮 - 始终显示，移动端放在右上角 */}
+      <div className="absolute top-2 md:top-4 right-2 md:right-4 z-40">
         <div className="layer-menu-container relative">
           <Button
             variant="secondary"
             size="sm"
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-1 md:gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px] px-2 md:px-3 py-1.5 md:py-2"
             aria-expanded={showLayerMenu}
             aria-haspopup="menu"
           >
-            <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-            <span className="text-gray-700 dark:text-gray-200">图层</span>
+            <Layers className="h-3 w-3 md:h-4 md:w-4 text-gray-700 dark:text-gray-200" />
+            <span className="text-xs md:text-sm text-gray-700 dark:text-gray-200">图层</span>
           </Button>
 
           {/* 图层选择菜单 */}
@@ -864,8 +864,8 @@ export const EnhancedWorldMap = memo(({
         </div>
       </div>
 
-      {/* 地图容器：占满可用空间，保底高度避免过小 */}
-      <div className="flex-1 min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+      {/* 地图容器：占满可用空间，移动端使用较小的最小高度 */}
+      <div className="flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
         <MapContainer
           center={[20, 0]}
           zoom={2}

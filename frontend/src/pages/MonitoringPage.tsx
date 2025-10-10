@@ -180,36 +180,38 @@ export const MonitoringPage: React.FC = () => {
       
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 页面标题和状态 */}
-        <div className="mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+        <div className="mb-6 md:mb-8">
+          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg">
-                  <Server className="h-8 w-8 text-white" />
+            <div className="relative z-10">
+              {/* 标题区域 - 移动端全宽 */}
+              <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-0">
+                <div className="p-2 md:p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg flex-shrink-0">
+                  <Server className="h-6 w-6 md:h-8 md:w-8 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-cyan-300 bg-clip-text text-transparent">
                     监控概览
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-0.5 md:mt-1 hidden sm:block">
                     实时监控 {totalNodes} 个节点的系统状态
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="flex items-center justify-end space-x-4 mb-2">
-                <div className="flex items-center space-x-2">
+
+              {/* 控制按钮区域 - 移动端换行 */}
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-4 md:mt-0 md:absolute md:top-6 md:right-6">
+                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                   {connected ? (
-                    <Wifi className="h-4 w-4 text-green-500" />
+                    <Wifi className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
                   ) : (
-                    <WifiOff className="h-4 w-4 text-red-500" />
+                    <WifiOff className="h-3 w-3 md:h-4 md:w-4 text-red-500" />
                   )}
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                     {connected ? '实时连接' : '离线模式'}
                   </span>
                 </div>
-                
+
                 {/* 布局切换按钮 */}
                 <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                   <button
@@ -220,8 +222,9 @@ export const MonitoringPage: React.FC = () => {
                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                     }`}
                     title="网格布局"
+                    aria-label="网格布局"
                   >
-                    <LayoutGrid className="h-4 w-4" />
+                    <LayoutGrid className="h-3 w-3 md:h-4 md:w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
@@ -231,18 +234,20 @@ export const MonitoringPage: React.FC = () => {
                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                     }`}
                     title="列表布局"
+                    aria-label="列表布局"
                   >
-                    <List className="h-4 w-4" />
+                    <List className="h-3 w-3 md:h-4 md:w-4" />
                   </button>
                 </div>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={refreshData}
+                  className="flex-shrink-0"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新
+                  <RefreshCw className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+                  <span className="hidden md:inline">刷新</span>
                 </Button>
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
