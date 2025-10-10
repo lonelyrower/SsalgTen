@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
@@ -10,7 +9,6 @@ import { useRealTime } from '@/hooks/useRealTime';
 import { TrendingUp } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
-  const { } = useAuth();
   const { nodes, stats, lastUpdate, connected, refreshData } = useRealTime();
 
   // 下拉刷新处理
