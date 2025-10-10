@@ -248,7 +248,7 @@ export const HomePage = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div className="glass rounded-lg p-4 border border-white/10">
                           <div className="text-xs text-muted-foreground/70 mb-1.5">地理位置</div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center justify-center space-x-2">
                             <CountryFlagSvg country={selectedNode.country} />
                             <div className="font-semibold text-foreground text-sm">
                               {selectedNode.city}, {selectedNode.country}
@@ -258,22 +258,24 @@ export const HomePage = () => {
                         
                         <div className="glass rounded-lg p-4 border border-white/10">
                           <div className="text-xs text-muted-foreground/70 mb-1.5">服务提供商</div>
-                          <div className="font-semibold text-foreground text-sm">
+                          <div className="font-semibold text-foreground text-sm text-center">
                             {selectedNode.provider}
                           </div>
                         </div>
                         
                         <div className="glass rounded-lg p-4 border border-white/10">
                           <div className="text-xs text-muted-foreground/70 mb-1.5">运行状态</div>
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
-                            selectedNode.status === 'online' 
-                              ? 'status-badge-online' 
-                              : selectedNode.status === 'offline' 
-                              ? 'status-badge-offline'
-                              : 'status-badge-warning'
-                          }`}>
-                            {selectedNode.status.toUpperCase()}
-                          </span>
+                          <div className="flex justify-center">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
+                              selectedNode.status === 'online' 
+                                ? 'status-badge-online' 
+                                : selectedNode.status === 'offline' 
+                                ? 'status-badge-offline'
+                                : 'status-badge-warning'
+                            }`}>
+                              {selectedNode.status.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
