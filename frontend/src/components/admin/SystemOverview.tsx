@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService, type SystemOverviewData } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useNotification } from '@/hooks/useNotification';
 import {
   Activity,
   Server,
@@ -12,6 +13,7 @@ import {
   CheckCircle2,
   Zap,
   HardDrive,
+  Trash2,
 } from 'lucide-react';
 
 export const SystemOverview: React.FC = () => {
@@ -19,6 +21,17 @@ export const SystemOverview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [retainHours, setRetainHours] = useState<number>(24);
+
+  const { addNotification } = useNotification();
+
+  const cleanupOptions = [
+    { value: 0, label: '清除全部历史心跳' },
+    { value: 24, label: '保留最近 24 小时' },
+    { value: 72, label: '保留最近 3 天' },
+    { value: 168, label: '保留最近 7 天' },
+  ];
 
   const fetchStats = async () => {
     try {
@@ -38,6 +51,52 @@ export const SystemOverview: React.FC = () => {
       setError('网络错误，无法获取系统概览');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (cleanupLoading) return;
+
+    const confirmMessage =
+      retainHours && retainHours > 0
+        ? `确认删除 ${retainHours} 小时前的心跳记录吗？此操作不可撤销。`
+        : '确认清空所有历史心跳记录吗？此操作不可撤销。';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setCleanupLoading(true);
+    try {
+      const response = await apiService.cleanupHeartbeatLogs(
+        retainHours && retainHours > 0 ? retainHours : undefined,
+      );
+
+      if (response.success) {
+        addNotification({
+          type: 'success',
+          title: '清理完成',
+          message:
+            response.message ||
+            `已删除 ${response.data?.deleted ?? 0} 条心跳记录`,
+        });
+        await fetchStats();
+      } else {
+        addNotification({
+          type: 'error',
+          title: '清理失败',
+          message: response.error || '无法清理心跳记录，请稍后再试',
+        });
+      }
+    } catch (err) {
+      console.error('Cleanup heartbeat logs error:', err);
+      addNotification({
+        type: 'error',
+        title: '清理失败',
+        message: '服务器请求失败，请稍后再试',
+      });
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -261,7 +320,50 @@ export const SystemOverview: React.FC = () => {
             进程负载
           </div>
         </Card>
+
+        {/* ����ʷ������� */}
+        <Card className="p-6 md:col-span-2 bg-gray-50 dark:bg-gray-900/40 border-dashed border-gray-300 dark:border-gray-700">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-red-500 dark:text-red-400" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  历史心跳清理
+                </h3>
+              </div>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
+                  手动清理历史心跳记录，确保每个节点仅保留最新数据
+                </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <select
+                className="min-w-[180px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                value={retainHours}
+                onChange={(e) => setRetainHours(Number(e.target.value))}
+                disabled={cleanupLoading}
+              >
+                {cleanupOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="sm:min-w-[150px]"
+                onClick={handleCleanup}
+                disabled={cleanupLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {cleanupLoading ? '清理中...' : '立即清理'}
+              </Button>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
 };
+
+

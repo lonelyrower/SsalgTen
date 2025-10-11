@@ -31,6 +31,8 @@ import {
 import { APP_VERSION } from "../utils/version";
 import { diagnosticsProxyController } from "../controllers/DiagnosticsProxyController";
 import { updateController } from "../controllers/UpdateController";
+import { prisma } from "../lib/prisma";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -395,6 +397,81 @@ router.post(
   authenticateToken,
   requireAdmin,
   systemConfigController.cleanupOldConfigs.bind(systemConfigController),
+);
+
+router.post(
+  "/admin/heartbeats/cleanup",
+  authenticateToken,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const retainRaw = req.body?.retainHours;
+      let retainHours: number | undefined;
+
+      if (typeof retainRaw !== "undefined") {
+        const parsed = Number(retainRaw);
+        if (!Number.isFinite(parsed) || parsed < 0) {
+          const response: ApiResponse = {
+            success: false,
+            error: "retainHours must be a non-negative number",
+          };
+          res.status(400).json(response);
+          return;
+        }
+        retainHours = parsed;
+      }
+
+      let whereClause:
+        | {
+            timestamp?: {
+              lt: Date;
+            };
+          }
+        | undefined;
+
+      if (retainHours && retainHours > 0) {
+        const cutoff = new Date(Date.now() - retainHours * 60 * 60 * 1000);
+        whereClause = {
+          timestamp: {
+            lt: cutoff,
+          },
+        };
+      }
+
+      const result = await prisma.heartbeatLog.deleteMany({
+        where: whereClause,
+      });
+
+      logger.info(
+        `[Routes] Heartbeat logs cleanup triggered by ${req.ip}: deleted ${result.count} record(s)${
+          retainHours && retainHours > 0
+            ? ` (retained last ${retainHours} hour(s))`
+            : ""
+        }`,
+      );
+
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          deleted: result.count,
+          retainHours: retainHours && retainHours > 0 ? retainHours : undefined,
+        },
+        message:
+          retainHours && retainHours > 0
+            ? `已删除 ${result.count} 条心跳记录（保留最近 ${retainHours} 小时）`
+            : `已删除 ${result.count} 条心跳记录`,
+      };
+
+      res.json(response);
+    } catch (error) {
+      logger.error("Failed to cleanup heartbeat logs:", error);
+      const response: ApiResponse = {
+        success: false,
+        error: "Failed to cleanup heartbeat logs",
+      };
+      res.status(500).json(response);
+    }
+  },
 );
 
 // API密钥管理（管理员专用）

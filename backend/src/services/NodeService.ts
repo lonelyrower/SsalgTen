@@ -878,8 +878,13 @@ export class NodeService {
       }
 
       // 记录心跳日志
-      await prisma.heartbeatLog.create({
-        data: logData,
+      await prisma.$transaction(async (tx) => {
+        await tx.heartbeatLog.deleteMany({
+          where: { nodeId: node.id },
+        });
+        await tx.heartbeatLog.create({
+          data: logData,
+        });
       });
 
       // 心跳日志降噪：仅每 N 次输出一次详细字段

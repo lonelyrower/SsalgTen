@@ -763,6 +763,15 @@ class ApiService {
     }, true);
   }
 
+  async cleanupHeartbeatLogs(retainHours?: number): Promise<ApiResponse<{ deleted: number; retainHours?: number }>> {
+    const payload =
+      retainHours && retainHours > 0 ? { retainHours } : {};
+    return this.request<{ deleted: number; retainHours?: number }>('/admin/heartbeats/cleanup', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, true);
+  }
+
   async deleteSystemConfig(key: string): Promise<ApiResponse<void>> {
     return this.request<void>(`/admin/configs/${key}`, {
       method: 'DELETE',
