@@ -1,31 +1,34 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, memo, useMemo } from 'react';
+import { useRef, memo, useMemo, useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import type { NodeData } from '@/services/api';
 
 // 运行时地图配置（与 EnhancedWorldMap 保持一致）
-const getMapConfig = () => {
+// 注意：这个函数现在接收 apiKey 作为参数，确保响应式更新
+const getMapConfig = (apiKey: string) => {
   const w: any = typeof window !== 'undefined' ? (window as any) : {};
   const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
-  const apiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
   switch (provider) {
     case 'carto':
       return {
         url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
+        provider: 'carto',
       };
     case 'mapbox':
       return {
         url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
         attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
+        provider: 'mapbox',
       };
     case 'openstreetmap':
     default:
       return {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        provider: 'openstreetmap',
       };
   }
 };
@@ -73,6 +76,39 @@ const createCustomIcon = (status: string) => {
 
 export const WorldMap = memo(({ nodes = [], onNodeClick, hideIPs = false }: WorldMapProps) => {
   const mapRef = useRef<any>(null);
+
+  // 获取API key（用于Mapbox）- 使用 useState 确保响应式更新
+  const [apiKey, setApiKey] = useState<string>(() => {
+    const w: any = typeof window !== 'undefined' ? (window as any) : {};
+    return w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+  });
+
+  // 监听 APP_CONFIG 的变化，动态更新 apiKey
+  useEffect(() => {
+    const checkApiKey = () => {
+      const w: any = typeof window !== 'undefined' ? (window as any) : {};
+      const newApiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+      if (newApiKey && newApiKey !== apiKey) {
+        setApiKey(newApiKey);
+      }
+    };
+
+    // 立即检查一次
+    checkApiKey();
+
+    // 设置轮询检查（仅在 apiKey 为空时）
+    let intervalId: NodeJS.Timeout | undefined;
+    if (!apiKey) {
+      intervalId = setInterval(checkApiKey, 500);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [apiKey]);
+
+  // 获取地图配置（基于当前 apiKey）
+  const mapConfig = useMemo(() => getMapConfig(apiKey), [apiKey]);
 
   // 使用 useMemo 缓存标记组件，避免不必要的重新渲染
   const markers = useMemo(() => {
@@ -128,10 +164,12 @@ export const WorldMap = memo(({ nodes = [], onNodeClick, hideIPs = false }: Worl
         maxBounds={[[-90, -180], [90, 180]]}
         maxBoundsViscosity={0.5}
       >
-        {(() => { const cfg = getMapConfig(); return (
-          <TileLayer attribution={cfg.attribution} url={cfg.url} />
-        ); })()}
-        
+        <TileLayer
+          key={`${mapConfig.provider}-${apiKey ? 'with-key' : 'no-key'}`}
+          attribution={mapConfig.attribution}
+          url={mapConfig.url}
+        />
+
         {markers}
       </MapContainer>
     </div>

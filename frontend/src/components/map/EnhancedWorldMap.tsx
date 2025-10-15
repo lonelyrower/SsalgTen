@@ -417,11 +417,35 @@ export const EnhancedWorldMap = memo(({
   });
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   
-  // 获取API key（用于Mapbox）
-  const apiKey = useMemo(() => {
+  // 获取API key（用于Mapbox）- 使用 useState 确保响应式更新
+  const [apiKey, setApiKey] = useState<string>(() => {
     const w: any = typeof window !== 'undefined' ? (window as any) : {};
     return w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
-  }, []);
+  });
+
+  // 监听 APP_CONFIG 的变化，动态更新 apiKey
+  useEffect(() => {
+    const checkApiKey = () => {
+      const w: any = typeof window !== 'undefined' ? (window as any) : {};
+      const newApiKey = w.APP_CONFIG?.MAP_API_KEY || import.meta.env.VITE_MAP_API_KEY || '';
+      if (newApiKey && newApiKey !== apiKey) {
+        setApiKey(newApiKey);
+      }
+    };
+
+    // 立即检查一次
+    checkApiKey();
+
+    // 设置轮询检查（仅在 apiKey 为空时）
+    let intervalId: NodeJS.Timeout | undefined;
+    if (!apiKey) {
+      intervalId = setInterval(checkApiKey, 500);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [apiKey]);
   
   // 获取所有图层
   const allLayers = useMemo(() => getAllLayers(apiKey), [apiKey]);
@@ -884,7 +908,7 @@ export const EnhancedWorldMap = memo(({
           
           {/* 动态图层 */}
           <TileLayer
-            key={currentLayerId} // 关键：当图层ID改变时重新渲染
+            key={`${currentLayerId}-${apiKey ? 'with-key' : 'no-key'}`} // 关键：当图层ID或apiKey状态改变时重新渲染
             attribution={currentLayerConfig.attribution}
             url={currentLayerConfig.url}
             subdomains={currentLayerConfig.subdomains}
