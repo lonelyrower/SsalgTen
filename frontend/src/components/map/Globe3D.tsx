@@ -298,7 +298,7 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
         case 'offline':
           color = Cesium.Color.fromCssColorString('#ef4444');
           break;
-        case 'warning':
+        case 'maintenance':
           color = Cesium.Color.fromCssColorString('#f59e0b');
           break;
         default:
