@@ -183,10 +183,6 @@ export const HomePage = () => {
                   <div className="status-indicator bg-red-400" />
                   <span className="font-medium text-foreground">离线 {stats?.offlineNodes || 0}</span>
                 </div>
-                <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
-                  <div className="status-indicator bg-gray-400" />
-                  <span className="font-medium text-foreground">未知 {(stats?.totalNodes || 0) - (stats?.onlineNodes || 0) - (stats?.offlineNodes || 0)}</span>
-                </div>
               </div>
             </div>
             
@@ -267,11 +263,9 @@ export const HomePage = () => {
                           <div className="text-xs text-muted-foreground/70 mb-1.5">运行状态</div>
                           <div className="flex justify-center">
                             <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
-                              selectedNode.status === 'online' 
-                                ? 'status-badge-online' 
-                                : selectedNode.status === 'offline' 
-                                ? 'status-badge-offline'
-                                : 'status-badge-warning'
+                              selectedNode.status === 'online'
+                                ? 'status-badge-online'
+                                : 'status-badge-offline'
                             }`}>
                               {selectedNode.status.toUpperCase()}
                             </span>
