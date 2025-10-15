@@ -54,6 +54,6 @@ export const UpdateNodeSchema = z
     datacenter: z.string().optional(),
     description: z.string().optional(),
     tags: z.array(z.string()).optional(),
-    status: z.enum(["ONLINE", "OFFLINE", "UNKNOWN"]).optional(),
+    status: z.enum(["ONLINE", "OFFLINE", "MAINTENANCE"]).optional(),
   })
   .strict();

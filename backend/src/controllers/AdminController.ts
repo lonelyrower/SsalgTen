@@ -34,7 +34,7 @@ export interface UpdateNodeRequest {
   datacenter?: string;
   description?: string;
   tags?: string[];
-  status?: "ONLINE" | "OFFLINE" | "UNKNOWN";
+  status?: "ONLINE" | "OFFLINE" | "MAINTENANCE";
 }
 
 export interface CreateUserRequest {
@@ -134,7 +134,7 @@ export class AdminController {
           apiKey,
           description,
           tags: tags ? JSON.stringify(tags) : null,
-          status: "UNKNOWN",
+          status: "OFFLINE",
         },
       });
 
@@ -786,7 +786,6 @@ export class AdminController {
             total: Object.values(nodeStatsMap).reduce((a, b) => a + b, 0),
             online: nodeStatsMap.online || 0,
             offline: nodeStatsMap.offline || 0,
-            unknown: nodeStatsMap.unknown || 0,
           },
           users: {
             total: Object.values(userStatsMap).reduce((a, b) => a + b, 0),
@@ -919,12 +918,11 @@ export class AdminController {
 
   private async getNodeStats() {
     // 复用现有的节点统计逻辑
-    const [totalNodes, onlineNodes, offlineNodes, unknownNodes] =
+    const [totalNodes, onlineNodes, offlineNodes] =
       await Promise.all([
         prisma.node.count(),
         prisma.node.count({ where: { status: "ONLINE" } }),
         prisma.node.count({ where: { status: "OFFLINE" } }),
-        prisma.node.count({ where: { status: "UNKNOWN" } }),
       ]);
 
     const [totalCountries, totalProviders] = await Promise.all([
@@ -946,7 +944,6 @@ export class AdminController {
       totalNodes,
       onlineNodes,
       offlineNodes,
-      unknownNodes,
       totalCountries,
       totalProviders,
     };

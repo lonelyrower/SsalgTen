@@ -106,7 +106,7 @@ export async function seedNodes() {
           ...nodeData,
           agentId,
           apiKey,
-          status: NodeStatus.UNKNOWN,
+          status: NodeStatus.OFFLINE,
         },
       });
 
