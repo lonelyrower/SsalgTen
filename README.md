@@ -17,9 +17,12 @@
 - **🌍 全球节点部署** - 支持全球无限节点，实时网络可视化监控
 - **📊 多维度诊断** - Ping、Traceroute、MTR、速度测试等专业网络工具
 - **🗺️ 智能地图展示** - 交互式世界地图，实时显示节点状态和网络拓扑
+- **🌐 3D 地球可视化** - Cesium 引擎驱动的交互式 3D 地球，支持卫星图、地形图等多种图层
+- **🗺️ 多地图供应商** - 支持 OpenStreetMap、Mapbox、Carto 等多种地图供应商切换
 - **⚡ 实时数据更新** - WebSocket 实时推送，毫秒级状态更新
 - **🎯 同位置节点分散** - 智能坐标微调，完美解决节点重叠显示问题
- - **📦 资产占位节点** - 未安装/已过期 VPS 也可纳入清单并显示为离线（自动按 IP 填充地理/ASN，后续安装 Agent 会自动“升级”为正式节点）
+- **🔢 ASN 信息展示** - 自动获取并展示节点的 ASN（自治系统号）和网络运营商信息
+- **📦 资产占位节点** - 未安装/已过期 VPS 也可纳入清单并显示为离线（自动按 IP 填充地理/ASN，后续安装 Agent 会自动"升级"为正式节点）
 
 ### 🛡️ 企业级安全管理
 - **🔐 完整权限体系** - 基于 JWT 的三级权限管理 (Admin/Operator/Viewer)
@@ -86,9 +89,10 @@ graph TB
 ```
 
 ### 🎨 前端 (React + TypeScript)
-- **现代化框架**: React 18 + TypeScript + Vite 热重载
-- **响应式设计**: TailwindCSS + shadcn/ui 组件库
-- **地图可视化**: Leaflet + Supercluster 智能聚合
+- **现代化框架**: React 19 + TypeScript + Vite 热重载
+- **响应式设计**: TailwindCSS 4 + shadcn/ui 组件库
+- **2D 地图可视化**: Leaflet + Supercluster 智能聚合，支持多地图供应商
+- **3D 地球引擎**: Cesium 引擎，提供交互式 3D 地球视图
 - **实时通信**: Socket.IO 客户端，毫秒级数据同步
 - **状态管理**: Context + Hooks 架构，优化渲染性能
 
@@ -118,32 +122,34 @@ graph TB
 ### 前端技术栈
 ```typescript
 {
-  "framework": "React 18 + TypeScript + Vite",
-  "styling": "TailwindCSS 3 + shadcn/ui + HeadlessUI", 
-  "mapping": "react-leaflet + Supercluster + OpenStreetMap",
-  "charts": "Recharts + D3.js 数据可视化",
-  "icons": "Lucide React + Heroicons",
-  "forms": "React Hook Form + Zod 验证",
-  "routing": "React Router v6 + 代码分割",
-  "state": "Context API + useReducer 模式",
+  "framework": "React 19 + TypeScript + Vite 7",
+  "styling": "TailwindCSS 4 + shadcn/ui 组件库",
+  "mapping2D": "Leaflet 1.9 + react-leaflet + Supercluster",
+  "mapping3D": "Cesium 1.123 + 3D 地球可视化",
+  "mapProviders": "OpenStreetMap + Mapbox + Carto",
+  "charts": "Recharts 3 数据可视化",
+  "icons": "Lucide React 图标库",
+  "routing": "React Router v7 + 代码分割",
+  "state": "Context API + Hooks 模式",
   "realtime": "Socket.IO Client v4",
-  "http": "Axios + React Query 数据获取"
+  "http": "Axios 数据获取",
+  "utils": "date-fns + clsx + tailwind-merge"
 }
 ```
 
-### 后端技术栈  
+### 后端技术栈
+
 ```typescript
 {
-  "runtime": "Node.js 20+ + Express.js + TypeScript",
-  "database": "PostgreSQL 15+ + Prisma ORM v5",
-  "cache": "Redis 7+ + ioredis 客户端",
-  "auth": "jsonwebtoken + bcryptjs + passport.js",
-  "validation": "joi + express-validator",
+  "runtime": "Node.js 24+ + Express.js 5 + TypeScript 5",
+  "database": "PostgreSQL 15+ + Prisma ORM v6",
+  "cache": "Redis 7+ 缓存策略",
+  "auth": "jsonwebtoken + bcryptjs",
+  "validation": "Zod 验证库",
   "security": "helmet + cors + rate-limiter",
-  "realtime": "Socket.IO Server v4 + 适配器",
-  "monitoring": "winston + morgan + 健康检查",
-  "docs": "RESTful API + 标准化响应",
-  "testing": "Jest + Supertest + 工厂模式"
+  "realtime": "Socket.IO Server v4",
+  "monitoring": "morgan + 健康检查",
+  "docs": "RESTful API + 标准化响应"
 }
 ```
 
@@ -168,8 +174,8 @@ Redis 7+ + 持久化 + 集群支持
 ### 系统要求
 
 **开发环境:**
-- Node.js 20.0.0+ (推荐 20+ LTS)
-- npm 10.0.0+ 
+- Node.js 24.0.0+ (推荐 24+ LTS)
+- npm 10.0.0+
 - Git 2.25+
 - 8GB RAM 推荐
 
@@ -358,16 +364,10 @@ SsalgTen/
 │   ├── docker-compose.dev.yml # 开发环境编排
 │   ├── Dockerfile.*           # 多阶段构建文件
 │   └── docker/                # Docker 配置目录
-├── 📚 docs/                     # 项目文档
-│   ├── api.md                 # API 接口文档
-│   ├── PRODUCTION_UPDATE.md   # 生产更新指南
-│   └── deployment.md          # 部署文档
-├── 📋 配置文件
-│   ├── CLAUDE.md              # Claude Code 指南
-│   ├── UPDATE_SYSTEM.md       # 更新系统说明
-│   ├── ASN_IMPLEMENTATION.md  # ASN 实现文档
-│   └── package.json           # 根工作空间配置
-└── 🔧 开发配置
+├── 🚀 scripts/                  # 部署和管理脚本
+│   └── ... (续上)
+└── 📋 配置文件
+    ├── package.json           # 根工作空间配置
     ├── .env.example           # 环境变量模板
     ├── .gitignore             # Git 忽略规则
     ├── LICENSE                # MIT 许可证
@@ -377,11 +377,25 @@ SsalgTen/
 ## 🎯 核心功能详解
 
 ### 🗺️ 智能地图系统
+
+**2D 平面地图**
 - **多层级聚合**: Supercluster 算法，智能节点聚合和展开
 - **同位置处理**: 坐标微调技术，解决节点重叠显示
+- **多地图供应商**: 支持 OpenStreetMap、Mapbox、Carto 切换
 - **实时状态**: WebSocket 推送，毫秒级状态更新
 - **交互体验**: 点击展开、弹窗详情、状态筛选
+
+**3D 地球视图**
+- **Cesium 引擎**: 专业级 3D 地球可视化引擎
+- **多种图层**: 卫星图、地形图、街道地图、自然地理图
+- **流畅交互**: 缩放、旋转、倾斜视角自由切换
+- **节点聚合**: 3D 空间中的智能节点聚合
+- **性能优化**: 大规模节点高性能渲染
+
+**通用特性**
+- **ASN 信息**: 自动显示节点的 ASN 和网络运营商
 - **自适应**: 响应式设计，移动端完美适配
+- **实时更新**: 节点状态实时同步
 
 ### 📊 网络诊断工具
 ```bash
@@ -568,12 +582,62 @@ Content-Type: application/json
 - `neverAdopt=true` 表示“冻结占位”，即使未来该 IP 上有新的 Agent 上报，也不会自动合并升级为正式节点。
 - 未设置 `neverAdopt` 时默认保持可被收编（便于先占位、后安装的场景）。
 
+### 🗺️ 地图配置说明
+
+SsalgTen 支持多种地图供应商和 3D 地球可视化，可通过系统设置界面或环境变量配置。
+
+#### 2D 地图供应商
+
+**1. OpenStreetMap (默认，免费)**
+```bash
+VITE_MAP_PROVIDER="openstreetmap"
+```
+- 无需 API 密钥
+- 免费开源
+- 适合大多数使用场景
+
+**2. Mapbox (需要 API 密钥)**
+```bash
+VITE_MAP_PROVIDER="mapbox"
+VITE_MAPBOX_TOKEN="your-mapbox-token"
+```
+- 注册地址: <https://www.mapbox.com/>
+- 提供更精美的地图样式
+- 免费额度: 50,000 次地图加载/月
+
+**3. Carto (免费)**
+```bash
+VITE_MAP_PROVIDER="carto"
+```
+- 无需 API 密钥
+- 简洁轻量的地图样式
+
+#### 3D 地球配置
+
+**Cesium Ion Token (可选)**
+```bash
+VITE_CESIUM_ION_TOKEN="your-cesium-ion-token"
+```
+- 注册地址: <https://cesium.com/ion/>
+- 用于加载高精度地形和影像数据
+- 免费额度: 5GB 存储 + 50,000 次请求/月
+- 不配置 Token 也可使用基础 3D 地球功能
+
+#### 系统设置界面配置
+
+管理员可以通过 Web 界面进行地图配置:
+1. 登录管理后台
+2. 进入"系统设置"
+3. 找到"地图配置"选项卡
+4. 选择地图供应商并填写必要的 API 密钥
+5. 保存配置后刷新页面生效
+
 ### 🛠️ 开发环境搭建
 
 ```bash
 # 1. 系统要求检查
-node --version  # >= 20.0.0
-npm --version   # >= 10.0.0  
+node --version  # >= 24.0.0
+npm --version   # >= 10.0.0
 docker --version # >= 24.0.0
 
 # 2. 克隆项目
@@ -743,6 +807,11 @@ PORT=3001
 FRONTEND_PORT=3000
 LOG_LEVEL=info
 MAX_REQUEST_SIZE="10mb"
+
+# 地图配置
+VITE_MAP_PROVIDER="openstreetmap"  # openstreetmap | mapbox | carto
+VITE_MAPBOX_TOKEN=""               # Mapbox 供应商需要
+VITE_CESIUM_ION_TOKEN=""           # Cesium 3D 地球需要 (可选)
 
 # 更新系统配置
 UPDATER_TOKEN="secure-updater-token-change-in-production"
@@ -1054,7 +1123,7 @@ perf(database): 优化节点查询性能
 - 🌍 网络监控: 专业的全球分布式网络诊断服务
 - 🛠️ 技术栈: React, Node.js, TypeScript, PostgreSQL 等开源项目
 - 🎨 UI 设计: TailwindCSS, shadcn/ui, Lucide Icons
-- 🗺️ 地图服务: OpenStreetMap, Leaflet
+- 🗺️ 地图服务: OpenStreetMap, Mapbox, Leaflet, Cesium
 - 🤝 社区贡献者和 Issue 反馈者们
 
 ## 📞 支持与联系
@@ -1062,7 +1131,7 @@ perf(database): 优化节点查询性能
 ### 🆘 获取帮助
 
 - 📋 **问题反馈**: [GitHub Issues](https://github.com/lonelyrower/SsalgTen/issues)
-- 📖 **文档中心**: [项目文档](https://github.com/lonelyrower/SsalgTen/tree/main/docs)
+- 📖 **文档中心**: 查看项目 README 和代码注释
 - 💬 **讨论社区**: [GitHub Discussions](https://github.com/lonelyrower/SsalgTen/discussions)
 - 📧 **邮件联系**: 通过 GitHub Profile 联系维护者
 
