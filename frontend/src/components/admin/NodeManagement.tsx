@@ -446,13 +446,20 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       )}
                     </div>
                   </td>
-                  <td className="w-56 px-3 py-4 text-center">
-                    <div className="text-sm text-gray-900 dark:text-white inline-flex items-center gap-1.5 max-w-full">
-                      <CountryFlagSvg country={node.country} />
-                      <span className="truncate">{node.city}, {node.country}</span>
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs" title={node.provider}>
-                      {node.provider}
+                  <td className="w-56 px-3 py-4">
+                    <div className="flex flex-col items-center">
+                      <div className="text-sm text-gray-900 dark:text-white inline-flex items-center gap-1.5">
+                        <CountryFlagSvg country={node.country} />
+                        <span className="truncate">{node.city}, {node.country}</span>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs text-center" title={node.provider}>
+                        {node.provider}
+                      </div>
+                      {node.asnNumber && (
+                        <div className="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+                          {node.asnNumber}
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="w-20 px-2 py-4 text-center">
