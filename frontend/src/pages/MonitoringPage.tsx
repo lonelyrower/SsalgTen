@@ -211,6 +211,7 @@ export const MonitoringPage: React.FC = () => {
                 {/* 布局切换 */}
                 <div className="hidden md:flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                   <button
+                    type="button"
                     onClick={() => setViewMode('grid')}
                     className={`p-1.5 rounded transition-colors ${
                       viewMode === 'grid'
@@ -223,6 +224,7 @@ export const MonitoringPage: React.FC = () => {
                     <LayoutGrid className="h-4 w-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => setViewMode('list')}
                     className={`p-1.5 rounded transition-colors ${
                       viewMode === 'list'
@@ -382,22 +384,22 @@ export const MonitoringPage: React.FC = () => {
               </div>
             </div>
             <div className="space-y-2">
-              {topProviders.map(([provider, count], index) => (
-                <div key={provider} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                      index === 0 ? 'bg-primary' : 
-                      index === 1 ? 'bg-green-500' : 'bg-purple-500'
-                    }`}></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                      {provider.length > 12 ? `${provider.substring(0, 12)}...` : provider}
+              {topProviders.map(([provider, count], index) => {
+                const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
+                return (
+                  <div key={provider} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${colors[index]}`}></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        {provider.length > 12 ? `${provider.substring(0, 12)}...` : provider}
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {count}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {count}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
               {Object.keys(providerStats).length > 6 && (
                 <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
                   还有 {Object.keys(providerStats).length - 6} 个服务商
