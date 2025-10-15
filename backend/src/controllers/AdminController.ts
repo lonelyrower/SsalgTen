@@ -918,12 +918,11 @@ export class AdminController {
 
   private async getNodeStats() {
     // 复用现有的节点统计逻辑
-    const [totalNodes, onlineNodes, offlineNodes] =
-      await Promise.all([
-        prisma.node.count(),
-        prisma.node.count({ where: { status: "ONLINE" } }),
-        prisma.node.count({ where: { status: "OFFLINE" } }),
-      ]);
+    const [totalNodes, onlineNodes, offlineNodes] = await Promise.all([
+      prisma.node.count(),
+      prisma.node.count({ where: { status: "ONLINE" } }),
+      prisma.node.count({ where: { status: "OFFLINE" } }),
+    ]);
 
     const [totalCountries, totalProviders] = await Promise.all([
       prisma.node
