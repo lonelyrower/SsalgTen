@@ -75,7 +75,6 @@ interface StatsForComparison {
   totalNodes: number;
   onlineNodes: number;
   offlineNodes: number;
-  unknownNodes: number;
   totalCountries: number;
   totalProviders: number;
 }
@@ -90,7 +89,6 @@ export function compareStats(stats1: StatsForComparison | null, stats2: StatsFor
     stats1.totalNodes === stats2.totalNodes &&
     stats1.onlineNodes === stats2.onlineNodes &&
     stats1.offlineNodes === stats2.offlineNodes &&
-    stats1.unknownNodes === stats2.unknownNodes &&
     stats1.totalCountries === stats2.totalCountries &&
     stats1.totalProviders === stats2.totalProviders
   );

@@ -77,8 +77,7 @@ export const AnalyticsPanel = memo(({ className = '' }: AnalyticsPanelProps) => 
     if (!stats) return [] as any[];
     return [
       { name: '在线', value: stats.onlineNodes, color: '#22c55e' },
-      { name: '离线', value: stats.offlineNodes, color: '#ef4444' },
-      { name: '未知', value: stats.unknownNodes, color: '#8b5cf6' }
+      { name: '离线', value: stats.offlineNodes, color: '#ef4444' }
     ];
   }, [stats]);
 

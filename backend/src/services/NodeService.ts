@@ -172,7 +172,6 @@ export class NodeService {
       totalNodes: number;
       onlineNodes: number;
       offlineNodes: number;
-      unknownNodes: number;
       totalCountries: number;
       totalProviders: number;
       securityEvents: number;
@@ -251,7 +250,7 @@ export class NodeService {
           ...asnInfo,
           agentId,
           apiKey,
-          status: input.status || NodeStatus.UNKNOWN,
+          status: input.status || NodeStatus.OFFLINE,
         },
       });
 
@@ -980,7 +979,6 @@ export class NodeService {
     totalNodes: number;
     onlineNodes: number;
     offlineNodes: number;
-    unknownNodes: number;
     totalCountries: number;
     totalProviders: number;
     securityEvents: number;
@@ -1045,7 +1043,6 @@ export class NodeService {
         totalNodes,
         onlineNodes: statusMap[NodeStatus.ONLINE] || 0,
         offlineNodes: statusMap[NodeStatus.OFFLINE] || 0,
-        unknownNodes: statusMap[NodeStatus.UNKNOWN] || 0,
         totalCountries: countries.length,
         totalProviders: providers.length,
         securityEvents: securityEventsCount,
@@ -1503,7 +1500,6 @@ export class NodeService {
     totalNodes: number;
     onlineNodes: number;
     offlineNodes: number;
-    unknownNodes: number;
     totalCountries: number;
     totalProviders: number;
   } {
@@ -1511,10 +1507,7 @@ export class NodeService {
     const onlineNodes = nodes.filter(
       (node) => node.status === NodeStatus.ONLINE,
     ).length;
-    const unknownNodes = nodes.filter(
-      (node) => node.status === NodeStatus.UNKNOWN,
-    ).length;
-    const offlineNodes = Math.max(0, totalNodes - onlineNodes - unknownNodes);
+    const offlineNodes = totalNodes - onlineNodes;
     const countries = new Set(nodes.map((node) => node.country));
     const providers = new Set(nodes.map((node) => node.provider));
 
@@ -1522,7 +1515,6 @@ export class NodeService {
       totalNodes,
       onlineNodes,
       offlineNodes,
-      unknownNodes,
       totalCountries: countries.size,
       totalProviders: providers.size,
     };

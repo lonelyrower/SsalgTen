@@ -48,7 +48,7 @@ export const useNodes = (): UseNodesResult => {
         // 转换状态格式以匹配前端接口
         const transformedNodes = nodesResponse.data.map((node: NodeData) => ({
           ...node,
-          status: node.status.toLowerCase() as 'online' | 'offline' | 'unknown' | 'maintenance'
+          status: node.status.toLowerCase() as 'online' | 'offline' | 'maintenance'
         }));
 
         // 只有数据真正变化时才更新状态

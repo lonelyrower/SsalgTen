@@ -103,7 +103,7 @@ export interface NodeData {
   city: string;
   latitude: number;
   longitude: number;
-  status: 'online' | 'offline' | 'warning' | 'unknown' | 'maintenance';
+  status: 'online' | 'offline' | 'maintenance';
   provider: string;
   ipv4?: string;
   ipv6?: string;
@@ -152,7 +152,6 @@ export interface NodeStats {
   totalNodes: number;
   onlineNodes: number;
   offlineNodes: number;
-  unknownNodes: number;
   totalCountries: number;
   totalProviders: number;
   securityEvents?: number; // 安全事件统计（SSH暴力破解等），可选字段

@@ -135,8 +135,7 @@ export const MonitoringPage: React.FC = () => {
 
   const totalNodes = nodes.length;
   const onlineNodes = nodes.filter(node => node.status === 'online').length;
-  const offlineNodes = nodes.filter(node => node.status === 'offline').length;
-  const unknownNodes = totalNodes - onlineNodes - offlineNodes;
+  const offlineNodes = totalNodes - onlineNodes;
 
 
   // 计算国家/地区分布
@@ -265,7 +264,7 @@ export const MonitoringPage: React.FC = () => {
                 </h3>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="grid grid-cols-2 gap-3 text-center">
               <div className="p-2 rounded bg-green-50 dark:bg-green-900/20">
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">在线</div>
                 <div className="text-lg font-bold text-green-600 dark:text-green-400">{onlineNodes}</div>
@@ -275,11 +274,6 @@ export const MonitoringPage: React.FC = () => {
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">离线</div>
                 <div className="text-lg font-bold text-red-600 dark:text-red-400">{offlineNodes}</div>
                 <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((offlineNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
-              </div>
-              <div className="p-2 rounded bg-yellow-50 dark:bg-yellow-900/20">
-                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">未知</div>
-                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">{unknownNodes}</div>
-                <div className="text-xs text-gray-500 whitespace-nowrap">{totalNodes > 0 ? ((unknownNodes / totalNodes) * 100).toFixed(1) : 0}%</div>
               </div>
             </div>
           </div>

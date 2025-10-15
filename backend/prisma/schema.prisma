@@ -46,7 +46,7 @@ model Node {
   neverAdopt   Boolean  @default(false)
   
   // 状态信息
-  status      NodeStatus @default(UNKNOWN)
+  status      NodeStatus @default(OFFLINE)
   lastSeen    DateTime?  // 最后在线时间
   
   // 元数据
@@ -259,7 +259,6 @@ model VisitorLog {
 enum NodeStatus {
   ONLINE
   OFFLINE
-  UNKNOWN
   MAINTENANCE
 }
 

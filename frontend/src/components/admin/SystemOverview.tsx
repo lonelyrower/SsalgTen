@@ -263,10 +263,6 @@ export const SystemOverview: React.FC = () => {
               <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
               离线 {stats.nodes.offlineNodes}
             </span>
-            <span className="flex items-center text-gray-600 dark:text-gray-400">
-              <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-              未知 {stats.nodes.unknownNodes}
-            </span>
           </div>
         </Card>
 

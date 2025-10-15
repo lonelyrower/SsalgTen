@@ -12,7 +12,7 @@ interface RealtimeData {
   connected: boolean;
 }
 
-const NODE_STATUS_VALUES = ['online', 'offline', 'warning', 'unknown', 'maintenance'] as const;
+const NODE_STATUS_VALUES = ['online', 'offline', 'maintenance'] as const;
 type NodeStatusLiteral = typeof NODE_STATUS_VALUES[number];
 type NodeStatusValue = NodeStatusLiteral | string | { status?: NodeStatusLiteral | string };
 
@@ -37,7 +37,6 @@ const isNodeStats = (value: unknown): value is NodeStats => {
     'totalNodes',
     'onlineNodes',
     'offlineNodes',
-    'unknownNodes',
     'totalCountries',
     'totalProviders',
   ];
@@ -54,7 +53,7 @@ const normalizeStatus = (status: unknown): NodeStatusLiteral => {
       return lower;
     }
   }
-  return 'unknown';
+  return 'offline';
 };
 
 const normalizeNodesStatusPayload = (payload: unknown): NodesStatusUpdatePayload | null => {
@@ -101,8 +100,7 @@ const normalizeRealtimeNodesPayload = (payload: unknown): RealtimeNodesPayload |
 const calculateStats = (nodes: NodeData[]): NodeStats => {
   const totalNodes = nodes.length;
   const onlineNodes = nodes.filter((node) => node.status === 'online').length;
-  const unknownNodes = nodes.filter((node) => node.status === 'unknown').length;
-  const offlineNodes = Math.max(0, totalNodes - onlineNodes - unknownNodes);
+  const offlineNodes = totalNodes - onlineNodes;
   const countries = new Set(nodes.map((node) => node.country));
   const providers = new Set(nodes.map((node) => node.provider));
 
@@ -110,7 +108,6 @@ const calculateStats = (nodes: NodeData[]): NodeStats => {
     totalNodes,
     onlineNodes,
     offlineNodes,
-    unknownNodes,
     totalCountries: countries.size,
     totalProviders: providers.size,
   };
@@ -128,7 +125,6 @@ export function useRealTime() {
       totalNodes: 0,
       onlineNodes: 0,
       offlineNodes: 0,
-      unknownNodes: 0,
       totalCountries: 0,
       totalProviders: 0
     },
