@@ -479,7 +479,7 @@ export const NodesPage: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* 地图 */}
           <div className="xl:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col min-h-[700px] xl:sticky xl:top-4 xl:h-[calc(100vh-160px)]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col xl:min-h-[700px] xl:sticky xl:top-4 xl:h-[calc(100vh-160px)]">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   节点分布（{viewMode === '3d' ? '3D 地球' : '2D 地图'}）
@@ -513,7 +513,7 @@ export const NodesPage: React.FC = () => {
           
           {/* 节点列表/详情 */}
           <div className="xl:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col min-h-[700px] xl:sticky xl:top-4 xl:h-[calc(100vh-160px)]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col xl:min-h-[700px] xl:sticky xl:top-4 xl:h-[calc(100vh-160px)]">
               {selectedNode ? (
                 /* 节点详情视图 */
                 <div className="flex-1 min-h-0 overflow-y-auto">
