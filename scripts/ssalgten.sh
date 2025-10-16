@@ -2554,12 +2554,23 @@ force_cleanup_docker_resources() {
 check_port_conflicts() {
     log_info "检查端口占用..."
 
-    # 检查关键端口
-    local ports_to_check=(80 443 3000 3001 5432 6379)
+    # 根据部署类型智能检查端口
+    # 如果还未收集部署信息，使用完整端口列表
+    local ports_to_check=()
+
+    if [[ -n "$FRONTEND_PORT" && -n "$BACKEND_PORT" ]]; then
+        # 已配置，使用实际配置的端口
+        ports_to_check=("$FRONTEND_PORT" "$BACKEND_PORT" 5432 6379)
+        [[ "$ENABLE_SSL" == "true" ]] && ports_to_check+=(443)
+    else
+        # 未配置，检查所有可能的端口
+        ports_to_check=(80 443 3000 3001 5432 6379)
+    fi
+
     local conflicted_ports=()
 
     for port in "${ports_to_check[@]}"; do
-        if netstat -tuln 2>/dev/null | grep -q ":$port " || ss -tuln 2>/dev/null | grep -q ":$port "; then
+        if check_port_occupied "$port"; then
             conflicted_ports+=($port)
             log_warning "端口 $port 已被占用"
         fi
@@ -2599,19 +2610,67 @@ check_port_conflicts() {
         fi
     fi
 
-    # 如果端口80被占用，提供解决方案
+    # 智能处理端口80冲突
     if [[ " ${conflicted_ports[*]} " == *" 80 "* ]]; then
-        log_warning "端口80已被占用，这可能会导致Nginx无法启动"
+        log_warning "端口80已被占用"
         echo ""
-        echo "解决方案选择："
-        echo "1. 停止占用端口80的服务"
-        echo "2. 使用其他端口（如8080）"
+        echo "检测占用进程："
+        lsof -i :80 2>/dev/null || ss -tulpn | grep :80 2>/dev/null || echo "  无法检测进程信息"
         echo ""
-        local continue_deploy
-        continue_deploy=$(prompt_yes_no "是否继续部署" "Y")
-        if [[ "$continue_deploy" != "y" ]]; then
-            log_info "部署已取消"
-            exit 0
+
+        # 根据部署类型给出不同建议
+        if [[ "$SSL_MODE" == "cloudflare" ]]; then
+            echo -e "${RED}⚠️  Cloudflare部署必须使用80端口！${NC}"
+            echo ""
+            echo "解决方案："
+            echo "1. 停止占用端口80的服务（推荐）"
+            echo "2. 取消部署，稍后处理"
+            echo ""
+
+            if prompt_yes_no "是否尝试自动停止占用80端口的服务" "Y"; then
+                log_info "尝试停止Nginx/Apache服务..."
+                run_as_root systemctl stop nginx 2>/dev/null || \
+                run_as_root systemctl stop apache2 2>/dev/null || \
+                run_as_root service nginx stop 2>/dev/null || \
+                run_as_root service apache2 stop 2>/dev/null || \
+                log_warning "无法自动停止服务，请手动停止"
+                sleep 2
+
+                # 再次检查
+                if check_port_occupied 80; then
+                    log_error "端口 80 仍然被占用，无法继续Cloudflare部署"
+                    echo ""
+                    echo "请手动停止占用服务后重新运行部署脚本"
+                    exit 1
+                else
+                    log_success "端口 80 已释放"
+                fi
+            else
+                log_info "部署已取消"
+                exit 0
+            fi
+        elif [[ "$ENABLE_SSL" == "true" ]]; then
+            echo -e "${YELLOW}HTTPS部署推荐使用80端口${NC}"
+            echo ""
+            echo "解决方案："
+            echo "1. 停止占用端口80的服务（推荐）"
+            echo "2. 使用其他端口（需要手动配置反向代理）"
+            echo "3. 继续部署（可能失败）"
+            echo ""
+
+            if ! prompt_yes_no "是否继续部署" "N"; then
+                log_info "部署已取消"
+                exit 0
+            fi
+        else
+            echo -e "${YELLOW}端口80被占用，但不影响非SSL部署${NC}"
+            echo ""
+            echo "提示：您已配置使用端口 $FRONTEND_PORT"
+            echo ""
+            if ! prompt_yes_no "是否继续部署" "Y"; then
+                log_info "部署已取消"
+                exit 0
+            fi
         fi
     fi
 
@@ -2987,10 +3046,31 @@ collect_deployment_info() {
     # 端口配置
     echo ""
     log_info "端口配置 (回车使用默认值):"
-    
+
     HTTP_PORT=$(prompt_port "HTTP端口" "80")
     HTTPS_PORT=$(prompt_port "HTTPS端口" "443")
-    FRONTEND_PORT=$(prompt_port "前端服务端口" "3000")
+
+    # 智能端口配置：根据部署类型推荐端口
+    # - Cloudflare部署：frontend必须在80端口（Cloudflare只支持标准HTTP/HTTPS端口）
+    # - 完整部署(Let's Encrypt)：通常需要80端口，但可灵活配置
+    # - 简单部署：推荐3000端口，避免与系统nginx冲突
+    local frontend_default_port
+    local port_hint
+
+    if [[ "$SSL_MODE" == "cloudflare" ]]; then
+        frontend_default_port="80"
+        port_hint="(Cloudflare部署推荐使用80端口)"
+    elif [[ "$ENABLE_SSL" == "true" ]]; then
+        frontend_default_port="80"
+        port_hint="(HTTPS部署推荐使用80端口)"
+    else
+        frontend_default_port="3000"
+        port_hint="(本地部署推荐使用3000端口，避免与系统nginx冲突)"
+    fi
+
+    echo ""
+    echo -e "${YELLOW}${port_hint}${NC}"
+    FRONTEND_PORT=$(prompt_port "前端服务端口" "$frontend_default_port")
     BACKEND_PORT=$(prompt_port "后端API端口" "3001")
     DB_PORT=$(prompt_port "数据库端口" "5432")
     REDIS_PORT=$(prompt_port "Redis端口" "6379")
@@ -4095,6 +4175,21 @@ show_deployment_result() {
     echo "  ⏱️  首次部署需等待1-2分钟完成数据库初始化"
     echo "  📊 数据库初始化完成后才能正常登录和使用"
     echo "  🔍 如遇问题请运行: ssalgten logs 查看详细日志"
+
+    # Cloudflare 部署特殊说明
+    if [[ "$SSL_MODE" == "cloudflare" ]]; then
+        echo ""
+        echo -e "${CYAN}☁️  Cloudflare 部署配置说明:${NC}"
+        echo "  1. 确保域名DNS已指向本服务器IP: $(get_server_ip)"
+        echo "  2. Cloudflare DNS记录需要开启代理(橙色云朵)"
+        echo "  3. SSL/TLS模式设置为 'Flexible' 或 'Full'"
+        echo "  4. 如遇 '521 Web server is down' 错误:"
+        echo "     • 检查服务器防火墙是否开放80/443端口"
+        echo "     • 运行 'ssalgten port-check' 检查端口占用"
+        echo "     • 运行 'ssalgten status' 检查服务状态"
+        echo "     • 确认本机未安装其他web服务器占用80端口"
+    fi
+
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 }
