@@ -171,8 +171,8 @@ export const SystemOverview: React.FC = () => {
           数据加载失败
         </h3>
         <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
-        <Button onClick={fetchStats} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-          <RefreshCw className="h-4 w-4 mr-2 text-primary" />
+        <Button variant="outline" size="sm" onClick={fetchStats}>
+          <RefreshCw className="h-4 w-4 mr-2" />
           重新加载
         </Button>
       </Card>

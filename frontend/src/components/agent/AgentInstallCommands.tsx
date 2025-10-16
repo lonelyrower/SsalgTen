@@ -336,14 +336,14 @@ sudo systemctl reset-failed`,
           在目标服务器上以root用户执行以下命令，自动完成节点安装和配置：
         </p>
 
-        <div className="relative">
-          <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+        <div className="relative group">
+          <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
             <code>{installData.quickCommand}</code>
           </pre>
           <Button
+            variant="ghost"
             size="sm"
-            variant="outline"
-            className="absolute top-3 right-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
             aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
             title={copied === 'quick' ? '已复制！' : '复制命令'}
@@ -377,14 +377,14 @@ sudo systemctl reset-failed`,
             适用于需要自定义配置的场景，运行后选择菜单选项"1"即可快速安装：
           </p>
 
-          <div className="relative">
-            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+          <div className="relative group">
+            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
               <code>{installData.interactiveCommand}</code>
             </pre>
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              className="absolute top-3 right-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={() => copyToClipboard(installData.interactiveCommand, 'interactive')}
               aria-label={copied === 'interactive' ? '交互式安装命令已复制到剪贴板' : '复制交互式安装命令到剪贴板'}
               title={copied === 'interactive' ? '已复制！' : '复制命令'}
@@ -419,14 +419,14 @@ sudo systemctl reset-failed`,
             如需完全卸载监控探针，请在目标服务器上以root用户执行：
           </p>
 
-          <div className="relative">
-            <pre className="bg-gray-900 text-red-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+          <div className="relative group">
+            <pre className="bg-gray-900 text-red-400 p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
               <code>{installData.quickUninstallCommand}</code>
             </pre>
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              className="absolute top-3 right-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={() => copyToClipboard(installData.quickUninstallCommand, 'uninstall')}
               aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
               title={copied === 'uninstall' ? '已复制！' : '复制命令'}

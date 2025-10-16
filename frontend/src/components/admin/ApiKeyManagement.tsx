@@ -197,15 +197,15 @@ export const ApiKeyManagement: React.FC = () => {
               <RefreshCw className="h-4 w-4 mr-1" />
               刷新
             </Button>
-            <Button 
-              onClick={handleRegenerateApiKey} 
+            <Button
+              variant="warning"
+              size="sm"
+              onClick={handleRegenerateApiKey}
               disabled={regenerating}
-              variant="outline"
-              className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-600 dark:hover:bg-orange-900/20"
             >
               {regenerating ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600 mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   生成中...
                 </>
               ) : (

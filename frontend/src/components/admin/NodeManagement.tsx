@@ -209,18 +209,18 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               刷新
             </Button>
             <Button
-              onClick={() => setShowImportModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              variant="success"
               size="sm"
+              onClick={() => setShowImportModal(true)}
               title="导入过期/未安装Agent的 VPS（作为离线节点）"
             >
               <Plus className="h-4 w-4 mr-1" />
               导入过期VPS
             </Button>
             <Button
-              onClick={() => setShowDeployModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              variant="info"
               size="sm"
+              onClick={() => setShowDeployModal(true)}
             >
               <Plus className="h-4 w-4 mr-1" />
               部署节点
@@ -341,6 +341,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   取消
                 </Button>
                 <Button
+                  variant="success"
                   onClick={async () => {
                     // 解析 importText 为 items
                     const raw = importText.trim();
@@ -387,7 +388,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                     }
                   }}
                   disabled={importing || !importText.trim()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[120px] disabled:opacity-50"
+                  className="min-w-[120px]"
                 >
                   {importing ? '正在导入…' : '开始导入'}
                 </Button>
@@ -513,8 +514,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
           </p>
           {(!searchTerm && filterStatus === 'all') && (
             <Button
+              variant="info"
               onClick={() => setShowDeployModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               部署节点
@@ -562,8 +563,9 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   取消
                 </Button>
                 <Button
+                  variant="destructive"
                   onClick={() => handleDeleteNode(showDeleteConfirm)}
-                  className="bg-red-600 hover:bg-red-700 text-white min-w-[80px] shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="min-w-[80px]"
                 >
                   删除
                 </Button>
@@ -619,9 +621,10 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   取消
                 </Button>
                 <Button
+                  variant="info"
                   onClick={() => handleRenameNode(showRenameModal)}
                   disabled={!newNodeName.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white min-w-[80px] shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-w-[80px]"
                 >
                   确认
                 </Button>

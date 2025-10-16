@@ -161,8 +161,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
               <span>导出</span>
             </Button>
             <Button
+              variant="info"
+              size="sm"
               onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2 flex-1 sm:flex-none justify-center"
+              className="flex items-center space-x-2 flex-1 sm:flex-none justify-center"
             >
               <UserPlus className="h-4 w-4" />
               <span>添加用户</span>
@@ -458,8 +460,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
                 取消
               </Button>
               <Button
+                variant="destructive"
                 onClick={() => handleDeleteUser(showDeleteConfirm)}
-                className="bg-red-600 hover:bg-red-700 text-white"
               >
                 删除
               </Button>
