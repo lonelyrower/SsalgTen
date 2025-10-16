@@ -343,7 +343,7 @@ sudo systemctl reset-failed`,
           <Button
             size="sm"
             variant="outline"
-            className="absolute top-2 right-2"
+            className="absolute top-3 right-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
             aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
             title={copied === 'quick' ? '已复制！' : '复制命令'}
@@ -378,13 +378,13 @@ sudo systemctl reset-failed`,
           </p>
 
           <div className="relative">
-            <pre className="bg-gray-900 text-primary p-4 rounded-lg overflow-x-auto text-sm font-mono">
+            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
               <code>{installData.interactiveCommand}</code>
             </pre>
             <Button
               size="sm"
               variant="outline"
-              className="absolute top-2 right-2"
+              className="absolute top-3 right-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
               onClick={() => copyToClipboard(installData.interactiveCommand, 'interactive')}
               aria-label={copied === 'interactive' ? '交互式安装命令已复制到剪贴板' : '复制交互式安装命令到剪贴板'}
               title={copied === 'interactive' ? '已复制！' : '复制命令'}
@@ -426,7 +426,7 @@ sudo systemctl reset-failed`,
             <Button
               size="sm"
               variant="outline"
-              className="absolute top-2 right-2"
+              className="absolute top-3 right-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
               onClick={() => copyToClipboard(installData.quickUninstallCommand, 'uninstall')}
               aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
               title={copied === 'uninstall' ? '已复制！' : '复制命令'}
