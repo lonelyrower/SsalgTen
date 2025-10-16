@@ -484,6 +484,7 @@ export const EnhancedWorldMap = memo(({
   const manualPreferenceRef = useRef<boolean>(Boolean(storedProvider));
 
   const mapRef = useRef<any>(null);
+  const tileErrorCountRef = useRef(0);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const invalidateMapSize = useCallback(() => {
     if (mapRef.current && typeof mapRef.current.invalidateSize === 'function') {
@@ -598,8 +599,40 @@ export const EnhancedWorldMap = memo(({
       };
     }
     const layer = currentProviderLayers.find(l => l.id === currentLayerId);
-    return layer || currentProviderLayers[0]; // 如果找不到，返回第一个
+    return layer || currentProviderLayers[0]; // 否则降级到第一个
   }, [currentProviderLayers, currentLayerId]);
+
+
+  const fallbackToDefaultLayer = useCallback(
+    (reason?: string) => {
+      const fallbackProvider: MapProvider = 'carto';
+      const fallbackLayerId = getDefaultLayerForProvider(fallbackProvider);
+
+      if (currentProvider === fallbackProvider && currentLayerId === fallbackLayerId) {
+        return false;
+      }
+
+      if (reason) {
+        console.warn(`[EnhancedWorldMap] Fallback to default layer due to: ${reason}`);
+      }
+
+      setCurrentProvider(fallbackProvider);
+      setCurrentLayerId(fallbackLayerId);
+      manualPreferenceRef.current = false;
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_PROVIDER_KEY, fallbackProvider);
+          localStorage.setItem(LOCAL_STORAGE_LAYER_KEY, fallbackLayerId);
+          localStorage.setItem(LOCAL_STORAGE_SELECTION_KEY, 'auto');
+        } catch (error) {
+          console.warn('Failed to persist fallback map provider', error);
+        }
+      }
+      return true;
+    },
+    [currentLayerId, currentProvider],
+  );
 
   useEffect(() => {
     const hasValidUrl =
@@ -611,27 +644,10 @@ export const EnhancedWorldMap = memo(({
       return;
     }
 
-    const fallbackProvider: MapProvider = 'carto';
-    const fallbackLayerId = getDefaultLayerForProvider(fallbackProvider);
+    fallbackToDefaultLayer('missing or invalid tile URL');
+  }, [currentLayerConfig, fallbackToDefaultLayer]);
 
-    if (currentProvider === fallbackProvider && currentLayerId === fallbackLayerId) {
-      return;
-    }
 
-    setCurrentProvider(fallbackProvider);
-    setCurrentLayerId(fallbackLayerId);
-    manualPreferenceRef.current = false;
-
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_PROVIDER_KEY, fallbackProvider);
-        localStorage.setItem(LOCAL_STORAGE_LAYER_KEY, fallbackLayerId);
-        localStorage.setItem(LOCAL_STORAGE_SELECTION_KEY, 'auto');
-      } catch (error) {
-        console.warn('Failed to persist fallback map provider', error);
-      }
-    }
-  }, [currentLayerConfig, currentProvider, currentLayerId]);
 
   // 切换地图提供商和图层，并保存到 localStorage
   const switchMapLayer = (
@@ -659,6 +675,29 @@ export const EnhancedWorldMap = memo(({
       switchMapLayer('mapbox', getDefaultLayerForProvider('mapbox'), { manual: false });
     }
   }, [apiKey, currentProvider]);
+
+  useEffect(() => {
+    tileErrorCountRef.current = 0;
+  }, [currentProvider, currentLayerId]);
+
+  const handleTileError = useCallback(() => {
+    if (!currentLayerConfig?.requiresApiKey && currentProvider === 'carto') {
+      return;
+    }
+
+    tileErrorCountRef.current += 1;
+
+    if (tileErrorCountRef.current >= 2) {
+      fallbackToDefaultLayer(`tile load failure (${currentProvider}/${currentLayerId})`);
+    }
+  }, [currentLayerConfig?.requiresApiKey, currentLayerId, currentProvider, fallbackToDefaultLayer]);
+
+  const tileLayerEventHandlers = useMemo(
+    () => ({
+      tileerror: handleTileError,
+    }),
+    [handleTileError],
+  );
 
   // 点击外部关闭图层菜单
   useEffect(() => {
@@ -1078,6 +1117,7 @@ export const EnhancedWorldMap = memo(({
             attribution={currentLayerConfig.attribution}
             url={currentLayerConfig.url}
             subdomains={currentLayerConfig.subdomains}
+            eventHandlers={tileLayerEventHandlers}
             className="grayscale-[20%] contrast-[110%]"
             updateWhenIdle={true}
             updateWhenZooming={false}
