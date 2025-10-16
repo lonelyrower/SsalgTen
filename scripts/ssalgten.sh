@@ -114,6 +114,11 @@ ENABLE_SSL=false
 SSL_MODE="none"
 RUNNING_AS_ROOT=false
 
+# 端口相关默认值（避免 set -u 下未定义变量导致报错）
+FRONTEND_PORT=""
+BACKEND_PORT=""
+AGENT_PORT=""
+
 # 颜色定义（可通过环境变量禁用）
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
     RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
