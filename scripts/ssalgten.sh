@@ -152,7 +152,7 @@ run_as_root() {
 # 改进的输入函数 - 支持默认值和回车确认
 prompt_input() {
     local prompt="$1"
-    local default="$2"
+    local default="${2:-}"
     local var_name="${3:-}"
     local response
     
@@ -173,7 +173,7 @@ prompt_input() {
 # 端口输入函数 - 带验证
 prompt_port() {
     local prompt="$1"
-    local default="$2"
+    local default="${2:-}"
     local port
     
     while true; do
@@ -5199,4 +5199,3 @@ main() {
 
 # 运行主函数
 main "$@"
-
