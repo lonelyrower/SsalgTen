@@ -3565,6 +3565,26 @@ EOF
         log_error "Nginx配置测试失败"
         exit 1
     fi
+
+    # 确保Nginx服务已启用并运行
+    if command -v systemctl >/dev/null 2>&1; then
+        run_as_root systemctl enable nginx >/dev/null 2>&1 || true
+        if ! run_as_root systemctl restart nginx; then
+            log_warning "Nginx重启失败，尝试启动服务..."
+            if ! run_as_root systemctl start nginx; then
+                log_error "无法启动Nginx，请手动检查 systemctl status nginx"
+                exit 1
+            fi
+        fi
+    else
+        if ! run_as_root service nginx restart 2>/dev/null; then
+            log_warning "service nginx restart 失败，尝试使用 start"
+            if ! run_as_root service nginx start 2>/dev/null; then
+                log_error "无法启动Nginx，请手动运行 'service nginx status' 或 'nginx -g \"daemon on; master_process on;\"'"
+                exit 1
+            fi
+        fi
+    fi
     
     log_success "Nginx配置创建完成"
 }
