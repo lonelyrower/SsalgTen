@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { apiService, type InstallCommandData } from '@/services/api';
 import { 
   Copy, 
@@ -26,6 +27,15 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
   useEffect(() => {
     fetchInstallCommand();
   }, []);
+
+  const copyButtonClasses = (isCopied: boolean) =>
+    cn(
+      'absolute top-3 right-3 z-10 h-9 w-9 min-h-0 min-w-0 p-0 rounded-md shadow-sm transition-colors',
+      'border bg-white/95 text-primary hover:bg-primary/10 dark:bg-slate-900/80 dark:text-primary',
+      isCopied
+        ? 'border-emerald-300 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
+        : 'border-primary/40 dark:border-primary/40'
+    );
 
   const fetchInstallCommand = async () => {
     const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> => {
@@ -341,9 +351,9 @@ sudo systemctl reset-failed`,
             <code>{installData.quickCommand}</code>
           </pre>
           <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity"
+            variant="outline"
+            size="icon"
+            className={copyButtonClasses(copied === 'quick')}
             onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
             aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
             title={copied === 'quick' ? '已复制！' : '复制命令'}
@@ -382,9 +392,9 @@ sudo systemctl reset-failed`,
               <code>{installData.interactiveCommand}</code>
             </pre>
             <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity"
+              variant="outline"
+              size="icon"
+              className={copyButtonClasses(copied === 'interactive')}
               onClick={() => copyToClipboard(installData.interactiveCommand, 'interactive')}
               aria-label={copied === 'interactive' ? '交互式安装命令已复制到剪贴板' : '复制交互式安装命令到剪贴板'}
               title={copied === 'interactive' ? '已复制！' : '复制命令'}
@@ -424,9 +434,9 @@ sudo systemctl reset-failed`,
               <code>{installData.quickUninstallCommand}</code>
             </pre>
             <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity"
+              variant="outline"
+              size="icon"
+              className={copyButtonClasses(copied === 'uninstall')}
               onClick={() => copyToClipboard(installData.quickUninstallCommand, 'uninstall')}
               aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
               title={copied === 'uninstall' ? '已复制！' : '复制命令'}
