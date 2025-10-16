@@ -38,6 +38,102 @@ interface LayerConfig {
   requiresApiKey?: boolean;
 }
 
+const SUPPORTED_PROVIDERS: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
+const LOCAL_STORAGE_PROVIDER_KEY = 'map_provider';
+const LOCAL_STORAGE_LAYER_KEY = 'map_layer_id';
+const LOCAL_STORAGE_SELECTION_KEY = 'map_provider_selected';
+
+const normalizeProvider = (value?: unknown): MapProvider | undefined => {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim().toLowerCase();
+  return (SUPPORTED_PROVIDERS as string[]).includes(normalized)
+    ? (normalized as MapProvider)
+    : undefined;
+};
+
+const resolveStoredSelectionMode = (): 'manual' | 'auto' | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_SELECTION_KEY);
+    return stored === 'manual' || stored === 'auto' ? stored : null;
+  } catch (error) {
+    console.warn('Failed to read map provider selection mode from localStorage', error);
+    return null;
+  }
+};
+
+const resolveStoredProvider = (): MapProvider | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  if (resolveStoredSelectionMode() !== 'manual') return undefined;
+  try {
+    const stored = normalizeProvider(localStorage.getItem(LOCAL_STORAGE_PROVIDER_KEY));
+    if (stored === 'mapbox' && !hasAnyApiKeyAvailable()) {
+      return undefined;
+    }
+    return stored;
+  } catch (error) {
+    console.warn('Failed to read map provider from localStorage', error);
+    return undefined;
+  }
+};
+
+const resolveStoredLayerId = (provider?: MapProvider): string | undefined => {
+  if (!provider) return undefined;
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_LAYER_KEY);
+    return typeof stored === 'string' && stored.trim().length > 0 ? stored : undefined;
+  } catch (error) {
+    console.warn('Failed to read map layer ID from localStorage', error);
+    return undefined;
+  }
+};
+
+const hasAnyApiKeyAvailable = (): boolean => {
+  const envKey = import.meta.env.VITE_MAP_API_KEY as string | undefined;
+  if (typeof envKey === 'string' && envKey.trim().length > 0) {
+    return true;
+  }
+  if (typeof window !== 'undefined') {
+    const w: any = window;
+    const runtimeKey = w.APP_CONFIG?.MAP_API_KEY;
+    return typeof runtimeKey === 'string' && runtimeKey.trim().length > 0;
+  }
+  return false;
+};
+
+const resolvePreferredProvider = (): MapProvider => {
+  const storedProvider = resolveStoredProvider();
+  if (storedProvider) {
+    return storedProvider;
+  }
+
+  const w: any = typeof window !== 'undefined' ? (window as any) : {};
+  const runtimeProvider = normalizeProvider(w.APP_CONFIG?.MAP_PROVIDER);
+  if (runtimeProvider) {
+    return runtimeProvider;
+  }
+
+  const envProvider = normalizeProvider(import.meta.env.VITE_MAP_PROVIDER as string | undefined);
+  if (envProvider) {
+    return envProvider;
+  }
+
+  return hasAnyApiKeyAvailable() ? 'mapbox' : 'carto';
+};
+
+const getDefaultLayerForProvider = (provider: MapProvider): string => {
+  switch (provider) {
+    case 'mapbox':
+      return 'mapbox-streets';
+    case 'openstreetmap':
+      return 'osm-standard';
+    case 'carto':
+    default:
+      return 'carto-light';
+  }
+};
+
 // 获取所有图层配置
 const getAllLayers = (apiKey: string = ''): Record<MapProvider, LayerConfig[]> => {
   return {
@@ -375,6 +471,13 @@ export const EnhancedWorldMap = memo(({
   className = '',
   showControlPanels = true
 }: EnhancedWorldMapProps) => {
+  const storedProvider = useMemo(() => resolveStoredProvider(), []);
+  const initialProvider = useMemo(
+    () => storedProvider ?? resolvePreferredProvider(),
+    [storedProvider],
+  );
+  const manualPreferenceRef = useRef<boolean>(Boolean(storedProvider));
+
   const mapRef = useRef<any>(null);
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
@@ -385,35 +488,14 @@ export const EnhancedWorldMap = memo(({
   const [clusterNodes, setClusterNodes] = useState<NodeData[]>([]);
   
   // 图层切换状态 - 从 localStorage 读取用户偏好
-  const [currentProvider, setCurrentProvider] = useState<MapProvider>(() => {
-    try {
-      // 优先从 localStorage 读取用户偏好
-      const savedProvider = localStorage.getItem('map_provider');
-      if (savedProvider) {
-        const validProviders: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
-        if (validProviders.includes(savedProvider as MapProvider)) {
-          return savedProvider as MapProvider;
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to read map provider from localStorage', error);
-    }
-    // 如果没有保存的偏好，使用默认值
-    return 'carto';
-  });
+  const [currentProvider, setCurrentProvider] = useState<MapProvider>(initialProvider);
 
   const [currentLayerId, setCurrentLayerId] = useState<string>(() => {
-    try {
-      // 从 localStorage 读取保存的图层ID
-      const savedLayerId = localStorage.getItem('map_layer_id');
-      if (savedLayerId) {
-        return savedLayerId;
-      }
-    } catch (error) {
-      console.warn('Failed to read map layer ID from localStorage', error);
+    const storedLayerId = resolveStoredLayerId(storedProvider);
+    if (storedLayerId) {
+      return storedLayerId;
     }
-    // 默认使用 carto-light
-    return 'carto-light';
+    return getDefaultLayerForProvider(initialProvider);
   });
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   
@@ -472,32 +554,31 @@ export const EnhancedWorldMap = memo(({
   }, [currentProviderLayers, currentLayerId]);
 
   // 切换地图提供商和图层，并保存到 localStorage
-  const switchMapLayer = (provider: MapProvider, layerId: string) => {
+  const switchMapLayer = (
+    provider: MapProvider,
+    layerId: string,
+    options: { persist?: boolean; manual?: boolean } = {}
+  ) => {
+    const { persist = true, manual = true } = options;
     setCurrentProvider(provider);
     setCurrentLayerId(layerId);
-    // 保存用户偏好到 localStorage
-    try {
-      localStorage.setItem('map_provider', provider);
-      localStorage.setItem('map_layer_id', layerId);
-    } catch (error) {
-      console.warn('Failed to save map preferences to localStorage', error);
+    manualPreferenceRef.current = manual;
+    if (persist && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_PROVIDER_KEY, provider);
+        localStorage.setItem(LOCAL_STORAGE_LAYER_KEY, layerId);
+        localStorage.setItem(LOCAL_STORAGE_SELECTION_KEY, manual ? 'manual' : 'auto');
+      } catch (error) {
+        console.warn('Failed to save map preferences to localStorage', error);
+      }
     }
   };
 
-  // 初始化时保存默认值到localStorage（如果尚未保存）
   useEffect(() => {
-    try {
-      if (!localStorage.getItem('map_provider')) {
-        localStorage.setItem('map_provider', currentProvider);
-      }
-      if (!localStorage.getItem('map_layer_id')) {
-        localStorage.setItem('map_layer_id', currentLayerId);
-      }
-    } catch (error) {
-      console.warn('Failed to initialize map preferences in localStorage', error);
+    if (!manualPreferenceRef.current && apiKey && currentProvider !== 'mapbox') {
+      switchMapLayer('mapbox', getDefaultLayerForProvider('mapbox'), { manual: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 只在组件挂载时执行一次，使用初始值
+  }, [apiKey, currentProvider]);
 
   // 点击外部关闭图层菜单
   useEffect(() => {

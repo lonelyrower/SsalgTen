@@ -30,21 +30,45 @@ export async function loadMapConfig(): Promise<void> {
 
     if (response.success && response.data) {
       const config = ensureAppConfig()
-
       const data = response.data as MapConfigResponse
 
-      // Provider 优先使用后端返回，其次读取已有配置，最后使用安全默认值
-      const provider =
-        data.provider ??
-        config.MAP_PROVIDER ??
-        (import.meta.env.VITE_MAP_PROVIDER as string | undefined) ??
-        'carto'
+      const envProvider = (import.meta.env.VITE_MAP_PROVIDER as string | undefined) ?? undefined
+      const envApiKey = (import.meta.env.VITE_MAP_API_KEY as string | undefined) ?? undefined
+
+      const incomingApiKey =
+        typeof data.apiKey === 'string' && data.apiKey.trim().length > 0
+          ? data.apiKey.trim()
+          : undefined
+
+      if (incomingApiKey) {
+        config.MAP_API_KEY = incomingApiKey
+      } else if (typeof config.MAP_API_KEY !== 'string' && envApiKey) {
+        config.MAP_API_KEY = envApiKey
+      }
+
+      assignIfString(config, 'CESIUM_ION_TOKEN', data.cesiumIonToken)
+
+      const resolvedApiKey =
+        (typeof config.MAP_API_KEY === 'string' && config.MAP_API_KEY.trim().length > 0
+          ? (config.MAP_API_KEY as string)
+          : envApiKey) || ''
+
+      const normalizeProvider = (value?: unknown): string | undefined => {
+        if (typeof value !== 'string') return undefined
+        const normalized = value.trim().toLowerCase()
+        return ['carto', 'openstreetmap', 'mapbox'].includes(normalized) ? normalized : undefined
+      }
+
+      let provider =
+        normalizeProvider(data.provider) ??
+        normalizeProvider(config.MAP_PROVIDER) ??
+        normalizeProvider(envProvider)
+
+      if (!provider) {
+        provider = resolvedApiKey ? 'mapbox' : 'carto'
+      }
 
       config.MAP_PROVIDER = provider
-
-      // API key 与 Cesium token 仅在后端提供时覆盖（保持前端注入的默认值）
-      assignIfString(config, 'MAP_API_KEY', data.apiKey)
-      assignIfString(config, 'CESIUM_ION_TOKEN', data.cesiumIonToken)
 
       console.info(
         '%cMap Config Loaded',

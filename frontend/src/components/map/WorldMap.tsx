@@ -5,30 +5,71 @@ import { Icon, DivIcon } from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import type { NodeData } from '@/services/api';
 
+type MapProvider = 'carto' | 'openstreetmap' | 'mapbox';
+
+const SUPPORTED_PROVIDERS: MapProvider[] = ['carto', 'openstreetmap', 'mapbox'];
+
+const normalizeProvider = (value?: unknown): MapProvider | undefined => {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim().toLowerCase();
+  return (SUPPORTED_PROVIDERS as string[]).includes(normalized)
+    ? (normalized as MapProvider)
+    : undefined;
+};
+
+const hasMapboxKey = (apiKey: string): boolean => {
+  if (typeof apiKey === 'string' && apiKey.trim().length > 0) {
+    return true;
+  }
+  const envKey = import.meta.env.VITE_MAP_API_KEY as string | undefined;
+  if (typeof envKey === 'string' && envKey.trim().length > 0) {
+    return true;
+  }
+  if (typeof window !== 'undefined') {
+    const w: any = window;
+    const runtimeKey = w.APP_CONFIG?.MAP_API_KEY;
+    return typeof runtimeKey === 'string' && runtimeKey.trim().length > 0;
+  }
+  return false;
+};
+
 // 运行时地图配置（与 EnhancedWorldMap 保持一致）
 // 注意：这个函数现在接收 apiKey 作为参数，确保响应式更新
 const getMapConfig = (apiKey: string) => {
   const w: any = typeof window !== 'undefined' ? (window as any) : {};
-  const provider = (w.APP_CONFIG?.MAP_PROVIDER || import.meta.env.VITE_MAP_PROVIDER || 'openstreetmap').toString().toLowerCase();
+  const providerCandidate =
+    normalizeProvider(w.APP_CONFIG?.MAP_PROVIDER) ??
+    normalizeProvider(import.meta.env.VITE_MAP_PROVIDER as string | undefined);
+
+  const provider: MapProvider = (() => {
+    if (providerCandidate) {
+      if (providerCandidate === 'mapbox' && !hasMapboxKey(apiKey)) {
+        return 'carto';
+      }
+      return providerCandidate;
+    }
+    return hasMapboxKey(apiKey) ? 'mapbox' : 'carto';
+  })();
+
   switch (provider) {
     case 'carto':
       return {
         url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OSM contributors',
-        provider: 'carto',
+        provider: 'carto' as const,
       };
     case 'mapbox':
       return {
         url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${apiKey}`,
         attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OSM contributors',
-        provider: 'mapbox',
+        provider: 'mapbox' as const,
       };
     case 'openstreetmap':
     default:
       return {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        provider: 'openstreetmap',
+        provider: 'openstreetmap' as const,
       };
   }
 };
