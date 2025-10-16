@@ -4268,7 +4268,27 @@ uninstall_system() {
         log_info "删除Docker镜像..."
         docker images | grep -E "(ssalgten|ghcr.io.*ssalgten)" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
     fi
-    
+
+    # 清理Nginx配置（如果曾启用 HTTPS/Cloudflare 部署）
+    log_info "清理Nginx配置..."
+    local nginx_config_found=false
+    for cfg in /etc/nginx/conf.d/ssalgten.conf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/ssalgten; do
+        if [[ -f "$cfg" ]]; then
+            nginx_config_found=true
+            break
+        fi
+    done
+    if [[ "$nginx_config_found" == "true" ]]; then
+        if command -v systemctl >/dev/null 2>&1; then
+            run_as_root systemctl stop nginx 2>/dev/null || true
+        else
+            run_as_root service nginx stop 2>/dev/null || true
+        fi
+    fi
+    run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+    run_as_root rm -f /etc/nginx/sites-available/ssalgten 2>/dev/null || true
+    run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
+
     # 删除应用目录
     log_info "删除应用目录..."
     if [[ -d "$APP_DIR" ]]; then
