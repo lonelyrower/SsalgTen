@@ -498,7 +498,7 @@ export const NodesPage: React.FC = () => {
                       selectedNode={selectedNode}
                       showHeatmap={false}
                       showControlPanels={false}
-                      className="min-h-[420px] sm:min-h-[500px] md:min-h-[560px] xl:h-full"
+                      className="h-[420px] sm:h-[500px] md:h-[560px] xl:h-full"
                     />
                   ) : (
                     <Globe3D 
