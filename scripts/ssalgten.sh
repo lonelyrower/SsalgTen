@@ -2956,7 +2956,7 @@ collect_deployment_info() {
         
         while [[ -z "$DOMAIN" ]]; do
             DOMAIN=$(prompt_input "您的域名 (如: example.com)")
-            if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$ ]]; then
+            if [[ ! "$DOMAIN" =~ ^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$ ]]; then
                 log_error "域名格式不正确，请重新输入"
                 DOMAIN=""
             fi
