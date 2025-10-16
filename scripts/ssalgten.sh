@@ -119,6 +119,12 @@ FRONTEND_PORT=""
 BACKEND_PORT=""
 AGENT_PORT=""
 
+# Nginx配置路径缓存（供SSL流程复用）
+NGINX_HTTP_CONFIG_FILE=""
+NGINX_SSL_CONFIG_FILE=""
+NGINX_HTTP_ENABLE_CMD=""
+NGINX_SSL_ENABLE_CMD=""
+
 # 颜色定义（可通过环境变量禁用）
 if [[ "${LOG_NO_COLOR:-}" == "true" ]] || [[ ! -t 1 ]]; then
     RED="" GREEN="" YELLOW="" BLUE="" CYAN="" PURPLE="" NC=""
@@ -3556,11 +3562,18 @@ create_nginx_config() {
     if [[ -d "/etc/nginx/sites-available" ]]; then
         NGINX_CONFIG_FILE="/etc/nginx/sites-available/ssalgten"
         NGINX_ENABLE_CMD="run_as_root ln -sf /etc/nginx/sites-available/ssalgten /etc/nginx/sites-enabled/"
+        NGINX_SSL_CONFIG_FILE="/etc/nginx/sites-available/ssalgten-ssl"
+        NGINX_SSL_ENABLE_CMD="run_as_root ln -sf /etc/nginx/sites-available/ssalgten-ssl /etc/nginx/sites-enabled/"
     else
         NGINX_CONFIG_FILE="/etc/nginx/conf.d/ssalgten.conf"
         NGINX_ENABLE_CMD="# 配置已自动启用"
         run_as_root mkdir -p /etc/nginx/conf.d
+        NGINX_SSL_CONFIG_FILE="/etc/nginx/conf.d/ssalgten-ssl.conf"
+        NGINX_SSL_ENABLE_CMD="# SSL配置已自动启用"
     fi
+
+    NGINX_HTTP_CONFIG_FILE="$NGINX_CONFIG_FILE"
+    NGINX_HTTP_ENABLE_CMD="$NGINX_ENABLE_CMD"
     
     # 创建基础Nginx配置
     run_as_root tee $NGINX_CONFIG_FILE > /dev/null << EOF
@@ -3751,7 +3764,154 @@ EOF'
         run_as_root systemctl reload nginx
 
     else
-        log_info "Cloudflare SSL模式，证书由Cloudflare自动管理"
+        log_info "Cloudflare SSL模式，生成自签名证书供源站使用"
+
+        if ! command -v openssl >/dev/null 2>&1; then
+            log_info "安装 openssl..."
+            if command -v apt >/dev/null 2>&1; then
+                run_as_root apt install -y openssl
+            elif command -v yum >/dev/null 2>&1; then
+                run_as_root yum install -y openssl
+            elif command -v dnf >/dev/null 2>&1; then
+                run_as_root dnf install -y openssl
+            else
+                log_warning "无法自动安装 openssl，请确认系统已安装该工具"
+            fi
+        fi
+
+        local cert_dir="/etc/ssl/ssalgten"
+        local ssl_cert="$cert_dir/fullchain.pem"
+        local ssl_key="$cert_dir/privkey.pem"
+        local https_listen_port="${HTTPS_PORT:-443}"
+        local server_names="$DOMAIN"
+        local include_www=false
+
+        if [[ -n "$DOMAIN" ]] && getent ahosts "www.$DOMAIN" >/dev/null 2>&1; then
+            server_names="$server_names www.$DOMAIN"
+            include_www=true
+        fi
+        [[ -z "$server_names" ]] && server_names="_"
+
+        local san_values="DNS:${DOMAIN:-ssalgten.local}"
+        if [[ "$include_www" == "true" && -n "$DOMAIN" ]]; then
+            san_values="$san_values,DNS:www.$DOMAIN"
+        fi
+
+        run_as_root mkdir -p "$cert_dir"
+
+        if ! run_as_root openssl req -x509 -nodes -days 365 \
+            -newkey rsa:2048 \
+            -keyout "$ssl_key" \
+            -out "$ssl_cert" \
+            -subj "/CN=${DOMAIN:-ssalgten.local}" \
+            -addext "subjectAltName=$san_values"; then
+            log_warning "当前 openssl 不支持 -addext 选项，回退到基础自签名证书生成"
+            run_as_root openssl req -x509 -nodes -days 365 \
+                -newkey rsa:2048 \
+                -keyout "$ssl_key" \
+                -out "$ssl_cert" \
+                -subj "/CN=${DOMAIN:-ssalgten.local}"
+        fi
+        run_as_root chmod 600 "$ssl_key" "$ssl_cert" 2>/dev/null || true
+
+        if [[ -z "$NGINX_SSL_CONFIG_FILE" ]]; then
+            log_error "未能确定Nginx SSL配置路径，请重新运行部署脚本"
+            exit 1
+        fi
+
+        run_as_root mkdir -p "$(dirname "$NGINX_SSL_CONFIG_FILE")"
+        run_as_root tee "$NGINX_SSL_CONFIG_FILE" > /dev/null << EOF
+# SsalgTen Nginx HTTPS 配置 (Cloudflare)
+server {
+    listen $https_listen_port ssl http2;
+    server_name $server_names;
+
+    ssl_certificate     $ssl_cert;
+    ssl_certificate_key $ssl_key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+
+    client_max_body_size 20m;
+    gzip on;
+    gzip_proxied any;
+    gzip_types application/json application/javascript text/css text/plain application/xml application/xml+rss application/atom+xml image/svg+xml;
+
+    location / {
+        proxy_pass http://localhost:${FRONTEND_PORT:-3000};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
+            proxy_pass http://localhost:${FRONTEND_PORT:-3000};
+            proxy_set_header Host \$host;
+            proxy_cache_valid 200 1d;
+            add_header Cache-Control "public, max-age=86400";
+        }
+    }
+
+    location /api {
+        proxy_pass http://localhost:${BACKEND_PORT:-3001};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://localhost:${BACKEND_PORT:-3001}/socket.io/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+        if [[ -n "$NGINX_SSL_ENABLE_CMD" && "$NGINX_SSL_ENABLE_CMD" != "#"* ]]; then
+            eval "$NGINX_SSL_ENABLE_CMD"
+        fi
+
+        run_as_root nginx -t
+        run_as_root systemctl reload nginx
+
+        log_success "Cloudflare SSL模式配置完成"
+        echo ""
+        log_info "Cloudflare配置提醒："
+        echo "  • 确保Cloudflare DNS记录开启代理（橙色云朵）"
+        echo "  • SSL/TLS模式建议使用 Full 或 Full (strict)"
+        echo "  • 若证书即将过期，可重新运行部署脚本刷新自签名证书"
     fi
 
     log_success "SSL证书配置完成"
@@ -4286,8 +4446,12 @@ uninstall_system() {
         fi
     fi
     run_as_root rm -f /etc/nginx/conf.d/ssalgten.conf 2>/dev/null || true
+    run_as_root rm -f /etc/nginx/conf.d/ssalgten-ssl.conf 2>/dev/null || true
     run_as_root rm -f /etc/nginx/sites-available/ssalgten 2>/dev/null || true
+    run_as_root rm -f /etc/nginx/sites-available/ssalgten-ssl 2>/dev/null || true
     run_as_root rm -f /etc/nginx/sites-enabled/ssalgten 2>/dev/null || true
+    run_as_root rm -f /etc/nginx/sites-enabled/ssalgten-ssl 2>/dev/null || true
+    run_as_root rm -rf /etc/ssl/ssalgten 2>/dev/null || true
 
     # 删除应用目录
     log_info "删除应用目录..."
