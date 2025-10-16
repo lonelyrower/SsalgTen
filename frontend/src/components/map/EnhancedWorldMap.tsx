@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useRef, memo, useMemo, useState, useEffect } from 'react';
+import React, { useRef, memo, useMemo, useState, useEffect, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import { DivIcon } from 'leaflet';
@@ -404,9 +404,14 @@ const BoundsHandler = ({ onBoundsChange }: { onBoundsChange: (b: any) => void })
 };
 
 // 将 Leaflet Map 实例写入外部 ref，便于在点击聚合时主动缩放
-const MapRefSetter = ({ setRef }: { setRef: (map: any) => void }) => {
+const MapRefSetter = ({ setRef, onReady }: { setRef: (map: any) => void; onReady?: (map: any) => void }) => {
   const map = useMap();
-  useEffect(() => { setRef(map); }, [map, setRef]);
+  useEffect(() => {
+    setRef(map);
+    if (onReady) {
+      requestAnimationFrame(() => onReady(map));
+    }
+  }, [map, setRef, onReady]);
   return null;
 };
 
@@ -479,6 +484,49 @@ export const EnhancedWorldMap = memo(({
   const manualPreferenceRef = useRef<boolean>(Boolean(storedProvider));
 
   const mapRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const invalidateMapSize = useCallback(() => {
+    if (mapRef.current && typeof mapRef.current.invalidateSize === 'function') {
+      mapRef.current.invalidateSize();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timeoutId = window.setTimeout(() => invalidateMapSize(), 180);
+    return () => window.clearTimeout(timeoutId);
+  }, [invalidateMapSize]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => {
+      requestAnimationFrame(invalidateMapSize);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [invalidateMapSize]);
+
+  useEffect(() => {
+    if (!mapContainerRef.current || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(invalidateMapSize);
+    });
+
+    observer.observe(mapContainerRef.current);
+    return () => observer.disconnect();
+  }, [invalidateMapSize]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timeoutId = window.setTimeout(() => invalidateMapSize(), 120);
+    return () => window.clearTimeout(timeoutId);
+  }, [nodes.length, invalidateMapSize]);
+
   const [showStats, setShowStats] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(3);
   const [debouncedZoom, setDebouncedZoom] = useState(3);
@@ -552,6 +600,38 @@ export const EnhancedWorldMap = memo(({
     const layer = currentProviderLayers.find(l => l.id === currentLayerId);
     return layer || currentProviderLayers[0]; // 如果找不到，返回第一个
   }, [currentProviderLayers, currentLayerId]);
+
+  useEffect(() => {
+    const hasValidUrl =
+      currentLayerConfig &&
+      typeof currentLayerConfig.url === 'string' &&
+      currentLayerConfig.url.trim().length > 0;
+
+    if (hasValidUrl) {
+      return;
+    }
+
+    const fallbackProvider: MapProvider = 'carto';
+    const fallbackLayerId = getDefaultLayerForProvider(fallbackProvider);
+
+    if (currentProvider === fallbackProvider && currentLayerId === fallbackLayerId) {
+      return;
+    }
+
+    setCurrentProvider(fallbackProvider);
+    setCurrentLayerId(fallbackLayerId);
+    manualPreferenceRef.current = false;
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_PROVIDER_KEY, fallbackProvider);
+        localStorage.setItem(LOCAL_STORAGE_LAYER_KEY, fallbackLayerId);
+        localStorage.setItem(LOCAL_STORAGE_SELECTION_KEY, 'auto');
+      } catch (error) {
+        console.warn('Failed to persist fallback map provider', error);
+      }
+    }
+  }, [currentLayerConfig, currentProvider, currentLayerId]);
 
   // 切换地图提供商和图层，并保存到 localStorage
   const switchMapLayer = (
@@ -766,7 +846,7 @@ export const EnhancedWorldMap = memo(({
 
 
   return (
-    <div className={`relative flex flex-col ${className}`}>
+    <div ref={mapContainerRef} className={`relative flex flex-col ${className}`}>
       {/* 地图控制面板 */}
       {showControlPanels && (
       <div className="absolute top-2 md:top-4 left-2 md:left-auto md:right-4 z-40 space-y-2 md:space-y-3 max-w-[calc(100vw-200px)] md:max-w-none">
@@ -984,7 +1064,12 @@ export const EnhancedWorldMap = memo(({
           maxBoundsViscosity={0.5}
         >
           {/* 设置 mapRef，供点击聚合时 setView 使用 */}
-          <MapRefSetter setRef={(m) => { (mapRef as any).current = m; }} />
+          <MapRefSetter
+            setRef={(m) => {
+              (mapRef as any).current = m;
+            }}
+            onReady={() => invalidateMapSize()}
+          />
           <BoundsHandler onBoundsChange={setBounds} />
           
           {/* 动态图层 */}
