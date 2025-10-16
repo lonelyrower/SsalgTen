@@ -3056,18 +3056,17 @@ collect_deployment_info() {
     HTTPS_PORT=$(prompt_port "HTTPS端口" "443")
 
     # 智能端口配置：根据部署类型推荐端口
-    # - Cloudflare部署：frontend必须在80端口（Cloudflare只支持标准HTTP/HTTPS端口）
-    # - 完整部署(Let's Encrypt)：通常需要80端口，但可灵活配置
-    # - 简单部署：推荐3000端口，避免与系统nginx冲突
+    # - Cloudflare/HTTPS：系统会启用Nginx监听80/443，前端容器建议使用3000端口避免冲突
+    # - 简单部署：同样推荐3000端口，可直接通过IP:3000访问
     local frontend_default_port
     local port_hint
 
     if [[ "$SSL_MODE" == "cloudflare" ]]; then
-        frontend_default_port="80"
-        port_hint="(Cloudflare部署推荐使用80端口)"
+        frontend_default_port="3000"
+        port_hint="(Cloudflare部署：Nginx将占用80端口，推荐前端使用3000端口)"
     elif [[ "$ENABLE_SSL" == "true" ]]; then
-        frontend_default_port="80"
-        port_hint="(HTTPS部署推荐使用80端口)"
+        frontend_default_port="3000"
+        port_hint="(HTTPS部署：Nginx将占用80/443端口，推荐前端使用3000端口)"
     else
         frontend_default_port="3000"
         port_hint="(本地部署推荐使用3000端口，避免与系统nginx冲突)"
@@ -3079,6 +3078,22 @@ collect_deployment_info() {
     BACKEND_PORT=$(prompt_port "后端API端口" "3001")
     DB_PORT=$(prompt_port "数据库端口" "5432")
     REDIS_PORT=$(prompt_port "Redis端口" "6379")
+
+    if [[ "$FRONTEND_PORT" == "$HTTP_PORT" ]]; then
+        local fallback_port=""
+        local candidate_ports=("3000" "3001" "8080" "3100")
+        for candidate in "${candidate_ports[@]}"; do
+            if [[ "$candidate" != "$HTTP_PORT" ]]; then
+                fallback_port="$candidate"
+                break
+            fi
+        done
+        if [[ -z "$fallback_port" ]]; then
+            fallback_port=$((HTTP_PORT + 1))
+        fi
+        log_warning "前端端口 $FRONTEND_PORT 与 HTTP端口 $HTTP_PORT 相同，将与Nginx冲突，自动调整为 $fallback_port"
+        FRONTEND_PORT="$fallback_port"
+    fi
     
     # 生成安全密钥
     echo ""
