@@ -1868,25 +1868,43 @@ EOF
     if [[ "$AGENT_USE_HOST_NETWORK" != "true" ]]; then
         log_info "准备重新创建 Docker 网络（启用 IPv6 支持）..."
 
-        # 停止容器
         cd "$APP_DIR"
-        docker_compose down >/dev/null 2>&1 || true
 
-        # 删除网络
+        # 获取网络名称
         local compose_project
         compose_project=$(basename "$APP_DIR")
         local default_network="${compose_project}_agent-network"
 
+        # 停止并删除所有容器和网络
+        log_info "停止并清理旧容器和网络..."
+        docker_compose down 2>&1 | grep -v "^$" || true
+        sleep 2
+
+        # 检查网络是否还存在，如果存在则强制删除
         if docker network inspect "$default_network" >/dev/null 2>&1; then
-            log_info "移除旧网络: $default_network"
-            docker network rm "$default_network" >/dev/null 2>&1 || {
-                log_warning "无法删除网络 $default_network，可能仍有容器在使用"
-                # 强制删除所有相关容器
-                docker ps -a --filter "network=$default_network" -q | xargs -r docker rm -f >/dev/null 2>&1 || true
-                docker network rm "$default_network" >/dev/null 2>&1 || true
-            }
-            log_success "旧网络已删除，将使用 IPv6 配置重新创建"
+            log_warning "网络 $default_network 仍然存在，正在强制删除..."
+            # 强制删除所有使用该网络的容器
+            docker ps -a --filter "network=$default_network" -q | xargs -r docker rm -f 2>/dev/null || true
+            docker network rm "$default_network" 2>/dev/null || true
+            sleep 1
         fi
+
+        # 查找并删除可能占用相同子网的其他网络
+        log_info "检查是否有其他网络占用 IPv6 子网..."
+        local conflicting_networks=$(docker network ls -q | xargs -r docker network inspect 2>/dev/null | \
+            grep -B 20 "$DEFAULT_AGENT_IPV6_SUBNET" | grep '"Name":' | cut -d'"' -f4 | grep -v "^$" || true)
+
+        if [[ -n "$conflicting_networks" ]]; then
+            log_warning "发现占用相同子网的网络，正在删除:"
+            echo "$conflicting_networks" | while read -r net; do
+                if [[ -n "$net" ]]; then
+                    log_info "  - 删除网络: $net"
+                    docker network rm "$net" 2>/dev/null || true
+                fi
+            done
+        fi
+
+        log_success "网络清理完成，准备重新创建"
     fi
 
     # 3. 重新构建镜像
