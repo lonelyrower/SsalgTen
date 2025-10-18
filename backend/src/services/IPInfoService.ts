@@ -310,9 +310,7 @@ class IPInfoService {
         .split(",")
         .map((part) => part.trim())
         .filter((part) => part.length > 0)
-        .map((part) =>
-          part.startsWith("::ffff:") ? part.slice(7) : part,
-        );
+        .map((part) => (part.startsWith("::ffff:") ? part.slice(7) : part));
 
     const forwarded = pickHeaderValue(req.headers["x-forwarded-for"]);
     if (forwarded) {
