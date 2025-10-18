@@ -1006,20 +1006,29 @@ download_agent_code() {
     # 尝试多种下载方式
     local download_success=false
     local methods=(
-        "git clone https://github.com/lonelyrower/SsalgTen.git ."
-        "git clone https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git ."
-        "git clone https://hub.fastgit.xyz/lonelyrower/SsalgTen.git ."
+        "git clone --depth 1 https://github.com/lonelyrower/SsalgTen.git repo"
+        "git clone --depth 1 https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git repo"
+        "git clone --depth 1 https://hub.fastgit.xyz/lonelyrower/SsalgTen.git repo"
     )
-    
+
     cd $TEMP_DIR
-    
+
     # 尝试Git克隆
     for method in "${methods[@]}"; do
         log_info "尝试: $method"
         if eval "$method" 2>/dev/null; then
-            download_success=true
-            log_success "Git克隆成功"
-            break
+            # Git克隆到 repo 子目录，现在移动内容到当前目录
+            if [[ -d "repo" ]]; then
+                (
+                    shopt -s dotglob nullglob
+                    mv repo/* . 2>/dev/null || true
+                    shopt -u dotglob nullglob
+                )
+                rmdir repo 2>/dev/null || true
+                download_success=true
+                log_success "Git克隆成功"
+                break
+            fi
         else
             log_warning "Git克隆失败，尝试下一种方法..."
         fi
@@ -1582,18 +1591,27 @@ update_agent() {
     # 尝试多种下载方式
     local download_success=false
     local methods=(
-        "git clone --depth 1 https://github.com/lonelyrower/SsalgTen.git ."
-        "git clone --depth 1 https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git ."
-        "git clone --depth 1 https://hub.fastgit.xyz/lonelyrower/SsalgTen.git ."
+        "git clone --depth 1 https://github.com/lonelyrower/SsalgTen.git repo"
+        "git clone --depth 1 https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git repo"
+        "git clone --depth 1 https://hub.fastgit.xyz/lonelyrower/SsalgTen.git repo"
     )
-    
+
     # 尝试Git克隆
     for method in "${methods[@]}"; do
         log_info "尝试: $method"
         if eval "$method" 2>/dev/null; then
-            download_success=true
-            log_success "代码下载成功"
-            break
+            # Git克隆到 repo 子目录，现在移动内容到当前目录
+            if [[ -d "repo" ]]; then
+                (
+                    shopt -s dotglob nullglob
+                    mv repo/* . 2>/dev/null || true
+                    shopt -u dotglob nullglob
+                )
+                rmdir repo 2>/dev/null || true
+                download_success=true
+                log_success "代码下载成功"
+                break
+            fi
         else
             log_warning "下载失败，尝试下一种方法..."
         fi
@@ -1651,17 +1669,26 @@ PY
         read -p "按回车键返回主菜单..." -r
         return
     fi
-    
+
+    # 调试：显示当前目录内容
+    log_info "当前临时目录: $(pwd)"
+    log_info "目录内容:"
+    ls -la 2>/dev/null | head -20 || true
+
     # 检查 agent 源目录
     local agent_source=""
     if [[ -d "agent" ]]; then
         agent_source="agent"
+        log_info "找到 agent 目录"
     elif [[ -d "packages/agent" ]]; then
         agent_source="packages/agent"
+        log_info "找到 packages/agent 目录"
     fi
 
     if [[ -z "$agent_source" ]]; then
         log_error "下载的代码中未找到 agent 目录"
+        log_error "临时目录内容："
+        ls -laR 2>/dev/null | head -50 || true
         rm -rf "$TEMP_DIR"
         read -p "按回车键返回主菜单..." -r
         return
