@@ -225,13 +225,15 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
           duration: Date.now() - (prev[toolId]?.startTime || Date.now())
         }
       }));
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '诊断执行失败';
+      console.error(`诊断工具 ${toolId} 执行失败:`, error);
       setResults(prev => ({
         ...prev,
         [toolId]: {
           ...prev[toolId],
           status: 'failed',
-          error: '诊断执行失败',
+          error: errorMessage,
           duration: Date.now() - (prev[toolId]?.startTime || Date.now())
         }
       }));
@@ -242,8 +244,10 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
   const callAgentAPI = async (url: string, timeout: number = 60000) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
+      console.log(`[诊断] 调用 API: ${url}, 超时: ${timeout}ms`);
+
       // 尝试携带登录令牌（后端代理端点需要鉴权）
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -251,26 +255,35 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
       if (url.startsWith('/api/')) {
         try {
           const token = localStorage.getItem('ssalgten_auth_token');
-          if (token) headers['Authorization'] = `Bearer ${token}`;
-        } catch {
-          // 忽略清理超时错误
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+            console.log('[诊断] 添加认证令牌');
+          }
+        } catch (e) {
+          console.warn('[诊断] 获取令牌失败:', e);
         }
       }
+
       const response = await fetch(url, {
         method: 'GET',
         headers,
         credentials: 'include', // 尽量携带会话信息
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
 
+      console.log(`[诊断] HTTP 响应: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[诊断] HTTP 错误响应: ${errorText}`);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+      console.log('[诊断] 响应数据:', data);
+
       if (!data.success) {
         throw new Error(data.error || '诊断测试失败');
       }
@@ -278,7 +291,11 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
       return data.data;
     } catch (error) {
       clearTimeout(timeoutId);
-      console.warn(`Agent API call failed for ${url}:`, error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error(`[诊断] 请求超时 (${timeout}ms): ${url}`);
+        throw new Error(`请求超时 (${timeout / 1000}秒)`);
+      }
+      console.error(`[诊断] API 调用失败: ${url}`, error);
       throw error;
     }
   };
