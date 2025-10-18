@@ -1192,10 +1192,6 @@ networks:
   agent-network:
     driver: bridge
     enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: ${DEFAULT_AGENT_IPV6_SUBNET}
 EOF
     fi
 
@@ -1236,9 +1232,6 @@ ENABLE_DEBUG=false
 
 # 系统配置
 TZ=Asia/Shanghai
-
-# Docker 网络配置
-DEFAULT_AGENT_IPV6_SUBNET=${DEFAULT_AGENT_IPV6_SUBNET}
 
 # 可选：Xray 自检（启用后将检测本机端口监听/TLS握手）
 # XRAY_CHECK_PORT=443
@@ -1751,23 +1744,16 @@ PY
         cp -r "$agent_source"/* "$APP_DIR/"
     )
 
-    # 恢复并更新 .env 配置文件
+    # 恢复 .env 配置文件
     if [ -f "$ENV_BACKUP" ]; then
         cp "$ENV_BACKUP" "$APP_DIR/.env"
         log_success ".env 配置已恢复"
 
-        # 确保 .env 包含正确的 DEFAULT_AGENT_IPV6_SUBNET
+        # 清理旧的 DEFAULT_AGENT_IPV6_SUBNET 配置（不再需要）
         if grep -q "^DEFAULT_AGENT_IPV6_SUBNET=" "$APP_DIR/.env" 2>/dev/null; then
-            # 已存在，更新值
-            sed -i "s|^DEFAULT_AGENT_IPV6_SUBNET=.*|DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET|" "$APP_DIR/.env"
-            log_success "已更新 .env 中的 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET"
-        else
-            # 不存在，添加
-            log_info "添加 IPv6 配置到 .env"
-            echo "" >> "$APP_DIR/.env"
-            echo "# Docker 网络配置" >> "$APP_DIR/.env"
-            echo "DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" >> "$APP_DIR/.env"
-            log_success "已添加 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET 到 .env"
+            sed -i '/^DEFAULT_AGENT_IPV6_SUBNET=/d' "$APP_DIR/.env"
+            sed -i '/^# Docker 网络配置$/d' "$APP_DIR/.env"
+            log_info "已清理旧的 IPv6 子网配置（现在由 Docker 自动分配）"
         fi
 
         # 清理临时 .env 备份
@@ -1788,23 +1774,8 @@ PY
 
     cd "$APP_DIR"
 
-    # 验证 .env 文件配置
-    if [ -f "$APP_DIR/.env" ]; then
-        if grep -q "^DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" "$APP_DIR/.env" 2>/dev/null; then
-            log_success "✓ .env 配置验证通过"
-        else
-            log_warning ".env 中的 DEFAULT_AGENT_IPV6_SUBNET 可能不正确，正在修正..."
-            # 强制更新
-            if grep -q "^DEFAULT_AGENT_IPV6_SUBNET=" "$APP_DIR/.env" 2>/dev/null; then
-                sed -i "s|^DEFAULT_AGENT_IPV6_SUBNET=.*|DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET|" "$APP_DIR/.env"
-            else
-                echo "" >> "$APP_DIR/.env"
-                echo "# Docker 网络配置" >> "$APP_DIR/.env"
-                echo "DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" >> "$APP_DIR/.env"
-            fi
-            log_success "已强制更新 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET"
-        fi
-    else
+    # 验证 .env 文件存在
+    if [ ! -f "$APP_DIR/.env" ]; then
         log_error ".env 文件不存在！"
         return
     fi
@@ -1830,17 +1801,13 @@ PY
             # 删除旧的 networks 部分（如果存在）
             sed -i '/^networks:/,$ d' "$compose_file"
 
-            # 添加新的 IPv6 网络配置
+            # 添加新的 IPv6 网络配置（不指定子网，让 Docker 自动分配）
             cat >> "$compose_file" << 'EOF'
 
 networks:
   agent-network:
     driver: bridge
     enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: ${DEFAULT_AGENT_IPV6_SUBNET}
 EOF
             log_success "已更新 docker-compose.yml 的 IPv6 网络配置"
         else
@@ -1877,31 +1844,15 @@ EOF
 
         # 停止并删除所有容器和网络
         log_info "停止并清理旧容器和网络..."
-        docker_compose down 2>&1 | grep -v "^$" || true
+        docker_compose down -v 2>&1 | grep -v "^$" || true
         sleep 2
 
-        # 检查网络是否还存在，如果存在则强制删除
+        # 检查并删除残留的 agent 网络
         if docker network inspect "$default_network" >/dev/null 2>&1; then
-            log_warning "网络 $default_network 仍然存在，正在强制删除..."
-            # 强制删除所有使用该网络的容器
+            log_info "删除残留网络: $default_network"
             docker ps -a --filter "network=$default_network" -q | xargs -r docker rm -f 2>/dev/null || true
             docker network rm "$default_network" 2>/dev/null || true
             sleep 1
-        fi
-
-        # 查找并删除可能占用相同子网的其他网络
-        log_info "检查是否有其他网络占用 IPv6 子网..."
-        local conflicting_networks=$(docker network ls -q | xargs -r docker network inspect 2>/dev/null | \
-            grep -B 20 "$DEFAULT_AGENT_IPV6_SUBNET" | grep '"Name":' | cut -d'"' -f4 | grep -v "^$" || true)
-
-        if [[ -n "$conflicting_networks" ]]; then
-            log_warning "发现占用相同子网的网络，正在删除:"
-            echo "$conflicting_networks" | while read -r net; do
-                if [[ -n "$net" ]]; then
-                    log_info "  - 删除网络: $net"
-                    docker network rm "$net" 2>/dev/null || true
-                fi
-            done
         fi
 
         log_success "网络清理完成，准备重新创建"
