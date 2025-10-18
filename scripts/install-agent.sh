@@ -1038,13 +1038,34 @@ download_agent_code() {
             log_info "尝试下载: $zip_url"
             if wget -q "$zip_url" -O main.zip 2>/dev/null; then
                 if unzip -q main.zip 2>/dev/null; then
-                    mv SsalgTen-main/* . 2>/dev/null
-                    mv SsalgTen-main/.* . 2>/dev/null || true
-                    rmdir SsalgTen-main 2>/dev/null
-                    rm -f main.zip
-                    download_success=true
-                    log_success "ZIP包下载成功"
-                    break
+                    if command -v python3 >/dev/null 2>&1 && python3 - <<'PY'
+import os, shutil
+src = 'SsalgTen-main'
+dst = '.'
+for name in os.listdir(src):
+    shutil.move(os.path.join(src, name), dst)
+PY
+                    then
+                        rmdir SsalgTen-main 2>/dev/null || true
+                        rm -f main.zip
+                        download_success=true
+                        log_success "ZIP包下载成功"
+                        break
+                    else
+                        log_warning "Python 搬运失败或未安装，使用Shell回退方案"
+                        (
+                            shopt -s dotglob nullglob
+                            for item in SsalgTen-main/*; do
+                                mv "$item" .
+                            done
+                            shopt -u dotglob nullglob
+                        )
+                        rmdir SsalgTen-main 2>/dev/null || true
+                        rm -f main.zip
+                        download_success=true
+                        log_success "ZIP包下载成功"
+                        break
+                    fi
                 fi
             fi
         done
@@ -1591,13 +1612,34 @@ update_agent() {
             log_info "尝试下载: $zip_url"
             if wget -q "$zip_url" -O main.zip 2>/dev/null; then
                 if unzip -q main.zip 2>/dev/null; then
-                    mv SsalgTen-main/* . 2>/dev/null
-                    mv SsalgTen-main/.* . 2>/dev/null || true
-                    rmdir SsalgTen-main 2>/dev/null
-                    rm -f main.zip
-                    download_success=true
-                    log_success "ZIP包下载成功"
-                    break
+                    if command -v python3 >/dev/null 2>&1 && python3 - <<'PY'
+import os, shutil
+src = 'SsalgTen-main'
+dst = '.'
+for name in os.listdir(src):
+    shutil.move(os.path.join(src, name), dst)
+PY
+                    then
+                        rmdir SsalgTen-main 2>/dev/null || true
+                        rm -f main.zip
+                        download_success=true
+                        log_success "ZIP包下载成功"
+                        break
+                    else
+                        log_warning "Python 搬运失败或未安装，使用Shell回退方案"
+                        (
+                            shopt -s dotglob nullglob
+                            for item in SsalgTen-main/*; do
+                                mv "$item" .
+                            done
+                            shopt -u dotglob nullglob
+                        )
+                        rmdir SsalgTen-main 2>/dev/null || true
+                        rm -f main.zip
+                        download_success=true
+                        log_success "ZIP包下载成功"
+                        break
+                    fi
                 fi
             fi
         done
