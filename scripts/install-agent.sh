@@ -1005,29 +1005,33 @@ download_agent_code() {
     
     # 尝试多种下载方式
     local download_success=false
-    local methods=(
-        "git clone --depth 1 https://github.com/lonelyrower/SsalgTen.git repo"
-        "git clone --depth 1 https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git repo"
-        "git clone --depth 1 https://hub.fastgit.xyz/lonelyrower/SsalgTen.git repo"
+    local git_urls=(
+        "https://github.com/lonelyrower/SsalgTen.git"
+        "https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git"
+        "https://hub.fastgit.xyz/lonelyrower/SsalgTen.git"
     )
 
     cd $TEMP_DIR
 
     # 尝试Git克隆
-    for method in "${methods[@]}"; do
-        log_info "尝试: $method"
-        if eval "$method" 2>/dev/null; then
-            # Git克隆到 repo 子目录，现在移动内容到当前目录
-            if [[ -d "repo" ]]; then
-                (
-                    shopt -s dotglob nullglob
-                    mv repo/* . 2>/dev/null || true
-                    shopt -u dotglob nullglob
-                )
-                rmdir repo 2>/dev/null || true
+    for git_url in "${git_urls[@]}"; do
+        log_info "尝试: git clone --depth 1 $git_url"
+        rm -rf repo 2>/dev/null || true
+
+        if git clone --depth 1 "$git_url" repo >/dev/null 2>&1; then
+            # 验证克隆成功并且有内容
+            if [[ -d "repo/agent" ]] || [[ -d "repo/packages/agent" ]]; then
+                # 移动所有内容到当前目录
+                shopt -s dotglob nullglob
+                mv repo/* . 2>/dev/null || true
+                shopt -u dotglob nullglob
+                rm -rf repo
                 download_success=true
                 log_success "Git克隆成功"
                 break
+            else
+                log_warning "Git克隆成功但未找到agent目录，尝试下一种方法..."
+                rm -rf repo
             fi
         else
             log_warning "Git克隆失败，尝试下一种方法..."
@@ -1590,27 +1594,31 @@ update_agent() {
     
     # 尝试多种下载方式
     local download_success=false
-    local methods=(
-        "git clone --depth 1 https://github.com/lonelyrower/SsalgTen.git repo"
-        "git clone --depth 1 https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git repo"
-        "git clone --depth 1 https://hub.fastgit.xyz/lonelyrower/SsalgTen.git repo"
+    local git_urls=(
+        "https://github.com/lonelyrower/SsalgTen.git"
+        "https://github.com.cnpmjs.org/lonelyrower/SsalgTen.git"
+        "https://hub.fastgit.xyz/lonelyrower/SsalgTen.git"
     )
 
     # 尝试Git克隆
-    for method in "${methods[@]}"; do
-        log_info "尝试: $method"
-        if eval "$method" 2>/dev/null; then
-            # Git克隆到 repo 子目录，现在移动内容到当前目录
-            if [[ -d "repo" ]]; then
-                (
-                    shopt -s dotglob nullglob
-                    mv repo/* . 2>/dev/null || true
-                    shopt -u dotglob nullglob
-                )
-                rmdir repo 2>/dev/null || true
+    for git_url in "${git_urls[@]}"; do
+        log_info "尝试: git clone --depth 1 $git_url"
+        rm -rf repo 2>/dev/null || true
+
+        if git clone --depth 1 "$git_url" repo >/dev/null 2>&1; then
+            # 验证克隆成功并且有内容
+            if [[ -d "repo/agent" ]] || [[ -d "repo/packages/agent" ]]; then
+                # 移动所有内容到当前目录
+                shopt -s dotglob nullglob
+                mv repo/* . 2>/dev/null || true
+                shopt -u dotglob nullglob
+                rm -rf repo
                 download_success=true
                 log_success "代码下载成功"
                 break
+            else
+                log_warning "Git克隆成功但未找到agent目录，尝试下一种方法..."
+                rm -rf repo
             fi
         else
             log_warning "下载失败，尝试下一种方法..."
