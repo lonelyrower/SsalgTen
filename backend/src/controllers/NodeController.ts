@@ -87,6 +87,11 @@ async function scheduleNodeDetailBroadcastByAgent(agentId: string, io: any) {
 }
 
 export class NodeController {
+  // 简易 IPv6 校验（包含冒号且非空），避免误把 IPv4 写入 IPv6 字段
+  private isLikelyIPv6(v?: unknown): v is string {
+    return typeof v === "string" && v.includes(":");
+  }
+
   // 获取所有节点
   async getAllNodes(req: Request, res: Response): Promise<void> {
     try {
@@ -502,6 +507,10 @@ export class NodeController {
       if (!node) {
         // 如果节点不存在，尝试将Agent“收编”到同IP的占位节点
         if (nodeInfo && (nodeInfo.ipv4 || nodeInfo.ipv6)) {
+          // 清洗 IPv6：忽略与 IPv4 相同或非 IPv6 格式的值
+          if (nodeInfo.ipv6 && (!this.isLikelyIPv6(nodeInfo.ipv6) || nodeInfo.ipv6 === nodeInfo.ipv4)) {
+            nodeInfo.ipv6 = undefined;
+          }
           const adopted = await nodeService.tryAdoptAgentToPlaceholder(
             agentId,
             nodeInfo.ipv4 || nodeInfo.ipv6,
@@ -526,7 +535,10 @@ export class NodeController {
             longitude: nodeInfo.longitude || 0,
             provider: nodeInfo.provider || "Unknown",
             ipv4: nodeInfo.ipv4,
-            ipv6: nodeInfo.ipv6,
+            ipv6:
+              nodeInfo.ipv6 && this.isLikelyIPv6(nodeInfo.ipv6) && nodeInfo.ipv6 !== nodeInfo.ipv4
+                ? nodeInfo.ipv6
+                : undefined,
             osType: systemInfo?.platform || "Unknown",
             osVersion: systemInfo?.version || "Unknown",
             status: NodeStatus.ONLINE,
@@ -556,6 +568,10 @@ export class NodeController {
 
         // 如果提供了新的节点信息，也更新位置信息
         if (nodeInfo) {
+          // 清洗 IPv6：忽略与 IPv4 相同或非 IPv6 格式的值
+          if (nodeInfo.ipv6 && (!this.isLikelyIPv6(nodeInfo.ipv6) || nodeInfo.ipv6 === nodeInfo.ipv4)) {
+            nodeInfo.ipv6 = undefined;
+          }
           const updateData: any = {
             country: nodeInfo.country || node.country,
             city: nodeInfo.city || node.city,
@@ -705,11 +721,15 @@ export class NodeController {
             ) {
               updates.ipv4 = heartbeatData.nodeIPs.ipv4;
             }
+            const hbV6 = heartbeatData.nodeIPs.ipv6;
+            const hbV4 = heartbeatData.nodeIPs.ipv4;
             if (
-              heartbeatData.nodeIPs.ipv6 &&
-              heartbeatData.nodeIPs.ipv6 !== node.ipv6
+              typeof hbV6 === "string" &&
+              this.isLikelyIPv6(hbV6) &&
+              hbV6 !== hbV4 &&
+              hbV6 !== node.ipv6
             ) {
-              updates.ipv6 = heartbeatData.nodeIPs.ipv6;
+              updates.ipv6 = hbV6;
             }
             if (Object.keys(updates).length > 0) {
               await nodeService.updateNode(node.id, updates);

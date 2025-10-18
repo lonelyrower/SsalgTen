@@ -750,7 +750,7 @@ export const getSystemInfo = async (): Promise<SystemInfo> => {
 // 获取公网 IP（IPv4/IPv6）
 export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> => {
   const result: { ipv4?: string; ipv6?: string } = {};
-  const timeout = 2000;
+  const timeout = 5000; // 放宽超时，提升在启用IPv6但握手较慢环境下的成功率
 
   // Helper function to validate IPv6
   const isValidIPv6 = (ip: string): boolean => {
@@ -786,6 +786,14 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
     try {
       const v6alt = await axios.get('https://ipv6.icanhazip.com', { timeout });
       const ip = (v6alt?.data || '').toString().trim();
+      if (ip && isValidIPv6(ip)) result.ipv6 = ip;
+    } catch {}
+  }
+  if (!result.ipv6) {
+    try {
+      // 额外备选：v6.ident.me 返回纯文本IPv6
+      const v6alt2 = await axios.get('https://v6.ident.me', { timeout });
+      const ip = (v6alt2?.data || '').toString().trim();
       if (ip && isValidIPv6(ip)) result.ipv6 = ip;
     } catch {}
   }
