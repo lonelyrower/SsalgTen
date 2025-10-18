@@ -1790,18 +1790,17 @@ PY
         AGENT_USE_HOST_NETWORK=false
     fi
 
-    # 确保 docker-compose.yml 包含 IPv6 网络配置
+    # 确保 docker-compose.yml 包含正确的 IPv6 网络配置
     if [[ "$AGENT_USE_HOST_NETWORK" != "true" && -f "$compose_file" ]]; then
         log_info "检查并更新 docker-compose.yml 中的 IPv6 网络配置..."
 
-        # 检查是否已有网络配置
-        if ! grep -q "enable_ipv6: true" "$compose_file" 2>/dev/null; then
-            log_info "添加 IPv6 网络配置到 docker-compose.yml"
-
-            # 删除旧的 networks 部分（如果存在）
+        # 检查是否有旧的子网配置引用
+        if grep -q 'DEFAULT_AGENT_IPV6_SUBNET' "$compose_file" 2>/dev/null; then
+            log_warning "发现旧的子网配置，正在更新..."
+            # 删除整个 networks 部分
             sed -i '/^networks:/,$ d' "$compose_file"
 
-            # 添加新的 IPv6 网络配置（不指定子网，让 Docker 自动分配）
+            # 添加新的简化配置
             cat >> "$compose_file" << 'EOF'
 
 networks:
@@ -1809,9 +1808,24 @@ networks:
     driver: bridge
     enable_ipv6: true
 EOF
-            log_success "已更新 docker-compose.yml 的 IPv6 网络配置"
+            log_success "已更新为简化的 IPv6 网络配置（由 Docker 自动分配子网）"
+        elif ! grep -q "enable_ipv6: true" "$compose_file" 2>/dev/null; then
+            log_info "添加 IPv6 网络配置到 docker-compose.yml"
+
+            # 删除旧的 networks 部分（如果存在）
+            sed -i '/^networks:/,$ d' "$compose_file"
+
+            # 添加新的 IPv6 网络配置
+            cat >> "$compose_file" << 'EOF'
+
+networks:
+  agent-network:
+    driver: bridge
+    enable_ipv6: true
+EOF
+            log_success "已添加 IPv6 网络配置"
         else
-            log_info "docker-compose.yml 已包含 IPv6 配置"
+            log_info "docker-compose.yml 已包含正确的 IPv6 配置"
         fi
     fi
     if ! ensure_kernel_ipv6_support; then
