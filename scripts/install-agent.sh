@@ -1539,9 +1539,16 @@ update_agent() {
         return
     fi
     
-    # 检查agent目录是否存在
-    if [[ ! -d "agent" ]]; then
-        log_error "下载的代码中未找到agent目录"
+    # 检查 agent 源目录
+    local agent_source=""
+    if [[ -d "agent" ]]; then
+        agent_source="agent"
+    elif [[ -d "packages/agent" ]]; then
+        agent_source="packages/agent"
+    fi
+
+    if [[ -z "$agent_source" ]]; then
+        log_error "下载的代码中未找到 agent 目录"
         rm -rf "$TEMP_DIR"
         read -p "按回车键返回主菜单..." -r
         return
@@ -1559,7 +1566,11 @@ update_agent() {
     find "$APP_DIR" -mindepth 1 -not -name '.env*' -not -name 'docker-compose.yml' -delete 2>/dev/null || true
     
     # 复制新的Agent文件
-    cp -r agent/* "$APP_DIR/"
+    mkdir -p "$APP_DIR"
+    (
+        shopt -s dotglob nullglob
+        cp -r "$agent_source"/* "$APP_DIR/"
+    )
     
     # 恢复 .env 和 docker-compose.yml 配置文件
     if [ -f "$BACKUP_DIR/.env" ]; then
@@ -1577,6 +1588,22 @@ update_agent() {
     
     cd "$APP_DIR"
     log_success "代码更新完成"
+
+    # 更新网络配置/IPv6 支持
+    local compose_file="$APP_DIR/docker-compose.yml"
+    if [[ -f "$compose_file" && $(grep -c 'network_mode: host' "$compose_file") -gt 0 ]]; then
+        AGENT_USE_HOST_NETWORK=true
+    else
+        AGENT_USE_HOST_NETWORK=false
+    fi
+    ensure_docker_ipv6_support
+    if [[ "$AGENT_USE_HOST_NETWORK" != "true" ]]; then
+        local compose_project
+        compose_project=$(basename "$APP_DIR")
+        local default_network="${compose_project}_agent-network"
+        docker network rm "$default_network" >/dev/null 2>&1 && \
+            log_info "已移除旧的 Docker 网络 $default_network 以重新创建 (IPv6)"
+    fi
 
     # 3. 重新构建镜像
     log_info "重新构建 Agent 镜像（可能需要几分钟）..."
