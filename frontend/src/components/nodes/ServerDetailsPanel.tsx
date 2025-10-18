@@ -604,28 +604,35 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
           )}
 
           {/* 系统服务 */}
-          {heartbeatData?.services && (
-            <div className="pt-2 border-t space-y-3">
-              <div>
-                <p className="text-sm font-medium mb-2">系统服务</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(heartbeatData.services).filter(([k]) => !k.endsWith('Detail')).map(([service, isActive]) => (
-                    <div key={service} className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <span className="text-xs capitalize">{service}</span>
-                    </div>
-                  ))}
+          {heartbeatData?.services && (() => {
+            // 只显示检测到的服务（值为 true 的）
+            const activeServices = Object.entries(heartbeatData.services)
+              .filter(([k, v]) => !k.endsWith('Detail') && v === true);
+
+            if (activeServices.length === 0) return null;
+
+            return (
+              <div className="pt-2 border-t space-y-3">
+                <div>
+                  <p className="text-sm font-medium mb-2">系统服务</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {activeServices.map(([service]) => (
+                      <div key={service} className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span className="text-xs capitalize">{service}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {/* Xray 自检 */}
-              {(() => {
-                const svc: any = heartbeatData.services;
-                const detail = svc?.xrayDetail;
-                if (!detail) return null;
-                return (
-                  <div className="pt-2 border-t">
-                    <p className="text-sm font-medium mb-2">Xray 自检</p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                {/* Xray 自检 */}
+                {(() => {
+                  const svc: any = heartbeatData.services;
+                  const detail = svc?.xrayDetail;
+                  if (!detail) return null;
+                  return (
+                    <div className="pt-2 border-t">
+                      <p className="text-sm font-medium mb-2">Xray 自检</p>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-gray-600 dark:text-gray-400">进程</p>
                         <Badge variant={detail.running ? 'success' : 'secondary'} className="text-xs">
@@ -661,8 +668,9 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(({
                   </div>
                 );
               })()}
-            </div>
-          )}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
         </div>
