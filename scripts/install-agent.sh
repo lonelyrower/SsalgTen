@@ -1742,16 +1742,25 @@ PY
     if [ -f "$BACKUP_DIR/.env" ]; then
         cp "$BACKUP_DIR/.env" "$APP_DIR/"
         log_success ".env 配置已保留"
+
+        # 确保 .env 包含 DEFAULT_AGENT_IPV6_SUBNET
+        if ! grep -q "DEFAULT_AGENT_IPV6_SUBNET" "$APP_DIR/.env" 2>/dev/null; then
+            log_info "添加 IPv6 配置到 .env"
+            echo "" >> "$APP_DIR/.env"
+            echo "# Docker 网络配置" >> "$APP_DIR/.env"
+            echo "DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" >> "$APP_DIR/.env"
+            log_success "已添加 DEFAULT_AGENT_IPV6_SUBNET 到 .env"
+        fi
     fi
     
     if [ -f "$BACKUP_DIR/docker-compose.yml" ]; then
         cp "$BACKUP_DIR/docker-compose.yml" "$APP_DIR/"
         log_success "docker-compose.yml 配置已保留"
     fi
-    
+
     # 清理临时目录
     rm -rf "$TEMP_DIR"
-    
+
     cd "$APP_DIR"
     log_success "代码更新完成"
 
@@ -1761,6 +1770,35 @@ PY
         AGENT_USE_HOST_NETWORK=true
     else
         AGENT_USE_HOST_NETWORK=false
+    fi
+
+    # 确保 docker-compose.yml 包含 IPv6 网络配置
+    if [[ "$AGENT_USE_HOST_NETWORK" != "true" && -f "$compose_file" ]]; then
+        log_info "检查并更新 docker-compose.yml 中的 IPv6 网络配置..."
+
+        # 检查是否已有网络配置
+        if ! grep -q "enable_ipv6: true" "$compose_file" 2>/dev/null; then
+            log_info "添加 IPv6 网络配置到 docker-compose.yml"
+
+            # 删除旧的 networks 部分（如果存在）
+            sed -i '/^networks:/,$ d' "$compose_file"
+
+            # 添加新的 IPv6 网络配置
+            cat >> "$compose_file" << 'EOF'
+
+networks:
+  agent-network:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: ${DEFAULT_AGENT_IPV6_SUBNET}
+EOF
+            log_success "已更新 docker-compose.yml 的 IPv6 网络配置"
+        else
+            log_info "docker-compose.yml 已包含 IPv6 配置"
+        fi
     fi
     if ! ensure_kernel_ipv6_support; then
         log_error "内核 IPv6 参数配置失败，已停止更新流程"
