@@ -26,7 +26,7 @@ const ensureEnabled = async (res: Response): Promise<boolean> => {
   try {
     const flag = await getSystemConfig<boolean>(
       "diagnostics.proxy_enabled",
-      envProxyEnabled,
+      true, // 默认启用诊断代理
     );
     if (!flag) {
       res.status(403).json({
@@ -36,7 +36,10 @@ const ensureEnabled = async (res: Response): Promise<boolean> => {
       return false;
     }
     return true;
-  } catch {
+  } catch (error) {
+    // 读取配置失败时，使用环境变量或默认启用
+    logger.warn("Failed to read diagnostics.proxy_enabled config, using fallback:", error);
+    // 环境变量默认也是 true，所以这里基本上总是启用
     if (!envProxyEnabled) {
       res
         .status(403)
