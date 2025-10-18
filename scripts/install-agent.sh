@@ -1725,29 +1725,42 @@ PY
     BACKUP_DIR="/tmp/ssalgten-agent-backup-$(date +%Y%m%d_%H%M%S)"
     mkdir -p "$BACKUP_DIR"
     cp -r "$APP_DIR"/* "$BACKUP_DIR/" 2>/dev/null || true
-    
-    # 更新代码（保留.env和docker-compose.yml文件）
+
+    # 先保存 .env 和 docker-compose.yml 到临时位置
+    ENV_BACKUP="/tmp/ssalgten-env-backup-$$.env"
+    COMPOSE_BACKUP="/tmp/ssalgten-compose-backup-$$.yml"
+
+    if [ -f "$APP_DIR/.env" ]; then
+        cp "$APP_DIR/.env" "$ENV_BACKUP"
+        log_info "已保存 .env 配置"
+    fi
+
+    if [ -f "$APP_DIR/docker-compose.yml" ]; then
+        cp "$APP_DIR/docker-compose.yml" "$COMPOSE_BACKUP"
+        log_info "已保存 docker-compose.yml 配置"
+    fi
+
+    # 更新代码（删除所有旧文件）
     log_info "更新代码文件..."
-    # 删除旧文件（除了.env和docker-compose.yml备份文件）
-    find "$APP_DIR" -mindepth 1 -not -name '.env*' -not -name 'docker-compose.yml' -delete 2>/dev/null || true
-    
+    rm -rf "$APP_DIR"/*
+
     # 复制新的Agent文件
     mkdir -p "$APP_DIR"
     (
         shopt -s dotglob nullglob
         cp -r "$agent_source"/* "$APP_DIR/"
     )
-    
-    # 恢复 .env 和 docker-compose.yml 配置文件
-    if [ -f "$BACKUP_DIR/.env" ]; then
-        cp "$BACKUP_DIR/.env" "$APP_DIR/"
-        log_success ".env 配置已保留"
+
+    # 恢复并更新 .env 配置文件
+    if [ -f "$ENV_BACKUP" ]; then
+        cp "$ENV_BACKUP" "$APP_DIR/.env"
+        log_success ".env 配置已恢复"
 
         # 确保 .env 包含正确的 DEFAULT_AGENT_IPV6_SUBNET
-        if grep -q "DEFAULT_AGENT_IPV6_SUBNET" "$APP_DIR/.env" 2>/dev/null; then
+        if grep -q "^DEFAULT_AGENT_IPV6_SUBNET=" "$APP_DIR/.env" 2>/dev/null; then
             # 已存在，更新值
             sed -i "s|^DEFAULT_AGENT_IPV6_SUBNET=.*|DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET|" "$APP_DIR/.env"
-            log_info "已更新 .env 中的 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET"
+            log_success "已更新 .env 中的 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET"
         else
             # 不存在，添加
             log_info "添加 IPv6 配置到 .env"
@@ -1756,17 +1769,46 @@ PY
             echo "DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" >> "$APP_DIR/.env"
             log_success "已添加 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET 到 .env"
         fi
+
+        # 清理临时 .env 备份
+        rm -f "$ENV_BACKUP"
+    else
+        log_warning "未找到原 .env 文件，可能需要重新配置"
     fi
-    
-    if [ -f "$BACKUP_DIR/docker-compose.yml" ]; then
-        cp "$BACKUP_DIR/docker-compose.yml" "$APP_DIR/"
-        log_success "docker-compose.yml 配置已保留"
+
+    # 恢复 docker-compose.yml 配置文件
+    if [ -f "$COMPOSE_BACKUP" ]; then
+        cp "$COMPOSE_BACKUP" "$APP_DIR/docker-compose.yml"
+        log_success "docker-compose.yml 配置已恢复"
+        rm -f "$COMPOSE_BACKUP"
     fi
 
     # 清理临时目录
     rm -rf "$TEMP_DIR"
 
     cd "$APP_DIR"
+
+    # 验证 .env 文件配置
+    if [ -f "$APP_DIR/.env" ]; then
+        if grep -q "^DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" "$APP_DIR/.env" 2>/dev/null; then
+            log_success "✓ .env 配置验证通过"
+        else
+            log_warning ".env 中的 DEFAULT_AGENT_IPV6_SUBNET 可能不正确，正在修正..."
+            # 强制更新
+            if grep -q "^DEFAULT_AGENT_IPV6_SUBNET=" "$APP_DIR/.env" 2>/dev/null; then
+                sed -i "s|^DEFAULT_AGENT_IPV6_SUBNET=.*|DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET|" "$APP_DIR/.env"
+            else
+                echo "" >> "$APP_DIR/.env"
+                echo "# Docker 网络配置" >> "$APP_DIR/.env"
+                echo "DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" >> "$APP_DIR/.env"
+            fi
+            log_success "已强制更新 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET"
+        fi
+    else
+        log_error ".env 文件不存在！"
+        return
+    fi
+
     log_success "代码更新完成"
 
     # 更新网络配置/IPv6 支持
