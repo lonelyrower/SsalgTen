@@ -798,6 +798,31 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
     } catch {}
   }
 
+  // 本地枚举回退：从系统网络接口查找全局可路由IPv6地址（排除回环/链路本地/ULA）
+  if (!result.ipv6) {
+    try {
+      const ifaces = os.networkInterfaces();
+      const isGlobalUnicastV6 = (addr: string): boolean => {
+        const lower = addr.toLowerCase();
+        if (lower.startsWith('fe80:')) return false; // 链路本地
+        if (lower === '::1') return false; // 回环
+        // 排除ULA fc00::/7（fc00: 或 fd00: 开头）
+        if (lower.startsWith('fc') || lower.startsWith('fd')) return false;
+        // 简易判断全局可路由：2000::/3，常见以 '2' 或 '3' 开头
+        return /^(2|3)[0-9a-f]/i.test(lower);
+      };
+      outer: for (const [, addrs] of Object.entries(ifaces)) {
+        if (!addrs) continue;
+        for (const a of addrs) {
+          if (a.family === 'IPv6' && !a.internal && isValidIPv6(a.address) && isGlobalUnicastV6(a.address)) {
+            result.ipv6 = a.address;
+            break outer;
+          }
+        }
+      }
+    } catch {}
+  }
+
   // 额外安全检查：确保IPv6字段不包含IPv4地址
   if (result.ipv6 && isValidIPv4(result.ipv6)) {
     delete (result as any).ipv6;
