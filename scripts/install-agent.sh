@@ -950,6 +950,7 @@ sys.exit(0 if changed else 1)
         else
             sudo systemctl restart docker
         fi
+        sleep 3
     fi
 
     # 等待 Docker 重启并确认 IPv6 状态
@@ -965,13 +966,27 @@ sys.exit(0 if changed else 1)
         ((attempt++))
     done
 
-    log_warning "Docker 仍未报告支持 IPv6，请手动检查 /etc/docker/daemon.json 配置并手动执行: systemctl restart docker"
-    log_info "当前 daemon.json 内容:"
-    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-        cat "$daemon_file" || true
-    else
-        sudo cat "$daemon_file" || true
+    # 即使 docker info 未报告 IPv6，检查 daemon.json 配置
+    log_warning "Docker info 未报告 IPv6 支持，检查配置文件..."
+
+    if [[ -f "$daemon_file" ]]; then
+        local has_ipv6=$(grep -c '"ipv6".*true' "$daemon_file" 2>/dev/null || echo "0")
+        local has_cidr=$(grep -c '"fixed-cidr-v6"' "$daemon_file" 2>/dev/null || echo "0")
+
+        if [[ $has_ipv6 -gt 0 && $has_cidr -gt 0 ]]; then
+            log_info "daemon.json 配置正确，将继续执行（旧网络将被删除重建）"
+            log_info "当前 daemon.json 内容:"
+            if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+                cat "$daemon_file" || true
+            else
+                sudo cat "$daemon_file" || true
+            fi
+            return 0
+        fi
     fi
+
+    log_error "daemon.json 配置不正确或不存在"
+    log_info "请手动检查 /etc/docker/daemon.json 配置"
     return 1
 }
 
@@ -1221,6 +1236,9 @@ ENABLE_DEBUG=false
 
 # 系统配置
 TZ=Asia/Shanghai
+
+# Docker 网络配置
+DEFAULT_AGENT_IPV6_SUBNET=${DEFAULT_AGENT_IPV6_SUBNET}
 
 # 可选：Xray 自检（启用后将检测本机端口监听/TLS握手）
 # XRAY_CHECK_PORT=443
@@ -1761,12 +1779,29 @@ PY
         log_info "备份目录: $BACKUP_DIR"
         return
     fi
+    # 删除旧网络以便重新创建支持 IPv6 的网络
     if [[ "$AGENT_USE_HOST_NETWORK" != "true" ]]; then
+        log_info "准备重新创建 Docker 网络（启用 IPv6 支持）..."
+
+        # 停止容器
+        cd "$APP_DIR"
+        docker_compose down >/dev/null 2>&1 || true
+
+        # 删除网络
         local compose_project
         compose_project=$(basename "$APP_DIR")
         local default_network="${compose_project}_agent-network"
-        docker network rm "$default_network" >/dev/null 2>&1 && \
-            log_info "已移除旧的 Docker 网络 $default_network 以重新创建 (IPv6)"
+
+        if docker network inspect "$default_network" >/dev/null 2>&1; then
+            log_info "移除旧网络: $default_network"
+            docker network rm "$default_network" >/dev/null 2>&1 || {
+                log_warning "无法删除网络 $default_network，可能仍有容器在使用"
+                # 强制删除所有相关容器
+                docker ps -a --filter "network=$default_network" -q | xargs -r docker rm -f >/dev/null 2>&1 || true
+                docker network rm "$default_network" >/dev/null 2>&1 || true
+            }
+            log_success "旧网络已删除，将使用 IPv6 配置重新创建"
+        fi
     fi
 
     # 3. 重新构建镜像
