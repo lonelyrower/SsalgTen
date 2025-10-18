@@ -10,6 +10,7 @@ interface RealtimeData {
   stats: NodeStats;
   lastUpdate: string;
   connected: boolean;
+  error: string | null;
 }
 
 const NODE_STATUS_VALUES = ['online', 'offline', 'maintenance'] as const;
@@ -117,6 +118,7 @@ export function useRealTime() {
   const { isAuthenticated } = useAuth();
   const pollTimer = useRef<number | null>(null);
   const flushTimer = useRef<number | null>(null);
+  const connectionTimeoutTimer = useRef<number | null>(null);
   const pendingFull = useRef<NodesStatusUpdatePayload | null>(null);
   const pendingChanges = useRef<Map<string, NodeStatusValue>>(new Map<string, NodeStatusValue>());
   const [realtimeData, setRealtimeData] = useState<RealtimeData>({
@@ -129,7 +131,8 @@ export function useRealTime() {
       totalProviders: 0
     },
     lastUpdate: '',
-    connected: false
+    connected: false,
+    error: null
   });
 
   // 节点状态更新处理（带深度比较优化）
@@ -242,21 +245,31 @@ export function useRealTime() {
           ...prev,
           nodes,
           stats,
-          lastUpdate: new Date().toISOString()
+          lastUpdate: new Date().toISOString(),
+          error: null // 清除错误状态
         }));
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '无法连接到后端服务器';
       console.warn('Failed to fetch nodes via REST fallback:', error);
+      setRealtimeData(prev => ({
+        ...prev,
+        error: errorMessage
+      }));
     }
   }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
       socketService.disconnect();
-      setRealtimeData(prev => ({ ...prev, connected: false }));
+      setRealtimeData(prev => ({ ...prev, connected: false, error: null }));
       if (pollTimer.current) {
         clearInterval(pollTimer.current);
         pollTimer.current = null;
+      }
+      if (connectionTimeoutTimer.current) {
+        clearTimeout(connectionTimeoutTimer.current);
+        connectionTimeoutTimer.current = null;
       }
       return;
     }
@@ -264,12 +277,40 @@ export function useRealTime() {
     // 连接 Socket.IO
     socketService.connect();
 
+    // 设置连接超时检测（15秒后如果仍未连接且无数据，设置错误）
+    connectionTimeoutTimer.current = window.setTimeout(() => {
+      setRealtimeData(prev => {
+        if (!prev.connected && prev.nodes.length === 0 && !prev.error) {
+          return {
+            ...prev,
+            error: '连接超时：无法建立实时连接，正在尝试通过备用方式获取数据...'
+          };
+        }
+        return prev;
+      });
+    }, 15000);
+
     // 监听连接状态
     const checkConnection = () => {
-      setRealtimeData(prev => ({ 
-        ...prev, 
-        connected: socketService.connected 
-      }));
+      const isConnected = socketService.connected;
+      setRealtimeData(prev => {
+        // 如果从断连恢复到连接状态，清除错误并清除超时
+        if (!prev.connected && isConnected) {
+          if (connectionTimeoutTimer.current) {
+            clearTimeout(connectionTimeoutTimer.current);
+            connectionTimeoutTimer.current = null;
+          }
+          return {
+            ...prev,
+            connected: isConnected,
+            error: null
+          };
+        }
+        return {
+          ...prev,
+          connected: isConnected
+        };
+      });
     };
 
     const intervalId = setInterval(checkConnection, 1000);
@@ -306,6 +347,10 @@ export function useRealTime() {
       if (pollTimer.current) {
         clearInterval(pollTimer.current);
         pollTimer.current = null;
+      }
+      if (connectionTimeoutTimer.current) {
+        clearTimeout(connectionTimeoutTimer.current);
+        connectionTimeoutTimer.current = null;
       }
     };
   }, [isAuthenticated, handleNodesStatusUpdate, handleNodeStatusChanged, handleRealtimeNodes, fetchViaRest]);
