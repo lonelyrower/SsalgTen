@@ -45,10 +45,11 @@ docker_compose() {
 }
 
 # 版本信息
-SCRIPT_VERSION="1.3.0"
+SCRIPT_VERSION="1.4.0"
 SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh"
 AGENT_VERSION="latest"
 DEFAULT_AGENT_IPV6_SUBNET="fd00:6a:6c:10::/64"
+SYSCTL_IPV6_CONFIG_FILE="/etc/sysctl.d/99-ssalgten-ipv6.conf"
 
 # 日志函数
 log_info() {
@@ -789,6 +790,64 @@ install_docker_compose() {
     return 1
 }
 
+# 确保宿主机 IPv6 内核参数打开（Docker IPv6 依赖）
+ensure_kernel_ipv6_support() {
+    log_info "检测宿主机 IPv6 内核配置..."
+
+    local desired_conf="net.ipv6.conf.all.disable_ipv6=0
+net.ipv6.conf.default.disable_ipv6=0
+net.ipv6.conf.all.forwarding=1
+net.ipv6.conf.default.forwarding=1"
+
+    # 立即应用内核参数（运行时）
+    local set_sysctl() {
+        local key="$1"
+        local val="$2"
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            sysctl -w "$key=$val" >/dev/null 2>&1
+        else
+            sudo sysctl -w "$key=$val" >/dev/null 2>&1
+        fi
+    }
+
+    set_sysctl "net.ipv6.conf.all.disable_ipv6" 0
+    set_sysctl "net.ipv6.conf.default.disable_ipv6" 0
+    set_sysctl "net.ipv6.conf.all.forwarding" 1
+    set_sysctl "net.ipv6.conf.default.forwarding" 1
+
+    # 写入持久化配置
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        mkdir -p "$(dirname "$SYSCTL_IPV6_CONFIG_FILE")"
+        printf '%s\n' "$desired_conf" > "$SYSCTL_IPV6_CONFIG_FILE"
+    else
+        sudo mkdir -p "$(dirname "$SYSCTL_IPV6_CONFIG_FILE")"
+        printf '%s\n' "$desired_conf" | sudo tee "$SYSCTL_IPV6_CONFIG_FILE" >/dev/null
+    fi
+
+    # 重新加载配置文件
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        sysctl -p "$SYSCTL_IPV6_CONFIG_FILE" >/dev/null 2>&1 || true
+    else
+        sudo sysctl -p "$SYSCTL_IPV6_CONFIG_FILE" >/dev/null 2>&1 || true
+    fi
+
+    # 验证最终状态
+    local all_disable
+    local def_disable
+    local all_forward
+    all_disable=$(sysctl -n net.ipv6.conf.all.disable_ipv6 2>/dev/null || echo 1)
+    def_disable=$(sysctl -n net.ipv6.conf.default.disable_ipv6 2>/dev/null || echo 1)
+    all_forward=$(sysctl -n net.ipv6.conf.all.forwarding 2>/dev/null || echo 0)
+
+    if [[ "$all_disable" != "0" || "$def_disable" != "0" || "$all_forward" != "1" ]]; then
+        log_warning "IPv6 内核参数配置可能未完全生效，请检查 sysctl 设置"
+        return 1
+    fi
+
+    log_success "宿主机 IPv6 内核参数已启用"
+    return 0
+}
+
 # 确保 Docker 已启用 IPv6 支持（非 host 网络模式依赖）
 ensure_docker_ipv6_support() {
     if [[ "$AGENT_USE_HOST_NETWORK" == "true" ]]; then
@@ -890,17 +949,28 @@ sys.exit(0 if changed else 1)
         else
             sudo systemctl restart docker
         fi
+    fi
+
+    # 等待 Docker 重启并确认 IPv6 状态
+    local attempt=0
+    local max_attempts=10
+    while [[ $attempt -lt $max_attempts ]]; do
         sleep 2
-    fi
+        ipv6_status=$(docker info --format '{{.IPv6}}' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        if [[ "$ipv6_status" == "true" ]]; then
+            log_success "Docker IPv6 支持已启用"
+            return 0
+        fi
+        ((attempt++))
+    done
 
-    # 再次确认状态
-    ipv6_status=$(docker info --format '{{.IPv6}}' 2>/dev/null | tr '[:upper:]' '[:lower:]')
-    if [[ "$ipv6_status" == "true" ]]; then
-        log_success "Docker IPv6 支持已启用"
-        return 0
+    log_warning "Docker 仍未报告支持 IPv6，请手动检查 /etc/docker/daemon.json 配置并手动执行: systemctl restart docker"
+    log_info "当前 daemon.json 内容:"
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        cat "$daemon_file" || true
+    else
+        sudo cat "$daemon_file" || true
     fi
-
-    log_warning "Docker 仍未报告支持 IPv6，请手动检查 /etc/docker/daemon.json 配置并重启 docker 服务"
     return 1
 }
 
@@ -1596,7 +1666,23 @@ update_agent() {
     else
         AGENT_USE_HOST_NETWORK=false
     fi
-    ensure_docker_ipv6_support
+    if ! ensure_kernel_ipv6_support; then
+        log_error "内核 IPv6 参数配置失败，已停止更新流程"
+        rm -rf "$APP_DIR"/*
+        cp -r "$BACKUP_DIR"/* "$APP_DIR/" 2>/dev/null || true
+        log_info "已恢复到更新前的状态"
+        log_info "备份目录: $BACKUP_DIR"
+        return
+    fi
+    if ! ensure_docker_ipv6_support; then
+        log_error "Docker IPv6 未成功启用，已停止更新流程"
+        rm -rf "$APP_DIR"/*
+        cp -r "$BACKUP_DIR"/* "$APP_DIR/" 2>/dev/null || true
+        log_info "已恢复到更新前的状态"
+        log_info "请检查 /etc/docker/daemon.json 后重新运行更新"
+        log_info "备份目录: $BACKUP_DIR"
+        return
+    fi
     if [[ "$AGENT_USE_HOST_NETWORK" != "true" ]]; then
         local compose_project
         compose_project=$(basename "$APP_DIR")
@@ -2190,7 +2276,14 @@ main() {
     install_system_dependencies
     install_docker
     install_docker_compose
-    ensure_docker_ipv6_support
+    if ! ensure_kernel_ipv6_support; then
+        log_error "无法启用宿主机 IPv6 参数，请检查系统设置后重试"
+        exit 1
+    fi
+    if ! ensure_docker_ipv6_support; then
+        log_error "Docker 未成功启用 IPv6，请检查 /etc/docker/daemon.json 后重试"
+        exit 1
+    fi
     create_app_directory
     download_agent_code
     create_docker_compose
