@@ -45,9 +45,10 @@ docker_compose() {
 }
 
 # 版本信息
-SCRIPT_VERSION="1.2.0"
+SCRIPT_VERSION="1.3.0"
 SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh"
 AGENT_VERSION="latest"
+DEFAULT_AGENT_IPV6_SUBNET="fd00:6a:6c:10::/64"
 
 # 日志函数
 log_info() {
@@ -664,28 +665,28 @@ install_system_dependencies() {
         log_info "检测到APT包管理器 (Debian/Ubuntu)"
         if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
             apt update
-            apt install -y curl wget git gnupg lsb-release
+            apt install -y curl wget git gnupg lsb-release python3
         else
             sudo apt update
-            sudo apt install -y curl wget git gnupg lsb-release
+            sudo apt install -y curl wget git gnupg lsb-release python3
         fi
     elif command -v yum >/dev/null 2>&1; then
         log_info "检测到YUM包管理器 (CentOS/RHEL 7)"
         if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
             yum update -y
-            yum install -y curl wget git
+            yum install -y curl wget git python3
         else
             sudo yum update -y
-            sudo yum install -y curl wget git
+            sudo yum install -y curl wget git python3
         fi
     elif command -v dnf >/dev/null 2>&1; then
         log_info "检测到DNF包管理器 (CentOS/RHEL 8+/Fedora)"
         if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
             dnf update -y
-            dnf install -y curl wget git
+            dnf install -y curl wget git python3
         else
             sudo dnf update -y
-            sudo dnf install -y curl wget git
+            sudo dnf install -y curl wget git python3
         fi
     else
         log_error "不支持的操作系统，未找到 apt/yum/dnf 包管理器"
@@ -785,6 +786,121 @@ install_docker_compose() {
     fi
     
     log_error "未能安装可用的 Docker Compose，请先安装 docker-compose-plugin 后重试"
+    return 1
+}
+
+# 确保 Docker 已启用 IPv6 支持（非 host 网络模式依赖）
+ensure_docker_ipv6_support() {
+    if [[ "$AGENT_USE_HOST_NETWORK" == "true" ]]; then
+        log_info "检测到 host 网络模式，跳过 Docker IPv6 自动配置（将直接复用宿主网络）"
+        return 0
+    fi
+
+    log_info "检测 Docker IPv6 支持..."
+
+    local ipv6_status
+    ipv6_status=$(docker info --format '{{.IPv6}}' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$ipv6_status" == "true" ]]; then
+        log_success "Docker 已启用 IPv6"
+        return 0
+    fi
+
+    log_warning "Docker 当前未启用 IPv6，将尝试自动配置"
+
+    local daemon_file="/etc/docker/daemon.json"
+    local need_restart=false
+    local python_bin="python3"
+
+    if ! command -v "$python_bin" >/dev/null 2>&1; then
+        if command -v python >/dev/null 2>&1; then
+            python_bin="python"
+        else
+            log_error "未找到 python3/python，无法自动配置 Docker IPv6"
+            log_error "请手动编辑 $daemon_file 并重启 docker 后重试"
+            return 1
+        fi
+    fi
+
+    # 备份现有 daemon.json
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        mkdir -p /etc/docker
+        if [[ -f "$daemon_file" ]]; then
+            cp "$daemon_file" "${daemon_file}.bak.$(date +%Y%m%d%H%M%S)"
+        fi
+    else
+        sudo mkdir -p /etc/docker
+        if [[ -f "$daemon_file" ]]; then
+            sudo cp "$daemon_file" "${daemon_file}.bak.$(date +%Y%m%d%H%M%S)"
+        fi
+    fi
+
+    # 写入或更新配置
+    local update_exit=1
+    local updater_script="
+import json, os, sys
+path = sys.argv[1]
+cidr = sys.argv[2]
+cfg = {}
+if os.path.exists(path):
+    try:
+        with open(path, 'r', encoding='utf-8') as fh:
+            cfg = json.load(fh)
+    except Exception:
+        cfg = {}
+changed = False
+if not cfg.get('ipv6'):
+    cfg['ipv6'] = True
+    changed = True
+if 'fixed-cidr-v6' not in cfg:
+    cfg['fixed-cidr-v6'] = cidr
+    changed = True
+if 'ip6tables' not in cfg:
+    cfg['ip6tables'] = True
+    changed = True
+# 保持配置内容有序且易读
+if changed:
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as fh:
+        json.dump(cfg, fh, indent=2, ensure_ascii=False)
+        fh.write('\\n')
+    os.replace(tmp, path)
+sys.exit(0 if changed else 1)
+"
+
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        "$python_bin" -c "$updater_script" "$daemon_file" "$DEFAULT_AGENT_IPV6_SUBNET"
+        update_exit=$?
+    else
+        sudo "$python_bin" -c "$updater_script" "$daemon_file" "$DEFAULT_AGENT_IPV6_SUBNET"
+        update_exit=$?
+    fi
+
+    if [[ $update_exit -eq 0 ]]; then
+        need_restart=true
+        log_success "已更新 Docker IPv6 配置 (fixed-cidr-v6=$DEFAULT_AGENT_IPV6_SUBNET)"
+    else
+        log_info "Docker IPv6 配置已存在，无需修改"
+    fi
+
+    if [[ "$need_restart" == "true" ]]; then
+        log_info "重启 Docker 服务使 IPv6 配置生效..."
+        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+            systemctl restart docker
+        else
+            sudo systemctl restart docker
+        fi
+        sleep 2
+    fi
+
+    # 再次确认状态
+    ipv6_status=$(docker info --format '{{.IPv6}}' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+    if [[ "$ipv6_status" == "true" ]]; then
+        log_success "Docker IPv6 支持已启用"
+        return 0
+    fi
+
+    log_warning "Docker 仍未报告支持 IPv6，请手动检查 /etc/docker/daemon.json 配置并重启 docker 服务"
     return 1
 }
 
@@ -955,6 +1071,11 @@ services:
 networks:
   agent-network:
     driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: ${DEFAULT_AGENT_IPV6_SUBNET}
 EOF
     fi
 
@@ -2032,6 +2153,7 @@ main() {
     install_system_dependencies
     install_docker
     install_docker_compose
+    ensure_docker_ipv6_support
     create_app_directory
     download_agent_code
     create_docker_compose
