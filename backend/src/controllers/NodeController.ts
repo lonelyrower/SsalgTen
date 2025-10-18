@@ -13,6 +13,7 @@ import { eventService } from "../services/EventService";
 import { ipInfoService } from "../services/IPInfoService";
 import { sanitizeNode, sanitizeNodes } from "../utils/serialize";
 import { prisma } from "../lib/prisma";
+import { isIP } from "node:net";
 
 // ---- Broadcast throttling helpers ----
 const BROADCAST_MIN_INTERVAL_MS = parseInt(
@@ -87,9 +88,17 @@ async function scheduleNodeDetailBroadcastByAgent(agentId: string, io: any) {
 }
 
 export class NodeController {
-  // 简易 IPv6 校验（包含冒号且非空），避免误把 IPv4 写入 IPv6 字段
+  // 规范化 IPv6：裁剪空白、去掉 scope id，并确保格式有效
+  private normalizeIPv6(v?: unknown): string | undefined {
+    if (typeof v !== "string") return undefined;
+    const trimmed = v.trim();
+    if (!trimmed) return undefined;
+    const [base] = trimmed.split("%");
+    return isIP(base) === 6 ? base : undefined;
+  }
+
   private isLikelyIPv6(v?: unknown): v is string {
-    return typeof v === "string" && v.includes(":");
+    return Boolean(this.normalizeIPv6(v));
   }
 
   // 获取所有节点
@@ -508,12 +517,12 @@ export class NodeController {
         // 如果节点不存在，尝试将Agent“收编”到同IP的占位节点
         if (nodeInfo && (nodeInfo.ipv4 || nodeInfo.ipv6)) {
           // 清洗 IPv6：忽略与 IPv4 相同或非 IPv6 格式的值
-          if (
-            nodeInfo.ipv6 &&
-            (!this.isLikelyIPv6(nodeInfo.ipv6) ||
-              nodeInfo.ipv6 === nodeInfo.ipv4)
-          ) {
-            nodeInfo.ipv6 = undefined;
+          if (nodeInfo.ipv6) {
+            const normalizedV6 = this.normalizeIPv6(nodeInfo.ipv6);
+            nodeInfo.ipv6 =
+              normalizedV6 && normalizedV6 !== nodeInfo.ipv4
+                ? normalizedV6
+                : undefined;
           }
           const adopted = await nodeService.tryAdoptAgentToPlaceholder(
             agentId,
@@ -530,6 +539,8 @@ export class NodeController {
         if (!node && nodeInfo) {
           logger.info(`Creating new node for agent: ${agentId}`);
 
+          const normalizedIPv6 = this.normalizeIPv6(nodeInfo.ipv6);
+
           node = await nodeService.createNode({
             agentId,
             name: nodeInfo.name || `Node-${agentId.substring(0, 8)}`,
@@ -540,10 +551,8 @@ export class NodeController {
             provider: nodeInfo.provider || "Unknown",
             ipv4: nodeInfo.ipv4,
             ipv6:
-              nodeInfo.ipv6 &&
-              this.isLikelyIPv6(nodeInfo.ipv6) &&
-              nodeInfo.ipv6 !== nodeInfo.ipv4
-                ? nodeInfo.ipv6
+              normalizedIPv6 && normalizedIPv6 !== nodeInfo.ipv4
+                ? normalizedIPv6
                 : undefined,
             osType: systemInfo?.platform || "Unknown",
             osVersion: systemInfo?.version || "Unknown",
@@ -575,12 +584,12 @@ export class NodeController {
         // 如果提供了新的节点信息，也更新位置信息
         if (nodeInfo) {
           // 清洗 IPv6：忽略与 IPv4 相同或非 IPv6 格式的值
-          if (
-            nodeInfo.ipv6 &&
-            (!this.isLikelyIPv6(nodeInfo.ipv6) ||
-              nodeInfo.ipv6 === nodeInfo.ipv4)
-          ) {
-            nodeInfo.ipv6 = undefined;
+          if (nodeInfo.ipv6) {
+            const normalizedV6 = this.normalizeIPv6(nodeInfo.ipv6);
+            nodeInfo.ipv6 =
+              normalizedV6 && normalizedV6 !== nodeInfo.ipv4
+                ? normalizedV6
+                : undefined;
           }
           const updateData: any = {
             country: nodeInfo.country || node.country,
@@ -731,14 +740,10 @@ export class NodeController {
             ) {
               updates.ipv4 = heartbeatData.nodeIPs.ipv4;
             }
-            const hbV6 = heartbeatData.nodeIPs.ipv6;
+            const hbV6Raw = heartbeatData.nodeIPs.ipv6;
+            const hbV6 = this.normalizeIPv6(hbV6Raw);
             const hbV4 = heartbeatData.nodeIPs.ipv4;
-            if (
-              typeof hbV6 === "string" &&
-              this.isLikelyIPv6(hbV6) &&
-              hbV6 !== hbV4 &&
-              hbV6 !== node.ipv6
-            ) {
+            if (hbV6 && hbV6 !== hbV4 && hbV6 !== node.ipv6) {
               updates.ipv6 = hbV6;
             }
             if (Object.keys(updates).length > 0) {

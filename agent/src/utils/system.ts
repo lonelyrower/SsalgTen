@@ -752,15 +752,51 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
   const result: { ipv4?: string; ipv6?: string } = {};
   const timeout = 5000; // 放宽超时，提升在启用IPv6但握手较慢环境下的成功率
 
-  // Helper function to validate IPv6
-  const isValidIPv6 = (ip: string): boolean => {
-    return ip.includes(':') && ip.length > 7; // Basic IPv6 validation
+  const isValidIPv6 = (ip?: string): ip is string => {
+    if (!ip) return false;
+    return net.isIP(ip) === 6;
   };
 
-  // Helper function to validate IPv4
-  const isValidIPv4 = (ip: string): boolean => {
-    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    return ipv4Regex.test(ip);
+  const isValidIPv4 = (ip?: string): ip is string => {
+    if (!ip) return false;
+    return net.isIP(ip) === 4;
+  };
+
+  const hasUsableIPv6 = (): boolean => {
+    return Boolean(result.ipv6 && isValidIPv6(result.ipv6));
+  };
+
+  const fillIPv6FromInterfaces = () => {
+    if (hasUsableIPv6()) return;
+    try {
+      const ifaces = os.networkInterfaces();
+      const isGlobalUnicastV6 = (addr: string): boolean => {
+        const lower = addr.toLowerCase();
+        if (lower.startsWith('fe80:')) return false; // 链路本地
+        if (lower === '::1') return false; // 回环
+        if (lower.startsWith('fc') || lower.startsWith('fd')) return false; // ULA
+        if (lower.startsWith('::ffff:')) return false; // IPv4 映射
+        return /^(2|3)[0-9a-f]/i.test(lower); // 粗略判断全局单播
+      };
+
+      outer: for (const [, addrs] of Object.entries(ifaces)) {
+        if (!addrs) continue;
+        for (const a of addrs) {
+          if (
+            a.family === 'IPv6' &&
+            !a.internal &&
+            typeof a.address === 'string' &&
+            isValidIPv6(a.address) &&
+            isGlobalUnicastV6(a.address)
+          ) {
+            result.ipv6 = a.address;
+            break outer;
+          }
+        }
+      }
+    } catch {
+      // 本地接口枚举失败不应阻塞公网IP检测
+    }
   };
 
   try {
@@ -779,49 +815,27 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
 
   try {
     const v6 = await axios.get('https://api64.ipify.org?format=json', { timeout });
-    const ipv6 = v6?.data?.ip;
-    if (ipv6 && isValidIPv6(ipv6)) result.ipv6 = ipv6;
+    const ipv6 = typeof v6?.data?.ip === 'string' ? v6.data.ip.trim() : '';
+    if (isValidIPv6(ipv6)) result.ipv6 = ipv6;
   } catch {}
-  if (!result.ipv6) {
+
+  if (!hasUsableIPv6()) {
     try {
       const v6alt = await axios.get('https://ipv6.icanhazip.com', { timeout });
       const ip = (v6alt?.data || '').toString().trim();
-      if (ip && isValidIPv6(ip)) result.ipv6 = ip;
-    } catch {}
-  }
-  if (!result.ipv6) {
-    try {
-      // 额外备选：v6.ident.me 返回纯文本IPv6
-      const v6alt2 = await axios.get('https://v6.ident.me', { timeout });
-      const ip = (v6alt2?.data || '').toString().trim();
-      if (ip && isValidIPv6(ip)) result.ipv6 = ip;
+      if (isValidIPv6(ip)) result.ipv6 = ip;
     } catch {}
   }
 
-  // 本地枚举回退：从系统网络接口查找全局可路由IPv6地址（排除回环/链路本地/ULA）
-  if (!result.ipv6) {
+  if (!hasUsableIPv6()) {
     try {
-      const ifaces = os.networkInterfaces();
-      const isGlobalUnicastV6 = (addr: string): boolean => {
-        const lower = addr.toLowerCase();
-        if (lower.startsWith('fe80:')) return false; // 链路本地
-        if (lower === '::1') return false; // 回环
-        // 排除ULA fc00::/7（fc00: 或 fd00: 开头）
-        if (lower.startsWith('fc') || lower.startsWith('fd')) return false;
-        // 简易判断全局可路由：2000::/3，常见以 '2' 或 '3' 开头
-        return /^(2|3)[0-9a-f]/i.test(lower);
-      };
-      outer: for (const [, addrs] of Object.entries(ifaces)) {
-        if (!addrs) continue;
-        for (const a of addrs) {
-          if (a.family === 'IPv6' && !a.internal && isValidIPv6(a.address) && isGlobalUnicastV6(a.address)) {
-            result.ipv6 = a.address;
-            break outer;
-          }
-        }
-      }
+      const v6alt2 = await axios.get('https://v6.ident.me', { timeout });
+      const ip = (v6alt2?.data || '').toString().trim();
+      if (isValidIPv6(ip)) result.ipv6 = ip;
     } catch {}
   }
+
+  fillIPv6FromInterfaces();
 
   // 额外安全检查：确保IPv6字段不包含IPv4地址
   if (result.ipv6 && isValidIPv4(result.ipv6)) {
@@ -832,6 +846,8 @@ export const getPublicIPs = async (): Promise<{ ipv4?: string; ipv6?: string }> 
   if (result.ipv4 && result.ipv6 && result.ipv4 === result.ipv6) {
     delete (result as any).ipv6;
   }
+
+  fillIPv6FromInterfaces();
 
   return result;
 };
