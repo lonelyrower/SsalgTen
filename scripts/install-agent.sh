@@ -1743,13 +1743,18 @@ PY
         cp "$BACKUP_DIR/.env" "$APP_DIR/"
         log_success ".env 配置已保留"
 
-        # 确保 .env 包含 DEFAULT_AGENT_IPV6_SUBNET
-        if ! grep -q "DEFAULT_AGENT_IPV6_SUBNET" "$APP_DIR/.env" 2>/dev/null; then
+        # 确保 .env 包含正确的 DEFAULT_AGENT_IPV6_SUBNET
+        if grep -q "DEFAULT_AGENT_IPV6_SUBNET" "$APP_DIR/.env" 2>/dev/null; then
+            # 已存在，更新值
+            sed -i "s|^DEFAULT_AGENT_IPV6_SUBNET=.*|DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET|" "$APP_DIR/.env"
+            log_info "已更新 .env 中的 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET"
+        else
+            # 不存在，添加
             log_info "添加 IPv6 配置到 .env"
             echo "" >> "$APP_DIR/.env"
             echo "# Docker 网络配置" >> "$APP_DIR/.env"
             echo "DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET" >> "$APP_DIR/.env"
-            log_success "已添加 DEFAULT_AGENT_IPV6_SUBNET 到 .env"
+            log_success "已添加 DEFAULT_AGENT_IPV6_SUBNET=$DEFAULT_AGENT_IPV6_SUBNET 到 .env"
         fi
     fi
     
@@ -1863,11 +1868,35 @@ EOF
     # 停止服务
     if systemctl is-active --quiet ssalgten-agent.service 2>/dev/null; then
         systemctl stop ssalgten-agent.service
-        sleep 1
+        sleep 2
     fi
 
+    # 清理可能残留的容器
+    docker_compose down 2>/dev/null || true
+    sleep 1
+
     # 启动服务
-    systemctl start ssalgten-agent.service
+    if systemctl start ssalgten-agent.service; then
+        log_info "systemd 服务已启动"
+    else
+        log_error "systemd 服务启动失败"
+        log_info "查看服务状态: systemctl status ssalgten-agent.service"
+        log_info "查看服务日志: journalctl -xeu ssalgten-agent.service"
+
+        # 尝试直接启动查看错误
+        log_info "尝试直接启动容器以查看错误..."
+        cd "$APP_DIR"
+        docker_compose up -d 2>&1 | head -30
+
+        log_warning "正在恢复备份..."
+        docker_compose down 2>/dev/null || true
+        rm -rf "$APP_DIR"/*
+        cp -r "$BACKUP_DIR"/* "$APP_DIR/"
+        systemctl start ssalgten-agent.service
+        log_info "已恢复到更新前的状态"
+        return
+    fi
+
     sleep 3
 
     # 验证容器状态
@@ -1880,9 +1909,10 @@ EOF
         log_info "旧版本备份位置: $BACKUP_DIR"
         log_info "如果一切正常，可以删除备份: rm -rf $BACKUP_DIR"
     else
-        log_error "Agent 启动失败"
-        log_info "查看日志: docker compose logs --tail 50"
+        log_error "Agent 容器启动失败"
+        log_info "查看容器日志: cd $APP_DIR && docker compose logs --tail 50"
         log_warning "正在恢复备份..."
+        docker_compose down 2>/dev/null || true
         rm -rf "$APP_DIR"/*
         cp -r "$BACKUP_DIR"/* "$APP_DIR/"
         systemctl restart ssalgten-agent.service
