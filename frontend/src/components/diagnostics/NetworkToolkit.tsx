@@ -169,7 +169,9 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, on
     try {
       let result;
       const agentHost = selectedNode.ipv4 || selectedNode.ipv6 || 'localhost';
-      const agentEndpoint = `http://${agentHost}:3002`;
+      // 如果是IPv6地址，需要用方括号包裹
+      const formattedHost = agentHost.includes(':') ? `[${agentHost}]` : agentHost;
+      const agentEndpoint = `http://${formattedHost}:3002`;
       const proxyBase = `/api/diagnostics/${encodeURIComponent(selectedNode.id)}`;
       
       // 根据工具类型调用相应的Agent API

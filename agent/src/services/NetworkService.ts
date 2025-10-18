@@ -47,12 +47,14 @@ export class NetworkService {
   
   // 验证目标地址是否安全
   private validateTarget(target: string): boolean {
-    // 基础格式白名单 (IPv4 / 域名) 防止命令注入；不允许空格、分号、&、| 等
+    // 基础格式白名单 (IPv4 / IPv6 / 域名) 防止命令注入；不允许空格、分号、&、| 等
     const ipv4Regex = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
     const domainRegex = /^(?=.{1,253}$)(?!-)(?:[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}$/;
     const isIPv4 = ipv4Regex.test(target);
+    const isIPv6 = ipv6Regex.test(target);
     const isDomain = domainRegex.test(target);
-    if (!isIPv4 && !isDomain) return false;
+    if (!isIPv4 && !isIPv6 && !isDomain) return false;
 
     if (/[;|&`$<>\\]/.test(target)) return false;
 
@@ -90,6 +92,7 @@ export class NetworkService {
     for (const allowed of securityConfig.allowedTargets) {
       if (!allowed) continue;
       if (allowed.includes('/')) {
+        // 只对IPv4支持CIDR检查，IPv6的CIDR匹配较复杂，暂时不支持
         if (isIPv4 && inCIDR(target, allowed)) return true;
       } else if (allowed.endsWith('*')) {
         const prefix = allowed.slice(0, -1);
@@ -98,6 +101,9 @@ export class NetworkService {
         return true;
       }
     }
+    // 对于IPv6，如果没有配置允许列表或只有通配符，默认允许
+    // 这样可以确保IPv6诊断可以正常工作
+    if (isIPv6 && securityConfig.allowedTargets.length === 0) return true;
     return false;
   }
 
