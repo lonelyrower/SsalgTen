@@ -48,6 +48,9 @@ interface NodeForComparison {
   country?: string;
   city?: string;
   provider?: string;
+  // 重要：包含 IP 字段，确保 IPv4/IPv6 改变时能触发前端节点更新
+  ipv4?: string;
+  ipv6?: string;
 }
 
 // 比较两个节点数组是否相等（用于避免不必要的渲染）
@@ -65,7 +68,9 @@ export function compareNodes(nodes1: NodeForComparison[], nodes2: NodeForCompari
       node1.name === node2.name &&
       node1.country === node2.country &&
       node1.city === node2.city &&
-      node1.provider === node2.provider
+      node1.provider === node2.provider &&
+      node1.ipv4 === node2.ipv4 &&
+      node1.ipv6 === node2.ipv6
     );
   });
 }

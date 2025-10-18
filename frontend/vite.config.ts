@@ -43,7 +43,6 @@ export default defineConfig({
           
           // Map chunk（包含新版增强地图）
           'map': [
-            './src/components/map/WorldMap',
             './src/components/map/EnhancedWorldMap'
           ],
           
