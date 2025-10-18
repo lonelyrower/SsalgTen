@@ -1822,7 +1822,6 @@ PY
     log_info "验证服务状态: systemctl status ssalgten-agent"
     log_info "查看 Agent 日志: cd $APP_DIR && docker compose logs -f"
     echo ""
-    read -p "按回车键返回主菜单..." -r
 }
 
 # 更新心跳配置
@@ -2020,7 +2019,6 @@ SYSTEMD_EOF
     echo ""
     log_info "验证服务状态: systemctl status ssalgten-agent"
     echo ""
-    read -p "按回车键返回主菜单..." -r
 }
 
 # 卸载Agent
@@ -2273,21 +2271,16 @@ main() {
                             break
                             ;;
                         2)
-                            log_info "更新 Agent 版本..."
                             update_agent
-                            # 更新完成后返回菜单
-                            show_main_menu
+                            exit 0
                             ;;
                         3)
-                            log_info "更新心跳配置..."
                             update_heartbeat_config
-                            # 更新完成后返回菜单
-                            show_main_menu
+                            exit 0
                             ;;
                         4)
-                            log_info "开始卸载监控节点..."
                             uninstall_agent
-                            return
+                            exit 0
                             ;;
                         0)
                             log_info "退出程序"
@@ -2295,8 +2288,7 @@ main() {
                             exit 0
                             ;;
                         *)
-                            echo -e "${RED}无效选项，请输入 1、2、3、4 或 0${NC}"
-                            continue
+                            echo -e "${RED}无效选项，请输入 0-4${NC}"
                             ;;
                     esac
                 done
