@@ -38,7 +38,10 @@ const ensureEnabled = async (res: Response): Promise<boolean> => {
     return true;
   } catch (error) {
     // 读取配置失败时，使用环境变量或默认启用
-    logger.warn("Failed to read diagnostics.proxy_enabled config, using fallback:", error);
+    logger.warn(
+      "Failed to read diagnostics.proxy_enabled config, using fallback:",
+      error,
+    );
     // 环境变量默认也是 true，所以这里基本上总是启用
     if (!envProxyEnabled) {
       res
