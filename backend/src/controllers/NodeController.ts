@@ -508,7 +508,11 @@ export class NodeController {
         // 如果节点不存在，尝试将Agent“收编”到同IP的占位节点
         if (nodeInfo && (nodeInfo.ipv4 || nodeInfo.ipv6)) {
           // 清洗 IPv6：忽略与 IPv4 相同或非 IPv6 格式的值
-          if (nodeInfo.ipv6 && (!this.isLikelyIPv6(nodeInfo.ipv6) || nodeInfo.ipv6 === nodeInfo.ipv4)) {
+          if (
+            nodeInfo.ipv6 &&
+            (!this.isLikelyIPv6(nodeInfo.ipv6) ||
+              nodeInfo.ipv6 === nodeInfo.ipv4)
+          ) {
             nodeInfo.ipv6 = undefined;
           }
           const adopted = await nodeService.tryAdoptAgentToPlaceholder(
@@ -536,7 +540,9 @@ export class NodeController {
             provider: nodeInfo.provider || "Unknown",
             ipv4: nodeInfo.ipv4,
             ipv6:
-              nodeInfo.ipv6 && this.isLikelyIPv6(nodeInfo.ipv6) && nodeInfo.ipv6 !== nodeInfo.ipv4
+              nodeInfo.ipv6 &&
+              this.isLikelyIPv6(nodeInfo.ipv6) &&
+              nodeInfo.ipv6 !== nodeInfo.ipv4
                 ? nodeInfo.ipv6
                 : undefined,
             osType: systemInfo?.platform || "Unknown",
@@ -569,7 +575,11 @@ export class NodeController {
         // 如果提供了新的节点信息，也更新位置信息
         if (nodeInfo) {
           // 清洗 IPv6：忽略与 IPv4 相同或非 IPv6 格式的值
-          if (nodeInfo.ipv6 && (!this.isLikelyIPv6(nodeInfo.ipv6) || nodeInfo.ipv6 === nodeInfo.ipv4)) {
+          if (
+            nodeInfo.ipv6 &&
+            (!this.isLikelyIPv6(nodeInfo.ipv6) ||
+              nodeInfo.ipv6 === nodeInfo.ipv4)
+          ) {
             nodeInfo.ipv6 = undefined;
           }
           const updateData: any = {
