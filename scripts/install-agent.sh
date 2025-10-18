@@ -68,6 +68,17 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# 写 sysctl 时使用的帮助函数
+set_sysctl_value() {
+    local key="$1"
+    local value="$2"
+    if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
+        sysctl -w "${key}=${value}" >/dev/null 2>&1
+    else
+        sudo sysctl -w "${key}=${value}" >/dev/null 2>&1
+    fi
+}
+
 # 检查脚本更新
 check_script_update() {
     log_info "检查脚本更新..."
@@ -800,20 +811,10 @@ net.ipv6.conf.all.forwarding=1
 net.ipv6.conf.default.forwarding=1"
 
     # 立即应用内核参数（运行时）
-    local set_sysctl() {
-        local key="$1"
-        local val="$2"
-        if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
-            sysctl -w "$key=$val" >/dev/null 2>&1
-        else
-            sudo sysctl -w "$key=$val" >/dev/null 2>&1
-        fi
-    }
-
-    set_sysctl "net.ipv6.conf.all.disable_ipv6" 0
-    set_sysctl "net.ipv6.conf.default.disable_ipv6" 0
-    set_sysctl "net.ipv6.conf.all.forwarding" 1
-    set_sysctl "net.ipv6.conf.default.forwarding" 1
+    set_sysctl_value "net.ipv6.conf.all.disable_ipv6" 0
+    set_sysctl_value "net.ipv6.conf.default.disable_ipv6" 0
+    set_sysctl_value "net.ipv6.conf.all.forwarding" 1
+    set_sysctl_value "net.ipv6.conf.default.forwarding" 1
 
     # 写入持久化配置
     if [[ "$RUNNING_AS_ROOT" == "true" ]]; then
