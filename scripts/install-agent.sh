@@ -1250,10 +1250,20 @@ configure_firewall() {
 # 启动Agent服务
 start_agent_service() {
     log_info "启动Agent服务..."
-    
+
+    if [[ "$AGENT_USE_HOST_NETWORK" != "true" ]]; then
+        local compose_project
+        compose_project=$(basename "$APP_DIR")
+        local default_network="${compose_project}_agent-network"
+
+        # 清理旧网络以应用最新的 IPv6 配置
+        docker network rm "$default_network" >/dev/null 2>&1 && \
+            log_info "已移除旧的 Docker 网络 $default_network 以重新创建 (IPv6)"
+    fi
+
     # 构建镜像
     docker_compose build
-    
+
     # 启动服务
     docker_compose up -d
     
