@@ -1,6 +1,7 @@
 import axios from "axios";
 import { logger } from "../utils/logger";
 import type { Request } from "express";
+import { isIP } from "net";
 
 export interface ASNInfo {
   asn: string;
@@ -296,14 +297,29 @@ class IPInfoService {
       return trimmed.length > 0 ? trimmed : undefined;
     };
 
-    const forwarded = pickHeaderValue(req.headers["x-forwarded-for"]);
-    if (forwarded) {
-      const firstForwarded = forwarded
+    const pickPreferredIP = (candidates: string[]): string | undefined => {
+      if (candidates.length === 0) return undefined;
+      const ipv4 = candidates.find((candidate) => isIP(candidate) === 4);
+      if (ipv4) return ipv4;
+      const ipv6 = candidates.find((candidate) => isIP(candidate) === 6);
+      return ipv6 ?? candidates[0];
+    };
+
+    const splitCandidates = (raw: string): string[] =>
+      raw
         .split(",")
         .map((part) => part.trim())
-        .find((part) => part.length > 0);
-      if (firstForwarded) {
-        return firstForwarded;
+        .filter((part) => part.length > 0)
+        .map((part) =>
+          part.startsWith("::ffff:") ? part.slice(7) : part,
+        );
+
+    const forwarded = pickHeaderValue(req.headers["x-forwarded-for"]);
+    if (forwarded) {
+      const candidates = splitCandidates(forwarded);
+      const preferred = pickPreferredIP(candidates);
+      if (preferred) {
+        return preferred;
       }
     }
 
@@ -315,7 +331,10 @@ class IPInfoService {
     for (const candidate of headerCandidates) {
       const value = pickHeaderValue(candidate);
       if (value) {
-        return value;
+        const preferred = pickPreferredIP([value]);
+        if (preferred) {
+          return preferred;
+        }
       }
     }
 
@@ -327,7 +346,13 @@ class IPInfoService {
 
     for (const candidate of fallbackCandidates) {
       if (typeof candidate === "string" && candidate.trim().length > 0) {
-        return candidate.trim();
+        const trimmed = candidate.trim();
+        const preferred = pickPreferredIP([
+          trimmed.startsWith("::ffff:") ? trimmed.slice(7) : trimmed,
+        ]);
+        if (preferred) {
+          return preferred;
+        }
       }
     }
 

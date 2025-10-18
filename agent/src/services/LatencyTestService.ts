@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import os from 'os';
 import { promisify } from 'util';
 import { logger } from '../utils/logger';
 
@@ -106,7 +107,12 @@ export class LatencyTestService {
       logger.debug(`Testing latency to ${target.name} (${target.url})`);
       
       // 使用ping命令测试延迟（发送3个包取平均值）
-      const { stdout, stderr } = await execAsync(`ping -c 3 -W 5 ${target.url}`, {
+      const isWindows = os.platform() === 'win32';
+      const pingCommand = isWindows
+        ? `ping -n 3 ${target.url}`
+        : `ping -c 3 -W 5 ${target.url}`;
+
+      const { stdout, stderr } = await execAsync(pingCommand, {
         timeout: 15000 // 15秒超时
       });
 
@@ -115,7 +121,7 @@ export class LatencyTestService {
       }
 
       // 解析ping结果，提取平均延迟
-      const latency = this.parsePingResult(stdout);
+      const latency = this.parsePingResult(stdout, isWindows);
       
       if (latency === null) {
         return {
@@ -151,8 +157,27 @@ export class LatencyTestService {
   /**
    * 解析ping命令的输出，提取平均延迟
    */
-  private parsePingResult(output: string): number | null {
+  private parsePingResult(output: string, isWindows: boolean): number | null {
     try {
+      if (isWindows) {
+        // Windows ping 输出（中英文均支持）
+        const avgMatch = output.match(/(?:平均|Average)\s*=\s*(\d+)ms/i);
+        if (avgMatch) {
+          return parseFloat(avgMatch[1]);
+        }
+
+        const timeMatches = output.match(/时间[=<]\s*(\d+)ms|time[=<]\s*(\d+)ms/gi);
+        if (timeMatches && timeMatches.length > 0) {
+          const times = timeMatches.map((match) => {
+            const timeMatch = match.match(/(\d+)\s*ms/);
+            return timeMatch ? parseFloat(timeMatch[1]) : 0;
+          });
+          const avgTime =
+            times.reduce((sum, time) => sum + time, 0) / times.length;
+          return Math.round(avgTime * 100) / 100;
+        }
+      }
+
       // 查找包含平均延迟的行
       // Linux格式: rtt min/avg/max/mdev = 12.345/23.456/34.567/5.678 ms
       const rttMatch = output.match(/rtt min\/avg\/max\/mdev = [\d.]+\/([\d.]+)\/[\d.]+\/[\d.]+ ms/);
