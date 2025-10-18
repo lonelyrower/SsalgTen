@@ -4,9 +4,7 @@ import { ipInfoService } from "../services/IPInfoService";
 import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";
 
-const domainRegex =
-  /^(?=.{1,253}$)(?!-)(?:[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}$/;
-
+const domainRegex = /^(?=.{1,253}$)(?!-)(?:[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}$/;
 const isValidLookupTarget = (target: string): boolean =>
   Boolean(target) && (isIP(target) !== 0 || domainRegex.test(target));
 
