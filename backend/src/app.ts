@@ -103,6 +103,7 @@ app.use((req: Request, res: Response) => {
         "GET /api/health",
         "GET /api/info",
         "GET /api/nodes",
+        "GET /api/visitor/info",
         "POST /api/agents/register",
         "POST /api/agents/:agentId/heartbeat",
         "GET /api/diagnostics",

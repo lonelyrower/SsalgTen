@@ -31,6 +31,7 @@ import {
 import { APP_VERSION } from "../utils/version";
 import { diagnosticsProxyController } from "../controllers/DiagnosticsProxyController";
 import { updateController } from "../controllers/UpdateController";
+import { visitorController } from "../controllers/VisitorController";
 import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
 
@@ -112,6 +113,18 @@ router.get(
   authenticateToken,
   requireAdmin,
   updateController.updaterHealth.bind(updateController),
+);
+
+// 访问者信息
+router.get(
+  "/visitor/info",
+  publicLimiter,
+  visitorController.getVisitorInfo.bind(visitorController),
+);
+router.get(
+  "/visitor/ip/:ip",
+  publicLimiter,
+  visitorController.getIPInfo.bind(visitorController),
 );
 
 // 节点管理路由

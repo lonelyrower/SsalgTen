@@ -440,7 +440,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                           IPv4: {node.ipv4}
                         </div>
                       )}
-                      {node.ipv6 && node.ipv6.includes(':') && node.ipv6.length > 15 && (
+                      {node.ipv6 && node.ipv6.includes(':') && (
                         <div className="text-xs text-purple-600 dark:text-purple-400 font-mono truncate max-w-xs" title={node.ipv6}>
                           IPv6: {node.ipv6}
                         </div>

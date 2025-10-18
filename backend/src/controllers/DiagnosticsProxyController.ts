@@ -5,7 +5,7 @@ import { logger } from "../utils/logger";
 import { getSystemConfig } from "../utils/initSystemConfig";
 
 const envProxyEnabled =
-  (process.env.DIAGNOSTICS_PROXY_ENABLED || "false").toLowerCase() === "true";
+  (process.env.DIAGNOSTICS_PROXY_ENABLED ?? "true").toLowerCase() === "true";
 
 // Basic target validation similar to agent
 const isValidTarget = (target: string): boolean => {

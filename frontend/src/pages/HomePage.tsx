@@ -275,7 +275,7 @@ export const HomePage = () => {
                     </div>
 
                     {/* 网络信息组 - 仅登录用户可见 */}
-                    {user && (selectedNode.ipv4 || (selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6.length > 15)) && (
+                    {user && (selectedNode.ipv4 || (selectedNode.ipv6 && selectedNode.ipv6.includes(':'))) && (
                       <div>
                         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">网络配置</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -288,7 +288,7 @@ export const HomePage = () => {
                             </div>
                           )}
 
-                          {selectedNode.ipv6 && selectedNode.ipv6.includes(':') && selectedNode.ipv6.length > 15 && (
+                          {selectedNode.ipv6 && selectedNode.ipv6.includes(':') && (
                             <div className="glass rounded-lg p-4 border border-white/10">
                               <div className="text-xs text-muted-foreground/70 mb-1.5">IPv6 地址</div>
                               <div className="font-mono text-sm text-accent font-semibold break-all">

@@ -86,6 +86,16 @@ export const DEFAULT_SYSTEM_CONFIGS: Record<string, ConfigMetadata> = {
     displayName: "Cesium Ion API Token",
     inputType: "text",
   },
+
+  // 🛠️ 网络诊断
+  "diagnostics.proxy_enabled": {
+    value: true,
+    category: "diagnostics",
+    description:
+      "启用主控后端的网络诊断代理，通过后端转发 Ping / Traceroute / MTR / Speedtest 请求，避免浏览器直接访问节点。关闭后需要手动切换到直连模式，且浏览器必须能访问节点的3002端口。",
+    displayName: "启用诊断代理",
+    inputType: "boolean",
+  },
 };
 
 export class SystemConfigController {
