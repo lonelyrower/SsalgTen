@@ -1,4 +1,4 @@
-import { Network, Activity, LogOut, LayoutDashboard, Server, Settings } from 'lucide-react';
+import { Network, Activity, LogOut, LayoutDashboard, Server, Settings, Film, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export const Header = () => {
-  const { user, isAuthenticated, logout, hasRole } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -76,23 +76,49 @@ export const Header = () => {
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}
                 </Link>
-                {hasRole('OPERATOR') && (
-                  <Link
-                    to="/nodes"
-                    className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      isActive('/nodes')
-                        ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                        : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
-                    }`}
-                  >
-                    <Server className="h-4 w-4" />
-                    <span>节点管理</span>
-                    {isActive('/nodes') && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-                    )}
-                  </Link>
-                )}
-                {hasRole('ADMIN') && (
+                <Link
+                  to="/nodes"
+                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive('/nodes')
+                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <Server className="h-4 w-4" />
+                  <span>节点管理</span>
+                  {isActive('/nodes') && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                  )}
+                </Link>
+                <Link
+                  to="/streaming"
+                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive('/streaming')
+                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <Film className="h-4 w-4" />
+                  <span>流媒体</span>
+                  {isActive('/streaming') && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                  )}
+                </Link>
+                <Link
+                  to="/services"
+                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive('/services')
+                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <Layers className="h-4 w-4" />
+                  <span>服务总览</span>
+                  {isActive('/services') && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                  )}
+                </Link>
+                {isAuthenticated && (
                   <Link
                     to="/admin"
                     className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${

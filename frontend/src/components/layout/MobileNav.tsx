@@ -10,12 +10,14 @@ import {
   Users,
   Settings,
   LogOut,
-  Server
+  Server,
+  Film,
+  Layers
 } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isAuthenticated, logout, hasRole } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
 
   // 小屏菜单打开时锁定页面滚动，避免背景滚动穿透
@@ -38,8 +40,10 @@ export const MobileNav: React.FC = () => {
 
   const navItems = isAuthenticated ? [
     { path: '/dashboard', label: '监控中心', icon: Activity, show: true },
-    { path: '/nodes', label: '节点管理', icon: Server, show: hasRole('OPERATOR') },
-    { path: '/admin', label: '系统管理', icon: Settings, show: hasRole('ADMIN') },
+    { path: '/nodes', label: '节点管理', icon: Server, show: true },
+    { path: '/streaming', label: '流媒体解锁', icon: Film, show: true },
+    { path: '/services', label: '服务总览', icon: Layers, show: true },
+    { path: '/admin', label: '系统管理', icon: Settings, show: true },
   ] : [
     { path: '/', label: '首页', icon: Activity, show: true },
   ];

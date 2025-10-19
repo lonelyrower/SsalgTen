@@ -1,0 +1,310 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Header } from '@/components/layout/Header';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { StreamingOverviewStats } from '@/components/streaming/StreamingOverviewStats';
+import { PlatformStatsCard } from '@/components/streaming/PlatformStatsCard';
+import { StreamingNodeList } from '@/components/streaming/StreamingNodeList';
+import { StreamingFilters } from '@/components/streaming/StreamingFilters';
+import type {
+  StreamingOverview,
+  NodeStreamingSummary,
+  StreamingFilters as FilterType,
+} from '@/types/streaming';
+import { STREAMING_SERVICE_ORDER } from '@/types/streaming';
+import { apiService } from '@/services/api';
+import { useNotification } from '@/hooks/useNotification';
+import { Download, RefreshCw, Grid, List } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+
+type ViewMode = 'grid' | 'list';
+
+export const StreamingPage: React.FC = () => {
+  const { showError, showSuccess } = useNotification();
+
+  const [overview, setOverview] = useState<StreamingOverview | null>(null);
+  const [nodes, setNodes] = useState<NodeStreamingSummary[]>([]);
+  const [filters, setFilters] = useState<FilterType>({ showExpired: true });
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 获取可用的国家列表
+  const availableCountries = useMemo(() => {
+    const countries = new Set<string>();
+    nodes.forEach(node => countries.add(node.country));
+    return Array.from(countries).sort();
+  }, [nodes]);
+
+  // 筛选后的节点
+  const filteredNodes = useMemo(() => {
+    return nodes.filter(node => {
+      // 平台筛选
+      if (filters.platform) {
+        const hasService = node.services.some(s => s.service === filters.platform);
+        if (!hasService) return false;
+      }
+
+      // 状态筛选
+      if (filters.status) {
+        const hasStatus = node.services.some(s => s.status === filters.status);
+        if (!hasStatus) return false;
+      }
+
+      // 国家筛选
+      if (filters.country && node.country !== filters.country) {
+        return false;
+      }
+
+      // 解锁区域筛选
+      if (filters.region) {
+        const hasRegion = node.services.some(s =>
+          s.region?.toLowerCase().includes(filters.region!.toLowerCase())
+        );
+        if (!hasRegion) return false;
+      }
+
+      // 关键字搜索
+      if (filters.keyword) {
+        const keyword = filters.keyword.toLowerCase();
+        if (!node.nodeName.toLowerCase().includes(keyword)) {
+          return false;
+        }
+      }
+
+      // 过期数据筛选
+      if (filters.showExpired === false && node.isExpired) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [nodes, filters]);
+
+  // 加载数据
+  const loadData = async () => {
+    try {
+      setError(null);
+      const [overviewRes, nodesRes] = await Promise.all([
+        apiService.getStreamingOverview(),
+        apiService.getStreamingNodeSummaries(filters),
+      ]);
+
+      if (overviewRes.success && overviewRes.data) {
+        setOverview(overviewRes.data);
+      } else {
+        throw new Error(overviewRes.error || '获取流媒体总览失败');
+      }
+
+      if (nodesRes.success && nodesRes.data) {
+        setNodes(nodesRes.data);
+      } else {
+        throw new Error(nodesRes.error || '获取节点数据失败');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '加载失败';
+      setError(message);
+      showError(message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
+  const handleExport = async (format: 'json' | 'csv' | 'markdown') => {
+    try {
+      const result = await apiService.exportStreamingData(format, filters);
+      if (result.success && result.data) {
+        const url = URL.createObjectURL(result.data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.fileName || `streaming-export.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showSuccess('导出成功');
+      } else {
+        throw new Error(result.error || '导出失败');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '导出失败';
+      showError(message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <LoadingSpinner size="lg" text="加载流媒体数据..." />
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !overview) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <ErrorState message={error || '无法加载数据'} onRetry={handleRefresh} />
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+
+      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        {/* 页面标题和操作栏 */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              流媒体解锁
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              查看节点对主流流媒体平台的解锁情况
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* 视图切换 */}
+            <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded ${
+                  viewMode === 'grid'
+                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                title="网格视图"
+              >
+                <Grid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded ${
+                  viewMode === 'list'
+                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                title="列表视图"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* 导出 */}
+            <div className="relative group">
+              <button
+                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>导出</span>
+              </button>
+              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                <button
+                  onClick={() => handleExport('json')}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                >
+                  JSON
+                </button>
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  CSV
+                </button>
+                <button
+                  onClick={() => handleExport('markdown')}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
+                >
+                  Markdown
+                </button>
+              </div>
+            </div>
+
+            {/* 刷新 */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>{refreshing ? '刷新中...' : '刷新'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 总览统计 */}
+        <StreamingOverviewStats overview={overview} />
+
+        {/* 平台统计 */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            平台解锁统计
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {overview.platformStats
+              .sort((a, b) =>
+                STREAMING_SERVICE_ORDER.indexOf(a.service) -
+                STREAMING_SERVICE_ORDER.indexOf(b.service)
+              )
+              .map((stat) => (
+                <PlatformStatsCard
+                  key={stat.service}
+                  stats={stat}
+                  onClick={() => setFilters({ ...filters, platform: stat.service })}
+                />
+              ))}
+          </div>
+        </div>
+
+        {/* 筛选器 */}
+        <StreamingFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          availableCountries={availableCountries}
+        />
+
+        {/* 节点列表 */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              节点列表
+              <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                (共 {filteredNodes.length} 个节点)
+              </span>
+            </h2>
+          </div>
+
+          {filteredNodes.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-gray-500 dark:text-gray-400">
+                  没有找到符合条件的节点
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <StreamingNodeList nodes={filteredNodes} />
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};

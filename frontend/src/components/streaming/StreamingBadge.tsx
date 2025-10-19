@@ -7,6 +7,7 @@ interface StreamingBadgeProps {
   service: StreamingServiceResult;
   size?: 'sm' | 'md' | 'lg';
   showStatus?: boolean;
+  showRegion?: boolean;
 }
 
 /**
@@ -16,7 +17,8 @@ interface StreamingBadgeProps {
 export const StreamingBadge: React.FC<StreamingBadgeProps> = ({
   service,
   size = 'md',
-  showStatus = true
+  showStatus = true,
+  showRegion = false,
 }) => {
   const sizeClasses = {
     sm: 'text-xs',
@@ -34,7 +36,7 @@ export const StreamingBadge: React.FC<StreamingBadgeProps> = ({
       </span>
       {showStatus && (
         <span className={`font-medium ${STATUS_COLORS[service.status]}`}>
-          {service.region || STATUS_TEXT[service.status]}
+          {showRegion && service.region ? service.region : STATUS_TEXT[service.status]}
         </span>
       )}
     </div>

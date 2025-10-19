@@ -16,6 +16,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ defau
 const UnifiedDashboardPage = lazy(() => import('@/pages/UnifiedDashboardPage').then(module => ({ default: module.UnifiedDashboardPage })));
 const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
 const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
+const StreamingPage = lazy(() => import('@/pages/StreamingPage').then(module => ({ default: module.StreamingPage })));
+const ServicesPage = lazy(() => import('@/pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
 
 function App() {
   // 动态加载系统名称并更新页面标题
@@ -89,11 +91,11 @@ function App() {
                     }
                   />
 
-                  {/* 节点管理 - OPERATOR及以上权限 */}
+                  {/* 节点管理 */}
                   <Route
                     path="/nodes"
                     element={
-                      <ProtectedRoute requiredRole="OPERATOR">
+                      <ProtectedRoute>
                         <PageErrorBoundary>
                           <NodesPage />
                         </PageErrorBoundary>
@@ -101,11 +103,35 @@ function App() {
                     }
                   />
 
-                  {/* 系统管理 - ADMIN权限 */}
+                  {/* 流媒体解锁 */}
+                  <Route
+                    path="/streaming"
+                    element={
+                      <ProtectedRoute>
+                        <PageErrorBoundary>
+                          <StreamingPage />
+                        </PageErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* 服务总览 */}
+                  <Route
+                    path="/services"
+                    element={
+                      <ProtectedRoute>
+                        <PageErrorBoundary>
+                          <ServicesPage />
+                        </PageErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* 系统管理 */}
                   <Route
                     path="/admin"
                     element={
-                      <ProtectedRoute requiredRole="ADMIN">
+                      <ProtectedRoute>
                         <PageErrorBoundary>
                           <AdminPage />
                         </PageErrorBoundary>

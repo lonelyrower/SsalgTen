@@ -48,8 +48,8 @@ export interface NodeStreamingData {
 
 // 流媒体服务配置
 export const STREAMING_SERVICES: Record<StreamingService, { name: string; icon: string }> = {
-  tiktok: { name: 'TikTok', icon: '🎭' },
-  disney_plus: { name: 'Disney+', icon: '🎵' },
+  tiktok: { name: 'TikTok', icon: '🎵' },
+  disney_plus: { name: 'Disney+', icon: '🏰' },
   netflix: { name: 'Netflix', icon: '🎬' },
   youtube: { name: 'YouTube', icon: '📺' },
   amazon_prime: { name: 'AmazonPV', icon: '📦' },
@@ -86,3 +86,60 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
   failed: '检测失败',
   unknown: '未测试',
 };
+
+// 流媒体平台统计
+export interface StreamingPlatformStats {
+  service: StreamingService;
+  name: string;
+  icon: string;
+  unlocked: number;      // 解锁节点数
+  restricted: number;    // 受限节点数
+  failed: number;        // 检测失败节点数
+  unknown: number;       // 未测试节点数
+  total: number;         // 总节点数
+  unlockRate: number;    // 解锁率 (0-100)
+}
+
+// 流媒体解锁总览
+export interface StreamingOverview {
+  totalNodes: number;
+  lastScanTime: string;       // 最新检测时间
+  expiredNodes: number;       // 超过24小时未检测的节点数
+  platformStats: StreamingPlatformStats[];
+  globalUnlockRate: number;   // 全局解锁率
+}
+
+// 节点流媒体摘要 (用于列表展示)
+export interface NodeStreamingSummary {
+  nodeId: string;
+  nodeName: string;
+  country: string;
+  city?: string;
+  services: StreamingServiceResult[];
+  lastScanned: string;
+  isExpired: boolean;         // 是否超过24小时
+  unlockedCount: number;      // 解锁服务数量
+  restrictedCount: number;    // 受限服务数量
+}
+
+// 流媒体筛选条件
+export interface StreamingFilters {
+  platform?: StreamingService;
+  status?: StreamingStatus;
+  country?: string;
+  region?: string;
+  keyword?: string;           // 节点名称搜索
+  showExpired?: boolean;      // 显示过期数据
+}
+
+// 流媒体时间范围
+export type StreamingTimeRange = 'latest' | 'last7days';
+
+// 数据过期阈值 (24小时)
+export const STREAMING_DATA_EXPIRY_THRESHOLD = 24 * 60 * 60 * 1000;
+
+// 批量操作类型
+export type StreamingBulkAction = 'retest' | 'export' | 'ignore';
+
+// 导出格式
+export type StreamingExportFormat = 'json' | 'csv' | 'markdown';

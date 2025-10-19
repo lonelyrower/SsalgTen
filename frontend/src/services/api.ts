@@ -897,6 +897,110 @@ class ApiService {
   async getStreamingStats(): Promise<ApiResponse<StreamingStats>> {
     return this.request<StreamingStats>('/streaming/stats');
   }
+
+  // 流媒体解锁总览 API
+  async getStreamingOverview(): Promise<ApiResponse<import('../types/streaming').StreamingOverview>> {
+    return this.request('/streaming/overview');
+  }
+
+  async getStreamingNodeSummaries(filters?: import('../types/streaming').StreamingFilters): Promise<ApiResponse<import('../types/streaming').NodeStreamingSummary[]>> {
+    const params = new URLSearchParams();
+    if (filters?.platform) params.append('platform', filters.platform);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.country) params.append('country', filters.country);
+    if (filters?.region) params.append('region', filters.region);
+    if (filters?.keyword) params.append('keyword', filters.keyword);
+    if (filters?.showExpired !== undefined) params.append('showExpired', String(filters.showExpired));
+
+    const query = params.toString();
+    return this.request(`/streaming/nodes${query ? `?${query}` : ''}`);
+  }
+
+  async triggerBulkStreamingTest(nodeIds: string[]): Promise<ApiResponse<{ message: string; queued: number }>> {
+    return this.request('/streaming/test/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ nodeIds })
+    }, true);
+  }
+
+  async exportStreamingData(format: import('../types/streaming').StreamingExportFormat, filters?: import('../types/streaming').StreamingFilters): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+    const params = new URLSearchParams({ format });
+    if (filters?.platform) params.append('platform', filters.platform);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.country) params.append('country', filters.country);
+
+    return this.download(`/streaming/export?${params.toString()}`, {}, true);
+  }
+
+  // 服务总览 API
+  async getServicesOverview(): Promise<ApiResponse<import('../types/services').ServicesOverviewStats>> {
+    return this.request('/services/overview');
+  }
+
+  async getNodeServices(nodeId: string): Promise<ApiResponse<import('../types/services').NodeService[]>> {
+    return this.request(`/nodes/${nodeId}/services`);
+  }
+
+  async getNodeServicesOverview(nodeId: string): Promise<ApiResponse<import('../types/services').NodeServicesOverview>> {
+    return this.request(`/nodes/${nodeId}/services/overview`);
+  }
+
+  async getAllServices(filters?: import('../types/services').ServiceFilters): Promise<ApiResponse<import('../types/services').NodeService[]>> {
+    const params = new URLSearchParams();
+    if (filters?.nodeId) params.append('nodeId', filters.nodeId);
+    if (filters?.serviceType) params.append('type', filters.serviceType);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.deploymentType) params.append('deploymentType', filters.deploymentType);
+    if (filters?.keyword) params.append('keyword', filters.keyword);
+    if (filters?.priority !== undefined) params.append('priority', String(filters.priority));
+    if (filters?.showExpired !== undefined) params.append('showExpired', String(filters.showExpired));
+    if (filters?.tags && filters.tags.length > 0) {
+      filters.tags.forEach(tag => params.append('tag', tag));
+    }
+
+    const query = params.toString();
+    return this.request(`/services${query ? `?${query}` : ''}`);
+  }
+
+  async getNodeServicesGrouped(): Promise<ApiResponse<import('../types/services').NodeServicesOverview[]>> {
+    return this.request('/services/by-node');
+  }
+
+  async updateServiceTags(serviceId: string, tags: string[]): Promise<ApiResponse<import('../types/services').NodeService>> {
+    return this.request(`/services/${serviceId}/tags`, {
+      method: 'PUT',
+      body: JSON.stringify({ tags })
+    }, true);
+  }
+
+  async updateServicePriority(serviceId: string, priority: number): Promise<ApiResponse<import('../types/services').NodeService>> {
+    return this.request(`/services/${serviceId}/priority`, {
+      method: 'PUT',
+      body: JSON.stringify({ priority })
+    }, true);
+  }
+
+  async updateServiceNotes(serviceId: string, notes: string): Promise<ApiResponse<import('../types/services').NodeService>> {
+    return this.request(`/services/${serviceId}/notes`, {
+      method: 'PUT',
+      body: JSON.stringify({ notes })
+    }, true);
+  }
+
+  async deleteService(serviceId: string): Promise<ApiResponse<void>> {
+    return this.request(`/services/${serviceId}`, {
+      method: 'DELETE'
+    }, true);
+  }
+
+  async exportServices(format: 'json' | 'csv' | 'markdown', filters?: import('../types/services').ServiceFilters): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+    const params = new URLSearchParams({ format });
+    if (filters?.nodeId) params.append('nodeId', filters.nodeId);
+    if (filters?.serviceType) params.append('type', filters.serviceType);
+    if (filters?.status) params.append('status', filters.status);
+
+    return this.download(`/services/export?${params.toString()}`, {}, true);
+  }
 }
 
 export const apiService = new ApiService();
