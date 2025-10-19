@@ -1,9 +1,7 @@
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
-import { ThreatMonitoringSummary } from '@/components/dashboard/ThreatMonitoringSummary';
 import { NodeMonitoringSection } from '@/components/dashboard/NodeMonitoringSection';
-import { LatencyOverviewCard } from '@/components/latency/LatencyOverviewCard';
 import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { MobilePullToRefresh } from '@/components/ui/MobilePullToRefresh';
@@ -12,8 +10,7 @@ import { TrendingUp } from 'lucide-react';
 
 /**
  * 统一监控中心页面
- * 整合了原 DashboardPage 和 MonitoringPage 的所有功能
- * 新增威胁监控摘要和流媒体解锁功能
+ * 整合了旧版监控视图的核心能力
  */
 export const UnifiedDashboardPage: React.FC = () => {
   const { nodes, stats, lastUpdate, connected, refreshData } = useRealTime();
@@ -91,20 +88,9 @@ export const UnifiedDashboardPage: React.FC = () => {
             />
           </section>
 
-          {/* 威胁监控摘要 + 地理分布 */}
+          {/* 地理分布 */}
           <section className="mb-6 sm:mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {/* 威胁监控摘要 */}
-              <ThreatMonitoringSummary />
-
-              {/* 地理分布 */}
-              <GeographicDistribution nodes={nodes} />
-            </div>
-          </section>
-
-          {/* 延迟概览和网络质量 */}
-          <section className="mb-6 sm:mb-8">
-            <LatencyOverviewCard className="" />
+            <GeographicDistribution nodes={nodes} />
           </section>
 
           {/* 节点监控区块 */}

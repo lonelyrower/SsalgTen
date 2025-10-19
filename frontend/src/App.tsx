@@ -16,10 +16,6 @@ const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ defau
 const UnifiedDashboardPage = lazy(() => import('@/pages/UnifiedDashboardPage').then(module => ({ default: module.UnifiedDashboardPage })));
 const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
 const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
-// 保留旧页面用于向后兼容和逐步迁移
-const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
-const MonitoringPage = lazy(() => import('@/pages/MonitoringPage').then(module => ({ default: module.MonitoringPage })));
-const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
 
 function App() {
   // 动态加载系统名称并更新页面标题
@@ -62,93 +58,64 @@ function App() {
             <AuthProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-          {/* 公开路由 */}
-          <Route path="/" element={
-            <PageErrorBoundary>
-              <HomePage />
-            </PageErrorBoundary>
-          } />
-          <Route path="/login" element={
-            <PageErrorBoundary>
-              <LoginPage />
-            </PageErrorBoundary>
-          } />
-          
-          {/* 需要认证的路由 */}
-          {/* 统一监控中心 - 新的主页面 */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <PageErrorBoundary>
-                  <UnifiedDashboardPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
+                  {/* 公开路由 */}
+                  <Route
+                    path="/"
+                    element={
+                      <PageErrorBoundary>
+                        <HomePage />
+                      </PageErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/login"
+                    element={
+                      <PageErrorBoundary>
+                        <LoginPage />
+                      </PageErrorBoundary>
+                    }
+                  />
 
-          {/* 节点管理 - OPERATOR及以上权限 */}
-          <Route
-            path="/nodes"
-            element={
-              <ProtectedRoute requiredRole="OPERATOR">
-                <PageErrorBoundary>
-                  <NodesPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
+                  {/* 需要认证的路由 */}
+                  {/* 统一监控中心 - 新的主页面 */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <PageErrorBoundary>
+                          <UnifiedDashboardPage />
+                        </PageErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
 
-          {/* 系统管理 - ADMIN权限 */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <PageErrorBoundary>
-                  <AdminPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
+                  {/* 节点管理 - OPERATOR及以上权限 */}
+                  <Route
+                    path="/nodes"
+                    element={
+                      <ProtectedRoute requiredRole="OPERATOR">
+                        <PageErrorBoundary>
+                          <NodesPage />
+                        </PageErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
 
-          {/* 向后兼容路由 - 保留旧页面访问 */}
-          <Route
-            path="/monitoring"
-            element={
-              <ProtectedRoute requiredRole="VIEWER">
-                <PageErrorBoundary>
-                  <MonitoringPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
+                  {/* 系统管理 - ADMIN权限 */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                        <PageErrorBoundary>
+                          <AdminPage />
+                        </PageErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
 
-          <Route
-            path="/security"
-            element={
-              <ProtectedRoute requiredRole="VIEWER">
-                <PageErrorBoundary>
-                  <SecurityPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/dashboard-old"
-            element={
-              <ProtectedRoute requiredRole="VIEWER">
-                <PageErrorBoundary>
-                  <DashboardPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
-          
-          
-          {/* 默认重定向 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+                  {/* 默认重定向 */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
               </Suspense>
             </AuthProvider>
           </Router>
