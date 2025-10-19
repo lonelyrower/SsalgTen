@@ -94,7 +94,9 @@ export class ServicesController {
         }),
         ...(search && {
           OR: [
-            { serviceName: { contains: search as string, mode: "insensitive" } },
+            {
+              serviceName: { contains: search as string, mode: "insensitive" },
+            },
             {
               node: {
                 name: { contains: search as string, mode: "insensitive" },
@@ -188,12 +190,15 @@ export class ServicesController {
           lastUpdated: service.updatedAt.toISOString(),
         }));
 
-        const runningCount = services.filter((s) => s.status === "running")
-          .length;
-        const stoppedCount = services.filter((s) => s.status === "stopped")
-          .length;
-        const failedCount = services.filter((s) => s.status === "unknown")
-          .length;
+        const runningCount = services.filter(
+          (s) => s.status === "running",
+        ).length;
+        const stoppedCount = services.filter(
+          (s) => s.status === "stopped",
+        ).length;
+        const failedCount = services.filter(
+          (s) => s.status === "unknown",
+        ).length;
 
         return {
           nodeId: node.id,
@@ -416,7 +421,8 @@ export class ServicesController {
       } else if (format === "markdown") {
         const mdHeader =
           "| Node | Country | City | Service | Type | Status | Port | Version |\n";
-        const mdSeparator = "|------|---------|------|---------|------|--------|------|---------|​\n";
+        const mdSeparator =
+          "|------|---------|------|---------|------|--------|------|---------|\n";
         const mdRows = exportData
           .map(
             (s) =>

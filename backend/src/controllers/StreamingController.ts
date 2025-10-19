@@ -360,13 +360,15 @@ export class StreamingController {
           `;
 
           const unlocked = latestTests.filter((t) => t.status === "YES").length;
-          const restricted = latestTests.filter((t) => t.status === "NO")
-            .length;
+          const restricted = latestTests.filter(
+            (t) => t.status === "NO",
+          ).length;
           const failed = latestTests.filter(
             (t) => t.status === "FAILED" || t.status === "ERROR",
           ).length;
-          const unknown = latestTests.filter((t) => t.status === "UNKNOWN")
-            .length;
+          const unknown = latestTests.filter(
+            (t) => t.status === "UNKNOWN",
+          ).length;
           const total = latestTests.length;
 
           return {
