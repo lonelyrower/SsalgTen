@@ -361,9 +361,7 @@ export class StreamingController {
           const restricted = latestTests.filter(
             (t) => t.status === "NO",
           ).length;
-          const failed = latestTests.filter(
-            (t) => t.status === "FAILED" || t.status === "ERROR",
-          ).length;
+          const failed = latestTests.filter((t) => t.status === "FAILED").length;
           const unknown = latestTests.filter(
             (t) => t.status === "UNKNOWN",
           ).length;
