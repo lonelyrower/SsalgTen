@@ -450,7 +450,10 @@ export class StreamingController {
         const serviceResults = services.map((svc) => {
           const latestTest = node.streamingTests
             .filter((t) => t.service === svc)
-            .sort((a, b) => new Date(b.testedAt).getTime() - new Date(a.testedAt).getTime())[0];
+            .sort(
+              (a, b) =>
+                new Date(b.testedAt).getTime() - new Date(a.testedAt).getTime(),
+            )[0];
 
           return {
             service: svc.toLowerCase(),
@@ -466,7 +469,9 @@ export class StreamingController {
           serviceResults
             .map((s) => s.lastTested)
             .filter(Boolean)
-            .sort((a, b) => new Date(b!).getTime() - new Date(a!).getTime())[0] || null;
+            .sort(
+              (a, b) => new Date(b!).getTime() - new Date(a!).getTime(),
+            )[0] || null;
 
         const unlockCount = serviceResults.filter(
           (s) => s.status === "yes",
@@ -613,7 +618,10 @@ export class StreamingController {
         const serviceResults = services.map((svc) => {
           const latestTest = node.streamingTests
             .filter((t) => t.service === svc)
-            .sort((a, b) => new Date(b.testedAt).getTime() - new Date(a.testedAt).getTime())[0];
+            .sort(
+              (a, b) =>
+                new Date(b.testedAt).getTime() - new Date(a.testedAt).getTime(),
+            )[0];
 
           return {
             service: svc.toLowerCase(),
