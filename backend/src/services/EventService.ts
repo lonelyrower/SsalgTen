@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 import { logger } from "../utils/logger";
 import { getIO } from "../sockets/ioRegistry";
 
@@ -19,7 +20,7 @@ class EventService {
           nodeId,
           type,
           message,
-          details: details ? (details as object) : undefined,
+          details: details ? (details as Prisma.InputJsonValue) : undefined,
         },
       });
 

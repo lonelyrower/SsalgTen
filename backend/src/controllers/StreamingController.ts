@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { StreamingService, StreamingStatus, UnlockType } from "@prisma/client";
+import {
+  Prisma,
+  StreamingService,
+  StreamingStatus,
+  UnlockType,
+} from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { getIO } from "../sockets/ioRegistry";
 import {
@@ -168,7 +173,9 @@ export class StreamingController {
               status: result.status.toUpperCase() as StreamingStatus,
               region: result.region,
               unlockType: result.unlockType?.toUpperCase() as UnlockType,
-              details: result.details,
+              details: result.details
+                ? (result.details as Prisma.InputJsonValue)
+                : undefined,
               errorMsg: result.errorMsg,
             },
           });
