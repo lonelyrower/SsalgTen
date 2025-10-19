@@ -35,6 +35,7 @@ import { visitorController } from "../controllers/VisitorController";
 import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
 import streamingRouter from "./streaming";
+import servicesRouter from "./services";
 
 const router = Router();
 
@@ -523,5 +524,8 @@ router.get(
 
 // 流媒体解锁检测路由
 router.use("/", streamingRouter);
+
+// 服务总览路由
+router.use("/", servicesRouter);
 
 export default router;

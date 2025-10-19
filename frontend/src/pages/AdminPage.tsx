@@ -48,18 +48,14 @@ export const AdminPage: React.FC = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* 页面头部 - 紧凑设计 */}
+        {/* 页面标题 */}
         <div className="mb-6">
-          <div className="bg-white dark:bg-gray-800 border-b-2 border-blue-500/20 dark:border-blue-400/20 px-4 py-3">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg">
-                <Shield className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                系统管理
-              </h1>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            系统管理
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            管理系统配置、节点、用户和API密钥
+          </p>
         </div>
 
         {/* 响应式标签页导航 */}

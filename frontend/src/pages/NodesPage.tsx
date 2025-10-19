@@ -10,7 +10,7 @@ import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
 import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download, Globe } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
 import { ViewModeToggle } from '@/components/map/ViewModeToggle';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
@@ -359,82 +359,66 @@ export const NodesPage: React.FC = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* 页面头部 - 紧凑设计 */}
-        <div className="mb-6">
-          <div className="bg-white dark:bg-gray-800 border-b-2 border-blue-500/20 dark:border-blue-400/20 px-4 py-3">
-            <div className="flex items-center justify-between">
-              {/* 左侧：图标 + 标题 */}
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg">
-                  <Globe className="h-5 w-5 text-white" />
-                </div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  节点管理
-                </h1>
-              </div>
+        {/* 页面标题和操作栏 */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              节点管理
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              管理和监控所有VPS节点的状态与配置
+            </p>
+          </div>
 
-              {/* 右侧：状态和操作按钮 */}
-              <div className="flex items-center space-x-2">
-                {/* 连接状态 */}
-                <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-                  connected
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                }`}>
-                  <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                  <span className="hidden sm:inline">{connected ? '实时连接' : '断开'}</span>
-                </div>
+          <div className="flex items-center gap-2">
+            {hasRole('ADMIN') && (
+              <Button onClick={handleAddNode} size="sm" className="hidden lg:flex">
+                <Plus className="h-4 w-4 mr-2" />
+                部署节点
+              </Button>
+            )}
 
-                {hasRole('ADMIN') && (
-                  <Button onClick={handleAddNode} size="sm" className="hidden lg:flex">
-                    <Plus className="h-4 w-4 mr-2" />
-                    部署节点
-                  </Button>
+            {hasRole('ADMIN') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportNodes('csv')}
+                disabled={exportingNodes}
+                className="hidden md:flex"
+              >
+                {exportingNodes ? (
+                  <LoadingSpinner size="xs" center={false} className="mr-2" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
                 )}
+                导出
+              </Button>
+            )}
 
-                {hasRole('ADMIN') && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExportNodes('csv')}
-                    disabled={exportingNodes}
-                    className="hidden md:flex"
-                  >
-                    {exportingNodes ? (
-                      <LoadingSpinner size="xs" center={false} className="mr-2" />
-                    ) : (
-                      <Download className="h-4 w-4 mr-2" />
-                    )}
-                    导出
-                  </Button>
-                )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="hidden sm:flex"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              刷新
+            </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefresh}
-                  className="hidden sm:flex"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={startLatencyTest}
-                  disabled={isTestingInProgress}
-                  className="hidden md:flex"
-                >
-                  {isTestingInProgress ? (
-                    <LoadingSpinner size="xs" center={false} className="mr-2" />
-                  ) : (
-                    <Activity className="h-4 w-4 mr-2" />
-                  )}
-                  延迟测试
-                </Button>
-              </div>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={startLatencyTest}
+              disabled={isTestingInProgress}
+              className="hidden md:flex"
+            >
+              {isTestingInProgress ? (
+                <LoadingSpinner size="xs" center={false} className="mr-2" />
+              ) : (
+                <Activity className="h-4 w-4 mr-2" />
+              )}
+              延迟测试
+            </Button>
           </div>
         </div>
 

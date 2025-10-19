@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealTime } from '@/hooks/useRealTime';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { connected } = useRealTime();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -140,6 +142,21 @@ export const Header = () => {
 
           {/* Actions - 右侧操作区 */}
           <div className="flex items-center space-x-2">
+            {/* 连接状态指示器 - 仅在已认证时显示 */}
+            {isAuthenticated && (
+              <div
+                className={`hidden lg:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  connected
+                    ? 'bg-green-500/15 text-green-300 border border-green-500/30'
+                    : 'bg-red-500/15 text-red-300 border border-red-500/30'
+                }`}
+                title={connected ? '实时连接正常' : '实时连接断开'}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                <span>{connected ? '已连接' : '断开'}</span>
+              </div>
+            )}
+
             {/* 主题切换 */}
             <div className="hidden sm:block">
               <ThemeToggle />
