@@ -13,11 +13,13 @@ import './App.css';
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })));
 const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
+const UnifiedDashboardPage = lazy(() => import('@/pages/UnifiedDashboardPage').then(module => ({ default: module.UnifiedDashboardPage })));
 const NodesPage = lazy(() => import('@/pages/NodesPage').then(module => ({ default: module.NodesPage })));
+const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
+// 保留旧页面用于向后兼容和逐步迁移
+const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
 const MonitoringPage = lazy(() => import('@/pages/MonitoringPage').then(module => ({ default: module.MonitoringPage })));
 const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
-const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
 
 function App() {
   // 动态加载系统名称并更新页面标题
@@ -73,30 +75,19 @@ function App() {
           } />
           
           {/* 需要认证的路由 */}
+          {/* 统一监控中心 - 新的主页面 */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <PageErrorBoundary>
-                  <DashboardPage />
+                  <UnifiedDashboardPage />
                 </PageErrorBoundary>
               </ProtectedRoute>
             }
           />
-          
-          {/* 管理员专用路由 */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <PageErrorBoundary>
-                  <AdminPage />
-                </PageErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* 操作员及以上权限路由 */}
+
+          {/* 节点管理 - OPERATOR及以上权限 */}
           <Route
             path="/nodes"
             element={
@@ -107,7 +98,20 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
+          {/* 系统管理 - ADMIN权限 */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <PageErrorBoundary>
+                  <AdminPage />
+                </PageErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 向后兼容路由 - 保留旧页面访问 */}
           <Route
             path="/monitoring"
             element={
@@ -118,14 +122,24 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
-          {/* 新增炫酷功能路由 */}
+
           <Route
             path="/security"
             element={
               <ProtectedRoute requiredRole="VIEWER">
                 <PageErrorBoundary>
                   <SecurityPage />
+                </PageErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard-old"
+            element={
+              <ProtectedRoute requiredRole="VIEWER">
+                <PageErrorBoundary>
+                  <DashboardPage />
                 </PageErrorBoundary>
               </ProtectedRoute>
             }

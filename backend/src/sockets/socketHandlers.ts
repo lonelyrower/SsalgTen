@@ -132,6 +132,18 @@ export function setupSocketHandlers(io: Server) {
       },
     );
 
+    // 订阅流媒体检测更新
+    socket.on("subscribe_streaming", (nodeId: string) => {
+      socket.join(`streaming_${nodeId}`);
+      logger.info(`用户 ${user?.username} 订阅节点 ${nodeId} 的流媒体检测更新`);
+    });
+
+    // 取消订阅流媒体检测更新
+    socket.on("unsubscribe_streaming", (nodeId: string) => {
+      socket.leave(`streaming_${nodeId}`);
+      logger.info(`用户 ${user?.username} 取消订阅节点 ${nodeId} 的流媒体检测更新`);
+    });
+
     // 断线处理
     socket.on("disconnect", (reason) => {
       logger.info(`用户已断开连接: ${user?.username}, 原因: ${reason}`);
@@ -210,4 +222,30 @@ export function broadcastNodeStatusChange(
     status,
     timestamp: new Date().toISOString(),
   });
+}
+
+// 辅助函数：广播流媒体检测结果
+export function broadcastStreamingTestResult(
+  io: Server,
+  nodeId: string,
+  results: unknown,
+) {
+  io.to(`streaming_${nodeId}`).emit("streaming_test_result", {
+    nodeId,
+    results,
+    timestamp: new Date().toISOString(),
+  });
+  logger.info(`广播节点 ${nodeId} 的流媒体检测结果`);
+}
+
+// 辅助函数：通知流媒体检测开始
+export function notifyStreamingTestStart(
+  io: Server,
+  nodeId: string,
+) {
+  io.to(`streaming_${nodeId}`).emit("streaming_test_started", {
+    nodeId,
+    timestamp: new Date().toISOString(),
+  });
+  logger.info(`通知节点 ${nodeId} 的流媒体检测已启动`);
 }

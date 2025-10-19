@@ -39,11 +39,9 @@ export const MobileNav: React.FC = () => {
   };
 
   const navItems = isAuthenticated ? [
-    { path: '/dashboard', label: '监控面板', icon: Activity, show: true },
-    { path: '/monitoring', label: '监控概览', icon: Server, show: hasRole('VIEWER') },
-    { path: '/nodes', label: '节点管理', icon: Settings, show: hasRole('OPERATOR') },
-    { path: '/security', label: '安全分析', icon: Lock, show: hasRole('VIEWER') },
-    { path: '/admin', label: '系统管理', icon: Users, show: hasRole('ADMIN') },
+    { path: '/dashboard', label: '监控中心', icon: Activity, show: true },
+    { path: '/nodes', label: '节点管理', icon: Server, show: hasRole('OPERATOR') },
+    { path: '/admin', label: '系统管理', icon: Settings, show: hasRole('ADMIN') },
   ] : [
     { path: '/', label: '首页', icon: Activity, show: true },
   ];

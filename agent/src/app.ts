@@ -6,6 +6,7 @@ import { config, serverConfig } from './config';
 import { getSystemInfo } from './utils/system';
 import { diagnosticController } from './controllers/DiagnosticController';
 import { registrationService } from './services/RegistrationService';
+import { streamingTestService } from './services/StreamingTestService';
 
 // 加载环境变量
 dotenv.config();
@@ -200,6 +201,9 @@ const server = app.listen(serverConfig.port, async () => {
       
       if (result.success) {
         logger.info(`✅ Registration successful! Node: ${result.nodeName} (${result.location})`);
+
+        // 注册成功后启动流媒体检测服务
+        streamingTestService.start();
       } else {
         logger.error(`❌ Registration failed: ${result.error}`);
         logger.warn('⚠️  Agent will continue running but will not appear in the master server.');
@@ -217,10 +221,11 @@ const server = app.listen(serverConfig.port, async () => {
 // 优雅关闭
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}, shutting down gracefully`);
-  
-  // 停止注册服务
+
+  // 停止所有服务
+  streamingTestService.stop();
   await registrationService.shutdown();
-  
+
   server.close(() => {
     logger.info('🛑 Agent server closed');
     process.exit(0);

@@ -71,53 +71,27 @@ export const Header = () => {
                   }`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  <span>监控面板</span>
+                  <span>监控中心</span>
                   {isActive('/dashboard') && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}
                 </Link>
-                <Link
-                  to="/monitoring"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/monitoring')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  <Monitor className="h-4 w-4" />
-                  <span>监控概览</span>
-                  {isActive('/monitoring') && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-                  )}
-                </Link>
-                <Link
-                  to="/nodes"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/nodes')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  <Server className="h-4 w-4" />
-                  <span>节点管理</span>
-                  {isActive('/nodes') && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-                  )}
-                </Link>
-                <Link
-                  to="/security"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/security')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  <Shield className="h-4 w-4" />
-                  <span>威胁监控</span>
-                  {isActive('/security') && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-                  )}
-                </Link>
+                {hasRole('OPERATOR') && (
+                  <Link
+                    to="/nodes"
+                    className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isActive('/nodes')
+                        ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                        : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    <Server className="h-4 w-4" />
+                    <span>节点管理</span>
+                    {isActive('/nodes') && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                    )}
+                  </Link>
+                )}
                 {hasRole('ADMIN') && (
                   <Link
                     to="/admin"

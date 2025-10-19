@@ -326,6 +326,28 @@ export interface LatencyTestResults {
   timestamp: string;
 }
 
+// 流媒体解锁接口
+export interface StreamingServiceResult {
+  service: string;
+  name: string;
+  icon: string;
+  status: 'yes' | 'no' | 'org' | 'pending' | 'failed' | 'unknown';
+  region?: string;
+  unlockType?: 'native' | 'dns' | 'idc' | 'unknown';
+  lastTested?: string;
+}
+
+export interface StreamingStats {
+  totalTests: number;
+  servicesAvailable: number;
+  byService: Record<string, {
+    total: number;
+    yes: number;
+    no: number;
+    org: number;
+  }>;
+}
+
 // API密钥管理接口
 export interface ApiKeyInfo {
   id: string;
@@ -855,6 +877,25 @@ class ApiService {
 
   async getLatencyResults(): Promise<ApiResponse<LatencyTestResults>> {
     return this.request<LatencyTestResults>('/client-latency/results', {}, true);
+  }
+
+  // 流媒体解锁 API
+  async getNodeStreaming(nodeId: string): Promise<ApiResponse<StreamingServiceResult[]>> {
+    return this.request<StreamingServiceResult[]>(`/nodes/${nodeId}/streaming`);
+  }
+
+  async triggerStreamingTest(nodeId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/nodes/${nodeId}/streaming/test`, {
+      method: 'POST'
+    }, true);
+  }
+
+  async getNodesByStreaming(service: string): Promise<ApiResponse<NodeData[]>> {
+    return this.request<NodeData[]>(`/nodes/streaming/${service}`);
+  }
+
+  async getStreamingStats(): Promise<ApiResponse<StreamingStats>> {
+    return this.request<StreamingStats>('/streaming/stats');
   }
 }
 

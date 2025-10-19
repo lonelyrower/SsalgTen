@@ -34,6 +34,7 @@ import { updateController } from "../controllers/UpdateController";
 import { visitorController } from "../controllers/VisitorController";
 import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
+import streamingRouter from "./streaming";
 
 const router = Router();
 
@@ -519,5 +520,8 @@ router.get(
   authenticateToken,
   clientLatencyController.getLatencyResults.bind(clientLatencyController),
 );
+
+// 流媒体解锁检测路由
+router.use("/", streamingRouter);
 
 export default router;

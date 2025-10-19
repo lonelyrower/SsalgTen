@@ -66,6 +66,8 @@ model Node {
   diagnosticRecords DiagnosticRecord[]
   heartbeatLogs     HeartbeatLog[]
   eventLogs         EventLog[]
+  streamingTests    StreamingTest[]
+  detectedServices  DetectedService[]
 
   @@map("nodes")
   @@index([isPlaceholder])
@@ -274,4 +276,122 @@ enum UserRole {
   ADMIN
   OPERATOR
   VIEWER
+}
+
+// 流媒体解锁测试记录
+model StreamingTest {
+  id          String   @id @default(cuid())
+  nodeId      String
+  node        Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  // 流媒体服务
+  service     StreamingService  // netflix, youtube, disney_plus, etc.
+
+  // 测试结果
+  status      StreamingStatus   // yes, no, org, pending, failed
+  region      String?           // 解锁区域，如 "US", "JP"
+  unlockType  UnlockType?       // native, dns, idc
+
+  // 详细信息
+  details     Json?             // 额外的检测详情
+  errorMsg    String?           // 错误信息
+
+  // 时间戳
+  testedAt    DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+
+  @@map("streaming_tests")
+  @@index([nodeId])
+  @@index([service])
+  @@index([status])
+  @@index([testedAt(sort: Desc)])
+  @@index([nodeId, service, testedAt(sort: Desc)])
+}
+
+// 检测到的服务（Xray、Nginx等）
+model DetectedService {
+  id          String   @id @default(cuid())
+  nodeId      String
+  node        Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  // 服务信息
+  serviceType ServiceType       // proxy, web, database, container, other
+  serviceName String            // Xray, Nginx, MySQL, Docker等
+  version     String?           // 版本号
+  status      ServiceStatus     // running, stopped, unknown
+
+  // 网络信息
+  port        Int?              // 监听端口
+  protocol    String?           // 协议类型，如 vmess, vless, trojan, http
+
+  // 配置信息
+  configPath  String?           // 配置文件路径
+  configHash  String?           // 配置文件哈希（用于检测变更）
+
+  // 网站信息（针对Web服务）
+  domains     Json?             // 域名列表
+  sslEnabled  Boolean?          // 是否启用SSL
+
+  // 容器信息（针对Docker）
+  containerInfo Json?           // 容器详细信息
+
+  // 元数据
+  details     Json?             // 额外的服务详情
+
+  // 时间戳
+  detectedAt  DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("detected_services")
+  @@index([nodeId])
+  @@index([serviceType])
+  @@index([serviceName])
+  @@index([status])
+  @@index([detectedAt(sort: Desc)])
+  @@unique([nodeId, serviceName, port])
+}
+
+// 流媒体服务枚举
+enum StreamingService {
+  NETFLIX
+  YOUTUBE
+  DISNEY_PLUS
+  TIKTOK
+  AMAZON_PRIME
+  SPOTIFY
+  CHATGPT
+}
+
+// 流媒体解锁状态
+enum StreamingStatus {
+  YES       // 完全解锁
+  NO        // 区域限制/封锁
+  ORG       // 仅自制剧（Netflix专用）
+  PENDING   // 待支持
+  FAILED    // 检测失败
+  UNKNOWN   // 未测试
+}
+
+// 解锁类型
+enum UnlockType {
+  NATIVE    // 原生IP
+  DNS       // DNS解锁
+  IDC       // 机房IP
+  UNKNOWN   // 未知
+}
+
+// 服务类型
+enum ServiceType {
+  PROXY      // 代理服务（Xray, V2Ray等）
+  WEB        // Web服务（Nginx, Apache等）
+  DATABASE   // 数据库（MySQL, PostgreSQL等）
+  CONTAINER  // 容器（Docker等）
+  OTHER      // 其他
+}
+
+// 服务状态
+enum ServiceStatus {
+  RUNNING
+  STOPPED
+  UNKNOWN
 }
