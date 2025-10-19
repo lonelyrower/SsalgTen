@@ -2,21 +2,13 @@ import React from 'react';
 import type { StreamingService } from '@/types/streaming';
 // Official brand icons via simple-icons (per-service ESM imports)
 // We keep local fallbacks to avoid empty UI if a brand icon isn't available.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - types shim provided in src/types/simple-icons.d.ts
 import tiktok from 'simple-icons/icons/tiktok';
-// @ts-ignore
 import disneyplus from 'simple-icons/icons/disneyplus';
-// @ts-ignore
 import netflix from 'simple-icons/icons/netflix';
-// @ts-ignore
 import youtube from 'simple-icons/icons/youtube';
-// @ts-ignore
 import amazonprime from 'simple-icons/icons/amazonprime';
-// @ts-ignore
 import spotify from 'simple-icons/icons/spotify';
 // Use OpenAI logo for ChatGPT
-// @ts-ignore
 import openai from 'simple-icons/icons/openai';
 
 type IconSize = 'sm' | 'md' | 'lg';
