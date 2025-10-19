@@ -36,6 +36,31 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
     onFiltersChange({ ...filters, [key]: value });
   };
 
+  // Type-safe parsers for select values
+  const parsePlatform = (v: string | undefined) => {
+    if (!v) return undefined;
+    return (STREAMING_SERVICE_ORDER as Array<FilterType['platform']>).includes(
+      v as FilterType['platform'],
+    )
+      ? (v as FilterType['platform'])
+      : undefined;
+  };
+
+  const parseStatus = (v: string | undefined) => {
+    if (!v) return undefined;
+    const allowed: Array<NonNullable<FilterType['status']>> = [
+      'yes',
+      'no',
+      'org',
+      'pending',
+      'failed',
+      'unknown',
+    ];
+    return allowed.includes(v as NonNullable<FilterType['status']>)
+      ? (v as FilterType['status'])
+      : undefined;
+  };
+
   const clearFilters = () => {
     setLocalKeyword('');
     onFiltersChange({});
@@ -65,7 +90,9 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
           {/* 平台筛选 */}
           <select
             value={filters.platform || ''}
-            onChange={(e) => handleFilterChange('platform', e.target.value || undefined)}
+            onChange={(e) =>
+              handleFilterChange('platform', parsePlatform(e.target.value))
+            }
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部平台</option>
@@ -79,7 +106,9 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
           {/* 状态筛选 */}
           <select
             value={filters.status || ''}
-            onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
+            onChange={(e) =>
+              handleFilterChange('status', parseStatus(e.target.value))
+            }
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部状态</option>

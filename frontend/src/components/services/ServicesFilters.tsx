@@ -38,6 +38,37 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
     onFiltersChange({ ...filters, [key]: value });
   };
 
+  // Type-safe parsers for select values
+  const parseServiceType = (v: string | undefined) => {
+    if (!v) return undefined;
+    const types = Object.keys(SERVICE_TYPE_CONFIG) as Array<
+      NonNullable<FilterType['serviceType']>
+    >;
+    return types.includes(v as NonNullable<FilterType['serviceType']>)
+      ? (v as FilterType['serviceType'])
+      : undefined;
+  };
+
+  const parseStatus = (v: string | undefined) => {
+    if (!v) return undefined;
+    const statuses = Object.keys(SERVICE_STATUS_CONFIG) as Array<
+      NonNullable<FilterType['status']>
+    >;
+    return statuses.includes(v as NonNullable<FilterType['status']>)
+      ? (v as FilterType['status'])
+      : undefined;
+  };
+
+  const parseDeploymentType = (v: string | undefined) => {
+    if (!v) return undefined;
+    const types = Object.keys(DEPLOYMENT_TYPE_CONFIG) as Array<
+      NonNullable<FilterType['deploymentType']>
+    >;
+    return types.includes(v as NonNullable<FilterType['deploymentType']>)
+      ? (v as FilterType['deploymentType'])
+      : undefined;
+  };
+
   const clearFilters = () => {
     setLocalKeyword('');
     onFiltersChange({});
@@ -112,7 +143,12 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
           {/* 服务类型筛选 */}
           <select
             value={filters.serviceType || ''}
-            onChange={(e) => handleFilterChange('serviceType', e.target.value || undefined)}
+            onChange={(e) =>
+              handleFilterChange(
+                'serviceType',
+                parseServiceType(e.target.value),
+              )
+            }
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部类型</option>
@@ -126,7 +162,9 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
           {/* 状态筛选 */}
           <select
             value={filters.status || ''}
-            onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
+            onChange={(e) =>
+              handleFilterChange('status', parseStatus(e.target.value))
+            }
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部状态</option>
@@ -140,7 +178,12 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
           {/* 部署方式筛选 */}
           <select
             value={filters.deploymentType || ''}
-            onChange={(e) => handleFilterChange('deploymentType', e.target.value || undefined)}
+            onChange={(e) =>
+              handleFilterChange(
+                'deploymentType',
+                parseDeploymentType(e.target.value),
+              )
+            }
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部部署方式</option>
