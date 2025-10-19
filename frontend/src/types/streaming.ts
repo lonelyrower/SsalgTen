@@ -46,14 +46,14 @@ export interface NodeStreamingData {
   lastScanned: string;    // ISO 时间戳
 }
 
-// 流媒体服务配置
+// 流媒体服务配置（icon 字段用于卡片等非图标组件的 emoji 显示）
 export const STREAMING_SERVICES: Record<StreamingService, { name: string; icon: string }> = {
   tiktok: { name: 'TikTok', icon: '🎵' },
-  disney_plus: { name: 'Disney+', icon: '🏰' },
+  disney_plus: { name: 'Disney+', icon: '✨' },
   netflix: { name: 'Netflix', icon: '🎬' },
-  youtube: { name: 'YouTube', icon: '📺' },
-  amazon_prime: { name: 'AmazonPV', icon: '📦' },
-  spotify: { name: 'Spotify', icon: '🎶' },
+  youtube: { name: 'YouTube', icon: '▶️' },
+  amazon_prime: { name: 'Amazon Prime Video', icon: '📦' },
+  spotify: { name: 'Spotify', icon: '🎧' },
   chatgpt: { name: 'ChatGPT', icon: '🤖' },
 };
 
