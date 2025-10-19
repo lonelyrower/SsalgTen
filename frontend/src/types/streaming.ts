@@ -4,10 +4,10 @@
 
 // 流媒体服务类型
 export type StreamingService =
+  | 'tiktok'
+  | 'disney_plus'
   | 'netflix'
   | 'youtube'
-  | 'disney_plus'
-  | 'tiktok'
   | 'amazon_prime'
   | 'spotify'
   | 'chatgpt';
@@ -48,14 +48,24 @@ export interface NodeStreamingData {
 
 // 流媒体服务配置
 export const STREAMING_SERVICES: Record<StreamingService, { name: string; icon: string }> = {
+  tiktok: { name: 'TikTok', icon: '🎭' },
+  disney_plus: { name: 'Disney+', icon: '🎵' },
   netflix: { name: 'Netflix', icon: '🎬' },
   youtube: { name: 'YouTube', icon: '📺' },
-  disney_plus: { name: 'Disney+', icon: '🎵' },
-  tiktok: { name: 'TikTok', icon: '🎭' },
-  amazon_prime: { name: 'Prime Video', icon: '📦' },
+  amazon_prime: { name: 'AmazonPV', icon: '📦' },
   spotify: { name: 'Spotify', icon: '🎶' },
   chatgpt: { name: 'ChatGPT', icon: '🤖' },
 };
+
+export const STREAMING_SERVICE_ORDER: StreamingService[] = [
+  'tiktok',
+  'disney_plus',
+  'netflix',
+  'youtube',
+  'amazon_prime',
+  'spotify',
+  'chatgpt',
+];
 
 // 状态颜色映射
 export const STATUS_COLORS: Record<StreamingStatus, string> = {

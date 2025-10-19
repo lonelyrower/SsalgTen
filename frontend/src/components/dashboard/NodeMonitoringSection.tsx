@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { StreamingBadge } from '@/components/streaming/StreamingBadge';
 import { apiService } from '@/services/api';
-import { STREAMING_SERVICES } from '@/types/streaming';
+import { STREAMING_SERVICES, STREAMING_SERVICE_ORDER } from '@/types/streaming';
 import type { NodeData } from '@/services/api';
 import type { StreamingServiceResult } from '@/types/streaming';
 
@@ -14,6 +14,7 @@ type ViewMode = 'grid' | 'list';
 
 export const NodeMonitoringSection: React.FC = () => {
   const { nodes, connected, refreshData } = useRealTime();
+  const ALL_STREAMING_SERVICES = STREAMING_SERVICE_ORDER;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -44,15 +45,30 @@ export const NodeMonitoringSection: React.FC = () => {
     try {
       const response = await apiService.getNodeStreaming(nodeId);
       if (response.success && response.data) {
+        const serviceMap = new Map(response.data.services.map(service => [service.service, service]));
+        const normalizedServices = ALL_STREAMING_SERVICES.map((service) => {
+          const existing = serviceMap.get(service);
+          if (existing) {
+            return existing;
+          }
+
+          return {
+            service,
+            name: STREAMING_SERVICES[service].name,
+            icon: STREAMING_SERVICES[service].icon,
+            status: 'unknown' as const,
+          };
+        });
+
         setStreamingDataMap(prev => ({
           ...prev,
-          [nodeId]: response.data!.services
+          [nodeId]: normalizedServices
         }));
       }
     } catch (error) {
       console.error(`Failed to fetch streaming data for node ${nodeId}:`, error);
     }
-  }, []);
+  }, [ALL_STREAMING_SERVICES]);
 
   // 当节点列表加载时，获取每个节点的流媒体数据
   React.useEffect(() => {
@@ -73,8 +89,7 @@ export const NodeMonitoringSection: React.FC = () => {
     }
 
     // 返回默认的未测试状态
-    const defaultServices: Array<keyof typeof STREAMING_SERVICES> = ['netflix', 'youtube', 'chatgpt'];
-    return defaultServices.map(service => ({
+    return ALL_STREAMING_SERVICES.map(service => ({
       service,
       name: STREAMING_SERVICES[service].name,
       icon: STREAMING_SERVICES[service].icon,
@@ -269,7 +284,7 @@ const NodeCardGrid: React.FC<{ node: NodeData; streamingData: StreamingServiceRe
       <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
         <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">流媒体解锁</div>
         <div className="flex flex-wrap gap-1">
-          {streamingData.slice(0, 3).map((service) => (
+          {streamingData.slice(0, 7).map((service) => (
             <StreamingBadge key={service.service} service={service} size="sm" showStatus={false} />
           ))}
         </div>
@@ -306,7 +321,7 @@ const NodeCardList: React.FC<{ node: NodeData; streamingData: StreamingServiceRe
 
           {/* 流媒体标签 */}
           <div className="hidden lg:flex items-center space-x-1">
-            {streamingData.slice(0, 3).map((service) => (
+            {streamingData.slice(0, 7).map((service) => (
               <StreamingBadge key={service.service} service={service} size="sm" showStatus={false} />
             ))}
           </div>

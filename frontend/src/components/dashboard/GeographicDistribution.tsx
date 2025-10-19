@@ -44,6 +44,9 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   nodes,
   className = ''
 }) => {
+  const CHART_LIMIT = 12;
+  const LIST_LIMIT = 12;
+
   // 计算国家分布数据
   const { countryStats, totalCountries } = useMemo(() => {
     const countryMap = new Map<string, { online: number; offline: number; total: number }>();
@@ -72,7 +75,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
       .sort((a, b) => b.total - a.total);
 
     return {
-      countryStats: allCountryStats.slice(0, 10), // 图表显示前10个国家
+      countryStats: allCountryStats,
       totalCountries: allCountryStats.length // 实际覆盖的国家总数
     };
   }, [nodes]);
@@ -94,7 +97,10 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
           {/* 柱状图 */}
           <div className="h-64 mb-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={countryStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart
+                data={countryStats.slice(0, CHART_LIMIT)}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis
                   dataKey="country"
@@ -111,7 +117,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
 
           {/* 国家列表 */}
           <div className="grid grid-cols-2 gap-3">
-            {countryStats.slice(0, 6).map((item, index) => (
+            {countryStats.slice(0, LIST_LIMIT).map((item, index) => (
               <div key={item.country} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">#{index + 1}</span>
@@ -127,6 +133,11 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
                 </div>
               </div>
             ))}
+            {totalCountries > LIST_LIMIT && (
+              <div className="col-span-2 text-xs text-gray-500 dark:text-gray-400 text-right">
+                还有 {totalCountries - LIST_LIMIT} 个国家/地区未显示
+              </div>
+            )}
           </div>
         </>
       ) : (

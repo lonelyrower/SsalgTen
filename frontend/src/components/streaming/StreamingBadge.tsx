@@ -1,6 +1,7 @@
 import React from 'react';
 import { STATUS_COLORS, STATUS_TEXT } from '@/types/streaming';
 import type { StreamingServiceResult } from '@/types/streaming';
+import { getStreamingIcon } from '@/components/streaming/StreamingIcons';
 
 interface StreamingBadgeProps {
   service: StreamingServiceResult;
@@ -42,7 +43,9 @@ export const StreamingBadge: React.FC<StreamingBadgeProps> = ({
       className={`inline-flex items-center space-x-1 rounded border ${getStatusBg()} ${sizeClasses[size]}`}
       title={`${service.name}: ${STATUS_TEXT[service.status]}${service.region ? ` (${service.region})` : ''}`}
     >
-      <span>{service.icon}</span>
+      <span className="flex items-center justify-center">
+        {getStreamingIcon(service.service, size)}
+      </span>
       {showStatus && (
         <span className={`font-medium ${STATUS_COLORS[service.status]}`}>
           {service.region || STATUS_TEXT[service.status]}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { STREAMING_SERVICES, STATUS_TEXT, STATUS_COLORS } from '@/types/streaming';
+import { STREAMING_SERVICES, STREAMING_SERVICE_ORDER, STATUS_TEXT, STATUS_COLORS } from '@/types/streaming';
 import type { StreamingServiceResult } from '@/types/streaming';
 
 interface StreamingUnlockTabProps {
@@ -19,8 +19,7 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
 
   // TODO: 从后端API获取流媒体数据
   // 临时模拟数据
-  const streamingData: StreamingServiceResult[] = Object.keys(STREAMING_SERVICES).map((key) => {
-    const service = key as keyof typeof STREAMING_SERVICES;
+  const streamingData: StreamingServiceResult[] = STREAMING_SERVICE_ORDER.map((service) => {
     return {
       service,
       name: STREAMING_SERVICES[service].name,
