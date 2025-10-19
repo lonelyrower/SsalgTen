@@ -141,7 +141,9 @@ export function setupSocketHandlers(io: Server) {
     // 取消订阅流媒体检测更新
     socket.on("unsubscribe_streaming", (nodeId: string) => {
       socket.leave(`streaming_${nodeId}`);
-      logger.info(`用户 ${user?.username} 取消订阅节点 ${nodeId} 的流媒体检测更新`);
+      logger.info(
+        `用户 ${user?.username} 取消订阅节点 ${nodeId} 的流媒体检测更新`,
+      );
     });
 
     // 断线处理
@@ -239,10 +241,7 @@ export function broadcastStreamingTestResult(
 }
 
 // 辅助函数：通知流媒体检测开始
-export function notifyStreamingTestStart(
-  io: Server,
-  nodeId: string,
-) {
+export function notifyStreamingTestStart(io: Server, nodeId: string) {
   io.to(`streaming_${nodeId}`).emit("streaming_test_started", {
     nodeId,
     timestamp: new Date().toISOString(),
