@@ -1,4 +1,4 @@
-import { Network, Activity, LogOut, LayoutDashboard, Monitor, Server, Shield, Settings } from 'lucide-react';
+import { Network, Activity, LogOut, LayoutDashboard, Server, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MobileNav } from '@/components/layout/MobileNav';

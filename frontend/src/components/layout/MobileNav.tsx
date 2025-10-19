@@ -3,15 +3,13 @@ import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { 
-  Menu, 
-  X, 
-  Activity, 
-  Users, 
-  Settings, 
+import {
+  Menu,
+  X,
+  Activity,
+  Users,
+  Settings,
   LogOut,
-  Shield,
-  Lock,
   Server
 } from 'lucide-react';
 
@@ -49,7 +47,7 @@ export const MobileNav: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return <Shield className="h-4 w-4 text-red-500" />;
+        return <Settings className="h-4 w-4 text-red-500" />;
       case 'OPERATOR':
         return <Settings className="h-4 w-4 text-primary" />;
       case 'VIEWER':

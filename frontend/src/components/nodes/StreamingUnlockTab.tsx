@@ -1,8 +1,8 @@
 import React from 'react';
 import { RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StreamingServiceResult, STREAMING_SERVICES, STATUS_TEXT, STATUS_COLORS } from '@/types/streaming';
-import { StreamingBadge } from '@/components/streaming/StreamingBadge';
+import { STREAMING_SERVICES, STATUS_TEXT, STATUS_COLORS } from '@/types/streaming';
+import type { StreamingServiceResult } from '@/types/streaming';
 
 interface StreamingUnlockTabProps {
   nodeId: string;
@@ -13,7 +13,7 @@ interface StreamingUnlockTabProps {
  * 节点详情 - 流媒体解锁 Tab
  * 显示节点对各流媒体平台的解锁状态
  */
-export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = ({ nodeId, nodeName }) => {
+export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
   const [loading, setLoading] = React.useState(false);
   const [lastTested, setLastTested] = React.useState<string | null>(null);
 

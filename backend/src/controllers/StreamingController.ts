@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-import { PrismaClient, StreamingService, StreamingStatus, UnlockType } from '@prisma/client';
+import { StreamingService, StreamingStatus, UnlockType } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { getIO } from '../sockets/ioRegistry';
 import { notifyStreamingTestStart, broadcastStreamingTestResult } from '../sockets/socketHandlers';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
 
 /**
  * 流媒体解锁API控制器

@@ -328,13 +328,19 @@ export interface LatencyTestResults {
 
 // 流媒体解锁接口
 export interface StreamingServiceResult {
-  service: string;
+  service: 'netflix' | 'youtube' | 'disney_plus' | 'tiktok' | 'amazon_prime' | 'spotify' | 'chatgpt';
   name: string;
   icon: string;
   status: 'yes' | 'no' | 'org' | 'pending' | 'failed' | 'unknown';
   region?: string;
   unlockType?: 'native' | 'dns' | 'idc' | 'unknown';
   lastTested?: string;
+}
+
+export interface NodeStreamingData {
+  nodeId: string;
+  services: StreamingServiceResult[];
+  lastScanned: string | null;
 }
 
 export interface StreamingStats {
@@ -880,8 +886,8 @@ class ApiService {
   }
 
   // 流媒体解锁 API
-  async getNodeStreaming(nodeId: string): Promise<ApiResponse<StreamingServiceResult[]>> {
-    return this.request<StreamingServiceResult[]>(`/nodes/${nodeId}/streaming`);
+  async getNodeStreaming(nodeId: string): Promise<ApiResponse<NodeStreamingData>> {
+    return this.request<NodeStreamingData>(`/nodes/${nodeId}/streaming`);
   }
 
   async triggerStreamingTest(nodeId: string): Promise<ApiResponse<{ message: string }>> {

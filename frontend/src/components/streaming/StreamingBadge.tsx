@@ -1,5 +1,6 @@
 import React from 'react';
-import { StreamingServiceResult, STATUS_COLORS, STATUS_TEXT } from '@/types/streaming';
+import { STATUS_COLORS, STATUS_TEXT } from '@/types/streaming';
+import type { StreamingServiceResult } from '@/types/streaming';
 
 interface StreamingBadgeProps {
   service: StreamingServiceResult;

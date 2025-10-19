@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Server, Search, Filter, LayoutGrid, List, RefreshCw } from 'lucide-react';
 import { useRealTime } from '@/hooks/useRealTime';
 import { Button } from '@/components/ui/button';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { StreamingBadge } from '@/components/streaming/StreamingBadge';
-import { NodeData, apiService } from '@/services/api';
-import { StreamingServiceResult, STREAMING_SERVICES } from '@/types/streaming';
+import { apiService } from '@/services/api';
+import { STREAMING_SERVICES } from '@/types/streaming';
+import type { NodeData } from '@/services/api';
+import type { StreamingServiceResult } from '@/types/streaming';
 
 type StatusFilter = 'all' | 'online' | 'offline';
 type ViewMode = 'grid' | 'list';
@@ -15,7 +17,6 @@ export const NodeMonitoringSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [streamingFilter, setStreamingFilter] = useState<string[]>([]);
 
   // 过滤节点
   const filteredNodes = useMemo(() => {
@@ -39,19 +40,19 @@ export const NodeMonitoringSection: React.FC = () => {
   const [streamingDataMap, setStreamingDataMap] = useState<Record<string, StreamingServiceResult[]>>({});
 
   // 获取流媒体数据
-  const fetchStreamingData = async (nodeId: string) => {
+  const fetchStreamingData = useCallback(async (nodeId: string) => {
     try {
       const response = await apiService.getNodeStreaming(nodeId);
       if (response.success && response.data) {
         setStreamingDataMap(prev => ({
           ...prev,
-          [nodeId]: response.data.services as StreamingServiceResult[]
+          [nodeId]: response.data!.services
         }));
       }
     } catch (error) {
       console.error(`Failed to fetch streaming data for node ${nodeId}:`, error);
     }
-  };
+  }, []);
 
   // 当节点列表加载时，获取每个节点的流媒体数据
   React.useEffect(() => {
@@ -63,7 +64,7 @@ export const NodeMonitoringSection: React.FC = () => {
         }
       });
     }
-  }, [filteredNodes]);
+  }, [filteredNodes, streamingDataMap, fetchStreamingData]);
 
   // 获取节点的流媒体数据（带默认值）
   const getStreamingData = (nodeId: string): StreamingServiceResult[] => {
@@ -79,26 +80,6 @@ export const NodeMonitoringSection: React.FC = () => {
       icon: STREAMING_SERVICES[service].icon,
       status: 'unknown' as const,
     }));
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'online':
-        return <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>;
-      case 'offline':
-        return <div className="w-2 h-2 bg-red-500 rounded-full"></div>;
-      default:
-        return <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>;
-    }
-  };
-
-  const formatUptime = (uptime: number | null | undefined) => {
-    if (!uptime || uptime <= 0) return '--';
-    const days = Math.floor(uptime / (24 * 3600));
-    const hours = Math.floor((uptime % (24 * 3600)) / 3600);
-
-    if (days > 0) return `${days}d ${hours}h`;
-    return `${hours}h`;
   };
 
   return (
