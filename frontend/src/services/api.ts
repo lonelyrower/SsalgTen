@@ -541,7 +541,7 @@ class ApiService {
     }, true);
   }
 
-  async exportNodes(format: 'json' | 'csv' = 'csv'): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+  async exportNodes(format: 'json' | 'csv' | 'markdown' = 'csv'): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
     return this.download('/admin/nodes/export?format=' + format, {}, true);
   }
 
@@ -905,11 +905,10 @@ class ApiService {
 
   async getStreamingNodeSummaries(filters?: import('../types/streaming').StreamingFilters): Promise<ApiResponse<import('../types/streaming').NodeStreamingSummary[]>> {
     const params = new URLSearchParams();
-    if (filters?.platform) params.append('platform', filters.platform);
+    if (filters?.platform) params.append('service', filters.platform);
     if (filters?.status) params.append('status', filters.status);
     if (filters?.country) params.append('country', filters.country);
-    if (filters?.region) params.append('region', filters.region);
-    if (filters?.keyword) params.append('keyword', filters.keyword);
+    if (filters?.keyword) params.append('search', filters.keyword);
     if (filters?.showExpired !== undefined) params.append('showExpired', String(filters.showExpired));
 
     const query = params.toString();
@@ -925,7 +924,7 @@ class ApiService {
 
   async exportStreamingData(format: import('../types/streaming').StreamingExportFormat, filters?: import('../types/streaming').StreamingFilters): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
     const params = new URLSearchParams({ format });
-    if (filters?.platform) params.append('platform', filters.platform);
+    if (filters?.platform) params.append('service', filters.platform);
     if (filters?.status) params.append('status', filters.status);
     if (filters?.country) params.append('country', filters.country);
 
@@ -948,10 +947,10 @@ class ApiService {
   async getAllServices(filters?: import('../types/services').ServiceFilters): Promise<ApiResponse<import('../types/services').NodeService[]>> {
     const params = new URLSearchParams();
     if (filters?.nodeId) params.append('nodeId', filters.nodeId);
-    if (filters?.serviceType) params.append('type', filters.serviceType);
+    if (filters?.serviceType) params.append('serviceType', filters.serviceType);
     if (filters?.status) params.append('status', filters.status);
-    if (filters?.deploymentType) params.append('deploymentType', filters.deploymentType);
-    if (filters?.keyword) params.append('keyword', filters.keyword);
+    if (filters?.deploymentType) params.append('deploymentType', filters.deploymentType as string);
+    if (filters?.keyword) params.append('search', filters.keyword);
     if (filters?.priority !== undefined) params.append('priority', String(filters.priority));
     if (filters?.showExpired !== undefined) params.append('showExpired', String(filters.showExpired));
     if (filters?.tags && filters.tags.length > 0) {
@@ -963,7 +962,7 @@ class ApiService {
   }
 
   async getNodeServicesGrouped(): Promise<ApiResponse<import('../types/services').NodeServicesOverview[]>> {
-    return this.request('/services/by-node');
+    return this.request('/services/grouped');
   }
 
   async updateServiceTags(serviceId: string, tags: string[]): Promise<ApiResponse<import('../types/services').NodeService>> {
@@ -996,7 +995,7 @@ class ApiService {
   async exportServices(format: 'json' | 'csv' | 'markdown', filters?: import('../types/services').ServiceFilters): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
     const params = new URLSearchParams({ format });
     if (filters?.nodeId) params.append('nodeId', filters.nodeId);
-    if (filters?.serviceType) params.append('type', filters.serviceType);
+    if (filters?.serviceType) params.append('serviceType', filters.serviceType);
     if (filters?.status) params.append('status', filters.status);
 
     return this.download(`/services/export?${params.toString()}`, {}, true);

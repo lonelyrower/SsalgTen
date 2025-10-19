@@ -350,14 +350,12 @@ export class StreamingController {
       const platformStats = await Promise.all(
         services.map(async (service) => {
           // 获取每个节点的最新测试结果
-          const latestTests = await prisma.$queryRaw<
-            Array<{ nodeId: string; status: string }>
-          >`
-            SELECT DISTINCT ON ("nodeId") "nodeId", "status"
-            FROM "StreamingTest"
-            WHERE "service" = ${service}
-            ORDER BY "nodeId", "testedAt" DESC
-          `;
+          const latestTests = await prisma.streamingTest.findMany({
+            where: { service },
+            distinct: ["nodeId"],
+            orderBy: { testedAt: "desc" },
+            select: { nodeId: true, status: true },
+          });
 
           const unlocked = latestTests.filter((t) => t.status === "YES").length;
           const restricted = latestTests.filter(

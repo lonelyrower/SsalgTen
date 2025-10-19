@@ -1351,6 +1351,51 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
         return;
       }
 
+      if (format === "markdown") {
+        const headers = [
+          "ID",
+          "Name",
+          "Country",
+          "City",
+          "Status",
+          "Provider",
+          "IPv4",
+          "IPv6",
+          "Last Seen",
+          "Created At",
+        ];
+
+        const mdHeader = `| ${headers.join(" | ")} |\n`;
+        const mdSeparator = `|${headers.map(() => "---").join("|")}|\n`;
+        const mdRows = parsedNodes
+          .map((n) =>
+            [
+              n.id,
+              n.name,
+              n.country,
+              n.city,
+              n.status,
+              n.provider,
+              n.ipv4 || "",
+              n.ipv6 || "",
+              n.lastSeen || "",
+              n.createdAt || "",
+            ]
+              .map((v) => String(v ?? "").replaceAll("|", "\\|"))
+              .join(" | "),
+          )
+          .join("\n");
+
+        const content = `# Nodes Export\n\n${mdHeader}${mdSeparator}${mdRows}`;
+        res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="ssalgten-nodes-${timestamp}.md"`,
+        );
+        res.status(200).send(content);
+        return;
+      }
+
       const response: ApiResponse = {
         success: true,
         data: parsedNodes,

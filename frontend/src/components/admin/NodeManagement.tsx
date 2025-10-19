@@ -40,6 +40,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const [showRenameModal, setShowRenameModal] = useState<string | null>(null);
   const [newNodeName, setNewNodeName] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     loadNodes();
@@ -66,7 +67,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
     }
   };
 
-  const handleExportNodes = async (format: 'json' | 'csv' = 'csv') => {
+  const handleExportNodes = async (format: 'json' | 'csv' | 'markdown' = 'csv') => {
     try {
       setExporting(true);
       const result = await apiService.exportNodes(format);
@@ -235,12 +236,13 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               <RefreshCw className="h-4 w-4 mr-1" />
               刷新
             </Button>
-            <div className="relative group hidden sm:block">
+            <div className="relative hidden sm:block">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={exporting}
-                onClick={() => handleExportNodes('csv')}
+                onClick={() => setShowExportMenu((v) => !v)}
+                onBlur={() => setTimeout(() => setShowExportMenu(false), 150)}
                 title="导出节点列表"
               >
                 {exporting ? (
@@ -250,6 +252,31 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                 )}
                 导出节点
               </Button>
+              {showExportMenu && (
+                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleExportNodes('json')}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                  >
+                    JSON
+                  </button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleExportNodes('csv')}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    CSV
+                  </button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleExportNodes('markdown')}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
+                  >
+                    Markdown
+                  </button>
+                </div>
+              )}
             </div>
             <Button
               variant="success"
