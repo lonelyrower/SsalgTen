@@ -1,9 +1,24 @@
-import { Request, Response } from 'express';
-import { StreamingService, StreamingStatus, UnlockType } from '@prisma/client';
-import { prisma } from '../lib/prisma';
-import { getIO } from '../sockets/ioRegistry';
-import { notifyStreamingTestStart, broadcastStreamingTestResult } from '../sockets/socketHandlers';
-import { logger } from '../utils/logger';
+import { Request, Response } from "express";
+import { StreamingService, StreamingStatus, UnlockType } from "@prisma/client";
+import { prisma } from "../lib/prisma";
+import { getIO } from "../sockets/ioRegistry";
+import {
+  notifyStreamingTestStart,
+  broadcastStreamingTestResult,
+} from "../sockets/socketHandlers";
+import { logger } from "../utils/logger";
+
+/**
+ * Agent上报的流媒体检测结果接口
+ */
+interface StreamingResultInput {
+  service: string;
+  status: string;
+  region?: string;
+  unlockType?: string;
+  details?: Record<string, unknown>;
+  errorMsg?: string;
+}
 
 /**
  * 流媒体解锁API控制器
@@ -25,7 +40,7 @@ export class StreamingController {
       if (!node) {
         return res.status(404).json({
           success: false,
-          error: 'Node not found',
+          error: "Node not found",
         });
       }
 
@@ -39,7 +54,7 @@ export class StreamingController {
               service,
             },
             orderBy: {
-              testedAt: 'desc',
+              testedAt: "desc",
             },
           });
 
@@ -47,12 +62,12 @@ export class StreamingController {
             service: service.toLowerCase(),
             name: getServiceName(service),
             icon: getServiceIcon(service),
-            status: latestTest?.status.toLowerCase() || 'unknown',
+            status: latestTest?.status.toLowerCase() || "unknown",
             region: latestTest?.region,
             unlockType: latestTest?.unlockType?.toLowerCase(),
             lastTested: latestTest?.testedAt,
           };
-        })
+        }),
       );
 
       return res.json({
@@ -64,10 +79,10 @@ export class StreamingController {
         },
       });
     } catch (error) {
-      console.error('Get node streaming error:', error);
+      console.error("Get node streaming error:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to get streaming data',
+        error: "Failed to get streaming data",
       });
     }
   }
@@ -89,7 +104,7 @@ export class StreamingController {
       if (!node) {
         return res.status(404).json({
           success: false,
-          error: 'Node not found',
+          error: "Node not found",
         });
       }
 
@@ -101,25 +116,29 @@ export class StreamingController {
 
         // TODO: 实际项目中应该通过Agent的Socket连接通知Agent执行检测
         // 目前Agent是定时执行，后续可以扩展为实时触发
-        logger.info(`Triggered streaming test for node ${nodeId}, services: ${services || 'all'}`);
+        logger.info(
+          `Triggered streaming test for node ${nodeId}, services: ${services || "all"}`,
+        );
       } else {
-        logger.warn('Socket.IO instance not available, cannot notify streaming test start');
+        logger.warn(
+          "Socket.IO instance not available, cannot notify streaming test start",
+        );
       }
 
       return res.json({
         success: true,
-        message: 'Streaming test triggered',
+        message: "Streaming test triggered",
         data: {
           nodeId,
-          services: services || 'all',
-          status: 'pending',
+          services: services || "all",
+          status: "pending",
         },
       });
     } catch (error) {
-      logger.error('Trigger streaming test error:', error);
+      logger.error("Trigger streaming test error:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to trigger streaming test',
+        error: "Failed to trigger streaming test",
       });
     }
   }
@@ -135,13 +154,13 @@ export class StreamingController {
       if (!nodeId || !results || !Array.isArray(results)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid request body',
+          error: "Invalid request body",
         });
       }
 
       // 批量保存检测结果
       const savedResults = await Promise.all(
-        results.map(async (result: any) => {
+        results.map(async (result: StreamingResultInput) => {
           return await prisma.streamingTest.create({
             data: {
               nodeId,
@@ -153,7 +172,7 @@ export class StreamingController {
               errorMsg: result.errorMsg,
             },
           });
-        })
+        }),
       );
 
       // 广播检测结果给前端
@@ -162,20 +181,22 @@ export class StreamingController {
         broadcastStreamingTestResult(io, nodeId, savedResults);
       }
 
-      logger.info(`Saved ${savedResults.length} streaming test results for node ${nodeId}`);
+      logger.info(
+        `Saved ${savedResults.length} streaming test results for node ${nodeId}`,
+      );
 
       return res.json({
         success: true,
-        message: 'Streaming results saved',
+        message: "Streaming results saved",
         data: {
           count: savedResults.length,
         },
       });
     } catch (error) {
-      logger.error('Save streaming results error:', error);
+      logger.error("Save streaming results error:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to save streaming results',
+        error: "Failed to save streaming results",
       });
     }
   }
@@ -187,14 +208,14 @@ export class StreamingController {
   static async getNodesByStreaming(req: Request, res: Response) {
     try {
       const { service } = req.params;
-      const { status = 'yes' } = req.query;
+      const { status = "yes" } = req.query;
 
       const streamingService = service.toUpperCase() as StreamingService;
 
       // 查找支持指定流媒体的节点
       const nodes = await prisma.node.findMany({
         where: {
-          status: 'ONLINE',
+          status: "ONLINE",
           streamingTests: {
             some: {
               service: streamingService,
@@ -212,7 +233,7 @@ export class StreamingController {
               service: streamingService,
             },
             orderBy: {
-              testedAt: 'desc',
+              testedAt: "desc",
             },
             take: 1,
           },
@@ -230,10 +251,10 @@ export class StreamingController {
         })),
       });
     } catch (error) {
-      console.error('Get nodes by streaming error:', error);
+      console.error("Get nodes by streaming error:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to get nodes',
+        error: "Failed to get nodes",
       });
     }
   }
@@ -255,7 +276,7 @@ export class StreamingController {
           const unlocked = await prisma.streamingTest.count({
             where: {
               service,
-              status: 'YES',
+              status: "YES",
               testedAt: {
                 gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
               },
@@ -267,9 +288,9 @@ export class StreamingController {
             name: getServiceName(service),
             total,
             unlocked,
-            percentage: total > 0 ? ((unlocked / total) * 100).toFixed(1) : '0',
+            percentage: total > 0 ? ((unlocked / total) * 100).toFixed(1) : "0",
           };
-        })
+        }),
       );
 
       return res.json({
@@ -277,10 +298,10 @@ export class StreamingController {
         data: stats,
       });
     } catch (error) {
-      console.error('Get streaming stats error:', error);
+      console.error("Get streaming stats error:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to get streaming stats',
+        error: "Failed to get streaming stats",
       });
     }
   }
@@ -289,13 +310,13 @@ export class StreamingController {
 // 辅助函数：获取服务名称
 function getServiceName(service: StreamingService): string {
   const names: Record<StreamingService, string> = {
-    NETFLIX: 'Netflix',
-    YOUTUBE: 'YouTube',
-    DISNEY_PLUS: 'Disney+',
-    TIKTOK: 'TikTok',
-    AMAZON_PRIME: 'Amazon Prime',
-    SPOTIFY: 'Spotify',
-    CHATGPT: 'ChatGPT',
+    NETFLIX: "Netflix",
+    YOUTUBE: "YouTube",
+    DISNEY_PLUS: "Disney+",
+    TIKTOK: "TikTok",
+    AMAZON_PRIME: "Amazon Prime",
+    SPOTIFY: "Spotify",
+    CHATGPT: "ChatGPT",
   };
   return names[service];
 }
@@ -303,13 +324,13 @@ function getServiceName(service: StreamingService): string {
 // 辅助函数：获取服务图标
 function getServiceIcon(service: StreamingService): string {
   const icons: Record<StreamingService, string> = {
-    NETFLIX: '🎬',
-    YOUTUBE: '📺',
-    DISNEY_PLUS: '🎵',
-    TIKTOK: '🎭',
-    AMAZON_PRIME: '📦',
-    SPOTIFY: '🎶',
-    CHATGPT: '🤖',
+    NETFLIX: "🎬",
+    YOUTUBE: "📺",
+    DISNEY_PLUS: "🎵",
+    TIKTOK: "🎭",
+    AMAZON_PRIME: "📦",
+    SPOTIFY: "🎶",
+    CHATGPT: "🤖",
   };
   return icons[service];
 }
