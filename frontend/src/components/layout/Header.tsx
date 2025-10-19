@@ -145,10 +145,10 @@ export const Header = () => {
             {/* 连接状态指示器 - 仅在已认证时显示 */}
             {isAuthenticated && (
               <div
-                className={`hidden lg:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                   connected
-                    ? 'bg-green-500/15 text-green-300 border border-green-500/30'
-                    : 'bg-red-500/15 text-red-300 border border-red-500/30'
+                    ? 'bg-green-500/15 text-green-300 border border-green-500/30 hover:border-green-500/50'
+                    : 'bg-red-500/15 text-red-300 border border-red-500/30 hover:border-red-500/50'
                 }`}
                 title={connected ? '实时连接正常' : '实时连接断开'}
               >
