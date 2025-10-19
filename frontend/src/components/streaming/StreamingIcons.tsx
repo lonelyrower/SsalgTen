@@ -103,7 +103,7 @@ const ChatGPTIcon = ({ size }: { size: number }) => (
   </svg>
 );
 
-const iconMap: Record<StreamingService, ({ size }: { size: number }) => JSX.Element> = {
+const iconMap: Record<StreamingService, ({ size }: { size: number }) => React.ReactElement> = {
   tiktok: TikTokIcon,
   disney_plus: DisneyPlusIcon,
   netflix: NetflixIcon,
@@ -113,11 +113,17 @@ const iconMap: Record<StreamingService, ({ size }: { size: number }) => JSX.Elem
   chatgpt: ChatGPTIcon,
 };
 
-export const getStreamingIcon = (service: StreamingService, size: IconSize = 'md'): JSX.Element => {
+export type StreamingIconProps = {
+  service: StreamingService;
+  size?: IconSize;
+};
+
+export const StreamingIcon: React.FC<StreamingIconProps> = ({ service, size = 'md' }) => {
   const Component = iconMap[service];
   if (!Component) {
     return <span className="text-sm font-semibold uppercase">{service.slice(0, 2)}</span>;
   }
-
   return <Component size={sizeMap[size]} />;
 };
+
+export default StreamingIcon;
