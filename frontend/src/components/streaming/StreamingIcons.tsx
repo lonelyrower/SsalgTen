@@ -2,13 +2,14 @@ import React from 'react';
 import type { StreamingService } from '@/types/streaming';
 // Official brand icons via simple-icons (per-service ESM imports)
 // We keep local fallbacks to avoid empty UI if a brand icon isn't available.
-import tiktok from 'simple-icons/icons/tiktok';
-import netflix from 'simple-icons/icons/netflix';
-import youtube from 'simple-icons/icons/youtube';
-import amazonprime from 'simple-icons/icons/amazonprime';
-import spotify from 'simple-icons/icons/spotify';
-// Use OpenAI logo for ChatGPT
-import openai from 'simple-icons/icons/openai';
+import {
+  siTiktok,
+  siNetflix,
+  siYoutube,
+  siAmazonprime,
+  siSpotify,
+  siOpenai,
+} from 'simple-icons';
 
 type IconSize = 'sm' | 'md' | 'lg';
 
@@ -21,12 +22,12 @@ const sizeMap: Record<IconSize, number> = {
 type BrandIcon = { path: string; hex: string };
 
 const brandIcons: Partial<Record<StreamingService, BrandIcon>> = {
-  tiktok: tiktok,
-  netflix: netflix,
-  youtube: youtube,
-  amazon_prime: amazonprime,
-  spotify: spotify,
-  chatgpt: openai,
+  tiktok: siTiktok,
+  netflix: siNetflix,
+  youtube: siYoutube,
+  amazon_prime: siAmazonprime,
+  spotify: siSpotify,
+  chatgpt: siOpenai,
 };
 
 // Brand color fallbacks for services without an icon in simple-icons
