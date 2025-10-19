@@ -66,6 +66,36 @@ export const StreamingIcon: React.FC<StreamingIconProps> = ({ service, size = 'm
   const px = sizeMap[size];
   const icon = brandIcons[service];
 
+  // Custom Disney+ icon rendering (simple arc + plus), since simple-icons has no disneyplus slug
+  if (service === 'disney_plus') {
+    const stroke = `#${fallbackHex.disney_plus}`;
+    return (
+      <svg
+        width={px}
+        height={px}
+        viewBox="0 0 24 24"
+        role="img"
+        aria-label="disney_plus"
+        focusable="false"
+      >
+        <path
+          d="M4 13.5c2.4-2.6 5.9-4.2 9.8-4.2 2 0 3.9.4 5.6 1.2"
+          stroke={stroke}
+          strokeWidth={Math.max(1.4, Math.round(px / 14))}
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M17 12v4M15 14h4"
+          stroke={stroke}
+          strokeWidth={Math.max(1.6, Math.round(px / 12))}
+          strokeLinecap="round"
+          fill="none"
+        />
+      </svg>
+    );
+  }
+
   if (icon?.path) {
     return (
       <svg
