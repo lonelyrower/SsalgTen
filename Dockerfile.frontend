@@ -1,5 +1,5 @@
 # Multi-stage build for SsalgTen Frontend
-FROM node:24-alpine AS builder
+FROM node:24-bookworm-slim AS builder
 
 # Set working directory
 WORKDIR /app
