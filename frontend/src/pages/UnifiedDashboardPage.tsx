@@ -42,15 +42,6 @@ export const UnifiedDashboardPage: React.FC = () => {
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
         <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe">
-          {/* 页面标题 */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              监控中心
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              实时监控所有节点的运行状态和性能指标
-            </p>
-          </div>
 
           {/* 系统概览区块 - 统计卡片 */}
           <section className="mb-6 sm:mb-8">

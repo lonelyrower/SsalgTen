@@ -40,7 +40,7 @@ export const MobileNav: React.FC = () => {
 
   const navItems = isAuthenticated ? [
     { path: '/dashboard', label: '监控中心', icon: Activity, show: true },
-    { path: '/nodes', label: '节点管理', icon: Server, show: true },
+    { path: '/nodes', label: '节点总览', icon: Server, show: true },
     { path: '/streaming', label: '流媒体解锁', icon: Film, show: true },
     { path: '/services', label: '服务总览', icon: Layers, show: true },
     { path: '/admin', label: '系统管理', icon: Settings, show: true },

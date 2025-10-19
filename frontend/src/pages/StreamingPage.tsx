@@ -170,17 +170,8 @@ export const StreamingPage: React.FC = () => {
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        {/* 页面标题和操作栏 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              流媒体解锁
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              查看节点对主流流媒体平台的解锁情况
-            </p>
-          </div>
-
+        {/* 操作栏（简化） */}
+        <div className="flex items-center justify-end gap-2">
           <div className="flex items-center gap-2">
             {/* 视图切换 */}
             <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">

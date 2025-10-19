@@ -9,8 +9,7 @@ import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
 import type { HeartbeatData } from '@/types/heartbeat';
 import { useClientLatency } from '@/hooks/useClientLatency';
-import { AgentDeployModal } from '@/components/admin/AgentDeployModal';
-import { Plus, Search, Filter, RefreshCw, Activity, ChevronDown, Download } from 'lucide-react';
+import { Search, Filter, RefreshCw, Activity, ChevronDown } from 'lucide-react';
 import { ViewModeToggle } from '@/components/map/ViewModeToggle';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { NodeData } from '@/services/api';
@@ -80,8 +79,7 @@ export const NodesPage: React.FC = () => {
   const [events, setEvents] = useState<NodeEventRecord[]>([]);
   const [eventFilter, setEventFilter] = useState<'all' | NodeEventRecord['type']>('all');
   const [loadingHeartbeat, setLoadingHeartbeat] = useState(false);
-  const [showDeployModal, setShowDeployModal] = useState(false);
-  const [exportingNodes, setExportingNodes] = useState(false);
+  
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
@@ -126,39 +124,7 @@ export const NodesPage: React.FC = () => {
   const handleRefresh = () => {
     refreshData();
   };
-  const handleExportNodes = async (format: 'json' | 'csv' = 'csv') => {
-    try {
-      setExportingNodes(true);
-      const result = await apiService.exportNodes(format);
-      if (result.success && result.data) {
-        const url = window.URL.createObjectURL(result.data);
-        const link = document.createElement('a');
-        link.href = url;
-        const fallbackName = `ssalgten-nodes-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`;
-        link.download = result.fileName || fallbackName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-      } else {
-        window.alert(`节点导出失败：${result.error || '未知错误'}`);
-      }
-    } catch (error) {
-      console.error('Export nodes failed:', error);
-      window.alert('节点导出失败，请稍后重试。');
-    } finally {
-      setExportingNodes(false);
-    }
-  };
-
-
-  const handleAddNode = () => {
-    setShowDeployModal(true);
-  };
-
-  const handleDeployComplete = async () => {
-    await refreshData(); // 刷新节点列表
-  };
+  
 
 
   // 获取节点详细心跳数据
@@ -359,67 +325,32 @@ export const NodesPage: React.FC = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* 页面标题和操作栏 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              节点管理
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              管理和监控所有VPS节点的状态与配置
-            </p>
-          </div>
+        {/* 操作栏（简化） */}
+        <div className="flex items-center justify-end gap-2 mb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="hidden sm:flex"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            刷新
+          </Button>
 
-          <div className="flex items-center gap-2">
-            {hasRole('ADMIN') && (
-              <Button onClick={handleAddNode} size="sm" className="hidden lg:flex">
-                <Plus className="h-4 w-4 mr-2" />
-                部署节点
-              </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={startLatencyTest}
+            disabled={isTestingInProgress}
+            className="hidden md:flex"
+          >
+            {isTestingInProgress ? (
+              <LoadingSpinner size="xs" center={false} className="mr-2" />
+            ) : (
+              <Activity className="h-4 w-4 mr-2" />
             )}
-
-            {hasRole('ADMIN') && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleExportNodes('csv')}
-                disabled={exportingNodes}
-                className="hidden md:flex"
-              >
-                {exportingNodes ? (
-                  <LoadingSpinner size="xs" center={false} className="mr-2" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                导出
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="hidden sm:flex"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              刷新
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={startLatencyTest}
-              disabled={isTestingInProgress}
-              className="hidden md:flex"
-            >
-              {isTestingInProgress ? (
-                <LoadingSpinner size="xs" center={false} className="mr-2" />
-              ) : (
-                <Activity className="h-4 w-4 mr-2" />
-              )}
-              延迟测试
-            </Button>
-          </div>
+            延迟测试
+          </Button>
         </div>
 
 
@@ -853,12 +784,7 @@ export const NodesPage: React.FC = () => {
         )}
       </main>
 
-      {/* 节点部署模态框 */}
-      <AgentDeployModal
-        isOpen={showDeployModal}
-        onClose={() => setShowDeployModal(false)}
-        onDeployed={handleDeployComplete}
-      />
+      
     </div>
   );
 };

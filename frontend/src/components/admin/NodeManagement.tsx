@@ -15,7 +15,8 @@ import {
   CheckCircle,
   Clock,
   ExternalLink,
-  Settings
+  Settings,
+  Download
 } from 'lucide-react';
 import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
 
@@ -38,6 +39,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showRenameModal, setShowRenameModal] = useState<string | null>(null);
   const [newNodeName, setNewNodeName] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadNodes();
@@ -61,6 +63,31 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
       setError('Failed to load nodes');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportNodes = async (format: 'json' | 'csv' = 'csv') => {
+    try {
+      setExporting(true);
+      const result = await apiService.exportNodes(format);
+      if (result.success && result.data) {
+        const url = window.URL.createObjectURL(result.data);
+        const link = document.createElement('a');
+        link.href = url;
+        const fallbackName = `ssalgten-nodes-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`;
+        link.download = result.fileName || fallbackName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        window.alert(`节点导出失败：${result.error || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('Export nodes failed:', error);
+      window.alert('节点导出失败，请稍后重试。');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -208,6 +235,22 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               <RefreshCw className="h-4 w-4 mr-1" />
               刷新
             </Button>
+            <div className="relative group hidden sm:block">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={exporting}
+                onClick={() => handleExportNodes('csv')}
+                title="导出节点列表"
+              >
+                {exporting ? (
+                  <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-1" />
+                )}
+                导出节点
+              </Button>
+            </div>
             <Button
               variant="success"
               size="sm"
