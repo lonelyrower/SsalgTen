@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -91,7 +91,7 @@ export const ServicesPage: React.FC = () => {
   }, [nodeOverviews, filters, viewMode]);
 
   // 加载数据
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setError(null);
 
@@ -126,11 +126,11 @@ export const ServicesPage: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [filters, showError]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setRefreshing(true);

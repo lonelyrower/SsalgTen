@@ -27,9 +27,12 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [localKeyword]);
+  }, [localKeyword, filters, onFiltersChange]);
 
-  const handleFilterChange = (key: keyof FilterType, value: any) => {
+  const handleFilterChange = <K extends keyof FilterType>(
+    key: K,
+    value: FilterType[K],
+  ) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 
