@@ -3,7 +3,6 @@ import type { StreamingService } from '@/types/streaming';
 // Official brand icons via simple-icons (per-service ESM imports)
 // We keep local fallbacks to avoid empty UI if a brand icon isn't available.
 import tiktok from 'simple-icons/icons/tiktok';
-import disneyplus from 'simple-icons/icons/disneyplus';
 import netflix from 'simple-icons/icons/netflix';
 import youtube from 'simple-icons/icons/youtube';
 import amazonprime from 'simple-icons/icons/amazonprime';
@@ -23,7 +22,6 @@ type BrandIcon = { path: string; hex: string };
 
 const brandIcons: Partial<Record<StreamingService, BrandIcon>> = {
   tiktok: tiktok,
-  disney_plus: disneyplus,
   netflix: netflix,
   youtube: youtube,
   amazon_prime: amazonprime,
@@ -31,8 +29,13 @@ const brandIcons: Partial<Record<StreamingService, BrandIcon>> = {
   chatgpt: openai,
 };
 
+// Brand color fallbacks for services without an icon in simple-icons
+const fallbackHex: Partial<Record<StreamingService, string>> = {
+  disney_plus: '113ccf',
+};
+
 // Minimal local fallback: uppercase initials box
-const FallbackIcon = ({ label, size }: { label: string; size: number }) => (
+const FallbackIcon = ({ label, size, hex }: { label: string; size: number; hex?: string }) => (
   <span
     style={{
       display: 'inline-flex',
@@ -41,7 +44,7 @@ const FallbackIcon = ({ label, size }: { label: string; size: number }) => (
       width: size,
       height: size,
       borderRadius: 6,
-      background: '#e5e7eb',
+      background: hex ? `#${hex}` : '#e5e7eb',
       color: '#111827',
       fontSize: Math.max(10, Math.floor(size * 0.55)),
       lineHeight: 1,
@@ -77,8 +80,9 @@ export const StreamingIcon: React.FC<StreamingIconProps> = ({ service, size = 'm
     );
   }
 
-  // Fallback to initials
-  return <FallbackIcon label={service.slice(0, 2).toUpperCase()} size={px} />;
+  // Fallback to initials (with brand color if known)
+  const hex = fallbackHex[service];
+  return <FallbackIcon label={service.slice(0, 2).toUpperCase()} size={px} hex={hex} />;
 };
 
 export default StreamingIcon;
