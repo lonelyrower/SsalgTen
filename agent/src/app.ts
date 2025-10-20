@@ -2,11 +2,12 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { logger } from './utils/logger';
-import { config, serverConfig } from './config';
+import { config, serverConfig, serviceDetectionConfig } from './config';
 import { getSystemInfo } from './utils/system';
 import { diagnosticController } from './controllers/DiagnosticController';
 import { registrationService } from './services/RegistrationService';
 import { streamingTestService } from './services/StreamingTestService';
+import { serviceDetectionService } from './services/ServiceDetectionService';
 
 // 加载环境变量
 dotenv.config();
@@ -146,6 +147,68 @@ app.get('/api/latency-test', diagnosticController.latencyTest.bind(diagnosticCon
 app.get('/api/network-info', diagnosticController.networkInfo.bind(diagnosticController));
 app.get('/api/connectivity', diagnosticController.connectivity.bind(diagnosticController));
 
+// 手动触发流媒体检测
+app.post('/api/streaming/test', async (req: Request, res: Response) => {
+  const apiKeyHeader =
+    (req.headers['x-agent-api-key'] as string) || (req.headers['x-api-key'] as string);
+
+  if (!apiKeyHeader || apiKeyHeader !== config.apiKey) {
+    res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+    });
+    return;
+  }
+
+  const result = await streamingTestService.triggerManual();
+  if (!result.started) {
+    res.status(409).json({
+      success: false,
+      error:
+        result.reason === 'in_progress'
+          ? 'Streaming detection already in progress'
+          : 'Unable to start detection',
+    });
+    return;
+  }
+
+  res.json({
+    success: true,
+    message: 'Streaming detection started',
+  });
+});
+
+// 手动触发服务扫描
+app.post('/api/services/scan', async (req: Request, res: Response) => {
+  const apiKeyHeader =
+    (req.headers['x-agent-api-key'] as string) || (req.headers['x-api-key'] as string);
+
+  if (!apiKeyHeader || apiKeyHeader !== config.apiKey) {
+    res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+    });
+    return;
+  }
+
+  const result = await serviceDetectionService.triggerManual();
+  if (!result.started) {
+    res.status(409).json({
+      success: false,
+      error:
+        result.reason === 'in_progress'
+          ? 'Service scan already in progress'
+          : 'Unable to start scan',
+    });
+    return;
+  }
+
+  res.json({
+    success: true,
+    message: 'Service scan started',
+  });
+});
+
 // 404 处理（Express 5 / router@2 不再支持 '*' 路由通配符）
 // 放在最后：不指定路径即可捕获所有未匹配的请求
 app.use((req: Request, res: Response) => {
@@ -204,6 +267,14 @@ const server = app.listen(serverConfig.port, async () => {
 
         // 注册成功后启动流媒体检测服务
         streamingTestService.start();
+
+        // 启动服务检测服务（如果已启用）
+        if (serviceDetectionConfig.enabled) {
+          serviceDetectionService.start();
+          logger.info('🔍 Service detection enabled');
+        } else {
+          logger.info('🔍 Service detection disabled');
+        }
       } else {
         logger.error(`❌ Registration failed: ${result.error}`);
         logger.warn('⚠️  Agent will continue running but will not appear in the master server.');
@@ -224,6 +295,7 @@ const gracefulShutdown = async (signal: string) => {
 
   // 停止所有服务
   streamingTestService.stop();
+  serviceDetectionService.stop();
   await registrationService.shutdown();
 
   server.close(() => {

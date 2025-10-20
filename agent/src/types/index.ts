@@ -215,3 +215,33 @@ export interface HeartbeatData {
   };
   version?: string;
 }
+
+// 服务检测相关类型
+export type ServiceType = 'PROXY' | 'WEB' | 'DATABASE' | 'CONTAINER' | 'OTHER';
+export type ServiceStatus = 'RUNNING' | 'STOPPED' | 'UNKNOWN';
+
+export interface DetectedService {
+  serviceType: ServiceType;
+  serviceName: string;
+  version?: string;
+  status: ServiceStatus;
+  port?: number;
+  protocol?: string;
+  configPath?: string;
+  configHash?: string;
+  domains?: string[];
+  sslEnabled?: boolean;
+  containerInfo?: {
+    id?: string;
+    image?: string;
+    state?: string;
+    [key: string]: any;
+  };
+  details?: Record<string, any>;
+}
+
+export interface ServiceReportPayload {
+  nodeId: string;
+  services: DetectedService[];
+  scannedAt: string;
+}

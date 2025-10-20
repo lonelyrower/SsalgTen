@@ -1004,6 +1004,12 @@ class ApiService {
 
     return this.download(`/services/export?${params.toString()}`, {}, true);
   }
+
+  async triggerServiceScan(nodeId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/nodes/${nodeId}/services/scan`, {
+      method: 'POST'
+    }, true);
+  }
 }
 
 export const apiService = new ApiService();

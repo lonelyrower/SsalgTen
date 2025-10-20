@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ServicesController } from "../controllers/ServicesController";
 import { authenticateToken, requireAdmin } from "../middleware/auth";
-import { publicLimiter } from "../middleware/rateLimit";
+import { publicLimiter, agentLimiter } from "../middleware/rateLimit";
 
 const router = Router();
 
@@ -50,6 +50,21 @@ router.delete(
   authenticateToken,
   requireAdmin,
   ServicesController.deleteService,
+);
+
+// Agent 上报服务检测结果（使用 Agent 限流器）
+router.post(
+  "/services/report",
+  agentLimiter,
+  ServicesController.reportServices,
+);
+
+// 触发节点服务扫描（需要管理员权限）
+router.post(
+  "/nodes/:nodeId/services/scan",
+  authenticateToken,
+  requireAdmin,
+  ServicesController.triggerServiceScan,
 );
 
 export default router;

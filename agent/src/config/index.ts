@@ -54,3 +54,9 @@ export const securityConfig = {
     '192.168.0.0/16'
   ],
 };
+
+// 服务检测配置
+export const serviceDetectionConfig = {
+  enabled: (process.env.SERVICE_DETECTION_ENABLED || 'true').toLowerCase() === 'true',
+  scanIntervalHours: parseInt(process.env.SERVICE_SCAN_INTERVAL_HOURS || '12'),
+};

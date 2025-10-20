@@ -2,11 +2,144 @@ import { Request, Response } from "express";
 import { Prisma, ServiceType, ServiceStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
+import { getIO } from "../sockets/ioRegistry";
+
+/**
+ * Agent 上报的服务数据接口
+ */
+interface ServiceReportInput {
+  serviceType: string;
+  serviceName: string;
+  version?: string;
+  status: string;
+  port?: number;
+  protocol?: string;
+  configPath?: string;
+  configHash?: string;
+  domains?: string[];
+  sslEnabled?: boolean;
+  containerInfo?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+}
 
 /**
  * 服务总览API控制器
  */
 export class ServicesController {
+  /**
+   * Agent 上报服务检测结果
+   * POST /api/services/report
+   */
+  static async reportServices(req: Request, res: Response) {
+    try {
+      const { nodeId, services, scannedAt } = req.body;
+
+      if (!nodeId || !services || !Array.isArray(services)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid request body",
+        });
+      }
+
+      // 验证节点是否存在
+      const node = await prisma.node.findUnique({
+        where: { id: nodeId },
+      });
+
+      if (!node) {
+        return res.status(404).json({
+          success: false,
+          error: "Node not found",
+        });
+      }
+
+      // 批量保存/更新服务检测结果
+      const savedServices = await Promise.all(
+        services.map(async (service: ServiceReportInput) => {
+          const serviceData = {
+            nodeId,
+            serviceType: service.serviceType.toUpperCase() as ServiceType,
+            serviceName: service.serviceName,
+            version: service.version,
+            status: service.status.toUpperCase() as ServiceStatus,
+            port: service.port,
+            protocol: service.protocol,
+            configPath: service.configPath,
+            configHash: service.configHash,
+            domains: service.domains
+              ? (service.domains as Prisma.InputJsonValue)
+              : undefined,
+            sslEnabled: service.sslEnabled,
+            containerInfo: service.containerInfo
+              ? (service.containerInfo as Prisma.InputJsonValue)
+              : undefined,
+            details: service.details
+              ? (service.details as Prisma.InputJsonValue)
+              : undefined,
+          };
+
+          // 尝试查找已存在的记录（通过 nodeId + serviceName + port 组合）
+          const existing = await prisma.detectedService.findFirst({
+            where: {
+              nodeId,
+              serviceName: service.serviceName,
+              port: service.port || null,
+            },
+          });
+
+          if (existing) {
+            // 更新已存在的记录
+            return await prisma.detectedService.update({
+              where: { id: existing.id },
+              data: serviceData,
+            });
+          } else {
+            // 创建新记录
+            return await prisma.detectedService.create({
+              data: serviceData,
+            });
+          }
+        })
+      );
+
+      // 广播服务检测结果给前端
+      const io = getIO();
+      if (io) {
+        io.emit("service-scan-completed", {
+          nodeId,
+          servicesCount: savedServices.length,
+          scannedAt,
+        });
+      }
+
+      logger.info(
+        `Saved ${savedServices.length} service detection results for node ${nodeId}`
+      );
+
+      return res.json({
+        success: true,
+        message: "Services reported successfully",
+        data: {
+          count: savedServices.length,
+        },
+      });
+    } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when reporting services, returning failure response."
+        );
+        return res.status(503).json({
+          success: false,
+          error: "Service management is not available yet",
+        });
+      }
+      logger.error("Report services error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to report services",
+      });
+    }
+  }
   /**
    * 获取服务总览统计
    * GET /api/services/overview
@@ -544,6 +677,133 @@ export class ServicesController {
       });
     }
   }
+
+  /**
+   * 触发节点服务重新扫描
+   * POST /api/nodes/:nodeId/services/scan
+   */
+  static async triggerServiceScan(req: Request, res: Response) {
+    try {
+      const { nodeId } = req.params;
+
+      const node = await prisma.node.findUnique({
+        where: { id: nodeId },
+      });
+
+      if (!node) {
+        return res.status(404).json({
+          success: false,
+          error: "Node not found",
+        });
+      }
+
+      // 构建 Agent 控制 URL
+      const agentBaseUrl = buildAgentBaseUrl(node);
+      if (!agentBaseUrl) {
+        return res.status(400).json({
+          success: false,
+          error: "Node is missing a reachable agent address",
+        });
+      }
+
+      const AGENT_CONTROL_API_KEY =
+        process.env.AGENT_CONTROL_API_KEY || process.env.DEFAULT_AGENT_API_KEY;
+
+      if (!AGENT_CONTROL_API_KEY) {
+        logger.error("Agent control API key is not configured on the server");
+        return res.status(500).json({
+          success: false,
+          error: "Agent control API key is not configured",
+        });
+      }
+
+      const axios = require("axios");
+      const AGENT_CONTROL_TIMEOUT = parseInt(
+        process.env.AGENT_CONTROL_TIMEOUT || "8000"
+      );
+
+      try {
+        await axios.post(
+          `${agentBaseUrl}/api/services/scan`,
+          {
+            origin: "master",
+            triggeredAt: new Date().toISOString(),
+          },
+          {
+            headers: {
+              "x-agent-api-key": AGENT_CONTROL_API_KEY,
+            },
+            timeout: AGENT_CONTROL_TIMEOUT,
+          }
+        );
+      } catch (error: any) {
+        logger.error(
+          `Failed to trigger service scan on agent ${node.agentId} (${agentBaseUrl}):`,
+          error
+        );
+
+        const errorMessage =
+          error.code === "ECONNREFUSED"
+            ? "Agent is not reachable (connection refused)"
+            : "Failed to contact agent for service scan";
+
+        return res.status(502).json({
+          success: false,
+          error: errorMessage,
+        });
+      }
+
+      const io = getIO();
+      if (io) {
+        io.emit("service-scan-started", { nodeId });
+      }
+
+      logger.info(
+        `Triggered service scan for node ${nodeId} via agent ${node.agentId}`
+      );
+
+      return res.json({
+        success: true,
+        message: "Service scan has been triggered on the agent",
+        data: {
+          nodeId,
+          status: "pending",
+        },
+      });
+    } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when triggering service scan, returning failure response."
+        );
+        return res.status(503).json({
+          success: false,
+          error: "Service management is not available yet",
+        });
+      }
+      logger.error("Trigger service scan error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to trigger service scan",
+      });
+    }
+  }
+}
+
+// Helper function to build agent base URL
+function buildAgentBaseUrl(node: {
+  ipv4?: string | null;
+  ipv6?: string | null;
+}): string | null {
+  const protocol = process.env.AGENT_CONTROL_PROTOCOL || "http";
+  const port = process.env.AGENT_CONTROL_PORT || 3002;
+
+  if (node.ipv4 && node.ipv4.trim().length > 0) {
+    return `${protocol}://${node.ipv4}:${port}`;
+  }
+  if (node.ipv6 && node.ipv6.trim().length > 0) {
+    return `${protocol}://[${node.ipv6}]:${port}`;
+  }
+  return null;
 }
 
 function isMissingServicesTableError(
