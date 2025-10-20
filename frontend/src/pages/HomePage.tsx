@@ -51,14 +51,14 @@ export const HomePage = () => {
       onlineNodes: stats?.onlineNodes || 0,
       totalCountries: stats?.totalCountries || 0,
       totalProviders: stats?.totalProviders || 0,
-      securityEvents: stats?.securityEvents || 0
+      totalTraffic: stats?.totalTraffic
     }),
     [
       stats?.totalNodes,
       stats?.onlineNodes,
       stats?.totalCountries,
       stats?.totalProviders,
-      stats?.securityEvents
+      stats?.totalTraffic
     ]
   );
 

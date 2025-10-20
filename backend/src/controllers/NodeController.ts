@@ -33,7 +33,7 @@ async function doNodesBroadcast(io: any) {
       await import("../services/NodeService")
     ).nodeService.getAllNodes();
     const safeNodes = sanitizeNodes(nodes as any[]);
-    const stats = (
+    const stats = await (
       await import("../services/NodeService")
     ).NodeService.calculateStats(nodes as any);
     io.to("nodes_updates").emit("nodes_status_update", {

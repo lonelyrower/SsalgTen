@@ -154,7 +154,11 @@ export interface NodeStats {
   offlineNodes: number;
   totalCountries: number;
   totalProviders: number;
-  securityEvents?: number; // 安全事件统计（SSH暴力破解等），可选字段
+  totalTraffic?: {
+    upload: number;
+    download: number;
+    total: number;
+  };
 }
 
 // 诊断记录接口

@@ -1,24 +1,44 @@
 import { memo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Server, Building, Shield } from 'lucide-react';
+import { Globe, Server, Building, HardDrive } from 'lucide-react';
 
 interface StatsCardsProps {
   totalNodes?: number;
   onlineNodes?: number;
   totalCountries?: number;
   totalProviders?: number;
-  securityEvents?: number;
+  totalTraffic?: {
+    upload: number;
+    download: number;
+    total: number;
+  };
 }
 
-const StatsCardsComponent = ({ 
-  totalNodes = 0, 
-  onlineNodes = 0, 
-  totalCountries = 0, 
+// 格式化字节数为可读的单位
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+};
+
+const StatsCardsComponent = ({
+  totalNodes = 0,
+  onlineNodes = 0,
+  totalCountries = 0,
   totalProviders = 0,
-  securityEvents = 0
+  totalTraffic
 }: StatsCardsProps) => {
   const offlineNodes = totalNodes - onlineNodes;
+
+  // 计算流量数据
+  const trafficTotal = totalTraffic?.total || 0;
+  const trafficUpload = totalTraffic?.upload || 0;
+  const trafficDownload = totalTraffic?.download || 0;
 
   const stats = [
     {
@@ -52,14 +72,14 @@ const StatsCardsComponent = ({
       bgGradient: 'from-purple-500/10 to-pink-500/10'
     },
     {
-      title: '安全事件',
-      value: securityEvents > 0 ? securityEvents.toLocaleString() : '0',
-      subtitle: securityEvents > 0 ? '检测到威胁' : '系统安全',
-      icon: <Shield className="h-6 w-6 text-orange-400" />,
-      badge: securityEvents > 0 ? '警惕' : '正常',
-      badgeVariant: securityEvents > 0 ? 'default' : 'outline' as const,
-      gradient: 'from-orange-500 to-red-500',
-      bgGradient: 'from-orange-500/10 to-red-500/10'
+      title: '总流量',
+      value: formatBytes(trafficTotal),
+      subtitle: `↑ ${formatBytes(trafficUpload)} · ↓ ${formatBytes(trafficDownload)}`,
+      icon: <HardDrive className="h-6 w-6 text-orange-400" />,
+      badge: '累计',
+      badgeVariant: 'outline' as const,
+      gradient: 'from-orange-500 to-amber-500',
+      bgGradient: 'from-orange-500/10 to-amber-500/10'
     }
   ];
 
@@ -84,16 +104,6 @@ const StatsCardsComponent = ({
                   {stat.title}
                 </h3>
               </div>
-              
-              {/* 只为安全事件保留动态徽章 */}
-              {stat.title === '安全事件' && securityEvents > 0 && (
-                <Badge 
-                  variant="default" 
-                  className="text-xs font-medium bg-red-500/20 text-red-400 border-red-500/30 animate-pulse"
-                >
-                  {stat.badge}
-                </Badge>
-              )}
             </div>
             
             {/* 数值显示 - 简洁版 */}

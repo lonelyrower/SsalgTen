@@ -1496,13 +1496,18 @@ export class NodeService {
   }
 
   // 静态方法：计算节点统计信息
-  static calculateStats(nodes: ManagedNode[]): {
+  static async calculateStats(nodes: ManagedNode[]): Promise<{
     totalNodes: number;
     onlineNodes: number;
     offlineNodes: number;
     totalCountries: number;
     totalProviders: number;
-  } {
+    totalTraffic: {
+      upload: number;
+      download: number;
+      total: number;
+    };
+  }> {
     const totalNodes = nodes.length;
     const onlineNodes = nodes.filter(
       (node) => node.status === NodeStatus.ONLINE,
@@ -1511,12 +1516,65 @@ export class NodeService {
     const countries = new Set(nodes.map((node) => node.country));
     const providers = new Set(nodes.map((node) => node.provider));
 
+    // 计算总流量：从所有节点的最新心跳中获取网络流量数据
+    let totalUpload = 0;
+    let totalDownload = 0;
+
+    try {
+      // 获取所有节点的最新心跳记录
+      const nodeIds = nodes.map((node) => node.id);
+      const latestHeartbeats = await prisma.heartbeatLog.findMany({
+        where: {
+          nodeId: { in: nodeIds },
+          networkInfo: { not: Prisma.DbNull },
+        },
+        orderBy: { timestamp: "desc" },
+        distinct: ["nodeId"],
+        select: {
+          nodeId: true,
+          networkInfo: true,
+        },
+      });
+
+      // 聚合所有节点的网络流量
+      for (const heartbeat of latestHeartbeats) {
+        if (heartbeat.networkInfo && typeof heartbeat.networkInfo === "object") {
+          const networkData = heartbeat.networkInfo as any;
+
+          // networkInfo 是一个接口数组
+          if (Array.isArray(networkData)) {
+            for (const iface of networkData) {
+              if (iface && typeof iface === "object") {
+                // 累加接收和发送的字节数
+                if (typeof iface.bytesReceived === "number") {
+                  totalDownload += iface.bytesReceived;
+                }
+                if (typeof iface.bytesSent === "number") {
+                  totalUpload += iface.bytesSent;
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to calculate traffic stats:", error);
+      // 出错时返回0
+      totalUpload = 0;
+      totalDownload = 0;
+    }
+
     return {
       totalNodes,
       onlineNodes,
       offlineNodes,
       totalCountries: countries.size,
       totalProviders: providers.size,
+      totalTraffic: {
+        upload: totalUpload,
+        download: totalDownload,
+        total: totalUpload + totalDownload,
+      },
     };
   }
 }

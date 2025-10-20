@@ -167,7 +167,7 @@ export function setupSocketHandlers(io: Server) {
     try {
       const nodes = await nodeService.getAllNodes();
       const safeNodes = sanitizeNodes(nodes as Record<string, unknown>[]);
-      const stats = NodeService.calculateStats(nodes);
+      const stats = await NodeService.calculateStats(nodes);
 
       // 简单比较，只有数据真正变化时才广播
       const currentData = { nodes: safeNodes, stats };
