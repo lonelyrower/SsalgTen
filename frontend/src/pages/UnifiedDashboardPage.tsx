@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { GeographicDistribution } from "@/components/dashboard/GeographicDistribution";
 import { SystemMetrics } from "@/components/dashboard/SystemMetrics";
+import { ProviderDistribution } from "@/components/dashboard/ProviderDistribution";
+import { TrafficRanking } from "@/components/dashboard/TrafficRanking";
 import { StatsCards } from "@/components/layout/StatsCards";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MobilePullToRefresh } from "@/components/ui/MobilePullToRefresh";
@@ -64,17 +66,27 @@ export const UnifiedDashboardPage: React.FC = () => {
             <StatsCards {...memoizedStats} />
           </section>
 
-          {/* 两列布局：系统资源概览 + 地理分布 */}
+          {/* 网格布局：4个统计区块 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 左侧：系统资源概览 */}
-            <section className="flex">
+            {/* 系统资源概览 */}
+            <div>
               <SystemMetrics nodes={nodes} />
-            </section>
+            </div>
 
-            {/* 右侧：地理分布 */}
-            <section className="flex">
+            {/* 地理分布 */}
+            <div>
               <GeographicDistribution nodes={nodes} compact={true} />
-            </section>
+            </div>
+
+            {/* 服务商分布 */}
+            <div>
+              <ProviderDistribution nodes={nodes} />
+            </div>
+
+            {/* 流量排行 */}
+            <div>
+              <TrafficRanking nodes={nodes} />
+            </div>
           </div>
         </main>
       </MobilePullToRefresh>
