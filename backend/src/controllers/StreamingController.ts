@@ -984,4 +984,3 @@ function isMissingStreamingTableError(
     error.code === "P2021"
   );
 }
-
