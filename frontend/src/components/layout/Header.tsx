@@ -103,7 +103,7 @@ export const Header = () => {
                   }`}
                 >
                   <Server className="h-4 w-4" />
-                  <span>节点总览</span>
+                  <span>节点看板</span>
                   {isActive("/nodes") && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}

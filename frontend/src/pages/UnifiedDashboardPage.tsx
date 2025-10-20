@@ -1,17 +1,35 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { NodeMonitoringSection } from "@/components/dashboard/NodeMonitoringSection";
 import { GeographicDistribution } from "@/components/dashboard/GeographicDistribution";
+import { StatsCards } from "@/components/layout/StatsCards";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MobilePullToRefresh } from "@/components/ui/MobilePullToRefresh";
 import { useRealTime } from "@/hooks/useRealTime";
 
 /**
  * 统一监控中心页面
- * 整合了旧版监控视图的核心能力
+ * 整合了旧版监控视图的核心能力 + 统计信息
  */
 export const UnifiedDashboardPage: React.FC = () => {
-  const { nodes, connected, refreshData } = useRealTime();
+  const { nodes, stats, connected, refreshData } = useRealTime();
+
+  const memoizedStats = useMemo(
+    () => ({
+      totalNodes: stats?.totalNodes || 0,
+      onlineNodes: stats?.onlineNodes || 0,
+      totalCountries: stats?.totalCountries || 0,
+      totalProviders: stats?.totalProviders || 0,
+      totalTraffic: stats?.totalTraffic,
+    }),
+    [
+      stats?.totalNodes,
+      stats?.onlineNodes,
+      stats?.totalCountries,
+      stats?.totalProviders,
+      stats?.totalTraffic,
+    ],
+  );
 
   // 下拉刷新处理
   const handleRefresh = async () => {
@@ -36,13 +54,18 @@ export const UnifiedDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen mobile-safe">
+    <div className="min-h-screen mobile-safe bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
-        <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe">
+        <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe space-y-6">
+          {/* 统计卡片 */}
+          <section>
+            <StatsCards {...memoizedStats} />
+          </section>
+
           {/* 地理分布 */}
-          <section className="mb-6 sm:mb-8">
+          <section>
             <GeographicDistribution nodes={nodes} />
           </section>
 

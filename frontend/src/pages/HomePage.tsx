@@ -1,6 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
-import { StatsCards } from "@/components/layout/StatsCards";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { MapSection } from "@/components/home/MapSection";
@@ -12,7 +11,7 @@ import type { NodeData } from "@/services/api";
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("3d");
   const { nodes, stats, connected, error } = useRealTime();
   const { user } = useAuth();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -40,23 +39,6 @@ export const HomePage = () => {
 
     return () => clearTimeout(timer);
   }, [isInitialLoad, nodes.length]);
-
-  const memoizedStats = useMemo(
-    () => ({
-      totalNodes: stats?.totalNodes || 0,
-      onlineNodes: stats?.onlineNodes || 0,
-      totalCountries: stats?.totalCountries || 0,
-      totalProviders: stats?.totalProviders || 0,
-      totalTraffic: stats?.totalTraffic,
-    }),
-    [
-      stats?.totalNodes,
-      stats?.onlineNodes,
-      stats?.totalCountries,
-      stats?.totalProviders,
-      stats?.totalTraffic,
-    ],
-  );
 
   if (isInitialLoad && nodes.length === 0 && !loadTimeout) {
     return (
@@ -114,15 +96,20 @@ export const HomePage = () => {
     );
   }
 
-  // const welcomeName = user?.name || user?.username || "访客";
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-
-        <StatsCards {...memoizedStats} />
+        {/* Welcome Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+            全球节点监控平台
+          </h1>
+          <p className="text-gray-400 text-lg">
+            实时监控 {nodes.length} 个节点，覆盖全球多个国家和地区
+          </p>
+        </div>
 
         <MapSection
           nodes={nodes}

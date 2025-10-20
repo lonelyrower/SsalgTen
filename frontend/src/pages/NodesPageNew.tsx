@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { NodeCard } from "@/components/nodes/NodeCard";
 import { EnhancedNodeDetailsPanel } from "@/components/nodes/EnhancedNodeDetailsPanel";
 import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
+import { MultiViewToggle, type MultiViewMode } from "@/components/map/MultiViewToggle";
 import type { NodeData } from "@/services/api";
 import type { HeartbeatData } from "@/types/heartbeat";
 import { apiService } from "@/services/api";
@@ -33,6 +34,18 @@ const NetworkToolkit = lazy(() =>
   })),
 );
 
+const EnhancedWorldMap = lazy(() =>
+  import("@/components/map/EnhancedWorldMap").then((module) => ({
+    default: module.EnhancedWorldMap,
+  })),
+);
+
+const Globe3D = lazy(() =>
+  import("@/components/map/Globe3D").then((module) => ({
+    default: module.Globe3D,
+  })),
+);
+
 export const NodesPageNew: React.FC = () => {
   const { hasRole } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
@@ -40,6 +53,7 @@ export const NodesPageNew: React.FC = () => {
   const [showServerDetails, setShowServerDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [viewMode, setViewMode] = useState<MultiViewMode>("list");
   const [heartbeatData, setHeartbeatData] = useState<HeartbeatData | null>(
     null,
   );
@@ -242,7 +256,7 @@ export const NodesPageNew: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Filter className="h-4 w-4 text-gray-400" />
             <select
               value={statusFilter}
@@ -253,34 +267,71 @@ export const NodesPageNew: React.FC = () => {
               <option value="online">在线</option>
               <option value="offline">离线</option>
             </select>
+            <MultiViewToggle value={viewMode} onChange={setViewMode} />
           </div>
         </div>
 
-        {/* Main Content: List + Details */}
+        {/* Main Content: Multi-View + Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Node List */}
-          <div className="lg:col-span-2 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-            {filteredNodes.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p>未找到匹配的节点</p>
-              </div>
-            ) : (
-              filteredNodes.map((node, index) => (
-                <NodeCard
-                  key={node.id}
-                  node={node}
-                  index={index}
-                  isInView={isInView}
-                  isSelected={selectedNode?.id === node.id}
-                  onClick={() => handleNodeClick(node)}
-                  latency={getNodeLatency(node.id)}
-                />
-              ))
-            )}
+          {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
+          <div className="lg:col-span-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-h-[600px]">
+              {viewMode === "list" ? (
+                /* List View */
+                <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                  {filteredNodes.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p>未找到匹配的节点</p>
+                    </div>
+                  ) : (
+                    filteredNodes.map((node, index) => (
+                      <NodeCard
+                        key={node.id}
+                        node={node}
+                        index={index}
+                        isInView={isInView}
+                        isSelected={selectedNode?.id === node.id}
+                        onClick={() => handleNodeClick(node)}
+                        latency={getNodeLatency(node.id)}
+                      />
+                    ))
+                  )}
+                </div>
+              ) : (
+                /* Map Views (2D/3D) */
+                <div className="h-[600px]">
+                  <Suspense
+                    fallback={
+                      <LoadingSpinner
+                        text="加载地图..."
+                        size="lg"
+                        className="h-full"
+                      />
+                    }
+                  >
+                    {viewMode === "2d" ? (
+                      <EnhancedWorldMap
+                        nodes={filteredNodes}
+                        onNodeClick={handleNodeClick}
+                        selectedNode={selectedNode}
+                        showHeatmap={false}
+                        showControlPanels={false}
+                        className="h-full"
+                      />
+                    ) : (
+                      <Globe3D
+                        nodes={filteredNodes}
+                        onNodeClick={handleNodeClick}
+                      />
+                    )}
+                  </Suspense>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Details Panel */}
+          {/* Right Panel - Details */}
           <div className="lg:col-span-1">
             <EnhancedNodeDetailsPanel
               node={selectedNode}
@@ -288,7 +339,6 @@ export const NodesPageNew: React.FC = () => {
               onRunDiagnostics={handleRunDiagnostics}
               onShowServerDetails={handleShowServerDetails}
               onViewLogs={() => {
-                // TODO: Implement view logs
                 console.log("View logs for:", selectedNode);
               }}
             />
