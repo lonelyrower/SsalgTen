@@ -61,30 +61,47 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
         avgLoad: 0,
         totalCpu: 0,
         totalMemory: 0,
+        nodesWithData: 0,
       };
     }
 
-    // 计算平均值（这里使用模拟数据，实际应从heartbeat获取）
-    // TODO: 从实际的heartbeat数据中获取
-    const avgCpu = onlineNodes.reduce((acc) => {
-      // 模拟数据，范围 10-80
-      return acc + Math.random() * 70 + 10;
-    }, 0) / onlineNodes.length;
+    // 过滤出有资源数据的节点
+    const nodesWithCpu = onlineNodes.filter(
+      (n) => n.cpuUsage !== null && n.cpuUsage !== undefined,
+    );
+    const nodesWithMemory = onlineNodes.filter(
+      (n) => n.memoryUsage !== null && n.memoryUsage !== undefined,
+    );
+    const nodesWithDisk = onlineNodes.filter(
+      (n) => n.diskUsage !== null && n.diskUsage !== undefined,
+    );
 
-    const avgMemory = onlineNodes.reduce((acc) => {
-      // 模拟数据，范围 30-90
-      return acc + Math.random() * 60 + 30;
-    }, 0) / onlineNodes.length;
+    // 计算平均CPU使用率
+    const avgCpu =
+      nodesWithCpu.length > 0
+        ? nodesWithCpu.reduce((acc, node) => acc + (node.cpuUsage || 0), 0) /
+          nodesWithCpu.length
+        : 0;
 
-    const avgDisk = onlineNodes.reduce((acc) => {
-      // 模拟数据，范围 20-70
-      return acc + Math.random() * 50 + 20;
-    }, 0) / onlineNodes.length;
+    // 计算平均内存使用率
+    const avgMemory =
+      nodesWithMemory.length > 0
+        ? nodesWithMemory.reduce(
+            (acc, node) => acc + (node.memoryUsage || 0),
+            0,
+          ) / nodesWithMemory.length
+        : 0;
 
-    const avgLoad = onlineNodes.reduce((acc) => {
-      // 模拟数据，范围 0.5-3.0
-      return acc + Math.random() * 2.5 + 0.5;
-    }, 0) / onlineNodes.length;
+    // 计算平均磁盘使用率
+    const avgDisk =
+      nodesWithDisk.length > 0
+        ? nodesWithDisk.reduce((acc, node) => acc + (node.diskUsage || 0), 0) /
+          nodesWithDisk.length
+        : 0;
+
+    // 计算平均负载（基于uptime，这里简单处理）
+    // 如果后端提供了loadAverage，应该使用那个数据
+    const avgLoad = 0; // 暂时设为0，等待后端提供真实的系统负载数据
 
     return {
       avgCpu,
@@ -93,6 +110,11 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
       avgLoad,
       totalCpu: avgCpu * onlineNodes.length,
       totalMemory: avgMemory * onlineNodes.length,
+      nodesWithData: Math.max(
+        nodesWithCpu.length,
+        nodesWithMemory.length,
+        nodesWithDisk.length,
+      ),
     };
   }, [nodes]);
 
@@ -161,7 +183,9 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           <div>
             <h2 className="text-xl font-bold gradient-text">系统资源概览</h2>
             <p className="text-muted-foreground text-sm">
-              在线节点的平均资源使用情况
+              {metrics.nodesWithData > 0
+                ? `基于 ${metrics.nodesWithData} 个在线节点的实时资源数据`
+                : "等待节点上报资源数据..."}
             </p>
           </div>
         </div>
