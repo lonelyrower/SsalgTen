@@ -38,6 +38,10 @@ export interface EnvConfig {
   AGENT_TIMEOUT: number;
   AGENT_OFFLINE_THRESHOLD: number;
   AGENT_REQUIRE_SIGNATURE: boolean;
+  AGENT_CONTROL_PROTOCOL: string;
+  AGENT_CONTROL_PORT: number;
+  AGENT_CONTROL_TIMEOUT: number;
+  AGENT_CONTROL_API_KEY: string;
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: number;
@@ -85,11 +89,15 @@ const defaultConfig: Partial<EnvConfig> = {
   REFRESH_TOKEN_EXPIRES_IN: "30d",
 
   CORS_ORIGIN: "http://localhost:3000",
+  DEFAULT_AGENT_API_KEY: "",
 
   AGENT_HEARTBEAT_INTERVAL: 30000, // 30 seconds
   AGENT_TIMEOUT: 10000, // 10 seconds
   AGENT_OFFLINE_THRESHOLD: 90000, // 90 seconds (3 missed heartbeats)
   AGENT_REQUIRE_SIGNATURE: false,
+  AGENT_CONTROL_PROTOCOL: "http",
+  AGENT_CONTROL_PORT: 3002,
+  AGENT_CONTROL_TIMEOUT: 8000,
 
   RATE_LIMIT_WINDOW_MS: 900000, // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: 100,
@@ -207,6 +215,24 @@ export const loadEnvConfig = (): EnvConfig => {
     AGENT_REQUIRE_SIGNATURE: parseBoolean(
       process.env.AGENT_REQUIRE_SIGNATURE,
       defaultConfig.AGENT_REQUIRE_SIGNATURE!,
+    ),
+    AGENT_CONTROL_PROTOCOL: parseString(
+      process.env.AGENT_CONTROL_PROTOCOL,
+      defaultConfig.AGENT_CONTROL_PROTOCOL!,
+    ),
+    AGENT_CONTROL_PORT: parseNumber(
+      process.env.AGENT_CONTROL_PORT,
+      defaultConfig.AGENT_CONTROL_PORT!,
+    ),
+    AGENT_CONTROL_TIMEOUT: parseNumber(
+      process.env.AGENT_CONTROL_TIMEOUT,
+      defaultConfig.AGENT_CONTROL_TIMEOUT!,
+    ),
+    AGENT_CONTROL_API_KEY: parseString(
+      process.env.AGENT_CONTROL_API_KEY,
+      process.env.DEFAULT_AGENT_API_KEY ||
+        defaultConfig.DEFAULT_AGENT_API_KEY! ||
+        "",
     ),
 
     RATE_LIMIT_WINDOW_MS: parseNumber(

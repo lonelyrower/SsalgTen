@@ -14,7 +14,7 @@ import type {
 } from '@/types/streaming';
 import { STREAMING_SERVICE_ORDER } from '@/types/streaming';
 import { apiService } from '@/services/api';
-import { useNotification } from '@/hooks/useNotification';
+import { Button } from '@/components/ui/button';
 import { Download, RefreshCw, Grid, List, Film } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -30,6 +30,7 @@ export const StreamingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bulkTriggering, setBulkTriggering] = useState(false);
 
   // 获取可用的国家列表
   const availableCountries = useMemo(() => {
@@ -122,6 +123,32 @@ export const StreamingPage: React.FC = () => {
     loadData();
   };
 
+  const handleTriggerAll = useCallback(async () => {
+    const nodeIds = filteredNodes.map((node) => node.nodeId);
+    if (nodeIds.length === 0) {
+      showError('当前筛选条件下没有可检测的节点');
+      return;
+    }
+    try {
+      setBulkTriggering(true);
+      const resp = await apiService.triggerBulkStreamingTest(nodeIds);
+      if (resp.success) {
+        const queued = resp.data?.queued ?? nodeIds.length;
+        const total = resp.data?.total ?? nodeIds.length;
+        const failureCount = resp.data?.failures?.length ?? 0;
+        const baseMessage = resp.message || resp.data?.message || `已触发 ${queued}/${total} 个节点的检测`;
+        const finalMessage = failureCount > 0 ? `${baseMessage}，失败 ${failureCount} 个` : baseMessage;
+        showSuccess(finalMessage);
+        await loadData();
+      } else {
+        showError(resp.error || '触发流媒体检测失败');
+      }
+    } catch (err) {
+      showError(err instanceof Error ? err.message : '触发流媒体检测失败');
+    } finally {
+      setBulkTriggering(false);
+    }
+  }, [filteredNodes, loadData, showError, showSuccess]);
   const handleExport = async (format: 'json' | 'csv' | 'markdown') => {
     try {
       const result = await apiService.exportStreamingData(format, filters);
@@ -203,6 +230,17 @@ export const StreamingPage: React.FC = () => {
                   <List className="h-4 w-4" />
                 </button>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleTriggerAll}
+                disabled={bulkTriggering || filteredNodes.length === 0}
+              >
+                <Film className={`h-4 w-4 ${bulkTriggering ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{bulkTriggering ? '检测中...' : '手动检测'}</span>
+              </Button>
+
 
               {/* 导出 */}
               <div className="relative group">

@@ -1,25 +1,32 @@
-import axios, { AxiosInstance } from 'axios';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import axios, {
+  type AxiosInstance,
+  type AxiosResponseHeaders,
+  type RawAxiosResponseHeaders,
+} from 'axios';
+import { promises as dns } from 'dns';
 
 /**
- * 流媒体服务类型
+ * 支持的流媒体服务
  */
 export type StreamingService =
   | 'netflix'
-  | 'youtube'
   | 'disney_plus'
-  | 'tiktok'
   | 'amazon_prime'
+  | 'youtube'
+  | 'tiktok'
   | 'spotify'
   | 'chatgpt';
 
 /**
- * 检测结果状态
+ * 流媒体状态
  */
-export type StreamingStatus = 'yes' | 'no' | 'org' | 'pending' | 'failed' | 'unknown';
+export type StreamingStatus =
+  | 'yes'
+  | 'no'
+  | 'org'
+  | 'pending'
+  | 'failed'
+  | 'unknown';
 
 /**
  * 解锁类型
@@ -27,26 +34,27 @@ export type StreamingStatus = 'yes' | 'no' | 'org' | 'pending' | 'failed' | 'unk
 export type UnlockType = 'native' | 'dns' | 'idc' | 'unknown';
 
 /**
- * 单个流媒体服务检测结果
+ * 流媒体检测结果
  */
 export interface StreamingResult {
   service: StreamingService;
   status: StreamingStatus;
   region?: string;
   unlockType?: UnlockType;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   errorMsg?: string;
   testedAt: Date;
 }
 
 /**
- * 流媒体解锁检测器
- * 参考 IPQuality 项目的检测逻辑
- * GitHub: https://github.com/xykt/IPQuality
+ * 流媒体检测器
+ * 参考 IPQuality.ip.sh 中的判定思路
  */
 export class StreamingDetector {
   private axios: AxiosInstance;
-  private userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  private userAgent =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+  private geoCache: { country?: string; region?: string; isp?: string } | null = null;
 
   constructor() {
     this.axios = axios.create({
@@ -55,18 +63,21 @@ export class StreamingDetector {
         'User-Agent': this.userAgent,
         'Accept-Language': 'en-US,en;q=0.9',
       },
-      validateStatus: () => true, // 接受所有状态码
+      validateStatus: () => true,
     });
   }
 
   /**
-   * 检测所有流媒体服务
+   * 依次检测所有服务
    */
   async detectAll(): Promise<StreamingResult[]> {
     const services: StreamingService[] = [
       'netflix',
+      'disney_plus',
+      'amazon_prime',
       'youtube',
       'tiktok',
+      'spotify',
       'chatgpt',
     ];
 
@@ -74,11 +85,9 @@ export class StreamingDetector {
 
     for (const service of services) {
       try {
-        console.log(`[StreamingDetector] Testing ${service}...`);
         const result = await this.detectService(service);
         results.push(result);
       } catch (error) {
-        console.error(`[StreamingDetector] Error testing ${service}:`, error);
         results.push({
           service,
           status: 'failed',
@@ -92,18 +101,24 @@ export class StreamingDetector {
   }
 
   /**
-   * 检测单个流媒体服务
+   * 检测单个服务
    */
   async detectService(service: StreamingService): Promise<StreamingResult> {
     switch (service) {
       case 'netflix':
-        return await this.detectNetflix();
+        return this.detectNetflix();
+      case 'disney_plus':
+        return this.detectDisneyPlus();
+      case 'amazon_prime':
+        return this.detectAmazonPrime();
       case 'youtube':
-        return await this.detectYouTube();
+        return this.detectYouTube();
       case 'tiktok':
-        return await this.detectTikTok();
+        return this.detectTikTok();
+      case 'spotify':
+        return this.detectSpotify();
       case 'chatgpt':
-        return await this.detectChatGPT();
+        return this.detectChatGPT();
       default:
         return {
           service,
@@ -115,62 +130,76 @@ export class StreamingDetector {
 
   /**
    * Netflix 检测
-   * 参考: IPQuality ip.sh 第1457-1520行
+   * 参考 IPQuality ip.sh 中的片源判定逻辑
    */
   private async detectNetflix(): Promise<StreamingResult> {
     try {
-      // 访问两个测试片源
-      const [res1, res2] = await Promise.all([
-        this.axios.get('https://www.netflix.com/title/81280792'),
-        this.axios.get('https://www.netflix.com/title/70143836'),
+      const globalTitle = 'https://www.netflix.com/title/81280792';
+      const originalTitle = 'https://www.netflix.com/title/80018499';
+
+      const [globalResp, originalResp] = await Promise.all([
+        this.axios.get(globalTitle),
+        this.axios.get(originalTitle),
       ]);
 
-      // 提取区域代码
-      const regionMatch = res1.data.match(/data-country="([A-Z]+)"/);
-      const region = regionMatch ? regionMatch[1] :
-                     res2.data.match(/data-country="([A-Z]+)"/)?.[1];
+      const region =
+        this.extractRegionFromHeaders(globalResp.headers) ??
+        this.extractRegionFromHeaders(originalResp.headers) ??
+        (await this.lookupGeoInfo()).country;
 
-      if (!region) {
-        return {
-          service: 'netflix',
-          status: 'no',
-          testedAt: new Date(),
-        };
-      }
+      const unlockType = await this.detectUnlockType('www.netflix.com');
 
-      // 检测是否受限 - 寻找 "Oh no!" 关键字
-      const isRestricted1 = res1.data.includes('Oh no!');
-      const isRestricted2 = res2.data.includes('Oh no!');
-
-      // 获取解锁类型
-      const unlockType = await this.detectUnlockType('netflix.com');
-
-      if (isRestricted1 && isRestricted2) {
-        // 仅自制剧
-        return {
-          service: 'netflix',
-          status: 'org',
-          region,
-          unlockType,
-          testedAt: new Date(),
-        };
-      } else if (!isRestricted1 || !isRestricted2) {
-        // 完全解锁
+      if (globalResp.status === 200) {
         return {
           service: 'netflix',
           status: 'yes',
           region,
           unlockType,
-          testedAt: new Date(),
-        };
-      } else {
-        // 完全封锁
-        return {
-          service: 'netflix',
-          status: 'no',
+          details: {
+            globalStatus: globalResp.status,
+            originalStatus: originalResp.status,
+          },
           testedAt: new Date(),
         };
       }
+
+      if (globalResp.status === 404 && originalResp.status === 200) {
+        return {
+          service: 'netflix',
+          status: 'org',
+          region,
+          unlockType,
+          details: {
+            globalStatus: globalResp.status,
+            originalStatus: originalResp.status,
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      if (globalResp.status === 403) {
+        return {
+          service: 'netflix',
+          status: 'no',
+          region,
+          details: {
+            globalStatus: globalResp.status,
+            originalStatus: originalResp.status,
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      return {
+        service: 'netflix',
+        status: 'failed',
+        errorMsg: `Unexpected response: global=${globalResp.status}, original=${originalResp.status}`,
+        details: {
+          globalStatus: globalResp.status,
+          originalStatus: originalResp.status,
+        },
+        testedAt: new Date(),
+      };
     } catch (error) {
       return {
         service: 'netflix',
@@ -182,31 +211,142 @@ export class StreamingDetector {
   }
 
   /**
+   * Disney+ 检测
+   * 利用主页提示信息判断地区可用性
+   */
+  private async detectDisneyPlus(): Promise<StreamingResult> {
+    try {
+      const response = await this.axios.get('https://www.disneyplus.com/');
+      const html = typeof response.data === 'string' ? response.data : '';
+
+      const unavailable =
+        /unavailable in your region/i.test(html) ||
+        /not available in your (location|country)/i.test(html);
+
+      const region =
+        this.extractRegionFromHeaders(response.headers) ??
+        (await this.lookupGeoInfo()).country;
+
+      if (response.status === 200 && !unavailable) {
+        return {
+          service: 'disney_plus',
+          status: 'yes',
+          region,
+          unlockType: await this.detectUnlockType('www.disneyplus.com'),
+          details: { homepageStatus: response.status },
+          testedAt: new Date(),
+        };
+      }
+
+      if (response.status === 200 && unavailable) {
+        return {
+          service: 'disney_plus',
+          status: 'no',
+          region,
+          details: {
+            homepageStatus: response.status,
+            reason: 'unavailable_notice',
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      if (response.status === 403) {
+        return {
+          service: 'disney_plus',
+          status: 'no',
+          region,
+          details: {
+            homepageStatus: response.status,
+            reason: 'http_403',
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      return {
+        service: 'disney_plus',
+        status: 'failed',
+        errorMsg: `Unexpected status ${response.status}`,
+        details: { homepageStatus: response.status },
+        testedAt: new Date(),
+      };
+    } catch (error) {
+      return {
+        service: 'disney_plus',
+        status: 'failed',
+        errorMsg: error instanceof Error ? error.message : 'Unknown error',
+        testedAt: new Date(),
+      };
+    }
+  }
+
+  /**
+   * Amazon Prime Video 检测
+   */
+  private async detectAmazonPrime(): Promise<StreamingResult> {
+    try {
+      const response = await this.axios.get('https://www.primevideo.com/');
+      const html = typeof response.data === 'string' ? response.data : '';
+
+      const blocked =
+        /not available in your location/i.test(html) ||
+        /geographic restriction/i.test(html) ||
+        /unavailable in your territory/i.test(html);
+
+      const region =
+        this.extractRegionFromHeaders(response.headers) ??
+        (await this.lookupGeoInfo()).country;
+
+      if (response.status === 200 && !blocked) {
+        return {
+          service: 'amazon_prime',
+          status: 'yes',
+          region,
+          unlockType: await this.detectUnlockType('www.primevideo.com'),
+          details: { homepageStatus: response.status },
+          testedAt: new Date(),
+        };
+      }
+
+      if ((response.status === 200 && blocked) || response.status === 403) {
+        return {
+          service: 'amazon_prime',
+          status: 'no',
+          region,
+          details: {
+            homepageStatus: response.status,
+            reason: blocked ? 'blocked_notice' : 'http_403',
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      return {
+        service: 'amazon_prime',
+        status: 'failed',
+        errorMsg: `Unexpected status ${response.status}`,
+        details: { homepageStatus: response.status },
+        testedAt: new Date(),
+      };
+    } catch (error) {
+      return {
+        service: 'amazon_prime',
+        status: 'failed',
+        errorMsg: error instanceof Error ? error.message : 'Unknown error',
+        testedAt: new Date(),
+      };
+    }
+  }
+
+  /**
    * YouTube Premium 检测
-   * 参考: IPQuality ip.sh 第1497-1555行
    */
   private async detectYouTube(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get('https://www.youtube.com/premium', {
-        headers: {
-          'Cookie': 'YSC=BiCUU3-5Gdk; CONSENT=YES+cb.20220301-11-p0.en+FX+700',
-        },
-      });
+      const response = await this.axios.get('https://www.youtube.com/premium');
 
-      // 检测是否重定向到 google.cn
-      const isCN = response.data.includes('www.google.cn');
-      if (isCN) {
-        return {
-          service: 'youtube',
-          status: 'no',
-          region: 'CN',
-          testedAt: new Date(),
-        };
-      }
-
-      // 检测是否提示不可用
-      const isNotAvailable = response.data.includes('Premium is not available in your country');
-      if (isNotAvailable) {
+      if (response.status === 403 || response.status === 429) {
         return {
           service: 'youtube',
           status: 'no',
@@ -214,20 +354,19 @@ export class StreamingDetector {
         };
       }
 
-      // 提取区域代码
       const regionMatch = response.data.match(/"contentRegion":"([^"]+)"/);
-      const region = regionMatch ? regionMatch[1] : 'Global';
+      const region =
+        (regionMatch ? regionMatch[1] : null) ?? (await this.lookupGeoInfo()).country ?? 'Global';
 
-      // 检测是否有 Premium 特征
-      const isAvailable = response.data.includes('ad-free') || response.data.includes('premium');
-
-      const unlockType = await this.detectUnlockType('www.youtube.com');
+      const isAvailable =
+        typeof response.data === 'string' &&
+        (response.data.includes('Premium benefits') || response.data.includes('Ad-free'));
 
       return {
         service: 'youtube',
         status: isAvailable ? 'yes' : 'no',
         region,
-        unlockType,
+        unlockType: await this.detectUnlockType('www.youtube.com'),
         testedAt: new Date(),
       };
     } catch (error) {
@@ -242,24 +381,21 @@ export class StreamingDetector {
 
   /**
    * TikTok 检测
-   * 参考: IPQuality ip.sh 第1320-1370行
    */
   private async detectTikTok(): Promise<StreamingResult> {
     try {
       const response = await this.axios.get('https://www.tiktok.com/');
 
-      // 从页面提取区域信息
       const regionMatch = response.data.match(/"region":"([^"]+)"/);
-      const region = regionMatch ? regionMatch[1] : null;
+      const region =
+        (regionMatch ? regionMatch[1] : null) ?? (await this.lookupGeoInfo()).country ?? undefined;
 
       if (region) {
-        const unlockType = await this.detectUnlockType('tiktok.com');
-
         return {
           service: 'tiktok',
           status: 'yes',
           region,
-          unlockType,
+          unlockType: await this.detectUnlockType('www.tiktok.com'),
           testedAt: new Date(),
         };
       }
@@ -280,16 +416,66 @@ export class StreamingDetector {
   }
 
   /**
+   * Spotify 检测
+   */
+  private async detectSpotify(): Promise<StreamingResult> {
+    try {
+      const response = await this.axios.get(
+        'https://spclient.wg.spotify.com/signup/public/v1/account/availability',
+        {
+          params: {
+            key: '142b583129b2df829de3656f9eb484e6',
+          },
+          headers: {
+            'User-Agent': 'Spotify/8.6.44 Android/29 (SM-G960F)',
+            'Accept-Language': 'en',
+          },
+        },
+      );
+
+      const availability = response.data?.countries ?? response.data?.countryList ?? null;
+      const countryCode =
+        (Array.isArray(availability) && availability[0]) ||
+        response.data?.country ||
+        response.data?.countryCode ||
+        (await this.lookupGeoInfo()).country;
+
+      const status =
+        response.status === 200 && countryCode ? 'yes' : 'no';
+
+      return {
+        service: 'spotify',
+        status,
+        region: countryCode,
+        unlockType: await this.detectUnlockType('spclient.wg.spotify.com'),
+        details: {
+          availability,
+          httpStatus: response.status,
+        },
+        testedAt: new Date(),
+      };
+    } catch (error) {
+      return {
+        service: 'spotify',
+        status: 'failed',
+        errorMsg: error instanceof Error ? error.message : 'Unknown error',
+        testedAt: new Date(),
+      };
+    }
+  }
+
+  /**
    * ChatGPT 检测
    */
   private async detectChatGPT(): Promise<StreamingResult> {
     try {
       const response = await this.axios.get('https://chat.openai.com/');
 
-      // 检测是否被限制
-      const isBlocked = response.status === 403 ||
-                       response.data.includes('not available in your country') ||
-                       response.data.includes('VPN or proxy');
+      const isBlocked =
+        response.status === 403 ||
+        (typeof response.data === 'string' &&
+          (response.data.includes('not available in your country') ||
+            response.data.includes('VPN or proxy')));
 
       if (isBlocked) {
         return {
@@ -299,13 +485,10 @@ export class StreamingDetector {
         };
       }
 
-      // 如果能正常访问，认为可用
-      const isAvailable = response.status === 200;
-
       return {
         service: 'chatgpt',
-        status: isAvailable ? 'yes' : 'no',
-        region: isAvailable ? 'Available' : undefined,
+        status: response.status === 200 ? 'yes' : 'no',
+        region: response.status === 200 ? (await this.lookupGeoInfo()).country : undefined,
         testedAt: new Date(),
       };
     } catch (error) {
@@ -319,19 +502,117 @@ export class StreamingDetector {
   }
 
   /**
-   * 检测解锁类型 (Native / DNS / IDC)
-   * 通过对比 DoH 和本地 DNS 解析结果
+   * 解析解锁类型：对比本地 DNS 和 DoH 结果
    */
   private async detectUnlockType(domain: string): Promise<UnlockType> {
     try {
-      // 简化版本：只检测本地DNS
-      // 完整版本需要对比 DoH (DNS over HTTPS) 和本地DNS
-      return 'native'; // 默认返回 native
+      const [localRecords, dohRecords] = await Promise.all([
+        this.resolveLocal(domain),
+        this.resolveDoh(domain),
+      ]);
+
+      if (!localRecords.length || !dohRecords.length) {
+        return 'unknown';
+      }
+
+      const intersection = localRecords.filter((ip) => dohRecords.includes(ip));
+
+      if (intersection.length === 0) {
+        return 'dns';
+      }
+
+      if (intersection.length === dohRecords.length) {
+        return 'native';
+      }
+
+      return 'idc';
     } catch {
       return 'unknown';
     }
   }
+
+  private async resolveLocal(domain: string): Promise<string[]> {
+    try {
+      const records = await dns.resolve4(domain);
+      return records;
+    } catch {
+      return [];
+    }
+  }
+
+  private async resolveDoh(domain: string): Promise<string[]> {
+    try {
+      const resp = await this.axios.get('https://dns.google/resolve', {
+        params: {
+          name: domain,
+          type: 'A',
+        },
+        timeout: 5000,
+      });
+
+      const answers = resp.data?.Answer;
+      if (!Array.isArray(answers)) {
+        return [];
+      }
+
+      return answers
+        .filter((item: { data?: string; type?: number }) => item?.type === 1 && typeof item?.data === 'string')
+        .map((item: { data: string }) => item.data);
+    } catch {
+      return [];
+    }
+  }
+
+  private extractRegionFromHeaders(
+    headers: AxiosResponseHeaders | RawAxiosResponseHeaders,
+  ): string | undefined {
+    const normalized: Record<string, string | string[]> = {};
+
+    Object.entries(headers).forEach(([key, value]) => {
+      normalized[key.toLowerCase()] = value as string | string[];
+    });
+
+    const candidates = ['x-geo-country', 'x-country', 'cf-ipcountry', 'geoip-country'];
+    for (const key of candidates) {
+      const value = normalized[key];
+      if (typeof value === 'string' && value.length === 2) {
+        return value.toUpperCase();
+      }
+    }
+
+    const origin = normalized['x-originating-url'];
+    if (typeof origin === 'string') {
+      const match = origin.match(/country=([A-Z]{2})/i);
+      if (match) {
+        return match[1].toUpperCase();
+      }
+    }
+
+    return undefined;
+  }
+
+  private async lookupGeoInfo(): Promise<{ country?: string; region?: string; isp?: string }> {
+    if (this.geoCache) {
+      return this.geoCache;
+    }
+
+    try {
+      const resp = await this.axios.get('https://api.ip.sb/geoip', { timeout: 5000 });
+      this.geoCache = {
+        country:
+          resp.data?.country_code ||
+          resp.data?.country_code_iso ||
+          resp.data?.country_iso_code ||
+          resp.data?.country,
+        region: resp.data?.region,
+        isp: resp.data?.organization || resp.data?.isp,
+      };
+      return this.geoCache;
+    } catch {
+      this.geoCache = {};
+      return this.geoCache;
+    }
+  }
 }
 
-// 导出单例
 export const streamingDetector = new StreamingDetector();

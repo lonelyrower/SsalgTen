@@ -1,4 +1,4 @@
-import { streamingDetector, StreamingResult } from './StreamingDetector';
+import { streamingDetector, type StreamingResult } from './StreamingDetector';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 import { http } from '../utils/http';
@@ -6,93 +6,115 @@ import { buildSignedHeaders } from '../utils/signing';
 
 /**
  * 流媒体检测服务
- * 定期检测流媒体解锁状态并上报到主控端
+ * 负责定时执行检测并回传结果
  */
 export class StreamingTestService {
   private intervalId: NodeJS.Timeout | null = null;
-  private isRunning = false;
+  private serviceStarted = false;
+  private executing = false;
+  private lastRunAt: number | null = null;
 
-  // 检测间隔（默认6小时）
-  private readonly testInterval: number;
+  private readonly testInterval: number; // 周期（毫秒）
 
   constructor(testIntervalHours: number = 6) {
     this.testInterval = testIntervalHours * 60 * 60 * 1000;
   }
 
   /**
-   * 启动定期检测
+   * 启动周期性检测
    */
   start(): void {
-    if (this.isRunning) {
+    if (this.serviceStarted) {
       logger.warn('[StreamingTestService] Already running');
       return;
     }
 
     logger.info('[StreamingTestService] Starting streaming detection service...');
-    logger.info(`[StreamingTestService] Test interval: ${this.testInterval / (60 * 60 * 1000)} hours`);
+    logger.info(
+      `[StreamingTestService] Test interval: ${this.testInterval / (60 * 60 * 1000)} hours`,
+    );
 
-    // 启动后延迟1分钟执行首次检测（避免启动时负载过高）
+    // 首次延迟执行，避免刚启动立即占用资源
     setTimeout(() => {
-      this.runTest();
+      void this.runTest();
     }, 60 * 1000);
 
-    // 设置定期检测
+    // 周期执行
     this.intervalId = setInterval(() => {
-      this.runTest();
+      void this.runTest();
     }, this.testInterval);
 
-    this.isRunning = true;
+    this.serviceStarted = true;
   }
 
   /**
-   * 停止定期检测
+   * 停止周期任务
    */
   stop(): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      this.isRunning = false;
-      logger.info('[StreamingTestService] Streaming detection service stopped');
     }
+    this.serviceStarted = false;
+    logger.info('[StreamingTestService] Streaming detection service stopped');
   }
 
   /**
-   * 立即执行一次检测（用于手动触发）
+   * 手动触发检测
+   */
+  async triggerManual(): Promise<{ started: boolean; reason?: string }> {
+    if (this.executing) {
+      return { started: false, reason: 'in_progress' };
+    }
+
+    void this.runTest();
+    return { started: true };
+  }
+
+  /**
+   * 执行一次检测
    */
   async runTest(): Promise<void> {
+    if (this.executing) {
+      logger.warn('[StreamingTestService] Detection already running, skip duplicate trigger');
+      return;
+    }
+
+    this.executing = true;
     try {
       logger.info('[StreamingTestService] Starting streaming unlock detection...');
 
       const results = await streamingDetector.detectAll();
+      logger.info(
+        `[StreamingTestService] Detection completed: ${results.length} services tested`,
+      );
 
-      logger.info(`[StreamingTestService] Detection completed: ${results.length} services tested`);
-
-      // 记录每个服务的检测结果
-      results.forEach(result => {
+      results.forEach((result) => {
         logger.info(
           `[StreamingTestService] ${result.service}: ${result.status}` +
-          (result.region ? ` (${result.region})` : '') +
-          (result.unlockType ? ` [${result.unlockType}]` : '')
+            (result.region ? ` (${result.region})` : '') +
+            (result.unlockType ? ` [${result.unlockType}]` : ''),
         );
       });
 
-      // 上报结果到主控端
       await this.reportResults(results);
-
+      this.lastRunAt = Date.now();
     } catch (error) {
       logger.error('[StreamingTestService] Detection failed:', error);
+    } finally {
+      this.executing = false;
     }
   }
 
   /**
-   * 上报检测结果到主控端
+   * 上报检测结果到 Master
    */
   private async reportResults(results: StreamingResult[]): Promise<void> {
     try {
       const payload = {
         nodeId: config.id,
-        results: results.map(r => ({
-          service: r.service.toUpperCase(), // 转换为大写匹配数据库 enum
+        results: results.map((r) => ({
+          service: r.service.toUpperCase(),
           status: r.status.toUpperCase(),
           region: r.region,
           unlockType: r.unlockType?.toUpperCase(),
@@ -101,27 +123,32 @@ export class StreamingTestService {
         })),
       };
 
-      const response = await http.post(
-        `${config.masterUrl}/api/streaming/results`,
-        payload,
-        {
-          headers: {
-            ...buildSignedHeaders(config.apiKey, payload),
-          },
-          timeout: 15000,
-        }
-      );
+      const response = await http.post(`${config.masterUrl}/api/streaming/results`, payload, {
+        headers: {
+          ...buildSignedHeaders(config.apiKey, payload),
+        },
+        timeout: 15000,
+      });
 
       if (response.status === 200) {
         logger.info('[StreamingTestService] Results reported successfully');
       } else {
-        logger.warn(`[StreamingTestService] Report failed with status ${response.status}`);
+        logger.warn(
+          `[StreamingTestService] Report failed with status ${response.status}: ${response.statusText}`,
+        );
       }
     } catch (error) {
       logger.error('[StreamingTestService] Failed to report results:', error);
     }
   }
+
+  getLastRunAt(): number | null {
+    return this.lastRunAt;
+  }
+
+  isExecuting(): boolean {
+    return this.executing;
+  }
 }
 
-// 导出单例
-export const streamingTestService = new StreamingTestService(6); // 默认6小时检测一次
+export const streamingTestService = new StreamingTestService(6);
