@@ -119,9 +119,9 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="space-y-6">
+    <div className="w-full">
       {/* System Resource Overview */}
-      <GlassCard variant="gradient" animated={false} className="p-6 h-full">
+      <GlassCard variant="gradient" animated={false} className="p-6 h-full flex flex-col">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2 bg-primary/15 rounded-xl backdrop-blur-sm">
             <Zap className="h-6 w-6 text-primary" />
@@ -136,7 +136,7 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1">
           <ResourceBar label="CPU 使用率" value={metrics.avgCpu} color="cyan" />
           <ResourceBar
             label="内存使用率"

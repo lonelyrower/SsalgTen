@@ -108,9 +108,9 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-full ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-full flex flex-col ${className}`}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
           <Globe className="h-5 w-5 mr-2 text-primary" />
           国家/地区分布
@@ -123,7 +123,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
       {countryStats.length > 0 ? (
         <>
           {/* 柱状图 */}
-          <div className={compact ? "h-48 mb-4" : "h-64 mb-4"}>
+          <div className={compact ? "h-48 mb-4 flex-shrink-0" : "h-64 mb-4 flex-shrink-0"}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={countryStats.slice(0, CHART_LIMIT)}
