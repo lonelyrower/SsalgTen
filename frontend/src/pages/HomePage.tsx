@@ -1,12 +1,14 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Globe2, RefreshCw } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { StatsCards } from '@/components/layout/StatsCards';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { HomeWelcomeBanner } from '@/components/home/HomeWelcomeBanner';
 import { MapSection } from '@/components/home/MapSection';
 import { NodeDetailsCard } from '@/components/home/NodeDetailsCard';
 import { ErrorBanner } from '@/components/home/ErrorBanner';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealTime } from '@/hooks/useRealTime';
 import type { NodeData } from '@/services/api';
@@ -14,7 +16,7 @@ import type { NodeData } from '@/services/api';
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
-  const { nodes, stats, connected, error } = useRealTime();
+  const { nodes, stats, connected, error, refreshData } = useRealTime();
   const { user } = useAuth();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [loadTimeout, setLoadTimeout] = useState(false);
@@ -23,7 +25,6 @@ export const HomePage = () => {
     setSelectedNode(node);
   }, []);
 
-  // 当数据加载后，取消初始加载状态
   useEffect(() => {
     if (nodes.length > 0) {
       setIsInitialLoad(false);
@@ -31,7 +32,6 @@ export const HomePage = () => {
     }
   }, [nodes]);
 
-  // 添加加载超时机制（10秒后即使没有数据也显示页面）
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isInitialLoad && nodes.length === 0) {
@@ -39,37 +39,35 @@ export const HomePage = () => {
         setIsInitialLoad(false);
         setLoadTimeout(true);
       }
-    }, 10000); // 10秒超时
+    }, 10000);
 
     return () => clearTimeout(timer);
   }, [isInitialLoad, nodes.length]);
 
-  // 缓存统计数据以防止不必要的重新渲染
   const memoizedStats = useMemo(
     () => ({
       totalNodes: stats?.totalNodes || 0,
       onlineNodes: stats?.onlineNodes || 0,
       totalCountries: stats?.totalCountries || 0,
       totalProviders: stats?.totalProviders || 0,
-      totalTraffic: stats?.totalTraffic
+      totalTraffic: stats?.totalTraffic,
     }),
     [
       stats?.totalNodes,
       stats?.onlineNodes,
       stats?.totalCountries,
       stats?.totalProviders,
-      stats?.totalTraffic
-    ]
+      stats?.totalTraffic,
+    ],
   );
 
-  // 如果正在加载，显示加载状态
   if (isInitialLoad && nodes.length === 0 && !loadTimeout) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
         <LoadingSpinner
           fullScreen
-          text={connected ? '正在加载节点数据...' : '正在连接服务器...'}
+          text={connected ? '正在加载节点数据...' : '正在尝试连接服务器...'}
           size="xl"
           variant="elegant"
         />
@@ -77,18 +75,17 @@ export const HomePage = () => {
     );
   }
 
-  // 如果有错误且没有数据，显示错误状态
   if (error && nodes.length === 0) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
             type="server"
             title="数据加载失败"
             message={error}
-            showRetry={true}
-            showHome={true}
+            showRetry
+            showHome
             onRetry={() => window.location.reload()}
             size="lg"
           />
@@ -97,10 +94,9 @@ export const HomePage = () => {
     );
   }
 
-  // 如果超时且没有数据（无错误），显示"暂无数据"提示
   if (loadTimeout && nodes.length === 0 && !error) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
@@ -108,10 +104,10 @@ export const HomePage = () => {
             title="暂无节点数据"
             message={
               connected
-                ? '系统已连接，但当前没有可用的节点数据。请稍后刷新页面或联系管理员。'
-                : '正在尝试连接服务器，请稍候...'
+                ? '系统已连接，但当前没有可用的节点信息。稍后刷新页面或联系管理员。'
+                : '正在尝试连接服务器，请稍后重试...'
             }
-            showRetry={true}
+            showRetry
             showHome={false}
             onRetry={() => window.location.reload()}
             size="lg"
@@ -121,43 +117,54 @@ export const HomePage = () => {
     );
   }
 
+  const welcomeName = user?.name || user?.username || '访客';
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* 欢迎信息 */}
-        <div className="mb-8">
-          <HomeWelcomeBanner userName={user?.name || user?.username} />
-        </div>
+      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        <PageHeader
+          title="全局监控面板"
+          description={`欢迎回来，${welcomeName}`}
+          icon={Globe2}
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={refreshData}
+            >
+              <RefreshCw className={`h-4 w-4 ${!connected ? 'animate-spin' : ''}`} />
+              刷新
+            </Button>
+          }
+        >
+          <p className="text-sm text-muted-foreground">
+            {connected
+              ? `当前共有 ${memoizedStats.totalNodes} 个节点在线监控，其中 ${memoizedStats.onlineNodes} 个处于在线状态。`
+              : '正在尝试重新连接实时数据通道，请稍候...'}
+          </p>
+        </PageHeader>
 
-        {/* 统计卡片 */}
-        <div className="mb-8">
-          <StatsCards {...memoizedStats} />
-        </div>
+        <StatsCards {...memoizedStats} />
 
-        {/* 地图区域 */}
-        <div className="mb-8">
-          <MapSection
-            nodes={nodes}
-            stats={stats}
-            viewMode={viewMode}
-            selectedNode={selectedNode}
-            onViewModeChange={setViewMode}
-            onNodeClick={handleNodeClick}
-          />
-        </div>
+        <MapSection
+          nodes={nodes}
+          stats={stats}
+          viewMode={viewMode}
+          selectedNode={selectedNode}
+          onViewModeChange={setViewMode}
+          onNodeClick={handleNodeClick}
+        />
 
-        {/* 选中节点信息 */}
         {selectedNode && (
-          <div className="mb-8">
-            <NodeDetailsCard node={selectedNode} showNetworkInfo={!!user} />
-          </div>
+          <NodeDetailsCard node={selectedNode} showNetworkInfo={!!user} />
         )}
 
-        {/* 错误提示 */}
         {error && <ErrorBanner error={error} />}
       </main>
     </div>
   );
 };
+

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { socketService } from '@/services/socketService';
-import { compareNodes, compareStats } from '@/utils/deepCompare';
+import { compareNodes, compareStats, deepEqual } from '@/utils/deepCompare';
 import { apiService } from '@/services/api';
 import type { NodeData, NodeStats } from '@/services/api';
 
@@ -165,7 +165,11 @@ export function useRealTime() {
           }
           const nodesChanged = !compareNodes(prev.nodes, normalizedNodes);
           const statsChanged = !compareStats(prev.stats, nextStats);
-          if (!nodesChanged && !statsChanged) {
+          const trafficChanged = !deepEqual(
+            prev.stats.totalTraffic ?? null,
+            nextStats.totalTraffic ?? null
+          );
+          if (!nodesChanged && !statsChanged && !trafficChanged) {
             return {
               ...prev,
               lastUpdate: full.timestamp || new Date().toISOString()
