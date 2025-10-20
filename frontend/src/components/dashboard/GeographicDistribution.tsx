@@ -15,6 +15,7 @@ import type { NodeData } from "@/services/api";
 interface GeographicDistributionProps {
   nodes: NodeData[];
   className?: string;
+  compact?: boolean;
 }
 
 const LegendItem: React.FC<{
@@ -60,9 +61,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   nodes,
   className = "",
+  compact = false,
 }) => {
-  const CHART_LIMIT = 12;
-  const LIST_LIMIT = 12;
+  const CHART_LIMIT = compact ? 8 : 12;
+  const LIST_LIMIT = compact ? 6 : 12;
 
   // 计算国家分布数据
   const { countryStats, totalCountries } = useMemo(() => {
@@ -106,7 +108,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-full ${className}`}
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
@@ -121,7 +123,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
       {countryStats.length > 0 ? (
         <>
           {/* 柱状图 */}
-          <div className="h-64 mb-4">
+          <div className={compact ? "h-48 mb-4" : "h-64 mb-4"}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={countryStats.slice(0, CHART_LIMIT)}

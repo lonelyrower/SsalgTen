@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Cpu, HardDrive, Gauge, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import type { NodeData } from "@/services/api";
 
@@ -118,64 +118,10 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
     };
   }, [nodes]);
 
-  const metricsCards = [
-    {
-      title: "平均 CPU 使用率",
-      value: `${metrics.avgCpu.toFixed(1)}%`,
-      icon: <Cpu className="h-6 w-6 text-cyan-400" />,
-      gradient: "from-cyan-500 to-blue-500",
-      bgGradient: "from-cyan-500/10 to-blue-500/10",
-    },
-    {
-      title: "平均内存使用率",
-      value: `${metrics.avgMemory.toFixed(1)}%`,
-      icon: <HardDrive className="h-6 w-6 text-purple-400" />,
-      gradient: "from-purple-500 to-pink-500",
-      bgGradient: "from-purple-500/10 to-pink-500/10",
-    },
-    {
-      title: "平均磁盘使用率",
-      value: `${metrics.avgDisk.toFixed(1)}%`,
-      icon: <HardDrive className="h-6 w-6 text-orange-400" />,
-      gradient: "from-orange-500 to-amber-500",
-      bgGradient: "from-orange-500/10 to-amber-500/10",
-    },
-    {
-      title: "平均系统负载",
-      value: metrics.avgLoad.toFixed(2),
-      icon: <Gauge className="h-6 w-6 text-green-400" />,
-      gradient: "from-green-500 to-emerald-500",
-      bgGradient: "from-green-500/10 to-emerald-500/10",
-    },
-  ];
-
   return (
     <div className="space-y-6">
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metricsCards.map((metric, index) => (
-          <GlassCard
-            key={index}
-            variant="tech"
-            animated={false}
-            glow={false}
-            className="p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2.5 rounded-lg bg-white/10">{metric.icon}</div>
-            </div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              {metric.title}
-            </h3>
-            <div className="text-3xl font-bold text-foreground">
-              {metric.value}
-            </div>
-          </GlassCard>
-        ))}
-      </div>
-
-      {/* Detailed Resource Bars */}
-      <GlassCard variant="gradient" animated={false} className="p-6">
+      {/* System Resource Overview */}
+      <GlassCard variant="gradient" animated={false} className="p-6 h-full">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2 bg-primary/15 rounded-xl backdrop-blur-sm">
             <Zap className="h-6 w-6 text-primary" />
@@ -190,7 +136,7 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
           <ResourceBar label="CPU 使用率" value={metrics.avgCpu} color="cyan" />
           <ResourceBar
             label="内存使用率"
