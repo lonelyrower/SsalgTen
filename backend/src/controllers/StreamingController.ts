@@ -258,6 +258,15 @@ export class StreamingController {
         })),
       });
     } catch (error) {
+      if (isMissingStreamingTableError(error)) {
+        logger.warn(
+          "Streaming tables missing when fetching nodes by streaming, returning empty result.",
+        );
+        return res.json({
+          success: true,
+          data: [],
+        });
+      }
       console.error("Get nodes by streaming error:", error);
       return res.status(500).json({
         success: false,
@@ -305,6 +314,22 @@ export class StreamingController {
         data: stats,
       });
     } catch (error) {
+      if (isMissingStreamingTableError(error)) {
+        logger.warn(
+          "Streaming tables missing when fetching streaming stats, returning defaults.",
+        );
+        const emptyStats = Object.values(StreamingService).map((service) => ({
+          service: service.toLowerCase(),
+          name: getServiceName(service),
+          total: 0,
+          unlocked: 0,
+          percentage: "0",
+        }));
+        return res.json({
+          success: true,
+          data: emptyStats,
+        });
+      }
       console.error("Get streaming stats error:", error);
       return res.status(500).json({
         success: false,
@@ -403,6 +428,36 @@ export class StreamingController {
         },
       });
     } catch (error) {
+      if (isMissingStreamingTableError(error)) {
+        logger.warn(
+          "Streaming tables missing when fetching streaming overview, returning defaults.",
+        );
+        const services = Object.values(StreamingService);
+        const platformStats = services.map((service) => ({
+          service: service.toLowerCase(),
+          name: getServiceName(service),
+          icon: getServiceIcon(service),
+          unlocked: 0,
+          restricted: 0,
+          failed: 0,
+          unknown: 0,
+          total: 0,
+          unlockRate: 0,
+        }));
+        const totalNodes = await prisma.node
+          .count({ where: { status: "ONLINE" } })
+          .catch(() => 0);
+        return res.json({
+          success: true,
+          data: {
+            totalNodes,
+            lastScanTime: null,
+            expiredNodes: totalNodes,
+            platformStats,
+            globalUnlockRate: 0,
+          },
+        });
+      }
       logger.error("Get streaming overview error:", error);
       return res.status(500).json({
         success: false,
@@ -526,6 +581,15 @@ export class StreamingController {
         data: filtered,
       });
     } catch (error) {
+      if (isMissingStreamingTableError(error)) {
+        logger.warn(
+          "Streaming tables missing when fetching node summaries, returning empty list.",
+        );
+        return res.json({
+          success: true,
+          data: [],
+        });
+      }
       logger.error("Get streaming node summaries error:", error);
       return res.status(500).json({
         success: false,
@@ -582,6 +646,18 @@ export class StreamingController {
         },
       });
     } catch (error) {
+      if (isMissingStreamingTableError(error)) {
+        logger.warn(
+          "Streaming tables missing when triggering bulk streaming test, returning fallback response.",
+        );
+        return res.json({
+          success: true,
+          message: "Streaming testing is not available yet",
+          data: {
+            queued: 0,
+          },
+        });
+      }
       logger.error("Trigger bulk streaming test error:", error);
       return res.status(500).json({
         success: false,
@@ -735,6 +811,37 @@ export class StreamingController {
         error: "Unsupported format. Use json, csv, or markdown",
       });
     } catch (error) {
+      if (isMissingStreamingTableError(error)) {
+        logger.warn(
+          "Streaming tables missing when exporting streaming data, returning empty export.",
+        );
+        if (format === "json") {
+          res.setHeader("Content-Type", "application/json");
+          return res.json([]);
+        }
+        if (format === "csv") {
+          res.setHeader("Content-Type", "text/csv");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=streaming-export-${new Date().toISOString().split("T")[0]}.csv`,
+          );
+          return res.send("Node ID,Node Name,Country,City\n");
+        }
+        if (format === "markdown") {
+          res.setHeader("Content-Type", "text/markdown");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=streaming-export-${new Date().toISOString().split("T")[0]}.md`,
+          );
+          return res.send(
+            "# Streaming Export\n\n_No streaming data available_\n",
+          );
+        }
+        return res.status(400).json({
+          success: false,
+          error: "Unsupported format. Use json, csv, or markdown",
+        });
+      }
       logger.error("Export streaming data error:", error);
       return res.status(500).json({
         success: false,
@@ -770,4 +877,13 @@ function getServiceIcon(service: StreamingService): string {
     CHATGPT: "🤖",
   };
   return icons[service];
+}
+
+function isMissingStreamingTableError(
+  error: unknown,
+): error is Prisma.PrismaClientKnownRequestError {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2021"
+  );
 }

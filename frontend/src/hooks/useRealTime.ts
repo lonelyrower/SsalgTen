@@ -98,20 +98,26 @@ const normalizeRealtimeNodesPayload = (payload: unknown): RealtimeNodesPayload |
   return result;
 };
 
-const calculateStats = (nodes: NodeData[]): NodeStats => {
+const calculateStats = (nodes: NodeData[], previous?: NodeStats): NodeStats => {
   const totalNodes = nodes.length;
   const onlineNodes = nodes.filter((node) => node.status === 'online').length;
   const offlineNodes = totalNodes - onlineNodes;
   const countries = new Set(nodes.map((node) => node.country));
   const providers = new Set(nodes.map((node) => node.provider));
 
-  return {
+  const stats: NodeStats = {
     totalNodes,
     onlineNodes,
     offlineNodes,
     totalCountries: countries.size,
     totalProviders: providers.size,
   };
+
+  if (previous?.totalTraffic) {
+    stats.totalTraffic = { ...previous.totalTraffic };
+  }
+
+  return stats;
 };
 
 export function useRealTime() {
@@ -134,6 +140,11 @@ export function useRealTime() {
     connected: false,
     error: null
   });
+  const realtimeDataRef = useRef<RealtimeData>(realtimeData);
+
+  useEffect(() => {
+    realtimeDataRef.current = realtimeData;
+  }, [realtimeData]);
 
   // 节点状态更新处理（带深度比较优化）
   const scheduleFlush = useCallback((delay = 250) => {
@@ -176,7 +187,7 @@ export function useRealTime() {
             return { ...node, ...patchRecord, status: normalizedStatus };
           });
           // 重新计算统计
-          const nextStats = calculateStats(nextNodes);
+        const nextStats = calculateStats(nextNodes, prev.stats);
           return {
             ...prev,
             nodes: nextNodes,
@@ -222,9 +233,10 @@ export function useRealTime() {
     if (!normalized?.data || normalized.data.length === 0) {
       return;
     }
+    const previousStats = realtimeDataRef.current?.stats;
     pendingFull.current = {
       nodes: normalized.data,
-      stats: calculateStats(normalized.data),
+      stats: calculateStats(normalized.data, previousStats),
       timestamp: normalized.timestamp,
     };
     pendingChanges.current.clear();
@@ -240,11 +252,10 @@ export function useRealTime() {
           ...node,
           status: normalizeStatus(node.status),
         }));
-        const stats = calculateStats(nodes);
         setRealtimeData(prev => ({
           ...prev,
           nodes,
-          stats,
+          stats: calculateStats(nodes, prev.stats),
           lastUpdate: new Date().toISOString(),
           error: null // 清除错误状态
         }));

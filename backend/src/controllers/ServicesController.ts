@@ -64,6 +64,29 @@ export class ServicesController {
         },
       });
     } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when fetching overview, returning default values.",
+        );
+        const totalNodes = await prisma.node
+          .count({ where: { status: "ONLINE" } })
+          .catch(() => 0);
+        const serviceTypes = Object.values(ServiceType).map((type) => ({
+          type: type.toLowerCase(),
+          count: 0,
+        }));
+        return res.json({
+          success: true,
+          data: {
+            totalNodes,
+            totalServices: 0,
+            runningServices: 0,
+            stoppedServices: 0,
+            failedServices: 0,
+            serviceTypeDistribution: serviceTypes,
+          },
+        });
+      }
       logger.error("Get services overview error:", error);
       return res.status(500).json({
         success: false,
@@ -150,6 +173,15 @@ export class ServicesController {
         data: formattedServices,
       });
     } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when fetching services list, returning empty list.",
+        );
+        return res.json({
+          success: true,
+          data: [],
+        });
+      }
       logger.error("Get all services error:", error);
       return res.status(500).json({
         success: false,
@@ -218,6 +250,15 @@ export class ServicesController {
         data: nodeServicesOverview,
       });
     } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when fetching grouped node services, returning empty list.",
+        );
+        return res.json({
+          success: true,
+          data: [],
+        });
+      }
       logger.error("Get node services grouped error:", error);
       return res.status(500).json({
         success: false,
@@ -282,6 +323,15 @@ export class ServicesController {
         },
       });
     } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when updating service, returning failure response.",
+        );
+        return res.status(503).json({
+          success: false,
+          error: "Service management is not available yet",
+        });
+      }
       logger.error("Update service error:", error);
       return res.status(500).json({
         success: false,
@@ -321,6 +371,15 @@ export class ServicesController {
         message: "Service deleted successfully",
       });
     } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when deleting service, returning failure response.",
+        );
+        return res.status(503).json({
+          success: false,
+          error: "Service management is not available yet",
+        });
+      }
       logger.error("Delete service error:", error);
       return res.status(500).json({
         success: false,
@@ -445,6 +504,39 @@ export class ServicesController {
         error: "Unsupported format. Use json, csv, or markdown",
       });
     } catch (error) {
+      if (isMissingServicesTableError(error)) {
+        logger.warn(
+          "Services table missing when exporting services, returning empty export.",
+        );
+        if (format === "json") {
+          res.setHeader("Content-Type", "application/json");
+          return res.json([]);
+        }
+        if (format === "csv") {
+          res.setHeader("Content-Type", "text/csv");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=services-export-${new Date().toISOString().split("T")[0]}.csv`,
+          );
+          return res.send(
+            "Node ID,Node Name,Country,City,Service Name,Service Type,Status,Port,Protocol,Version,Last Updated\n",
+          );
+        }
+        if (format === "markdown") {
+          res.setHeader("Content-Type", "text/markdown");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=services-export-${new Date().toISOString().split("T")[0]}.md`,
+          );
+          return res.send(
+            "# Services Export\n\n| Node | Country | City | Service | Type | Status | Port | Version |\n|------|---------|------|---------|------|--------|------|---------|\n",
+          );
+        }
+        return res.status(400).json({
+          success: false,
+          error: "Unsupported format. Use json, csv, or markdown",
+        });
+      }
       logger.error("Export services error:", error);
       return res.status(500).json({
         success: false,
@@ -452,4 +544,13 @@ export class ServicesController {
       });
     }
   }
+}
+
+function isMissingServicesTableError(
+  error: unknown,
+): error is Prisma.PrismaClientKnownRequestError {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2021"
+  );
 }
