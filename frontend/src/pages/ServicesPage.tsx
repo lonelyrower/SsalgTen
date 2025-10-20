@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ServicesOverviewStats } from '@/components/services/ServicesOverviewStats';
@@ -15,7 +16,7 @@ import type {
 } from '@/types/services';
 import { apiService } from '@/services/api';
 import { useNotification } from '@/hooks/useNotification';
-import { Download, RefreshCw, List, LayoutGrid } from 'lucide-react';
+import { Download, RefreshCw, List, LayoutGrid, Layers } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 
@@ -194,76 +195,81 @@ export const ServicesPage: React.FC = () => {
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        {/* 操作栏（简化） */}
-        <div className="flex items-center justify-end gap-2">
-          <div className="flex items-center gap-2">
-            {/* 视图切换 */}
-            <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${
-                  viewMode === 'list'
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                title="列表视图"
-              >
-                <List className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('node')}
-                className={`p-2 rounded ${
-                  viewMode === 'node'
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                title="节点视图"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* 导出 */}
-            <div className="relative group">
-              <button
-                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                <span>导出</span>
-              </button>
-              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+        {/* 页面标题 */}
+        <PageHeader
+          title="服务总览"
+          description={`监控节点部署的服务 - ${viewMode === 'list' ? filteredServices.length + ' 个服务' : filteredNodeOverviews.length + ' 个节点'}`}
+          icon={Layers}
+          actions={
+            <>
+              {/* 视图切换 */}
+              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
                 <button
-                  onClick={() => handleExport('json')}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded ${
+                    viewMode === 'list'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  title="列表视图"
                 >
-                  JSON
+                  <List className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => handleExport('csv')}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setViewMode('node')}
+                  className={`p-2 rounded ${
+                    viewMode === 'node'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  title="节点视图"
                 >
-                  CSV
-                </button>
-                <button
-                  onClick={() => handleExport('markdown')}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
-                >
-                  Markdown
+                  <LayoutGrid className="h-4 w-4" />
                 </button>
               </div>
-            </div>
 
-            {/* 刷新 */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span>{refreshing ? '刷新中...' : '刷新'}</span>
-            </button>
-          </div>
-        </div>
+              {/* 导出 */}
+              <div className="relative group">
+                <button
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">导出</span>
+                </button>
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <button
+                    onClick={() => handleExport('json')}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                  >
+                    JSON
+                  </button>
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    CSV
+                  </button>
+                  <button
+                    onClick={() => handleExport('markdown')}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
+                  >
+                    Markdown
+                  </button>
+                </div>
+              </div>
+
+              {/* 刷新 */}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{refreshing ? '刷新中...' : '刷新'}</span>
+              </button>
+            </>
+          }
+        />
 
         {/* 总览统计 */}
         <ServicesOverviewStats stats={stats} />

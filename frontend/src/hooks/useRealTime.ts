@@ -157,15 +157,24 @@ export function useRealTime() {
           const full = pendingFull.current;
           pendingFull.current = null;
           const normalizedNodes = full.nodes.map((node) => ({ ...node }));
+          const nextStats = full.stats
+            ? { ...full.stats }
+            : { ...prev.stats };
+          if (!nextStats.totalTraffic && prev.stats.totalTraffic) {
+            nextStats.totalTraffic = { ...prev.stats.totalTraffic };
+          }
           const nodesChanged = !compareNodes(prev.nodes, normalizedNodes);
-          const statsChanged = !compareStats(prev.stats, full.stats);
+          const statsChanged = !compareStats(prev.stats, nextStats);
           if (!nodesChanged && !statsChanged) {
-            return { ...prev, lastUpdate: full.timestamp || new Date().toISOString() };
+            return {
+              ...prev,
+              lastUpdate: full.timestamp || new Date().toISOString()
+            };
           }
           return {
             ...prev,
             nodes: normalizedNodes,
-            stats: full.stats,
+            stats: nextStats,
             lastUpdate: full.timestamp || new Date().toISOString()
           };
         }

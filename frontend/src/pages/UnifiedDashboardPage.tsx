@@ -1,6 +1,5 @@
 import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { EnhancedStats } from '@/components/dashboard/EnhancedStats';
 import { NodeMonitoringSection } from '@/components/dashboard/NodeMonitoringSection';
 import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -12,7 +11,7 @@ import { useRealTime } from '@/hooks/useRealTime';
  * 整合了旧版监控视图的核心能力
  */
 export const UnifiedDashboardPage: React.FC = () => {
-  const { nodes, stats, connected, refreshData } = useRealTime();
+  const { nodes, connected, refreshData } = useRealTime();
 
   // 下拉刷新处理
   const handleRefresh = async () => {
@@ -42,17 +41,6 @@ export const UnifiedDashboardPage: React.FC = () => {
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
         <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe">
-
-          {/* 系统概览区块 - 统计卡片 */}
-          <section className="mb-6 sm:mb-8">
-            <EnhancedStats
-              totalNodes={stats?.totalNodes || 0}
-              onlineNodes={stats?.onlineNodes || 0}
-              totalCountries={stats?.totalCountries || 0}
-              totalProviders={stats?.totalProviders || 0}
-              className=""
-            />
-          </section>
 
           {/* 地理分布 */}
           <section className="mb-6 sm:mb-8">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useRealTime } from "@/hooks/useRealTime";
 import { useConnectivityDiagnostics } from "@/hooks/useConnectivityDiagnostics";
 import { ConnectivityDiagnostics } from "@/components/nodes/ConnectivityDiagnostics";
@@ -9,7 +10,7 @@ import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
 import type { HeartbeatData } from "@/types/heartbeat";
 import { useClientLatency } from "@/hooks/useClientLatency";
-import { Search, Filter, RefreshCw, Activity, ChevronDown } from "lucide-react";
+import { Search, Filter, RefreshCw, Activity, ChevronDown, Server } from "lucide-react";
 import { ViewModeToggle } from "@/components/map/ViewModeToggle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { NodeData } from "@/services/api";
@@ -364,6 +365,24 @@ export const NodesPage: React.FC = () => {
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* 页面标题 */}
+        <PageHeader
+          title="节点总览"
+          description={`管理和监控所有节点 - 显示 ${filteredNodes.length} / ${nodes.length} 个节点`}
+          icon={Server}
+          actions={
+            <Button
+              onClick={handleRefresh}
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              刷新
+            </Button>
+          }
+        />
+
         {/* 搜索和过滤 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -393,11 +412,7 @@ export const NodesPage: React.FC = () => {
                 <option value="offline">仅离线</option>
               </select>
 
-              <span className="text-sm text-gray-500 dark:text-gray-400 hidden lg:inline">
-                显示 {filteredNodes.length} / {nodes.length} 个节点
-              </span>
-
-              {/* 刷新按钮 */}
+              {/* 刷新按钮 - 移到 PageHeader */}
               <Button
                 variant="outline"
                 size="sm"
