@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import type { NodeService } from '@/types/services';
-import { SERVICE_TYPE_CONFIG, SERVICE_STATUS_CONFIG, DEPLOYMENT_TYPE_CONFIG, SERVICE_DATA_EXPIRY_THRESHOLD } from '@/types/services';
-import { Card } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { ExternalLink, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import React, { useState } from "react";
+import type { NodeService } from "@/types/services";
+import {
+  SERVICE_TYPE_CONFIG,
+  SERVICE_STATUS_CONFIG,
+  DEPLOYMENT_TYPE_CONFIG,
+  SERVICE_DATA_EXPIRY_THRESHOLD,
+} from "@/types/services";
+import { Card } from "../ui/card";
+import { Badge } from "../ui/badge";
+import {
+  ExternalLink,
+  Edit,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 interface ServicesListProps {
   services: NodeService[];
@@ -42,14 +53,20 @@ interface ServiceCardProps {
   onDelete: () => void;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) => {
+const ServiceCard: React.FC<ServiceCardProps> = ({
+  service,
+  onEdit,
+  onDelete,
+}) => {
   const [expanded, setExpanded] = useState(false);
 
   const typeConfig = SERVICE_TYPE_CONFIG[service.type];
   const statusConfig = SERVICE_STATUS_CONFIG[service.status];
   const deploymentConfig = DEPLOYMENT_TYPE_CONFIG[service.deploymentType];
 
-  const isExpired = Date.now() - new Date(service.lastUpdated).getTime() > SERVICE_DATA_EXPIRY_THRESHOLD;
+  const isExpired =
+    Date.now() - new Date(service.lastUpdated).getTime() >
+    SERVICE_DATA_EXPIRY_THRESHOLD;
 
   const timeAgo = (() => {
     try {
@@ -58,12 +75,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
         locale: zhCN,
       });
     } catch {
-      return '未知';
+      return "未知";
     }
   })();
 
   return (
-    <Card className={`p-4 hover:shadow-lg transition-all ${isExpired ? 'border-l-4 border-l-yellow-500' : ''}`}>
+    <Card
+      className={`p-4 hover:shadow-lg transition-all ${isExpired ? "border-l-4 border-l-yellow-500" : ""}`}
+    >
       <div className="space-y-3">
         {/* 服务基本信息 */}
         <div className="flex items-start justify-between">
@@ -97,14 +116,22 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
               </Badge>
 
               {/* 状态 */}
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.className}`}>
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.className}`}
+              >
                 {statusConfig.name}
               </span>
 
               {/* 优先级 */}
               {service.priority && service.priority > 0 && (
                 <Badge
-                  variant={service.priority >= 4 ? 'destructive' : service.priority >= 3 ? 'warning' : 'default'}
+                  variant={
+                    service.priority >= 4
+                      ? "destructive"
+                      : service.priority >= 3
+                        ? "warning"
+                        : "default"
+                  }
                   className="text-xs"
                 >
                   P{service.priority}
@@ -127,9 +154,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
                 setExpanded(!expanded);
               }}
               className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              title={expanded ? '收起' : '展开'}
+              title={expanded ? "收起" : "展开"}
             >
-              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </button>
             <button
               onClick={(e) => {
@@ -161,7 +192,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
               <div className="flex items-center gap-1">
                 <ExternalLink className="h-3 w-3" />
                 <a
-                  href={`${service.access.protocol || 'http'}://${service.access.domain}${service.access.path || ''}`}
+                  href={`${service.access.protocol || "http"}://${service.access.domain}${service.access.path || ""}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline"
@@ -171,9 +202,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
                 </a>
               </div>
             )}
-            {service.access.port && (
-              <span>端口: {service.access.port}</span>
-            )}
+            {service.access.port && <span>端口: {service.access.port}</span>}
             {service.access.containerName && (
               <span>容器: {service.access.containerName}</span>
             )}
@@ -199,20 +228,32 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
               <div className="grid grid-cols-3 gap-4">
                 {service.resources.cpuPercent !== undefined && (
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">CPU:</span>
-                    <span className="ml-2 font-medium">{service.resources.cpuPercent.toFixed(1)}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      CPU:
+                    </span>
+                    <span className="ml-2 font-medium">
+                      {service.resources.cpuPercent.toFixed(1)}%
+                    </span>
                   </div>
                 )}
                 {service.resources.memoryMB !== undefined && (
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">内存:</span>
-                    <span className="ml-2 font-medium">{service.resources.memoryMB.toFixed(0)} MB</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      内存:
+                    </span>
+                    <span className="ml-2 font-medium">
+                      {service.resources.memoryMB.toFixed(0)} MB
+                    </span>
                   </div>
                 )}
                 {service.resources.diskMB !== undefined && (
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">磁盘:</span>
-                    <span className="ml-2 font-medium">{service.resources.diskMB.toFixed(0)} MB</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      磁盘:
+                    </span>
+                    <span className="ml-2 font-medium">
+                      {service.resources.diskMB.toFixed(0)} MB
+                    </span>
                   </div>
                 )}
               </div>
@@ -222,16 +263,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onEdit, onDelete }) 
             {service.notes && (
               <div>
                 <span className="text-gray-600 dark:text-gray-400">备注:</span>
-                <p className="mt-1 text-gray-900 dark:text-gray-100">{service.notes}</p>
+                <p className="mt-1 text-gray-900 dark:text-gray-100">
+                  {service.notes}
+                </p>
               </div>
             )}
 
             {/* 创建时间 */}
             {service.createdAt && (
               <div>
-                <span className="text-gray-600 dark:text-gray-400">创建时间:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  创建时间:
+                </span>
                 <span className="ml-2 text-gray-900 dark:text-gray-100">
-                  {new Date(service.createdAt).toLocaleString('zh-CN')}
+                  {new Date(service.createdAt).toLocaleString("zh-CN")}
                 </span>
               </div>
             )}

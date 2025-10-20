@@ -1,15 +1,27 @@
-import React, { useMemo, useEffect, useRef } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Globe, MapPin } from 'lucide-react';
-import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
-import type { NodeData } from '@/services/api';
+import React, { useMemo, useEffect, useRef } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { Globe, MapPin } from "lucide-react";
+import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
+import type { NodeData } from "@/services/api";
 
 interface GeographicDistributionProps {
   nodes: NodeData[];
   className?: string;
 }
 
-const LegendItem: React.FC<{ color?: string; name?: string; value?: number }> = ({ color, name, value }) => {
+const LegendItem: React.FC<{
+  color?: string;
+  name?: string;
+  value?: number;
+}> = ({ color, name, value }) => {
   const textRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
@@ -32,7 +44,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="font-medium text-gray-900 dark:text-white">{label}</p>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {payload.map((entry: any, index: number) => (
-          <LegendItem key={index} color={entry.color} name={entry.name} value={entry.value} />
+          <LegendItem
+            key={index}
+            color={entry.color}
+            name={entry.name}
+            value={entry.value}
+          />
         ))}
       </div>
     );
@@ -42,20 +59,27 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   nodes,
-  className = ''
+  className = "",
 }) => {
   const CHART_LIMIT = 12;
   const LIST_LIMIT = 12;
 
   // 计算国家分布数据
   const { countryStats, totalCountries } = useMemo(() => {
-    const countryMap = new Map<string, { online: number; offline: number; total: number }>();
+    const countryMap = new Map<
+      string,
+      { online: number; offline: number; total: number }
+    >();
 
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       const country = node.country;
-      const current = countryMap.get(country) || { online: 0, offline: 0, total: 0 };
+      const current = countryMap.get(country) || {
+        online: 0,
+        offline: 0,
+        total: 0,
+      };
 
-      if (node.status.toLowerCase() === 'online') {
+      if (node.status.toLowerCase() === "online") {
         current.online++;
       } else {
         current.offline++;
@@ -70,18 +94,20 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
         country,
         online: stats.online,
         offline: stats.offline,
-        total: stats.total
+        total: stats.total,
       }))
       .sort((a, b) => b.total - a.total);
 
     return {
       countryStats: allCountryStats,
-      totalCountries: allCountryStats.length // 实际覆盖的国家总数
+      totalCountries: allCountryStats.length, // 实际覆盖的国家总数
     };
   }, [nodes]);
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
           <Globe className="h-5 w-5 mr-2 text-primary" />
@@ -105,9 +131,9 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
                 <XAxis
                   dataKey="country"
                   fontSize={12}
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                 />
-                <YAxis fontSize={12} tick={{ fill: 'currentColor' }} />
+                <YAxis fontSize={12} tick={{ fill: "currentColor" }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="online" stackId="a" fill="#22c55e" name="在线" />
                 <Bar dataKey="offline" stackId="a" fill="#ef4444" name="离线" />
@@ -118,9 +144,14 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
           {/* 国家列表 */}
           <div className="grid grid-cols-2 gap-3">
             {countryStats.slice(0, LIST_LIMIT).map((item, index) => (
-              <div key={item.country} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div
+                key={item.country}
+                className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+              >
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">#{index + 1}</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    #{index + 1}
+                  </span>
                   <CountryFlagSvg country={item.country} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {item.country}

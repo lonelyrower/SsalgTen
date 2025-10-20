@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { socketService } from '@/services/socketService';
-import { compareNodes, compareStats, deepEqual } from '@/utils/deepCompare';
-import { apiService } from '@/services/api';
-import type { NodeData, NodeStats } from '@/services/api';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { socketService } from "@/services/socketService";
+import { compareNodes, compareStats, deepEqual } from "@/utils/deepCompare";
+import { apiService } from "@/services/api";
+import type { NodeData, NodeStats } from "@/services/api";
 
 interface RealtimeData {
   nodes: NodeData[];
@@ -13,9 +13,12 @@ interface RealtimeData {
   error: string | null;
 }
 
-const NODE_STATUS_VALUES = ['online', 'offline', 'maintenance'] as const;
-type NodeStatusLiteral = typeof NODE_STATUS_VALUES[number];
-type NodeStatusValue = NodeStatusLiteral | string | { status?: NodeStatusLiteral | string };
+const NODE_STATUS_VALUES = ["online", "offline", "maintenance"] as const;
+type NodeStatusLiteral = (typeof NODE_STATUS_VALUES)[number];
+type NodeStatusValue =
+  | NodeStatusLiteral
+  | string
+  | { status?: NodeStatusLiteral | string };
 
 interface NodesStatusUpdatePayload {
   nodes: NodeData[];
@@ -30,34 +33,37 @@ interface RealtimeNodesPayload {
 }
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+  typeof value === "object" && value !== null;
 
 const isNodeStats = (value: unknown): value is NodeStats => {
   if (!isObjectRecord(value)) return false;
   const requiredKeys: Array<keyof NodeStats> = [
-    'totalNodes',
-    'onlineNodes',
-    'offlineNodes',
-    'totalCountries',
-    'totalProviders',
+    "totalNodes",
+    "onlineNodes",
+    "offlineNodes",
+    "totalCountries",
+    "totalProviders",
   ];
-  return requiredKeys.every((key) => typeof value[key] === 'number');
+  return requiredKeys.every((key) => typeof value[key] === "number");
 };
 
 const isNodeDataArray = (value: unknown): value is NodeData[] =>
-  Array.isArray(value) && value.every((item) => isObjectRecord(item) && typeof item.id === 'string');
+  Array.isArray(value) &&
+  value.every((item) => isObjectRecord(item) && typeof item.id === "string");
 
 const normalizeStatus = (status: unknown): NodeStatusLiteral => {
-  if (typeof status === 'string') {
+  if (typeof status === "string") {
     const lower = status.toLowerCase() as NodeStatusLiteral;
     if (NODE_STATUS_VALUES.includes(lower)) {
       return lower;
     }
   }
-  return 'offline';
+  return "offline";
 };
 
-const normalizeNodesStatusPayload = (payload: unknown): NodesStatusUpdatePayload | null => {
+const normalizeNodesStatusPayload = (
+  payload: unknown,
+): NodesStatusUpdatePayload | null => {
   if (!isObjectRecord(payload)) {
     return null;
   }
@@ -74,18 +80,22 @@ const normalizeNodesStatusPayload = (payload: unknown): NodesStatusUpdatePayload
       status: normalizeStatus(node.status),
     })),
     stats,
-    timestamp: typeof payload.timestamp === 'string' ? payload.timestamp : undefined,
+    timestamp:
+      typeof payload.timestamp === "string" ? payload.timestamp : undefined,
   };
 };
 
-const normalizeRealtimeNodesPayload = (payload: unknown): RealtimeNodesPayload | null => {
+const normalizeRealtimeNodesPayload = (
+  payload: unknown,
+): RealtimeNodesPayload | null => {
   if (!isObjectRecord(payload)) {
     return null;
   }
 
   const result: RealtimeNodesPayload = {
-    success: typeof payload.success === 'boolean' ? payload.success : undefined,
-    timestamp: typeof payload.timestamp === 'string' ? payload.timestamp : undefined,
+    success: typeof payload.success === "boolean" ? payload.success : undefined,
+    timestamp:
+      typeof payload.timestamp === "string" ? payload.timestamp : undefined,
   };
 
   if (isNodeDataArray(payload.data)) {
@@ -100,7 +110,7 @@ const normalizeRealtimeNodesPayload = (payload: unknown): RealtimeNodesPayload |
 
 const calculateStats = (nodes: NodeData[], previous?: NodeStats): NodeStats => {
   const totalNodes = nodes.length;
-  const onlineNodes = nodes.filter((node) => node.status === 'online').length;
+  const onlineNodes = nodes.filter((node) => node.status === "online").length;
   const offlineNodes = totalNodes - onlineNodes;
   const countries = new Set(nodes.map((node) => node.country));
   const providers = new Set(nodes.map((node) => node.provider));
@@ -126,7 +136,9 @@ export function useRealTime() {
   const flushTimer = useRef<number | null>(null);
   const connectionTimeoutTimer = useRef<number | null>(null);
   const pendingFull = useRef<NodesStatusUpdatePayload | null>(null);
-  const pendingChanges = useRef<Map<string, NodeStatusValue>>(new Map<string, NodeStatusValue>());
+  const pendingChanges = useRef<Map<string, NodeStatusValue>>(
+    new Map<string, NodeStatusValue>(),
+  );
   const [realtimeData, setRealtimeData] = useState<RealtimeData>({
     nodes: [],
     stats: {
@@ -134,11 +146,11 @@ export function useRealTime() {
       onlineNodes: 0,
       offlineNodes: 0,
       totalCountries: 0,
-      totalProviders: 0
+      totalProviders: 0,
     },
-    lastUpdate: '',
+    lastUpdate: "",
     connected: false,
-    error: null
+    error: null,
   });
   const realtimeDataRef = useRef<RealtimeData>(realtimeData);
 
@@ -151,15 +163,13 @@ export function useRealTime() {
     if (flushTimer.current) return;
     flushTimer.current = window.setTimeout(() => {
       flushTimer.current = null;
-      setRealtimeData(prev => {
+      setRealtimeData((prev) => {
         // 优先使用全量更新
         if (pendingFull.current) {
           const full = pendingFull.current;
           pendingFull.current = null;
           const normalizedNodes = full.nodes.map((node) => ({ ...node }));
-          const nextStats = full.stats
-            ? { ...full.stats }
-            : { ...prev.stats };
+          const nextStats = full.stats ? { ...full.stats } : { ...prev.stats };
           if (!nextStats.totalTraffic && prev.stats.totalTraffic) {
             nextStats.totalTraffic = { ...prev.stats.totalTraffic };
           }
@@ -167,19 +177,19 @@ export function useRealTime() {
           const statsChanged = !compareStats(prev.stats, nextStats);
           const trafficChanged = !deepEqual(
             prev.stats.totalTraffic ?? null,
-            nextStats.totalTraffic ?? null
+            nextStats.totalTraffic ?? null,
           );
           if (!nodesChanged && !statsChanged && !trafficChanged) {
             return {
               ...prev,
-              lastUpdate: full.timestamp || new Date().toISOString()
+              lastUpdate: full.timestamp || new Date().toISOString(),
             };
           }
           return {
             ...prev,
             nodes: normalizedNodes,
             stats: nextStats,
-            lastUpdate: full.timestamp || new Date().toISOString()
+            lastUpdate: full.timestamp || new Date().toISOString(),
           };
         }
 
@@ -187,25 +197,28 @@ export function useRealTime() {
         if (pendingChanges.current.size > 0) {
           const changes = pendingChanges.current;
           pendingChanges.current = new Map<string, NodeStatusValue>();
-          const nextNodes = prev.nodes.map(node => {
+          const nextNodes = prev.nodes.map((node) => {
             const patch = changes.get(node.id);
             if (patch === undefined) return node;
             const patchRecord: Record<string, unknown> =
-              typeof patch === 'object' && patch !== null ? { ...(patch as Record<string, unknown>) } : {};
-            const statusSource = 'status' in patchRecord ? patchRecord.status : patch;
-            if ('status' in patchRecord) {
+              typeof patch === "object" && patch !== null
+                ? { ...(patch as Record<string, unknown>) }
+                : {};
+            const statusSource =
+              "status" in patchRecord ? patchRecord.status : patch;
+            if ("status" in patchRecord) {
               delete (patchRecord as { status?: unknown }).status;
             }
             const normalizedStatus = normalizeStatus(statusSource);
             return { ...node, ...patchRecord, status: normalizedStatus };
           });
           // 重新计算统计
-        const nextStats = calculateStats(nextNodes, prev.stats);
+          const nextStats = calculateStats(nextNodes, prev.stats);
           return {
             ...prev,
             nodes: nextNodes,
             stats: nextStats,
-            lastUpdate: new Date().toISOString()
+            lastUpdate: new Date().toISOString(),
           };
         }
 
@@ -214,47 +227,56 @@ export function useRealTime() {
     }, delay);
   }, []);
 
-  const handleNodesStatusUpdate = useCallback((payload: unknown) => {
-    const normalized = normalizeNodesStatusPayload(payload);
-    if (!normalized) {
-      return;
-    }
-    pendingFull.current = normalized;
-    pendingChanges.current.clear();
-    scheduleFlush(200);
-  }, [scheduleFlush]);
+  const handleNodesStatusUpdate = useCallback(
+    (payload: unknown) => {
+      const normalized = normalizeNodesStatusPayload(payload);
+      if (!normalized) {
+        return;
+      }
+      pendingFull.current = normalized;
+      pendingChanges.current.clear();
+      scheduleFlush(200);
+    },
+    [scheduleFlush],
+  );
 
   // 单个节点状态变化处理（带优化）
-  const handleNodeStatusChanged = useCallback((payload: unknown) => {
-    if (!isObjectRecord(payload)) {
-      return;
-    }
-    const nodeId = typeof payload.nodeId === 'string' ? payload.nodeId : null;
-    const status = payload.status as NodeStatusValue | undefined;
-    if (!nodeId || typeof status === 'undefined') {
-      return;
-    }
-    if (!pendingFull.current) {
-      pendingChanges.current.set(nodeId, status);
-    }
-    scheduleFlush(250);
-  }, [scheduleFlush]);
+  const handleNodeStatusChanged = useCallback(
+    (payload: unknown) => {
+      if (!isObjectRecord(payload)) {
+        return;
+      }
+      const nodeId = typeof payload.nodeId === "string" ? payload.nodeId : null;
+      const status = payload.status as NodeStatusValue | undefined;
+      if (!nodeId || typeof status === "undefined") {
+        return;
+      }
+      if (!pendingFull.current) {
+        pendingChanges.current.set(nodeId, status);
+      }
+      scheduleFlush(250);
+    },
+    [scheduleFlush],
+  );
 
   // 实时节点数据响应处理
-  const handleRealtimeNodes = useCallback((payload: unknown) => {
-    const normalized = normalizeRealtimeNodesPayload(payload);
-    if (!normalized?.data || normalized.data.length === 0) {
-      return;
-    }
-    const previousStats = realtimeDataRef.current?.stats;
-    pendingFull.current = {
-      nodes: normalized.data,
-      stats: calculateStats(normalized.data, previousStats),
-      timestamp: normalized.timestamp,
-    };
-    pendingChanges.current.clear();
-    scheduleFlush(150);
-  }, [scheduleFlush]);
+  const handleRealtimeNodes = useCallback(
+    (payload: unknown) => {
+      const normalized = normalizeRealtimeNodesPayload(payload);
+      if (!normalized?.data || normalized.data.length === 0) {
+        return;
+      }
+      const previousStats = realtimeDataRef.current?.stats;
+      pendingFull.current = {
+        nodes: normalized.data,
+        stats: calculateStats(normalized.data, previousStats),
+        timestamp: normalized.timestamp,
+      };
+      pendingChanges.current.clear();
+      scheduleFlush(150);
+    },
+    [scheduleFlush],
+  );
 
   // REST 兜底：当 Socket 未连接时，通过 HTTP 获取节点数据
   const fetchViaRest = useCallback(async () => {
@@ -265,20 +287,21 @@ export function useRealTime() {
           ...node,
           status: normalizeStatus(node.status),
         }));
-        setRealtimeData(prev => ({
+        setRealtimeData((prev) => ({
           ...prev,
           nodes,
           stats: calculateStats(nodes, prev.stats),
           lastUpdate: new Date().toISOString(),
-          error: null // 清除错误状态
+          error: null, // 清除错误状态
         }));
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '无法连接到后端服务器';
-      console.warn('Failed to fetch nodes via REST fallback:', error);
-      setRealtimeData(prev => ({
+      const errorMessage =
+        error instanceof Error ? error.message : "无法连接到后端服务器";
+      console.warn("Failed to fetch nodes via REST fallback:", error);
+      setRealtimeData((prev) => ({
         ...prev,
-        error: errorMessage
+        error: errorMessage,
       }));
     }
   }, []);
@@ -286,7 +309,7 @@ export function useRealTime() {
   useEffect(() => {
     if (!isAuthenticated) {
       socketService.disconnect();
-      setRealtimeData(prev => ({ ...prev, connected: false, error: null }));
+      setRealtimeData((prev) => ({ ...prev, connected: false, error: null }));
       if (pollTimer.current) {
         clearInterval(pollTimer.current);
         pollTimer.current = null;
@@ -303,11 +326,12 @@ export function useRealTime() {
 
     // 设置连接超时检测（15秒后如果仍未连接且无数据，设置错误）
     connectionTimeoutTimer.current = window.setTimeout(() => {
-      setRealtimeData(prev => {
+      setRealtimeData((prev) => {
         if (!prev.connected && prev.nodes.length === 0 && !prev.error) {
           return {
             ...prev,
-            error: '连接超时：无法建立实时连接，正在尝试通过备用方式获取数据...'
+            error:
+              "连接超时：无法建立实时连接，正在尝试通过备用方式获取数据...",
           };
         }
         return prev;
@@ -317,7 +341,7 @@ export function useRealTime() {
     // 监听连接状态
     const checkConnection = () => {
       const isConnected = socketService.connected;
-      setRealtimeData(prev => {
+      setRealtimeData((prev) => {
         // 如果从断连恢复到连接状态，清除错误并清除超时
         if (!prev.connected && isConnected) {
           if (connectionTimeoutTimer.current) {
@@ -327,12 +351,12 @@ export function useRealTime() {
           return {
             ...prev,
             connected: isConnected,
-            error: null
+            error: null,
           };
         }
         return {
           ...prev,
-          connected: isConnected
+          connected: isConnected,
         };
       });
     };
@@ -377,7 +401,13 @@ export function useRealTime() {
         connectionTimeoutTimer.current = null;
       }
     };
-  }, [isAuthenticated, handleNodesStatusUpdate, handleNodeStatusChanged, handleRealtimeNodes, fetchViaRest]);
+  }, [
+    isAuthenticated,
+    handleNodesStatusUpdate,
+    handleNodeStatusChanged,
+    handleRealtimeNodes,
+    fetchViaRest,
+  ]);
 
   // 当连接状态变化时，按需启动/停止 REST 轮询兜底
   useEffect(() => {
@@ -408,9 +438,12 @@ export function useRealTime() {
   }, [fetchViaRest]);
 
   // 订阅特定节点的诊断数据
-  const subscribeToDiagnostics = useCallback((nodeId: string, callback: (data: unknown) => void) => {
-    socketService.subscribeToDiagnostics(nodeId, callback);
-  }, []);
+  const subscribeToDiagnostics = useCallback(
+    (nodeId: string, callback: (data: unknown) => void) => {
+      socketService.subscribeToDiagnostics(nodeId, callback);
+    },
+    [],
+  );
 
   // 取消订阅特定节点的诊断数据
   const unsubscribeFromDiagnostics = useCallback((nodeId: string) => {
@@ -421,6 +454,6 @@ export function useRealTime() {
     ...realtimeData,
     refreshData,
     subscribeToDiagnostics,
-    unsubscribeFromDiagnostics
+    unsubscribeFromDiagnostics,
   };
 }

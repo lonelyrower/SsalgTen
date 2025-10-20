@@ -1,35 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { apiService, type User } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { UserModal } from './UserModal';
-import { 
-  Users, 
-  Search, 
-  Edit2, 
-  Trash2, 
-  Shield, 
-  Settings, 
+import React, { useState, useEffect } from "react";
+import { apiService, type User } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { UserModal } from "./UserModal";
+import {
+  Users,
+  Search,
+  Edit2,
+  Trash2,
+  Shield,
+  Settings,
   Eye,
   UserPlus,
   Filter,
   Download,
-  RefreshCw
-} from 'lucide-react';
+  RefreshCw,
+} from "lucide-react";
 
 interface UserManagementProps {
   className?: string;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }) => {
+export const UserManagement: React.FC<UserManagementProps> = ({
+  className = "",
+}) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<string>('all');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     loadUsers();
@@ -42,10 +46,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
       if (response.success && response.data) {
         setUsers(response.data);
       } else {
-        setError(response.error || 'Failed to load users');
+        setError(response.error || "Failed to load users");
       }
     } catch {
-      setError('Failed to load users');
+      setError("Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -53,11 +57,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'ADMIN':
+      case "ADMIN":
         return <Shield className="h-4 w-4 text-red-500" />;
-      case 'OPERATOR':
+      case "OPERATOR":
         return <Settings className="h-4 w-4 text-primary" />;
-      case 'VIEWER':
+      case "VIEWER":
         return <Eye className="h-4 w-4 text-green-500" />;
       default:
         return <Users className="h-4 w-4 text-gray-500" />;
@@ -66,38 +70,38 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
-      case 'ADMIN':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'OPERATOR':
-        return 'bg-primary/10 text-primary';
-      case 'VIEWER':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case "ADMIN":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "OPERATOR":
+        return "bg-primary/10 text-primary";
+      case "VIEWER":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case 'ADMIN':
-        return '管理员';
-      case 'OPERATOR':
-        return '操作员';
-      case 'VIEWER':
-        return '查看者';
+      case "ADMIN":
+        return "管理员";
+      case "OPERATOR":
+        return "操作员";
+      case "VIEWER":
+        return "查看者";
       default:
-        return '未知';
+        return "未知";
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    
+
+    const matchesRole = filterRole === "all" || user.role === filterRole;
+
     return matchesSearch && matchesRole;
   });
 
@@ -105,13 +109,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
     try {
       const response = await apiService.deleteUser(userId);
       if (response.success) {
-        setUsers(users.filter(u => u.id !== userId));
+        setUsers(users.filter((u) => u.id !== userId));
         setShowDeleteConfirm(null);
       } else {
-        setError(response.error || 'Failed to delete user');
+        setError(response.error || "Failed to delete user");
       }
     } catch {
-      setError('Failed to delete user');
+      setError("Failed to delete user");
     }
   };
 
@@ -121,7 +125,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div
+              key={i}
+              className="h-16 bg-gray-200 dark:bg-gray-700 rounded"
+            ></div>
           ))}
         </div>
       </div>
@@ -213,7 +220,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setError('')}
+                onClick={() => setError("")}
                 className="text-red-600 hover:text-red-700 mt-2"
               >
                 关闭
@@ -263,7 +270,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredUsers.map((user) => (
-                <tr 
+                <tr
                   key={user.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                 >
@@ -271,7 +278,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                          {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                          {user.name
+                            ? user.name.charAt(0).toUpperCase()
+                            : user.username.charAt(0).toUpperCase()}
                         </div>
                       </div>
                       <div className="ml-4">
@@ -290,25 +299,31 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {getRoleIcon(user.role)}
-                      <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
+                      <span
+                        className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}
+                      >
                         {getRoleText(user.role)}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.active 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {user.active ? '活跃' : '禁用'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.active
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {user.active ? "活跃" : "禁用"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString('zh-CN') : '从未登录'}
+                    {user.lastLogin
+                      ? new Date(user.lastLogin).toLocaleString("zh-CN")
+                      : "从未登录"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(user.createdAt).toLocaleDateString('zh-CN')}
+                    {new Date(user.createdAt).toLocaleDateString("zh-CN")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
@@ -339,17 +354,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
         {/* 移动端卡片布局 */}
         <div className="lg:hidden">
           {filteredUsers.map((user) => (
-            <div 
+            <div
               key={user.id}
               className="p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
             >
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 h-12 w-12">
                   <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                    {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                    {user.name
+                      ? user.name.charAt(0).toUpperCase()
+                      : user.username.charAt(0).toUpperCase()}
                   </div>
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -363,7 +380,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
                         {user.email}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 ml-2">
                       <Button
                         variant="ghost"
@@ -383,27 +400,39 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <div className="flex items-center space-x-1">
                       {getRoleIcon(user.role)}
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}
+                      >
                         {getRoleText(user.role)}
                       </span>
                     </div>
-                    
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      user.active 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {user.active ? '活跃' : '禁用'}
+
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        user.active
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {user.active ? "活跃" : "禁用"}
                     </span>
                   </div>
-                  
+
                   <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                    <p>最后登录: {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('zh-CN') : '从未登录'}</p>
-                    <p>创建时间: {new Date(user.createdAt).toLocaleDateString('zh-CN')}</p>
+                    <p>
+                      最后登录:{" "}
+                      {user.lastLogin
+                        ? new Date(user.lastLogin).toLocaleDateString("zh-CN")
+                        : "从未登录"}
+                    </p>
+                    <p>
+                      创建时间:{" "}
+                      {new Date(user.createdAt).toLocaleDateString("zh-CN")}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -415,7 +444,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
-              {searchTerm || filterRole !== 'all' ? '没有找到匹配的用户' : '还没有用户'}
+              {searchTerm || filterRole !== "all"
+                ? "没有找到匹配的用户"
+                : "还没有用户"}
             </p>
           </div>
         )}
@@ -431,7 +462,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
         user={editingUser}
         onSaved={() => {
           loadUsers();
-          setError('');
+          setError("");
         }}
       />
 

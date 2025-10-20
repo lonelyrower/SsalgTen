@@ -1,36 +1,63 @@
-import { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { NotificationProvider } from '@/contexts/NotificationContext';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
-import { PageErrorBoundary } from '@/components/error/ErrorBoundaryUtils';
-import { apiService } from '@/services/api';
-import './App.css';
+import { Suspense, lazy, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import ErrorBoundary from "@/components/error/ErrorBoundary";
+import { PageErrorBoundary } from "@/components/error/ErrorBoundaryUtils";
+import { apiService } from "@/services/api";
+import "./App.css";
 
 // Lazy load pages for better performance
-const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })));
-const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })));
-const UnifiedDashboardPage = lazy(() => import('@/pages/UnifiedDashboardPage').then(module => ({ default: module.UnifiedDashboardPage })));
-const NodesPage = lazy(() => import('@/pages/NodesPageNew').then(module => ({ default: module.NodesPageNew })));
-const AdminPage = lazy(() => import('@/pages/AdminPage').then(module => ({ default: module.AdminPage })));
-const StreamingPage = lazy(() => import('@/pages/StreamingPage').then(module => ({ default: module.StreamingPage })));
-const ServicesPage = lazy(() => import('@/pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
+const HomePage = lazy(() =>
+  import("@/pages/HomePage").then((module) => ({ default: module.HomePage })),
+);
+const LoginPage = lazy(() =>
+  import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage })),
+);
+const UnifiedDashboardPage = lazy(() =>
+  import("@/pages/UnifiedDashboardPage").then((module) => ({
+    default: module.UnifiedDashboardPage,
+  })),
+);
+const NodesPage = lazy(() =>
+  import("@/pages/NodesPageNew").then((module) => ({
+    default: module.NodesPageNew,
+  })),
+);
+const AdminPage = lazy(() =>
+  import("@/pages/AdminPage").then((module) => ({ default: module.AdminPage })),
+);
+const StreamingPage = lazy(() =>
+  import("@/pages/StreamingPage").then((module) => ({
+    default: module.StreamingPage,
+  })),
+);
+const ServicesPage = lazy(() =>
+  import("@/pages/ServicesPage").then((module) => ({
+    default: module.ServicesPage,
+  })),
+);
 
 function App() {
   // 动态加载系统名称并更新页面标题
   useEffect(() => {
     const loadSystemName = async () => {
       try {
-        const response = await apiService.getSystemConfig('system.name');
+        const response = await apiService.getSystemConfig("system.name");
         if (response.success && response.data?.value) {
           document.title = response.data.value;
         }
       } catch (error) {
         // 加载失败时保持默认标题
-        console.debug('Failed to load system name:', error);
+        console.debug("Failed to load system name:", error);
       }
     };
 
@@ -45,7 +72,7 @@ function App() {
         await apiService.getVisitorInfo();
       } catch (error) {
         // 记录失败不影响应用运行
-        console.debug('Failed to record visitor info:', error);
+        console.debug("Failed to record visitor info:", error);
       }
     };
 

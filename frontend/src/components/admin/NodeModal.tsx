@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { apiService, type NodeData } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { 
+import React, { useState, useEffect } from "react";
+import { apiService, type NodeData } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
   X,
   Server,
   Globe,
   MapPin,
   Settings,
   Activity,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface NodeModalProps {
   isOpen: boolean;
@@ -34,65 +34,67 @@ interface NodeFormData {
   enabled: boolean;
 }
 
-export const NodeModal: React.FC<NodeModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  node, 
-  onSaved 
+export const NodeModal: React.FC<NodeModalProps> = ({
+  isOpen,
+  onClose,
+  node,
+  onSaved,
 }) => {
   const [formData, setFormData] = useState<NodeFormData>({
-    name: '',
-    country: '',
-    city: '',
-    provider: '',
-    ipv4: '',
-    ipv6: '',
+    name: "",
+    country: "",
+    city: "",
+    provider: "",
+    ipv4: "",
+    ipv6: "",
     latitude: 0,
     longitude: 0,
-    description: '',
-    apiKey: '',
+    description: "",
+    apiKey: "",
     port: 3002,
-    enabled: true
+    enabled: true,
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     if (isOpen) {
       if (node) {
         setFormData({
-          name: node.name || '',
-          country: node.country || '',
-          city: node.city || '',
-          provider: node.provider || '',
-          ipv4: node.ipv4 || '',
-          ipv6: node.ipv6 || '',
+          name: node.name || "",
+          country: node.country || "",
+          city: node.city || "",
+          provider: node.provider || "",
+          ipv4: node.ipv4 || "",
+          ipv6: node.ipv6 || "",
           latitude: node.latitude || 0,
           longitude: node.longitude || 0,
-          description: node.description || '',
-          apiKey: node.apiKey || '',
+          description: node.description || "",
+          apiKey: node.apiKey || "",
           port: node.port || 3002,
-          enabled: node.enabled !== false
+          enabled: node.enabled !== false,
         });
       } else {
         setFormData({
-          name: '',
-          country: '',
-          city: '',
-          provider: '',
-          ipv4: '',
-          ipv6: '',
+          name: "",
+          country: "",
+          city: "",
+          provider: "",
+          ipv4: "",
+          ipv6: "",
           latitude: 0,
           longitude: 0,
-          description: '',
-          apiKey: '',
+          description: "",
+          apiKey: "",
           port: 3002,
-          enabled: true
+          enabled: true,
         });
       }
-      setError('');
+      setError("");
       setValidationErrors({});
     }
   }, [isOpen, node]);
@@ -101,51 +103,53 @@ export const NodeModal: React.FC<NodeModalProps> = ({
     const errors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      errors.name = '节点名称不能为空';
+      errors.name = "节点名称不能为空";
     }
 
     if (!formData.country.trim()) {
-      errors.country = '国家不能为空';
+      errors.country = "国家不能为空";
     }
 
     if (!formData.city.trim()) {
-      errors.city = '城市不能为空';
+      errors.city = "城市不能为空";
     }
 
     if (!formData.provider.trim()) {
-      errors.provider = '服务商不能为空';
+      errors.provider = "服务商不能为空";
     }
 
     if (!formData.ipv4.trim()) {
-      errors.ipv4 = 'IPv4地址不能为空';
+      errors.ipv4 = "IPv4地址不能为空";
     } else {
-      const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      const ipv4Regex =
+        /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
       if (!ipv4Regex.test(formData.ipv4)) {
-        errors.ipv4 = 'IPv4地址格式不正确';
+        errors.ipv4 = "IPv4地址格式不正确";
       }
     }
 
     if (formData.ipv6 && formData.ipv6.trim()) {
-      const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+      const ipv6Regex =
+        /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
       if (!ipv6Regex.test(formData.ipv6)) {
-        errors.ipv6 = 'IPv6地址格式不正确';
+        errors.ipv6 = "IPv6地址格式不正确";
       }
     }
 
     if (formData.latitude < -90 || formData.latitude > 90) {
-      errors.latitude = '纬度必须在-90到90之间';
+      errors.latitude = "纬度必须在-90到90之间";
     }
 
     if (formData.longitude < -180 || formData.longitude > 180) {
-      errors.longitude = '经度必须在-180到180之间';
+      errors.longitude = "经度必须在-180到180之间";
     }
 
     if (formData.port < 1 || formData.port > 65535) {
-      errors.port = '端口必须在1到65535之间';
+      errors.port = "端口必须在1到65535之间";
     }
 
     if (!formData.apiKey.trim()) {
-      errors.apiKey = 'API密钥不能为空';
+      errors.apiKey = "API密钥不能为空";
     }
 
     setValidationErrors(errors);
@@ -154,16 +158,16 @@ export const NodeModal: React.FC<NodeModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = node 
+      const response = node
         ? await apiService.updateNode(node.id, formData)
         : await apiService.createNode(formData);
 
@@ -171,25 +175,30 @@ export const NodeModal: React.FC<NodeModalProps> = ({
         onSaved();
         onClose();
       } else {
-        setError(response.error || `Failed to ${node ? 'update' : 'create'} node`);
+        setError(
+          response.error || `Failed to ${node ? "update" : "create"} node`,
+        );
       }
     } catch {
-      setError(`Failed to ${node ? 'update' : 'create'} node`);
+      setError(`Failed to ${node ? "update" : "create"} node`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof NodeFormData, value: string | number | boolean) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: keyof NodeFormData,
+    value: string | number | boolean,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
@@ -204,7 +213,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
           <div className="flex items-center space-x-3">
             <Server className="h-6 w-6 text-primary" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {node ? '编辑节点' : '添加节点'}
+              {node ? "编辑节点" : "添加节点"}
             </h2>
           </div>
           <Button
@@ -236,7 +245,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <Settings className="h-5 w-5 mr-2 text-primary" />
                   基本信息
                 </h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     节点名称 *
@@ -244,14 +253,18 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                      validationErrors.name ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                      validationErrors.name
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="输入节点名称"
                   />
                   {validationErrors.name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.name}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.name}
+                    </p>
                   )}
                 </div>
 
@@ -263,17 +276,23 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     <input
                       type="text"
                       value={formData.country}
-                      onChange={(e) => handleInputChange('country', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("country", e.target.value)
+                      }
                       className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                        validationErrors.country ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                        validationErrors.country
+                          ? "border-red-300 dark:border-red-600"
+                          : "border-gray-300 dark:border-gray-600"
                       }`}
                       placeholder="中国"
                     />
                     {validationErrors.country && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.country}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.country}
+                      </p>
                     )}
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       城市 *
@@ -281,14 +300,20 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     <input
                       type="text"
                       value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("city", e.target.value)
+                      }
                       className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                        validationErrors.city ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                        validationErrors.city
+                          ? "border-red-300 dark:border-red-600"
+                          : "border-gray-300 dark:border-gray-600"
                       }`}
                       placeholder="北京"
                     />
                     {validationErrors.city && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.city}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.city}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -300,14 +325,20 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="text"
                     value={formData.provider}
-                    onChange={(e) => handleInputChange('provider', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("provider", e.target.value)
+                    }
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                      validationErrors.provider ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                      validationErrors.provider
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="阿里云"
                   />
                   {validationErrors.provider && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.provider}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.provider}
+                    </p>
                   )}
                 </div>
 
@@ -317,7 +348,9 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   </label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="节点描述信息"
@@ -339,14 +372,18 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="text"
                     value={formData.ipv4}
-                    onChange={(e) => handleInputChange('ipv4', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
-                      validationErrors.ipv4 ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                    onChange={(e) => handleInputChange("ipv4", e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                      validationErrors.ipv4
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="192.168.1.1"
                   />
                   {validationErrors.ipv4 && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.ipv4}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.ipv4}
+                    </p>
                   )}
                 </div>
 
@@ -357,14 +394,18 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="text"
                     value={formData.ipv6}
-                    onChange={(e) => handleInputChange('ipv6', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
-                      validationErrors.ipv6 ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                    onChange={(e) => handleInputChange("ipv6", e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                      validationErrors.ipv6
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="2001:db8::1"
                   />
                   {validationErrors.ipv6 && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.ipv6}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.ipv6}
+                    </p>
                   )}
                 </div>
 
@@ -375,16 +416,22 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="number"
                     value={formData.port}
-                    onChange={(e) => handleInputChange('port', parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange("port", parseInt(e.target.value) || 0)
+                    }
                     min="1"
                     max="65535"
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                      validationErrors.port ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                      validationErrors.port
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="3002"
                   />
                   {validationErrors.port && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.port}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.port}
+                    </p>
                   )}
                 </div>
 
@@ -395,14 +442,20 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="text"
                     value={formData.apiKey}
-                    onChange={(e) => handleInputChange('apiKey', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("apiKey", e.target.value)
+                    }
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
-                      validationErrors.apiKey ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                      validationErrors.apiKey
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="agent-api-key-here"
                   />
                   {validationErrors.apiKey && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.apiKey}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.apiKey}
+                    </p>
                   )}
                 </div>
               </div>
@@ -414,7 +467,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                 <MapPin className="h-5 w-5 mr-2 text-orange-600" />
                 地理位置
               </h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -423,20 +476,29 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="number"
                     value={formData.latitude}
-                    onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "latitude",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                     step="0.000001"
                     min="-90"
                     max="90"
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                      validationErrors.latitude ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                      validationErrors.latitude
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="39.904211"
                   />
                   {validationErrors.latitude && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.latitude}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.latitude}
+                    </p>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     经度 *
@@ -444,17 +506,26 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   <input
                     type="number"
                     value={formData.longitude}
-                    onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "longitude",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                     step="0.000001"
                     min="-180"
                     max="180"
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                      validationErrors.longitude ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                      validationErrors.longitude
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="116.407395"
                   />
                   {validationErrors.longitude && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.longitude}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.longitude}
+                    </p>
                   )}
                 </div>
               </div>
@@ -466,16 +537,21 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                 <Activity className="h-5 w-5 mr-2 text-purple-600" />
                 状态设置
               </h3>
-              
+
               <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
                   id="enabled"
                   checked={formData.enabled}
-                  onChange={(e) => handleInputChange('enabled', e.target.checked)}
+                  onChange={(e) =>
+                    handleInputChange("enabled", e.target.checked)
+                  }
                   className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
                 />
-                <label htmlFor="enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="enabled"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   启用节点
                 </label>
               </div>
@@ -505,10 +581,12 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                {node ? '更新中...' : '创建中...'}
+                {node ? "更新中..." : "创建中..."}
               </>
+            ) : node ? (
+              "更新节点"
             ) : (
-              node ? '更新节点' : '创建节点'
+              "创建节点"
             )}
           </Button>
         </div>

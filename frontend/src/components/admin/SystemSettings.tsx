@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { apiService, type SystemConfig } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import React, { useState, useEffect } from "react";
+import { apiService, type SystemConfig } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Settings,
   Save,
@@ -9,19 +9,23 @@ import {
   AlertCircle,
   CheckCircle,
   RotateCcw,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface SystemSettingsProps {
   className?: string;
 }
 
-export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }) => {
+export const SystemSettings: React.FC<SystemSettingsProps> = ({
+  className = "",
+}) => {
   const [configs, setConfigs] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [changedConfigs, setChangedConfigs] = useState<Map<string, string>>(new Map());
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [changedConfigs, setChangedConfigs] = useState<Map<string, string>>(
+    new Map(),
+  );
 
   useEffect(() => {
     loadConfigs();
@@ -33,15 +37,17 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
       const response = await apiService.getSystemConfigs();
       if (response.success && response.data) {
         // 只显示当前版本定义的配置项
-        const validKeys = ['system.name', 'map.api_key', 'cesium.ion_token'];
-        const filteredConfigs = response.data.filter(config => validKeys.includes(config.key));
+        const validKeys = ["system.name", "map.api_key", "cesium.ion_token"];
+        const filteredConfigs = response.data.filter((config) =>
+          validKeys.includes(config.key),
+        );
         setConfigs(filteredConfigs);
         setChangedConfigs(new Map());
       } else {
-        setError(response.error || 'Failed to load configurations');
+        setError(response.error || "Failed to load configurations");
       }
     } catch {
-      setError('Failed to load configurations');
+      setError("Failed to load configurations");
     } finally {
       setLoading(false);
     }
@@ -58,13 +64,15 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
 
     try {
       setSaving(true);
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
 
-      const configsToUpdate = Array.from(changedConfigs.entries()).map(([key, value]) => ({
-        key,
-        value,
-      }));
+      const configsToUpdate = Array.from(changedConfigs.entries()).map(
+        ([key, value]) => ({
+          key,
+          value,
+        }),
+      );
 
       const response = await apiService.batchUpdateConfigs(configsToUpdate);
 
@@ -74,81 +82,90 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         await loadConfigs();
 
         // 如果修改了站点名称，刷新页面标题
-        const hasNameChange = configsToUpdate.some(c => c.key === 'system.name');
+        const hasNameChange = configsToUpdate.some(
+          (c) => c.key === "system.name",
+        );
         if (hasNameChange) {
           setTimeout(() => {
             window.location.reload();
           }, 1000);
         } else {
-          setTimeout(() => setSuccess(''), 3000);
+          setTimeout(() => setSuccess(""), 3000);
         }
       } else {
-        setError(response.error || '保存配置失败');
+        setError(response.error || "保存配置失败");
       }
     } catch {
-      setError('保存配置失败');
+      setError("保存配置失败");
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async () => {
-    if (!confirm('确定要将所有配置重置为默认值吗？此操作不可恢复。')) {
+    if (!confirm("确定要将所有配置重置为默认值吗？此操作不可恢复。")) {
       return;
     }
 
     try {
       setSaving(true);
-      setError('');
+      setError("");
 
       const response = await apiService.resetConfigsToDefaults();
 
       if (response.success) {
-        setSuccess('所有配置已重置为默认值');
+        setSuccess("所有配置已重置为默认值");
         setChangedConfigs(new Map());
         await loadConfigs();
-        setTimeout(() => setSuccess(''), 3000);
+        setTimeout(() => setSuccess(""), 3000);
       } else {
-        setError(response.error || '重置配置失败');
+        setError(response.error || "重置配置失败");
       }
     } catch {
-      setError('重置配置失败');
+      setError("重置配置失败");
     } finally {
       setSaving(false);
     }
   };
 
   const getConfigInfo = (key: string) => {
-    const configInfo: Record<string, { name: string; desc: string; placeholder?: string }> = {
-      'system.name': {
-        name: '站点名称',
-        desc: '在页面标题和导航栏中显示的系统名称',
-        placeholder: 'SsalgTen Network Monitor',
+    const configInfo: Record<
+      string,
+      { name: string; desc: string; placeholder?: string }
+    > = {
+      "system.name": {
+        name: "站点名称",
+        desc: "在页面标题和导航栏中显示的系统名称",
+        placeholder: "SsalgTen Network Monitor",
       },
-      'map.api_key': {
-        name: 'Mapbox API 密钥',
-        desc: '可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥',
-        placeholder: 'pk.ey...',
+      "map.api_key": {
+        name: "Mapbox API 密钥",
+        desc: "可选配置。如果要使用 Mapbox 地图样式，需要在 Mapbox 官网免费注册并填写密钥",
+        placeholder: "pk.ey...",
       },
-      'cesium.ion_token': {
-        name: 'Cesium Ion API Token',
-        desc: '可选配置。用于访问 Cesium Ion 的高质量 3D 地形和影像数据。在 cesium.com/ion 免费注册获取（每月 5万次免费加载）',
-        placeholder: 'eyJhbGciOiJ...',
+      "cesium.ion_token": {
+        name: "Cesium Ion API Token",
+        desc: "可选配置。用于访问 Cesium Ion 的高质量 3D 地形和影像数据。在 cesium.com/ion 免费注册获取（每月 5万次免费加载）",
+        placeholder: "eyJhbGciOiJ...",
       },
     };
-    return configInfo[key] || { name: key, desc: '' };
+    return configInfo[key] || { name: key, desc: "" };
   };
 
   const renderInput = (config: SystemConfig) => {
     let currentValue = changedConfigs.get(config.key) ?? config.value;
     // 去除值两端的双引号（如果存在）
-    if (typeof currentValue === 'string' && currentValue.startsWith('"') && currentValue.endsWith('"')) {
+    if (
+      typeof currentValue === "string" &&
+      currentValue.startsWith('"') &&
+      currentValue.endsWith('"')
+    ) {
       currentValue = currentValue.slice(1, -1);
     }
     const info = getConfigInfo(config.key);
-    const inputType = config.inputType || 'text';
+    const inputType = config.inputType || "text";
 
-    if (inputType === 'number') {
+    if (inputType === "number") {
       return (
         <input
           type="number"
@@ -177,7 +194,10 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div
+              key={i}
+              className="h-32 bg-gray-200 dark:bg-gray-700 rounded"
+            ></div>
           ))}
         </div>
       </div>
@@ -232,7 +252,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setError('')}
+                onClick={() => setError("")}
                 className="text-red-600 hover:text-red-700 mt-2 h-auto p-0"
               >
                 关闭
@@ -256,27 +276,47 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
         {configs.map((config) => {
           const info = getConfigInfo(config.key);
           const hasChanged = changedConfigs.has(config.key);
-          
+
           // 根据配置类型设置图标和颜色
           const configStyle = {
-            'system.name': { icon: '🏷️', color: 'from-blue-500 to-cyan-500', bg: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' },
-            'map.api_key': { icon: '🗺️', color: 'from-green-500 to-emerald-500', bg: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' },
-            'cesium.ion_token': { icon: '🌍', color: 'from-orange-500 to-amber-500', bg: 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20' },
-          }[config.key] || { icon: '⚙️', color: 'from-gray-500 to-slate-500', bg: 'bg-gray-50 dark:bg-gray-800' };
+            "system.name": {
+              icon: "🏷️",
+              color: "from-blue-500 to-cyan-500",
+              bg: "bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20",
+            },
+            "map.api_key": {
+              icon: "🗺️",
+              color: "from-green-500 to-emerald-500",
+              bg: "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20",
+            },
+            "cesium.ion_token": {
+              icon: "🌍",
+              color: "from-orange-500 to-amber-500",
+              bg: "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20",
+            },
+          }[config.key] || {
+            icon: "⚙️",
+            color: "from-gray-500 to-slate-500",
+            bg: "bg-gray-50 dark:bg-gray-800",
+          };
 
           return (
             <Card
               key={config.id}
               className={`overflow-hidden transition-all duration-200 ${
                 hasChanged
-                  ? 'border-2 border-blue-500 dark:border-blue-400 shadow-lg shadow-blue-500/20'
-                  : 'border border-gray-200 dark:border-gray-700 hover:shadow-md'
+                  ? "border-2 border-blue-500 dark:border-blue-400 shadow-lg shadow-blue-500/20"
+                  : "border border-gray-200 dark:border-gray-700 hover:shadow-md"
               }`}
             >
-              <div className={`h-2 bg-gradient-to-r ${configStyle.color}`}></div>
+              <div
+                className={`h-2 bg-gradient-to-r ${configStyle.color}`}
+              ></div>
               <div className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl ${configStyle.bg} flex items-center justify-center text-2xl`}>
+                  <div
+                    className={`flex-shrink-0 w-12 h-12 rounded-xl ${configStyle.bg} flex items-center justify-center text-2xl`}
+                  >
                     {configStyle.icon}
                   </div>
                   <div className="flex-1 space-y-3">
@@ -323,7 +363,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ className = '' }
               variant="outline"
               size="sm"
               onClick={() => {
-                if (confirm('确定要放弃所有未保存的更改吗？')) {
+                if (confirm("确定要放弃所有未保存的更改吗？")) {
                   setChangedConfigs(new Map());
                 }
               }}

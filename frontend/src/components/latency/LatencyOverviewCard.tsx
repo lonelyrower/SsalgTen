@@ -1,27 +1,27 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useClientLatency } from '@/hooks/useClientLatency';
-import { 
-  Activity, 
-  Wifi, 
-  RefreshCw, 
-  TrendingUp, 
-  TrendingDown, 
-  Clock, 
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useClientLatency } from "@/hooks/useClientLatency";
+import {
+  Activity,
+  Wifi,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  Clock,
   Globe,
-  Loader2
-} from 'lucide-react';
-import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
+  Loader2,
+} from "lucide-react";
+import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 
 interface LatencyOverviewCardProps {
   className?: string;
 }
 
-export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({ 
-  className = '' 
+export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
+  className = "",
 }) => {
-  const { 
+  const {
     isLoading,
     isTestingInProgress,
     stats,
@@ -29,50 +29,53 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
     lastUpdated,
     startLatencyTest,
     refreshResults,
-    getTestProgress
+    getTestProgress,
   } = useClientLatency();
 
   const progress = getTestProgress();
 
   // 格式化时间显示
   const formatLastUpdate = (timestamp: string | null) => {
-    if (!timestamp) return '未测试';
+    if (!timestamp) return "未测试";
     const date = new Date(timestamp);
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-    
-    if (diffMinutes < 1) return '刚刚';
+
+    if (diffMinutes < 1) return "刚刚";
     if (diffMinutes < 60) return `${diffMinutes}分钟前`;
     const diffHours = Math.floor(diffMinutes / 60);
     if (diffHours < 24) return `${diffHours}小时前`;
-    return date.toLocaleDateString('zh-CN');
+    return date.toLocaleDateString("zh-CN");
   };
 
   // 获取延迟等级的颜色和图标
   const getLatencyLevel = (average: number) => {
-    if (average < 50) return { 
-      color: 'text-green-600', 
-      bg: 'bg-green-100 dark:bg-green-900/20',
-      level: '优秀', 
-      icon: <TrendingDown className="h-4 w-4" />
-    };
-    if (average < 100) return { 
-      color: 'text-yellow-600', 
-      bg: 'bg-yellow-100 dark:bg-yellow-900/20',
-      level: '良好', 
-      icon: <Activity className="h-4 w-4" />
-    };
-    if (average < 200) return { 
-      color: 'text-orange-600', 
-      bg: 'bg-orange-100 dark:bg-orange-900/20',
-      level: '一般', 
-      icon: <TrendingUp className="h-4 w-4" />
-    };
-    return { 
-      color: 'text-red-600', 
-      bg: 'bg-red-100 dark:bg-red-900/20',
-      level: '需要关注', 
-      icon: <TrendingUp className="h-4 w-4" />
+    if (average < 50)
+      return {
+        color: "text-green-600",
+        bg: "bg-green-100 dark:bg-green-900/20",
+        level: "优秀",
+        icon: <TrendingDown className="h-4 w-4" />,
+      };
+    if (average < 100)
+      return {
+        color: "text-yellow-600",
+        bg: "bg-yellow-100 dark:bg-yellow-900/20",
+        level: "良好",
+        icon: <Activity className="h-4 w-4" />,
+      };
+    if (average < 200)
+      return {
+        color: "text-orange-600",
+        bg: "bg-orange-100 dark:bg-orange-900/20",
+        level: "一般",
+        icon: <TrendingUp className="h-4 w-4" />,
+      };
+    return {
+      color: "text-red-600",
+      bg: "bg-red-100 dark:bg-red-900/20",
+      level: "需要关注",
+      icon: <TrendingUp className="h-4 w-4" />,
     };
   };
 
@@ -93,7 +96,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {!isTestingInProgress && (
             <Button
@@ -103,10 +106,12 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               disabled={isLoading}
               className="text-gray-400 hover:text-gray-600"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
           )}
-          
+
           <Button
             size="sm"
             onClick={startLatencyTest}
@@ -120,7 +125,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             ) : (
               <>
                 <Activity className="h-4 w-4 mr-2" />
-                {stats ? '重新测试' : '开始测试'}
+                {stats ? "重新测试" : "开始测试"}
               </>
             )}
           </Button>
@@ -149,7 +154,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress.percentage}%` }}
             />
@@ -166,27 +171,37 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 {stats.average}ms
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">平均延迟</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                平均延迟
+              </div>
               {stats.average > 0 && (
-                <div className={`inline-flex items-center mt-1 px-2 py-1 rounded-full text-xs ${getLatencyLevel(stats.average).bg} ${getLatencyLevel(stats.average).color}`}>
+                <div
+                  className={`inline-flex items-center mt-1 px-2 py-1 rounded-full text-xs ${getLatencyLevel(stats.average).bg} ${getLatencyLevel(stats.average).color}`}
+                >
                   {getLatencyLevel(stats.average).icon}
-                  <span className="ml-1">{getLatencyLevel(stats.average).level}</span>
+                  <span className="ml-1">
+                    {getLatencyLevel(stats.average).level}
+                  </span>
                 </div>
               )}
             </div>
-            
+
             <div className="text-center">
               <div className="text-lg font-semibold text-green-600 mb-1">
                 {stats.min}ms
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">最佳延迟</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                最佳延迟
+              </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-lg font-semibold text-red-600 mb-1">
                 {stats.max}ms
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">最高延迟</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                最高延迟
+              </div>
             </div>
           </div>
 
@@ -200,7 +215,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                 {stats.tested} / {stats.total} 个节点
               </span>
             </div>
-            
+
             <div className="grid grid-cols-5 gap-2">
               {stats.distribution.map((dist, index) => (
                 <div key={index} className="text-center">
@@ -224,10 +239,13 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                   最佳节点
                 </span>
               </div>
-              
+
               <div className="space-y-1">
                 {stats.bestNodes.slice(0, 6).map((node, index) => (
-                  <div key={node.nodeId} className="flex items-center justify-between text-sm">
+                  <div
+                    key={node.nodeId}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <div className="flex items-center space-x-2">
                       <span className="w-4 h-4 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">
                         {index + 1}
@@ -237,7 +255,9 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                       </span>
                       <span className="text-gray-500 dark:text-gray-500 text-xs flex items-center space-x-1">
                         <CountryFlagSvg country={node.country} size={14} />
-                        <span>{node.location || `${node.city}, ${node.country}`}</span>
+                        <span>
+                          {node.location || `${node.city}, ${node.country}`}
+                        </span>
                       </span>
                     </div>
                     <span className="font-medium text-green-600">

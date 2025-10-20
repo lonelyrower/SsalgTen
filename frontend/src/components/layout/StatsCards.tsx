@@ -1,6 +1,6 @@
-import { memo } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { Globe, Server, Building, HardDrive } from 'lucide-react';
+import { memo } from "react";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { Globe, Server, Building, HardDrive } from "lucide-react";
 
 interface StatsCardsProps {
   totalNodes?: number;
@@ -16,10 +16,10 @@ interface StatsCardsProps {
 
 // 格式化字节数为可读的单位
 const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
 
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
@@ -30,7 +30,7 @@ const StatsCardsComponent = ({
   onlineNodes = 0,
   totalCountries = 0,
   totalProviders = 0,
-  totalTraffic
+  totalTraffic,
 }: StatsCardsProps) => {
   const offlineNodes = totalNodes - onlineNodes;
 
@@ -41,54 +41,54 @@ const StatsCardsComponent = ({
 
   const stats = [
     {
-      title: '网络节点',
+      title: "网络节点",
       value: totalNodes.toString(),
       subtitle: `${onlineNodes} 在线 · ${offlineNodes} 离线`,
       icon: <Server className="h-6 w-6 text-primary" />,
-      badge: '实时监控',
-      badgeVariant: 'default',
-      gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-500/10 to-cyan-500/10'
+      badge: "实时监控",
+      badgeVariant: "default",
+      gradient: "from-blue-500 to-cyan-500",
+      bgGradient: "from-blue-500/10 to-cyan-500/10",
     },
     {
-      title: '全球覆盖',
+      title: "全球覆盖",
       value: totalCountries.toString(),
-      subtitle: '全球节点分布',
+      subtitle: "全球节点分布",
       icon: <Globe className="h-6 w-6 text-emerald-400" />,
-      badge: '国际化',
-      badgeVariant: 'secondary' as const,
-      gradient: 'from-emerald-500 to-green-500',
-      bgGradient: 'from-emerald-500/10 to-green-500/10'
+      badge: "国际化",
+      badgeVariant: "secondary" as const,
+      gradient: "from-emerald-500 to-green-500",
+      bgGradient: "from-emerald-500/10 to-green-500/10",
     },
     {
-      title: '服务提供商',
+      title: "服务提供商",
       value: totalProviders.toString(),
-      subtitle: '多样化基础设施',
+      subtitle: "多样化基础设施",
       icon: <Building className="h-6 w-6 text-purple-400" />,
-      badge: '多元化',
-      badgeVariant: 'outline' as const,
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-500/10 to-pink-500/10'
+      badge: "多元化",
+      badgeVariant: "outline" as const,
+      gradient: "from-purple-500 to-pink-500",
+      bgGradient: "from-purple-500/10 to-pink-500/10",
     },
     {
-      title: '总流量',
+      title: "总流量",
       value: formatBytes(trafficTotal),
       subtitle: `↑ ${formatBytes(trafficUpload)} · ↓ ${formatBytes(trafficDownload)}`,
       icon: <HardDrive className="h-6 w-6 text-orange-400" />,
-      badge: '累计',
-      badgeVariant: 'outline' as const,
-      gradient: 'from-orange-500 to-amber-500',
-      bgGradient: 'from-orange-500/10 to-amber-500/10'
-    }
+      badge: "累计",
+      badgeVariant: "outline" as const,
+      gradient: "from-orange-500 to-amber-500",
+      bgGradient: "from-orange-500/10 to-amber-500/10",
+    },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => (
-        <GlassCard 
-          key={index} 
-          variant="tech" 
-          animated={false} 
+        <GlassCard
+          key={index}
+          variant="tech"
+          animated={false}
           glow={false}
           className="p-6 hover:border-white/30 transition-colors"
         >
@@ -96,15 +96,13 @@ const StatsCardsComponent = ({
             {/* 简洁头部 - 只保留图标和标题 */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-lg bg-white/10">
-                  {stat.icon}
-                </div>
+                <div className="p-2.5 rounded-lg bg-white/10">{stat.icon}</div>
                 <h3 className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </h3>
               </div>
             </div>
-            
+
             {/* 数值显示 - 简洁版 */}
             <div className="space-y-2">
               <div className="text-3xl font-bold text-foreground">

@@ -1,58 +1,51 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { apiService } from '@/services/api';
-import { useNotification } from '@/hooks/useNotification';
-import { 
-  X, 
-  Lock, 
-  Eye,
-  EyeOff,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { apiService } from "@/services/api";
+import { useNotification } from "@/hooks/useNotification";
+import { X, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ 
-  isOpen, 
-  onClose 
+export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
+  isOpen,
+  onClose,
 }) => {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { addNotification } = useNotification();
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!currentPassword.trim()) {
-      newErrors.currentPassword = '请输入当前密码';
+      newErrors.currentPassword = "请输入当前密码";
     }
 
     if (!newPassword.trim()) {
-      newErrors.newPassword = '请输入新密码';
+      newErrors.newPassword = "请输入新密码";
     } else if (newPassword.length < 6) {
-      newErrors.newPassword = '新密码长度至少6个字符';
+      newErrors.newPassword = "新密码长度至少6个字符";
     }
 
     if (!confirmPassword.trim()) {
-      newErrors.confirmPassword = '请确认新密码';
+      newErrors.confirmPassword = "请确认新密码";
     } else if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = '两次输入的密码不一致';
+      newErrors.confirmPassword = "两次输入的密码不一致";
     }
 
     if (currentPassword === newPassword) {
-      newErrors.newPassword = '新密码不能与当前密码相同';
+      newErrors.newPassword = "新密码不能与当前密码相同";
     }
 
     setErrors(newErrors);
@@ -61,31 +54,34 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
     try {
-      const response = await apiService.changePassword(currentPassword, newPassword);
+      const response = await apiService.changePassword(
+        currentPassword,
+        newPassword,
+      );
 
       if (response.success) {
         addNotification({
-          type: 'success',
-          title: '密码修改成功',
-          message: '您的密码已成功修改，请妥善保管新密码'
+          type: "success",
+          title: "密码修改成功",
+          message: "您的密码已成功修改，请妥善保管新密码",
         });
         handleClose();
       } else {
         setErrors({
-          currentPassword: response.error || '密码修改失败'
+          currentPassword: response.error || "密码修改失败",
         });
       }
     } catch (error) {
-      console.error('Change password error:', error);
+      console.error("Change password error:", error);
       setErrors({
-        currentPassword: '网络错误，请稍后重试'
+        currentPassword: "网络错误，请稍后重试",
       });
     } finally {
       setLoading(false);
@@ -93,9 +89,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   };
 
   const handleClose = () => {
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
     setErrors({});
     setShowCurrentPassword(false);
     setShowNewPassword(false);
@@ -136,13 +132,13 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               </label>
               <div className="relative">
                 <input
-                  type={showCurrentPassword ? 'text' : 'password'}
+                  type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                    errors.currentPassword 
-                      ? 'border-red-300 dark:border-red-600' 
-                      : 'border-gray-300 dark:border-gray-600'
+                    errors.currentPassword
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   } dark:bg-gray-700 dark:text-white`}
                   placeholder="请输入当前密码"
                 />
@@ -151,7 +147,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
-                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.currentPassword && (
@@ -169,13 +169,13 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               </label>
               <div className="relative">
                 <input
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                    errors.newPassword 
-                      ? 'border-red-300 dark:border-red-600' 
-                      : 'border-gray-300 dark:border-gray-600'
+                    errors.newPassword
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   } dark:bg-gray-700 dark:text-white`}
                   placeholder="请输入新密码（至少6个字符）"
                 />
@@ -184,7 +184,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
-                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.newPassword && (
@@ -202,13 +206,13 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               </label>
               <div className="relative">
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                    errors.confirmPassword 
-                      ? 'border-red-300 dark:border-red-600' 
-                      : 'border-gray-300 dark:border-gray-600'
+                    errors.confirmPassword
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   } dark:bg-gray-700 dark:text-white`}
                   placeholder="请再次输入新密码"
                 />
@@ -217,7 +221,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.confirmPassword && (
@@ -254,12 +262,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               >
                 取消
               </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={loading}
-              >
-                {loading ? '修改中...' : '确认修改'}
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? "修改中..." : "确认修改"}
               </Button>
             </div>
           </form>

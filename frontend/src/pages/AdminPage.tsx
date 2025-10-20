@@ -1,32 +1,32 @@
-import React, { useState } from 'react';
-import { Header } from '@/components/layout/Header';
-import { useAuth } from '@/hooks/useAuth';
-import { ResponsiveTabs } from '@/components/ui/ResponsiveTabs';
-import { ErrorState } from '@/components/ui/ErrorState';
-import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal';
-import { NodeManagement } from '@/components/admin/NodeManagement';
-import { SystemSettings } from '@/components/admin/SystemSettings';
-import { SystemOverview } from '@/components/admin/SystemOverview';
-import { ApiKeyManagement } from '@/components/admin/ApiKeyManagement';
-import { UserManagement } from '@/components/admin/UserManagement';
-import { Shield, Server, Settings, Users, Key } from 'lucide-react';
+import React, { useState } from "react";
+import { Header } from "@/components/layout/Header";
+import { useAuth } from "@/hooks/useAuth";
+import { ResponsiveTabs } from "@/components/ui/ResponsiveTabs";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
+import { NodeManagement } from "@/components/admin/NodeManagement";
+import { SystemSettings } from "@/components/admin/SystemSettings";
+import { SystemOverview } from "@/components/admin/SystemOverview";
+import { ApiKeyManagement } from "@/components/admin/ApiKeyManagement";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { Shield, Server, Settings, Users, Key } from "lucide-react";
 
 export const AdminPage: React.FC = () => {
   const { hasRole } = useAuth();
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   // 系统更新相关状态已移至SystemOverview组件中管理
 
   // 定义标签页配置
   const adminTabs = [
-    { id: 'overview', label: '系统概览', icon: Shield },
-    { id: 'system', label: '系统配置', icon: Settings },
-    { id: 'nodes', label: '节点管理', icon: Server },
-    { id: 'users', label: '用户管理', icon: Users },
-    { id: 'keys', label: 'API密钥', icon: Key },
+    { id: "overview", label: "系统概览", icon: Shield },
+    { id: "system", label: "系统配置", icon: Settings },
+    { id: "nodes", label: "节点管理", icon: Server },
+    { id: "users", label: "用户管理", icon: Users },
+    { id: "keys", label: "API密钥", icon: Key },
   ];
 
-  if (!hasRole('ADMIN')) {
+  if (!hasRole("ADMIN")) {
     return (
       <div className="min-h-screen">
         <Header />
@@ -46,7 +46,7 @@ export const AdminPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      
+
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 响应式标签页导航 */}
         <ResponsiveTabs
@@ -57,25 +57,15 @@ export const AdminPage: React.FC = () => {
         />
 
         {/* 标签页内容 */}
-        {activeTab === 'overview' && (
-          <SystemOverview />
-        )}
+        {activeTab === "overview" && <SystemOverview />}
 
-        {activeTab === 'system' && (
-          <SystemSettings />
-        )}
+        {activeTab === "system" && <SystemSettings />}
 
-        {activeTab === 'nodes' && (
-          <NodeManagement />
-        )}
+        {activeTab === "nodes" && <NodeManagement />}
 
-        {activeTab === 'users' && (
-          <UserManagement />
-        )}
+        {activeTab === "users" && <UserManagement />}
 
-        {activeTab === 'keys' && (
-          <ApiKeyManagement />
-        )}
+        {activeTab === "keys" && <ApiKeyManagement />}
       </main>
 
       {/* 修改密码模态框 */}
@@ -86,4 +76,3 @@ export const AdminPage: React.FC = () => {
     </div>
   );
 };
-

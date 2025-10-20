@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import type { ServiceFilters as FilterType } from '@/types/services';
-import { SERVICE_TYPE_CONFIG, SERVICE_STATUS_CONFIG, DEPLOYMENT_TYPE_CONFIG, QUICK_FILTER_TEMPLATES } from '@/types/services';
-import { Card } from '../ui/card';
-import { Search, Filter, X, Zap } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import type { ServiceFilters as FilterType } from "@/types/services";
+import {
+  SERVICE_TYPE_CONFIG,
+  SERVICE_STATUS_CONFIG,
+  DEPLOYMENT_TYPE_CONFIG,
+  QUICK_FILTER_TEMPLATES,
+} from "@/types/services";
+import { Card } from "../ui/card";
+import { Search, Filter, X, Zap } from "lucide-react";
 
 interface ServicesFiltersProps {
   filters: FilterType;
@@ -17,7 +22,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
   availableNodes = [],
   availableTags = [],
 }) => {
-  const [localKeyword, setLocalKeyword] = useState(filters.keyword || '');
+  const [localKeyword, setLocalKeyword] = useState(filters.keyword || "");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // 防抖搜索
@@ -42,48 +47,48 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
   const parseServiceType = (v: string | undefined) => {
     if (!v) return undefined;
     const types = Object.keys(SERVICE_TYPE_CONFIG) as Array<
-      NonNullable<FilterType['serviceType']>
+      NonNullable<FilterType["serviceType"]>
     >;
-    return types.includes(v as NonNullable<FilterType['serviceType']>)
-      ? (v as FilterType['serviceType'])
+    return types.includes(v as NonNullable<FilterType["serviceType"]>)
+      ? (v as FilterType["serviceType"])
       : undefined;
   };
 
   const parseStatus = (v: string | undefined) => {
     if (!v) return undefined;
     const statuses = Object.keys(SERVICE_STATUS_CONFIG) as Array<
-      NonNullable<FilterType['status']>
+      NonNullable<FilterType["status"]>
     >;
-    return statuses.includes(v as NonNullable<FilterType['status']>)
-      ? (v as FilterType['status'])
+    return statuses.includes(v as NonNullable<FilterType["status"]>)
+      ? (v as FilterType["status"])
       : undefined;
   };
 
   const parseDeploymentType = (v: string | undefined) => {
     if (!v) return undefined;
     const types = Object.keys(DEPLOYMENT_TYPE_CONFIG) as Array<
-      NonNullable<FilterType['deploymentType']>
+      NonNullable<FilterType["deploymentType"]>
     >;
-    return types.includes(v as NonNullable<FilterType['deploymentType']>)
-      ? (v as FilterType['deploymentType'])
+    return types.includes(v as NonNullable<FilterType["deploymentType"]>)
+      ? (v as FilterType["deploymentType"])
       : undefined;
   };
 
   const clearFilters = () => {
-    setLocalKeyword('');
+    setLocalKeyword("");
     onFiltersChange({});
   };
 
   const applyQuickFilter = (templateId: string) => {
-    const template = QUICK_FILTER_TEMPLATES.find(t => t.id === templateId);
+    const template = QUICK_FILTER_TEMPLATES.find((t) => t.id === templateId);
     if (template) {
-      setLocalKeyword('');
+      setLocalKeyword("");
       onFiltersChange(template.filters);
     }
   };
 
-  const hasActiveFilters = Object.keys(filters).some(key =>
-    key !== 'showExpired' && filters[key as keyof FilterType]
+  const hasActiveFilters = Object.keys(filters).some(
+    (key) => key !== "showExpired" && filters[key as keyof FilterType],
   );
 
   return (
@@ -101,8 +106,8 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
               onClick={() => applyQuickFilter(template.id)}
               className={`px-3 py-1 rounded-full text-sm transition-colors ${
                 JSON.stringify(filters) === JSON.stringify(template.filters)
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600"
               }`}
             >
               {template.name}
@@ -127,8 +132,10 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
           {/* 节点筛选 */}
           {availableNodes.length > 0 && (
             <select
-              value={filters.nodeId || ''}
-              onChange={(e) => handleFilterChange('nodeId', e.target.value || undefined)}
+              value={filters.nodeId || ""}
+              onChange={(e) =>
+                handleFilterChange("nodeId", e.target.value || undefined)
+              }
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">全部节点</option>
@@ -142,10 +149,10 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
 
           {/* 服务类型筛选 */}
           <select
-            value={filters.serviceType || ''}
+            value={filters.serviceType || ""}
             onChange={(e) =>
               handleFilterChange(
-                'serviceType',
+                "serviceType",
                 parseServiceType(e.target.value),
               )
             }
@@ -161,9 +168,9 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
 
           {/* 状态筛选 */}
           <select
-            value={filters.status || ''}
+            value={filters.status || ""}
             onChange={(e) =>
-              handleFilterChange('status', parseStatus(e.target.value))
+              handleFilterChange("status", parseStatus(e.target.value))
             }
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -177,10 +184,10 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
 
           {/* 部署方式筛选 */}
           <select
-            value={filters.deploymentType || ''}
+            value={filters.deploymentType || ""}
             onChange={(e) =>
               handleFilterChange(
-                'deploymentType',
+                "deploymentType",
                 parseDeploymentType(e.target.value),
               )
             }
@@ -202,7 +209,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
           >
             <Filter className="h-4 w-4" />
-            <span>{showAdvanced ? '隐藏' : '显示'}高级筛选</span>
+            <span>{showAdvanced ? "隐藏" : "显示"}高级筛选</span>
           </button>
 
           {hasActiveFilters && (
@@ -225,8 +232,13 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                 优先级
               </label>
               <select
-                value={filters.priority || ''}
-                onChange={(e) => handleFilterChange('priority', e.target.value ? Number(e.target.value) : undefined)}
+                value={filters.priority || ""}
+                onChange={(e) =>
+                  handleFilterChange(
+                    "priority",
+                    e.target.value ? Number(e.target.value) : undefined,
+                  )
+                }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">全部优先级</option>
@@ -251,14 +263,17 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                       onClick={() => {
                         const currentTags = filters.tags || [];
                         const newTags = currentTags.includes(tag)
-                          ? currentTags.filter(t => t !== tag)
+                          ? currentTags.filter((t) => t !== tag)
                           : [...currentTags, tag];
-                        handleFilterChange('tags', newTags.length > 0 ? newTags : undefined);
+                        handleFilterChange(
+                          "tags",
+                          newTags.length > 0 ? newTags : undefined,
+                        );
                       }}
                       className={`px-3 py-1 rounded-full text-sm transition-colors ${
                         filters.tags?.includes(tag)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600"
                       }`}
                     >
                       {tag}
@@ -274,10 +289,15 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                 type="checkbox"
                 id="showExpired"
                 checked={filters.showExpired !== false}
-                onChange={(e) => handleFilterChange('showExpired', e.target.checked)}
+                onChange={(e) =>
+                  handleFilterChange("showExpired", e.target.checked)
+                }
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="showExpired" className="text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="showExpired"
+                className="text-sm text-gray-700 dark:text-gray-300"
+              >
                 显示超过 2 天未更新的服务
               </label>
             </div>

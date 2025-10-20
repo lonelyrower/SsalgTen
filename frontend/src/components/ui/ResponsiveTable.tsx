@@ -1,11 +1,11 @@
-import React from 'react';
-import { useMobile } from '@/hooks/useMobile';
+import React from "react";
+import { useMobile } from "@/hooks/useMobile";
 
 interface ResponsiveTableProps {
   children: React.ReactNode;
   className?: string;
   mobileClassName?: string;
-  breakpoint?: 'sm' | 'md' | 'lg'; // 在哪个断点切换为卡片模式
+  breakpoint?: "sm" | "md" | "lg"; // 在哪个断点切换为卡片模式
 }
 
 interface ResponsiveTableRowProps {
@@ -23,19 +23,19 @@ interface ResponsiveTableCellProps {
 
 export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
   children,
-  className = '',
-  mobileClassName = '',
-  breakpoint = 'md'
+  className = "",
+  mobileClassName = "",
+  breakpoint = "md",
 }) => {
   const { isMobile, screenWidth } = useMobile();
 
   const shouldUseMobileLayout = () => {
     switch (breakpoint) {
-      case 'sm':
+      case "sm":
         return screenWidth <= 640;
-      case 'md':
+      case "md":
         return screenWidth <= 768;
-      case 'lg':
+      case "lg":
         return screenWidth <= 1024;
       default:
         return isMobile;
@@ -44,33 +44,27 @@ export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
 
   if (shouldUseMobileLayout()) {
     return (
-      <div className={`mobile-table-cards ${mobileClassName}`}>
-        {children}
-      </div>
+      <div className={`mobile-table-cards ${mobileClassName}`}>{children}</div>
     );
   }
 
   return (
     <div className="mobile-table mobile-scroll">
-      <table className={`w-full ${className}`}>
-        {children}
-      </table>
+      <table className={`w-full ${className}`}>{children}</table>
     </div>
   );
 };
 
 export const ResponsiveTableRow: React.FC<ResponsiveTableRowProps> = ({
   children,
-  className = '',
-  mobileCardContent
+  className = "",
+  mobileCardContent,
 }) => {
   const { isMobile } = useMobile();
 
   if (isMobile && mobileCardContent) {
     return (
-      <div className={`mobile-card-row ${className}`}>
-        {mobileCardContent}
-      </div>
+      <div className={`mobile-card-row ${className}`}>{mobileCardContent}</div>
     );
   }
 
@@ -79,9 +73,9 @@ export const ResponsiveTableRow: React.FC<ResponsiveTableRowProps> = ({
 
 export const ResponsiveTableCell: React.FC<ResponsiveTableCellProps> = ({
   children,
-  className = '',
-  label = '',
-  hideOnMobile = false
+  className = "",
+  label = "",
+  hideOnMobile = false,
 }) => {
   const { isMobile } = useMobile();
 
@@ -146,9 +140,12 @@ const tableStyles = `
 `;
 
 // 将样式注入到文档中
-if (typeof window !== 'undefined' && !document.getElementById('responsive-table-styles')) {
-  const style = document.createElement('style');
-  style.id = 'responsive-table-styles';
+if (
+  typeof window !== "undefined" &&
+  !document.getElementById("responsive-table-styles")
+) {
+  const style = document.createElement("style");
+  style.id = "responsive-table-styles";
   style.textContent = tableStyles;
   document.head.appendChild(style);
 }
@@ -171,9 +168,9 @@ interface SimpleResponsiveTableProps<T> {
 export function SimpleResponsiveTable<T>({
   data,
   columns,
-  className = '',
-  emptyMessage = '暂无数据',
-  onRowClick
+  className = "",
+  emptyMessage = "暂无数据",
+  onRowClick,
 }: SimpleResponsiveTableProps<T>) {
   const { isMobile } = useMobile();
 
@@ -192,14 +189,18 @@ export function SimpleResponsiveTable<T>({
           <div
             key={index}
             className={`mobile-card-row ${
-              onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800' : ''
+              onRowClick
+                ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                : ""
             }`}
             onClick={() => onRowClick?.(item)}
           >
             {columns.map((column) => {
               if (column.hideOnMobile) return null;
               const value = item[column.key];
-              const renderedValue = column.render ? column.render(value, item) : String(value || '');
+              const renderedValue = column.render
+                ? column.render(value, item)
+                : String(value || "");
 
               return (
                 <div key={String(column.key)} className="mobile-table-cell">
@@ -222,7 +223,7 @@ export function SimpleResponsiveTable<T>({
             {columns.map((column) => (
               <th
                 key={String(column.key)}
-                className={`text-left py-3 px-4 font-medium text-gray-900 dark:text-white ${column.className || ''}`}
+                className={`text-left py-3 px-4 font-medium text-gray-900 dark:text-white ${column.className || ""}`}
               >
                 {column.label}
               </th>
@@ -235,19 +236,21 @@ export function SimpleResponsiveTable<T>({
               key={index}
               className={`border-b border-gray-100 dark:border-gray-800 ${
                 onRowClick
-                  ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                  : ''
+                  ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  : ""
               }`}
               onClick={() => onRowClick?.(item)}
             >
               {columns.map((column) => {
                 const value = item[column.key];
-                const renderedValue = column.render ? column.render(value, item) : String(value || '');
+                const renderedValue = column.render
+                  ? column.render(value, item)
+                  : String(value || "");
 
                 return (
                   <td
                     key={String(column.key)}
-                    className={`py-3 px-4 text-gray-700 dark:text-gray-300 ${column.className || ''}`}
+                    className={`py-3 px-4 text-gray-700 dark:text-gray-300 ${column.className || ""}`}
                   >
                     {renderedValue}
                   </td>

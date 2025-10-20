@@ -1,11 +1,11 @@
-import React from 'react';
-import type { ReactNode, ErrorInfo } from 'react';
-import ErrorBoundary from './ErrorBoundary';
+import React from "react";
+import type { ReactNode, ErrorInfo } from "react";
+import ErrorBoundary from "./ErrorBoundary";
 
 export const withErrorBoundary = <P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  onError?: (error: Error, errorInfo: ErrorInfo) => void,
 ) => {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary fallback={fallback} onError={onError}>

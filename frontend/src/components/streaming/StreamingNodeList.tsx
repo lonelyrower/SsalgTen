@@ -1,21 +1,24 @@
-import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { NodeStreamingSummary } from '@/types/streaming';
-import { STREAMING_DATA_EXPIRY_THRESHOLD } from '@/types/streaming';
-import { Card } from '../ui/card';
-import { CountryFlag } from '../ui/CountryFlag';
-import { StreamingBadge } from './StreamingBadge';
-import { Badge } from '../ui/badge';
-import { Clock, AlertTriangle, ExternalLink } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import React, { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import type { NodeStreamingSummary } from "@/types/streaming";
+import { STREAMING_DATA_EXPIRY_THRESHOLD } from "@/types/streaming";
+import { Card } from "../ui/card";
+import { CountryFlag } from "../ui/CountryFlag";
+import { StreamingBadge } from "./StreamingBadge";
+import { Badge } from "../ui/badge";
+import { Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 interface StreamingNodeListProps {
   nodes: NodeStreamingSummary[];
   onNodeClick?: (nodeId: string) => void;
 }
 
-export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({ nodes, onNodeClick }) => {
+export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
+  nodes,
+  onNodeClick,
+}) => {
   const navigate = useNavigate();
 
   const handleNodeClick = (nodeId: string) => {
@@ -44,7 +47,10 @@ interface NodeStreamingCardProps {
   onClick: () => void;
 }
 
-const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({ node, onClick }) => {
+const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
+  node,
+  onClick,
+}) => {
   const isExpired = useMemo(() => {
     if (!node.lastScanned) return true;
     const lastScannedTime = new Date(node.lastScanned).getTime();
@@ -52,14 +58,14 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({ node, onClick }) 
   }, [node.lastScanned]);
 
   const timeAgo = useMemo(() => {
-    if (!node.lastScanned) return '从未检测';
+    if (!node.lastScanned) return "从未检测";
     try {
       return formatDistanceToNow(new Date(node.lastScanned), {
         addSuffix: true,
         locale: zhCN,
       });
     } catch {
-      return '未知';
+      return "未知";
     }
   }, [node.lastScanned]);
 
@@ -67,7 +73,11 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({ node, onClick }) 
     <Card
       className="p-4 hover:shadow-lg transition-all cursor-pointer border-l-4"
       style={{
-        borderLeftColor: isExpired ? '#f59e0b' : node.unlockedCount > node.restrictedCount ? '#10b981' : '#ef4444'
+        borderLeftColor: isExpired
+          ? "#f59e0b"
+          : node.unlockedCount > node.restrictedCount
+            ? "#10b981"
+            : "#ef4444",
       }}
       onClick={onClick}
     >
@@ -92,12 +102,20 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({ node, onClick }) 
           {/* 快速统计 */}
           <div className="flex items-center gap-4 text-sm">
             <div className="text-center">
-              <div className="text-green-600 dark:text-green-400 font-bold">{node.unlockedCount}</div>
-              <div className="text-gray-500 dark:text-gray-400 text-xs">解锁</div>
+              <div className="text-green-600 dark:text-green-400 font-bold">
+                {node.unlockedCount}
+              </div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs">
+                解锁
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-red-600 dark:text-red-400 font-bold">{node.restrictedCount}</div>
-              <div className="text-gray-500 dark:text-gray-400 text-xs">受限</div>
+              <div className="text-red-600 dark:text-red-400 font-bold">
+                {node.restrictedCount}
+              </div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs">
+                受限
+              </div>
             </div>
           </div>
         </div>

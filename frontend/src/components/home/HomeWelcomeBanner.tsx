@@ -1,10 +1,12 @@
-import { Globe } from 'lucide-react';
+import { Globe } from "lucide-react";
 
 interface HomeWelcomeBannerProps {
   userName?: string;
 }
 
-export const HomeWelcomeBanner: React.FC<HomeWelcomeBannerProps> = ({ userName }) => {
+export const HomeWelcomeBanner: React.FC<HomeWelcomeBannerProps> = ({
+  userName,
+}) => {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>

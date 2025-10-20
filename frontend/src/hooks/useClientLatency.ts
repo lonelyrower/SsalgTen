@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { apiService } from '@/services/api';
-import type { ClientLatencyData, LatencyStats } from '@/services/api';
+import React, { useState, useCallback, useRef } from "react";
+import { apiService } from "@/services/api";
+import type { ClientLatencyData, LatencyStats } from "@/services/api";
 
 interface ClientLatencyState {
   isLoading: boolean;
@@ -26,7 +26,7 @@ export function useClientLatency() {
   const [state, setState] = useState<ClientLatencyState>(initialState);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const testTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const STORAGE_KEY = 'client_latency_state_v1';
+  const STORAGE_KEY = "client_latency_state_v1";
   const STORAGE_TTL_MS = 10 * 60 * 1000; // 10分钟有效期
 
   // 启动时尝试从本地存储恢复数据，避免切换页面丢失
@@ -37,7 +37,7 @@ export function useClientLatency() {
       const parsed = JSON.parse(raw);
       if (!parsed || !parsed._savedAt) return;
       if (Date.now() - parsed._savedAt > STORAGE_TTL_MS) return;
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         isTestingInProgress: false, // 返回页面默认视为非测试进行中
@@ -48,7 +48,7 @@ export function useClientLatency() {
         clientIP: parsed.clientIP || null,
       }));
     } catch (error) {
-      console.warn('恢复客户端延迟状态失败:', error);
+      console.warn("恢复客户端延迟状态失败:", error);
     }
   }, [STORAGE_TTL_MS]);
 
@@ -64,7 +64,7 @@ export function useClientLatency() {
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (error) {
-      console.warn('保存客户端延迟状态失败:', error);
+      console.warn("保存客户端延迟状态失败:", error);
     }
   }, [state.results, state.stats, state.lastUpdated, state.clientIP]);
 
@@ -83,13 +83,13 @@ export function useClientLatency() {
   // 开始延迟测试
   const startLatencyTest = useCallback(async () => {
     try {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: true,
         isTestingInProgress: true,
         error: null,
         results: [],
-        stats: null
+        stats: null,
       }));
 
       // 清理之前的定时器
@@ -97,50 +97,51 @@ export function useClientLatency() {
 
       // 启动测试
       const testResponse = await apiService.startLatencyTest();
-      
+
       if (!testResponse.success || !testResponse.data) {
-        throw new Error(testResponse.error || 'Failed to start latency test');
+        throw new Error(testResponse.error || "Failed to start latency test");
       }
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        clientIP: testResponse.data?.clientIP || null
+        clientIP: testResponse.data?.clientIP || null,
       }));
 
       // 开始轮询结果
       const pollResults = async () => {
         try {
           const resultsResponse = await apiService.getLatencyResults();
-          
+
           if (resultsResponse.success && resultsResponse.data) {
             const data = resultsResponse.data;
-            
-            setState(prev => ({
+
+            setState((prev) => ({
               ...prev,
               results: data.results,
               stats: data.stats,
               lastUpdated: data.timestamp,
-              error: null
+              error: null,
             }));
 
             // 检查是否所有测试都完成了
-            const allCompleted = data.results.every(result => 
-              result.status === 'success' || 
-              result.status === 'failed' || 
-              result.status === 'timeout'
+            const allCompleted = data.results.every(
+              (result) =>
+                result.status === "success" ||
+                result.status === "failed" ||
+                result.status === "timeout",
             );
 
             if (allCompleted) {
-              setState(prev => ({
+              setState((prev) => ({
                 ...prev,
-                isTestingInProgress: false
+                isTestingInProgress: false,
               }));
               clearTimers();
             }
           }
         } catch (error) {
-          console.error('Failed to poll latency results:', error);
+          console.error("Failed to poll latency results:", error);
           // 继续轮询，不中断
         }
       };
@@ -153,20 +154,20 @@ export function useClientLatency() {
 
       // 设置总体超时（35秒后停止测试）
       testTimeoutRef.current = setTimeout(() => {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isTestingInProgress: false,
-          error: 'Test timeout - some nodes may not have responded'
+          error: "Test timeout - some nodes may not have responded",
         }));
         clearTimers();
       }, 35000);
-
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         isTestingInProgress: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       }));
       clearTimers();
     }
@@ -175,32 +176,33 @@ export function useClientLatency() {
   // 获取最新的延迟结果（不开始新测试）
   const refreshResults = useCallback(async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
       const response = await apiService.getLatencyResults();
       if (!response.success || !response.data) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: response.error || 'Failed to fetch results'
+          error: response.error || "Failed to fetch results",
         }));
         return;
       }
 
       const data = response.data; // LatencyTestResults
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         results: data.results,
         stats: data.stats,
         lastUpdated: data.timestamp,
-        clientIP: data.clientIP
+        clientIP: data.clientIP,
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       }));
     }
   }, []);
@@ -212,55 +214,57 @@ export function useClientLatency() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.warn('清除客户端延迟缓存失败:', error);
+      console.warn("清除客户端延迟缓存失败:", error);
     }
   }, [clearTimers]);
 
   // 计算延迟颜色等级
   const getLatencyColor = useCallback((latency: number | null) => {
-    if (latency === null) return 'gray';
-    if (latency < 50) return 'green';
-    if (latency < 150) return 'yellow';
-    return 'red';
+    if (latency === null) return "gray";
+    if (latency < 50) return "green";
+    if (latency < 150) return "yellow";
+    return "red";
   }, []);
 
   // 格式化延迟显示
   const formatLatency = useCallback((latency: number | null) => {
-    if (latency === null) return '--';
+    if (latency === null) return "--";
     return `${latency}ms`;
   }, []);
 
   // 获取测试进度
   const getTestProgress = useCallback(() => {
-    if (state.results.length === 0) return { completed: 0, total: 0, percentage: 0 };
-    
-    const completed = state.results.filter(result => 
-      result.status === 'success' || 
-      result.status === 'failed' || 
-      result.status === 'timeout'
+    if (state.results.length === 0)
+      return { completed: 0, total: 0, percentage: 0 };
+
+    const completed = state.results.filter(
+      (result) =>
+        result.status === "success" ||
+        result.status === "failed" ||
+        result.status === "timeout",
     ).length;
-    
+
     const total = state.results.length;
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     return { completed, total, percentage };
   }, [state.results]);
 
   return {
     // State
     ...state,
-    
+
     // Actions
     startLatencyTest,
     refreshResults,
     clearData,
-    
+
     // Utilities
     getLatencyColor,
     formatLatency,
     getTestProgress,
-    
+
     // Cleanup (for useEffect cleanup)
-    cleanup: clearTimers
+    cleanup: clearTimers,
   };
 }

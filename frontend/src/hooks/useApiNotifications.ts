@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { useNotification } from '@/hooks/useNotification';
-import { enhancedApiService } from '@/services/enhancedApiService';
-import { socketService } from '@/services/socketService';
+import { useEffect, useRef } from "react";
+import { useNotification } from "@/hooks/useNotification";
+import { enhancedApiService } from "@/services/enhancedApiService";
+import { socketService } from "@/services/socketService";
 
 export const useApiNotifications = () => {
   const { showError, showSuccess } = useNotification();
@@ -31,7 +31,7 @@ export const useApiNotifications = () => {
       const now = Date.now();
       if (now - lastErrorAtRef.current < ERROR_THROTTLE) return;
       lastErrorAtRef.current = now;
-      showError('连接错误', error.message);
+      showError("连接错误", error.message);
     };
 
     const handleConnectionStatusChange = (connected: boolean) => {
@@ -47,7 +47,7 @@ export const useApiNotifications = () => {
 
       if (connected) {
         if (hadOfflineToastRef.current) {
-          showSuccess('连接已恢复', '实时数据连接已建立');
+          showSuccess("连接已恢复", "实时数据连接已建立");
         }
         hadOfflineToastRef.current = false;
       } else {
@@ -67,7 +67,9 @@ export const useApiNotifications = () => {
 
     return () => {
       socketService.removeConnectionErrorListener(handleConnectionError);
-      socketService.removeConnectionStatusListener(handleConnectionStatusChange);
+      socketService.removeConnectionStatusListener(
+        handleConnectionStatusChange,
+      );
     };
   }, [showError, showSuccess, ENABLE_CONNECTION_TOASTS]);
 };

@@ -1,6 +1,6 @@
-import type { FC, ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import type { FC, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 export interface PageHeaderProps {
   /** Main page title */
@@ -22,7 +22,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
   description,
   icon: Icon,
   actions,
-  className = '',
+  className = "",
   children,
 }) => {
   return (
@@ -53,19 +53,12 @@ export const PageHeader: FC<PageHeaderProps> = ({
           </div>
 
           {actions && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {actions}
-            </div>
+            <div className="flex items-center gap-2 flex-wrap">{actions}</div>
           )}
         </div>
 
-        {children && (
-          <div className="mt-4">
-            {children}
-          </div>
-        )}
+        {children && <div className="mt-4">{children}</div>}
       </div>
     </GlassCard>
   );
 };
-

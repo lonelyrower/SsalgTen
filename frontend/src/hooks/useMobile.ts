@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface MobileInfo {
   isMobile: boolean;
@@ -8,14 +8,14 @@ interface MobileInfo {
   isAndroid: boolean;
   screenWidth: number;
   screenHeight: number;
-  orientation: 'portrait' | 'landscape';
+  orientation: "portrait" | "landscape";
   hasTouchScreen: boolean;
   isStandalone: boolean; // PWA 全屏模式
 }
 
 export const useMobile = (): MobileInfo => {
   const [mobileInfo, setMobileInfo] = useState<MobileInfo>(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return {
         isMobile: false,
         isTablet: false,
@@ -24,7 +24,7 @@ export const useMobile = (): MobileInfo => {
         isAndroid: false,
         screenWidth: 1920,
         screenHeight: 1080,
-        orientation: 'landscape',
+        orientation: "landscape",
         hasTouchScreen: false,
         isStandalone: false,
       };
@@ -42,9 +42,9 @@ export const useMobile = (): MobileInfo => {
       isAndroid: /android/.test(userAgent),
       screenWidth: width,
       screenHeight: height,
-      orientation: width > height ? 'landscape' : 'portrait',
-      hasTouchScreen: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-      isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+      orientation: width > height ? "landscape" : "portrait",
+      hasTouchScreen: "ontouchstart" in window || navigator.maxTouchPoints > 0,
+      isStandalone: window.matchMedia("(display-mode: standalone)").matches,
     };
   });
 
@@ -62,9 +62,10 @@ export const useMobile = (): MobileInfo => {
         isAndroid: /android/.test(userAgent),
         screenWidth: width,
         screenHeight: height,
-        orientation: width > height ? 'landscape' : 'portrait',
-        hasTouchScreen: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-        isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+        orientation: width > height ? "landscape" : "portrait",
+        hasTouchScreen:
+          "ontouchstart" in window || navigator.maxTouchPoints > 0,
+        isStandalone: window.matchMedia("(display-mode: standalone)").matches,
       });
     };
 
@@ -78,12 +79,12 @@ export const useMobile = (): MobileInfo => {
       setTimeout(updateMobileInfo, 100);
     };
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleOrientationChange);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleOrientationChange);
     };
   }, []);
 
@@ -108,25 +109,26 @@ export const mobileUtils = {
         // 如果在顶部向下滑动或在底部向上滑动，阻止默认行为
         if (
           (target.scrollTop === 0 && deltaY > 0) ||
-          (target.scrollHeight - target.scrollTop === target.clientHeight && deltaY < 0)
+          (target.scrollHeight - target.scrollTop === target.clientHeight &&
+            deltaY < 0)
         ) {
           e.preventDefault();
         }
       };
 
       const handleTouchEnd = () => {
-        target.removeEventListener('touchmove', handleTouchMove);
-        target.removeEventListener('touchend', handleTouchEnd);
+        target.removeEventListener("touchmove", handleTouchMove);
+        target.removeEventListener("touchend", handleTouchEnd);
       };
 
-      target.addEventListener('touchmove', handleTouchMove, { passive: false });
-      target.addEventListener('touchend', handleTouchEnd);
+      target.addEventListener("touchmove", handleTouchMove, { passive: false });
+      target.addEventListener("touchend", handleTouchEnd);
     };
 
-    target.addEventListener('touchstart', handleTouchStart);
+    target.addEventListener("touchstart", handleTouchStart);
 
     return () => {
-      target.removeEventListener('touchstart', handleTouchStart);
+      target.removeEventListener("touchstart", handleTouchStart);
     };
   },
 
@@ -134,16 +136,16 @@ export const mobileUtils = {
   getSafeAreaInsets: () => {
     const style = getComputedStyle(document.documentElement);
     return {
-      top: parseInt(style.getPropertyValue('--sat') || '0'),
-      right: parseInt(style.getPropertyValue('--sar') || '0'),
-      bottom: parseInt(style.getPropertyValue('--sab') || '0'),
-      left: parseInt(style.getPropertyValue('--sal') || '0'),
+      top: parseInt(style.getPropertyValue("--sat") || "0"),
+      right: parseInt(style.getPropertyValue("--sar") || "0"),
+      bottom: parseInt(style.getPropertyValue("--sab") || "0"),
+      left: parseInt(style.getPropertyValue("--sal") || "0"),
     };
   },
 
   // 检查是否支持PWA
   supportsPWA: () => {
-    return 'serviceWorker' in navigator && 'PushManager' in window;
+    return "serviceWorker" in navigator && "PushManager" in window;
   },
 
   // 获取网络状态
@@ -170,7 +172,8 @@ export const mobileUtils = {
     }
 
     const nav = navigator as NavigatorWithConnection;
-    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    const connection =
+      nav.connection || nav.mozConnection || nav.webkitConnection;
 
     if (connection) {
       return {
@@ -186,7 +189,7 @@ export const mobileUtils = {
 
   // 震动反馈（如果支持）
   vibrate: (pattern: number | number[]) => {
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(pattern);
     }
   },

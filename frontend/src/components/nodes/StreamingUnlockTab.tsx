@@ -1,8 +1,13 @@
-import React from 'react';
-import { RefreshCw, Clock, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { STREAMING_SERVICES, STREAMING_SERVICE_ORDER, STATUS_TEXT, STATUS_COLORS } from '@/types/streaming';
-import type { StreamingServiceResult } from '@/types/streaming';
+import React from "react";
+import { RefreshCw, Clock, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  STREAMING_SERVICES,
+  STREAMING_SERVICE_ORDER,
+  STATUS_TEXT,
+  STATUS_COLORS,
+} from "@/types/streaming";
+import type { StreamingServiceResult } from "@/types/streaming";
 
 interface StreamingUnlockTabProps {
   nodeId: string;
@@ -19,15 +24,17 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
 
   // TODO: 从后端API获取流媒体数据
   // 临时模拟数据
-  const streamingData: StreamingServiceResult[] = STREAMING_SERVICE_ORDER.map((service) => {
-    return {
-      service,
-      name: STREAMING_SERVICES[service].name,
-      icon: STREAMING_SERVICES[service].icon,
-      status: 'unknown', // 默认未测试
-      lastTested: undefined,
-    };
-  });
+  const streamingData: StreamingServiceResult[] = STREAMING_SERVICE_ORDER.map(
+    (service) => {
+      return {
+        service,
+        name: STREAMING_SERVICES[service].name,
+        icon: STREAMING_SERVICES[service].icon,
+        status: "unknown", // 默认未测试
+        lastTested: undefined,
+      };
+    },
+  );
 
   const handleRetest = async () => {
     setLoading(true);
@@ -39,16 +46,16 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
   };
 
   const formatLastTested = (timestamp: string | null) => {
-    if (!timestamp) return '从未测试';
+    if (!timestamp) return "从未测试";
     const date = new Date(timestamp);
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
 
-    if (diffMinutes < 1) return '刚刚';
+    if (diffMinutes < 1) return "刚刚";
     if (diffMinutes < 60) return `${diffMinutes}分钟前`;
     const diffHours = Math.floor(diffMinutes / 60);
     if (diffHours < 24) return `${diffHours}小时前`;
-    return date.toLocaleDateString('zh-CN');
+    return date.toLocaleDateString("zh-CN");
   };
 
   return (
@@ -109,18 +116,20 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
 };
 
 // 单个流媒体服务卡片
-const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({ service }) => {
+const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
+  service,
+}) => {
   const getStatusBg = () => {
     switch (service.status) {
-      case 'yes':
-        return 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800';
-      case 'no':
-        return 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800';
-      case 'org':
-      case 'pending':
-        return 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800';
+      case "yes":
+        return "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800";
+      case "no":
+        return "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800";
+      case "org":
+      case "pending":
+        return "bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800";
       default:
-        return 'bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-700';
+        return "bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-700";
     }
   };
 
@@ -128,9 +137,20 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({ service })
     if (!unlockType) return null;
 
     const badges = {
-      native: { text: 'Native 原生IP', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
-      dns: { text: 'DNS 解锁', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-      idc: { text: 'IDC 机房', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+      native: {
+        text: "Native 原生IP",
+        color:
+          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      },
+      dns: {
+        text: "DNS 解锁",
+        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      },
+      idc: {
+        text: "IDC 机房",
+        color:
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      },
     };
 
     const badge = badges[unlockType as keyof typeof badges];

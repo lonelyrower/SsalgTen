@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useMobile } from './useMobile';
+import { useState, useCallback } from "react";
+import { useMobile } from "./useMobile";
 
 interface UsePullToRefreshOptions {
   threshold?: number;
@@ -13,7 +13,7 @@ interface UsePullToRefreshResult {
 
 export const usePullToRefresh = (
   onRefresh: () => Promise<void>,
-  options: UsePullToRefreshOptions = {}
+  options: UsePullToRefreshOptions = {},
 ): UsePullToRefreshResult => {
   const { disabled = false } = options;
   const { isMobile } = useMobile();
@@ -26,7 +26,7 @@ export const usePullToRefresh = (
     try {
       await onRefresh();
     } catch (error) {
-      console.error('Refresh failed:', error);
+      console.error("Refresh failed:", error);
     } finally {
       setIsRefreshing(false);
     }

@@ -1,8 +1,8 @@
-import { createContext } from 'react';
+import { createContext } from "react";
 
 export interface Notification {
   id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: "success" | "error" | "info" | "warning";
   title: string;
   message?: string;
   duration?: number;
@@ -11,7 +11,7 @@ export interface Notification {
 
 export interface NotificationContextValue {
   notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'id'>) => string;
+  addNotification: (notification: Omit<Notification, "id">) => string;
   removeNotification: (id: string) => void;
   clearAll: () => void;
   showError: (title: string, message?: string) => string;
@@ -20,6 +20,6 @@ export interface NotificationContextValue {
   showWarning: (title: string, message?: string) => string;
 }
 
-export const NotificationContext = createContext<NotificationContextValue | undefined>(
-  undefined,
-);
+export const NotificationContext = createContext<
+  NotificationContextValue | undefined
+>(undefined);

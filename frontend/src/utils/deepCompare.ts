@@ -12,7 +12,7 @@ export function deepEqual(obj1: unknown, obj2: unknown): boolean {
     return false;
   }
 
-  if (typeof obj1 !== 'object') {
+  if (typeof obj1 !== "object") {
     return obj1 === obj2;
   }
 
@@ -32,7 +32,12 @@ export function deepEqual(obj1: unknown, obj2: unknown): boolean {
       return false;
     }
 
-    if (!deepEqual((obj1 as Record<string, unknown>)[key], (obj2 as Record<string, unknown>)[key])) {
+    if (
+      !deepEqual(
+        (obj1 as Record<string, unknown>)[key],
+        (obj2 as Record<string, unknown>)[key],
+      )
+    ) {
       return false;
     }
   }
@@ -54,7 +59,10 @@ interface NodeForComparison {
 }
 
 // 比较两个节点数组是否相等（用于避免不必要的渲染）
-export function compareNodes(nodes1: NodeForComparison[], nodes2: NodeForComparison[]): boolean {
+export function compareNodes(
+  nodes1: NodeForComparison[],
+  nodes2: NodeForComparison[],
+): boolean {
   if (nodes1.length !== nodes2.length) {
     return false;
   }
@@ -85,7 +93,10 @@ interface StatsForComparison {
 }
 
 // 比较统计数据是否相等
-export function compareStats(stats1: StatsForComparison | null, stats2: StatsForComparison | null): boolean {
+export function compareStats(
+  stats1: StatsForComparison | null,
+  stats2: StatsForComparison | null,
+): boolean {
   if (!stats1 || !stats2) {
     return stats1 === stats2;
   }

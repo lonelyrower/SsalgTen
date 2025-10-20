@@ -1,5 +1,5 @@
-import React from 'react';
-import type { StreamingService } from '@/types/streaming';
+import React from "react";
+import type { StreamingService } from "@/types/streaming";
 import {
   siTiktok,
   siNetflix,
@@ -7,9 +7,9 @@ import {
   siAmazonprime,
   siSpotify,
   siOpenai,
-} from 'simple-icons';
+} from "simple-icons";
 
-type IconSize = 'sm' | 'md' | 'lg';
+type IconSize = "sm" | "md" | "lg";
 
 const sizeMap: Record<IconSize, number> = {
   sm: 16,
@@ -33,12 +33,15 @@ export type StreamingIconProps = {
   size?: IconSize;
 };
 
-export const StreamingIcon: React.FC<StreamingIconProps> = ({ service, size = 'md' }) => {
+export const StreamingIcon: React.FC<StreamingIconProps> = ({
+  service,
+  size = "md",
+}) => {
   const px = sizeMap[size];
   const icon = brandIcons[service];
 
   // Disney+ 官方图标（来自 Wikimedia Commons）
-  if (service === 'disney_plus') {
+  if (service === "disney_plus") {
     return (
       <svg
         width={px}
@@ -82,7 +85,7 @@ export const StreamingIcon: React.FC<StreamingIconProps> = ({ service, size = 'm
         width: px,
         height: px,
         fontSize: Math.max(10, Math.floor(px * 0.6)),
-        color: '#6B7280',
+        color: "#6B7280",
       }}
       aria-label={service}
     >

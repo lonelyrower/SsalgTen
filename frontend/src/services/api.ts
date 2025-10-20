@@ -12,41 +12,54 @@ declare global {
 
 // Get API base URL from runtime config or fallback to env var or current origin
 const getApiBaseUrl = (): string => {
-  const isLocalHost = (u: string) => /^(https?:\/\/)?(localhost|127\.0\.0\.1|\[?::1\]?)/i.test(u);
+  const isLocalHost = (u: string) =>
+    /^(https?:\/\/)?(localhost|127\.0\.0\.1|\[?::1\]?)/i.test(u);
 
   // 1) Runtime config takes highest priority
-  if (typeof window !== 'undefined' && window.APP_CONFIG?.API_BASE_URL) {
+  if (typeof window !== "undefined" && window.APP_CONFIG?.API_BASE_URL) {
     const v = window.APP_CONFIG.API_BASE_URL;
     // If runtime config points to localhost but we are not on localhost, prefer relative /api
-    if (typeof window !== 'undefined' && v && v.startsWith('http') && isLocalHost(v) && !isLocalHost(window.location.origin)) {
-      return '/api';
+    if (
+      typeof window !== "undefined" &&
+      v &&
+      v.startsWith("http") &&
+      isLocalHost(v) &&
+      !isLocalHost(window.location.origin)
+    ) {
+      return "/api";
     }
     // Support relative value like "/api" to stick to current origin
-    return v && !v.startsWith('http') ? (v || '/api') : (v || '/api');
+    return v && !v.startsWith("http") ? v || "/api" : v || "/api";
   }
   // 2) Build-time env vars
-  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+  const envUrl =
+    import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
     // If points to localhost but app is not running on localhost, use relative /api for safety
-    if (typeof window !== 'undefined' && envUrl.startsWith('http') && isLocalHost(envUrl) && !isLocalHost(window.location.origin)) {
-      return '/api';
+    if (
+      typeof window !== "undefined" &&
+      envUrl.startsWith("http") &&
+      isLocalHost(envUrl) &&
+      !isLocalHost(window.location.origin)
+    ) {
+      return "/api";
     }
-    return envUrl.startsWith('http') ? envUrl : (envUrl || '/api');
+    return envUrl.startsWith("http") ? envUrl : envUrl || "/api";
   }
   // 3) Fallback to current origin (production safe)
-  if (typeof window !== 'undefined' && window.location?.origin) {
+  if (typeof window !== "undefined" && window.location?.origin) {
     return `${window.location.origin}/api`;
   }
   // 4) Last resort: relative path
-  return '/api';
+  return "/api";
 };
 
 const API_BASE_URL = getApiBaseUrl();
 
 // JWT 令牌管理
 class TokenManager {
-  private static readonly TOKEN_KEY = 'ssalgten_auth_token';
-  private static readonly REFRESH_TOKEN_KEY = 'ssalgten_refresh_token';
+  private static readonly TOKEN_KEY = "ssalgten_auth_token";
+  private static readonly REFRESH_TOKEN_KEY = "ssalgten_refresh_token";
 
   static getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
@@ -71,15 +84,15 @@ class TokenManager {
 
   static isTokenExpired(token: string): boolean {
     try {
-      const parts = token.split('.');
+      const parts = token.split(".");
       if (parts.length !== 3) return true;
       const payloadPart = parts[1];
       // base64url -> base64
-      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
       const padLen = (4 - (base64.length % 4)) % 4;
-      const padded = base64 + '='.repeat(padLen);
+      const padded = base64 + "=".repeat(padLen);
       const payload = JSON.parse(atob(padded));
-      if (!payload || typeof payload.exp !== 'number') return true;
+      if (!payload || typeof payload.exp !== "number") return true;
       return payload.exp * 1000 < Date.now();
     } catch {
       // 如果解析失败，保守起见认为已过期，避免使用无效token
@@ -103,7 +116,7 @@ export interface NodeData {
   city: string;
   latitude: number;
   longitude: number;
-  status: 'online' | 'offline' | 'maintenance';
+  status: "online" | "offline" | "maintenance";
   provider: string;
   ipv4?: string;
   ipv6?: string;
@@ -164,7 +177,7 @@ export interface NodeStats {
 // 诊断记录接口
 export interface DiagnosticRecord {
   id: string;
-  type: 'PING' | 'TRACEROUTE' | 'MTR' | 'SPEEDTEST';
+  type: "PING" | "TRACEROUTE" | "MTR" | "SPEEDTEST";
   target?: string;
   success: boolean;
   result: string;
@@ -179,7 +192,7 @@ export interface User {
   username: string;
   email: string;
   name?: string;
-  role: 'ADMIN' | 'OPERATOR' | 'VIEWER';
+  role: "ADMIN" | "OPERATOR" | "VIEWER";
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -211,7 +224,7 @@ export interface SystemConfig {
   updatedAt: string;
   // 元数据字段
   displayName?: string;
-  inputType?: 'text' | 'number' | 'boolean' | 'select' | 'textarea';
+  inputType?: "text" | "number" | "boolean" | "select" | "textarea";
   options?: string[];
   optionLabels?: Record<string, string>; // 选项的显示标签
   unit?: string;
@@ -301,7 +314,7 @@ export interface ClientLatencyData {
   city: string;
   ipv4?: string;
   latency: number | null;
-  status: 'testing' | 'success' | 'failed' | 'timeout';
+  status: "testing" | "success" | "failed" | "timeout";
   lastTested: string;
   error?: string;
 }
@@ -332,12 +345,19 @@ export interface LatencyTestResults {
 
 // 流媒体解锁接口
 export interface StreamingServiceResult {
-  service: 'netflix' | 'youtube' | 'disney_plus' | 'tiktok' | 'amazon_prime' | 'spotify' | 'chatgpt';
+  service:
+    | "netflix"
+    | "youtube"
+    | "disney_plus"
+    | "tiktok"
+    | "amazon_prime"
+    | "spotify"
+    | "chatgpt";
   name: string;
   icon: string;
-  status: 'yes' | 'no' | 'org' | 'pending' | 'failed' | 'unknown';
+  status: "yes" | "no" | "org" | "pending" | "failed" | "unknown";
   region?: string;
-  unlockType?: 'native' | 'dns' | 'idc' | 'unknown';
+  unlockType?: "native" | "dns" | "idc" | "unknown";
   lastTested?: string;
 }
 
@@ -350,12 +370,15 @@ export interface NodeStreamingData {
 export interface StreamingStats {
   totalTests: number;
   servicesAvailable: number;
-  byService: Record<string, {
-    total: number;
-    yes: number;
-    no: number;
-    org: number;
-  }>;
+  byService: Record<
+    string,
+    {
+      total: number;
+      yes: number;
+      no: number;
+      org: number;
+    }
+  >;
 }
 
 // API密钥管理接口
@@ -391,17 +414,21 @@ export interface InstallCommandData {
 
 class ApiService {
   private refreshPromise: Promise<LoginResponse | null> | null = null;
-  
+
   // 通用请求方法
-  private async request<T>(endpoint: string, options: RequestInit = {}, requireAuth: boolean = false): Promise<ApiResponse<T>> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    requireAuth: boolean = false,
+  ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
 
     // Build headers, only set Content-Type automatically when sending a body
     const headers: Record<string, string> = {
       ...(options.headers as Record<string, string>),
     };
-    if (!('Content-Type' in headers) && options.body) {
-      headers['Content-Type'] = 'application/json';
+    if (!("Content-Type" in headers) && options.body) {
+      headers["Content-Type"] = "application/json";
     }
 
     // 添加认证头（不抛异常，统一返回结构化错误，避免被上层当作网络错误处理）
@@ -416,10 +443,10 @@ class ApiService {
           headers.Authorization = `Bearer ${refreshed.token}`;
         } else {
           TokenManager.removeTokens();
-          return { success: false, error: 'Authentication required' };
+          return { success: false, error: "Authentication required" };
         }
       } else {
-        return { success: false, error: 'Authentication required' };
+        return { success: false, error: "Authentication required" };
       }
     }
 
@@ -427,57 +454,70 @@ class ApiService {
       // 为大数据查询添加超时控制（60秒）
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
-      
+
       const response = await fetch(url, {
         headers,
         ...options,
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
 
       if (response.status === 401) {
         TokenManager.removeTokens();
         // 统一返回而非抛异常，便于上层展示更友好的提示
-        return { success: false, error: 'Authentication failed' };
+        return { success: false, error: "Authentication failed" };
       }
 
       if (!response.ok) {
-        return { success: false, error: `HTTP error! status: ${response.status}` } as ApiResponse<T>;
+        return {
+          success: false,
+          error: `HTTP error! status: ${response.status}`,
+        } as ApiResponse<T>;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
-      if (error instanceof Error && error.name === 'AbortError') {
+      console.error("API request failed:", error);
+      if (error instanceof Error && error.name === "AbortError") {
         return {
           success: false,
-          error: '请求超时，请刷新页面重试'
+          error: "请求超时，请刷新页面重试",
         };
       }
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
   }
 
   // 节点管理 API
-  private async download(endpoint: string, options: RequestInit = {}, requireAuth: boolean = false): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+  private async download(
+    endpoint: string,
+    options: RequestInit = {},
+    requireAuth: boolean = false,
+  ): Promise<{
+    success: boolean;
+    data?: Blob;
+    fileName?: string;
+    error?: string;
+  }> {
     const url = API_BASE_URL + endpoint;
     const headers = new Headers(options.headers as HeadersInit | undefined);
 
-    if (!headers.has('Accept')) {
-      headers.set('Accept', 'application/octet-stream');
+    if (!headers.has("Accept")) {
+      headers.set("Accept", "application/octet-stream");
     }
 
     if (requireAuth) {
       const token = TokenManager.getToken();
       if (!token || TokenManager.isTokenExpired(token)) {
-        return { success: false, error: 'Authentication required' };
+        return { success: false, error: "Authentication required" };
       }
-      headers.set('Authorization', 'Bearer ' + token);
+      headers.set("Authorization", "Bearer " + token);
     }
 
     try {
@@ -487,17 +527,25 @@ class ApiService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => response.statusText);
-        return { success: false, error: errorText || ('HTTP error! status: ' + response.status) };
+        const errorText = await response
+          .text()
+          .catch(() => response.statusText);
+        return {
+          success: false,
+          error: errorText || "HTTP error! status: " + response.status,
+        };
       }
 
       const blob = await response.blob();
-      const disposition = response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+      const disposition =
+        response.headers.get("content-disposition") ||
+        response.headers.get("Content-Disposition");
       let fileName: string | undefined;
       if (disposition) {
         const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
         const quotedMatch = disposition.match(/filename="?([^";]+)"?/i);
-        const rawName = (utf8Match && utf8Match[1]) || (quotedMatch && quotedMatch[1]);
+        const rawName =
+          (utf8Match && utf8Match[1]) || (quotedMatch && quotedMatch[1]);
         if (rawName) {
           try {
             fileName = decodeURIComponent(rawName.trim());
@@ -509,60 +557,92 @@ class ApiService {
 
       return { success: true, data: blob, fileName };
     } catch (error) {
-      console.error('API download failed:', error);
+      console.error("API download failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
   }
 
   async getNodes(): Promise<ApiResponse<NodeData[]>> {
-    return this.request<NodeData[]>('/nodes');
+    return this.request<NodeData[]>("/nodes");
   }
 
   async getNodeById(id: string): Promise<ApiResponse<NodeData>> {
     return this.request<NodeData>(`/nodes/${id}`);
   }
 
-  async createNode(nodeData: Omit<NodeData, 'id' | 'agentId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<NodeData>> {
-    return this.request<NodeData>('/admin/nodes', {
-      method: 'POST',
-      body: JSON.stringify(nodeData),
-    }, true);
+  async createNode(
+    nodeData: Omit<
+      NodeData,
+      "id" | "agentId" | "status" | "createdAt" | "updatedAt"
+    >,
+  ): Promise<ApiResponse<NodeData>> {
+    return this.request<NodeData>(
+      "/admin/nodes",
+      {
+        method: "POST",
+        body: JSON.stringify(nodeData),
+      },
+      true,
+    );
   }
 
-  async updateNode(id: string, nodeData: Partial<NodeData>): Promise<ApiResponse<NodeData>> {
-    return this.request<NodeData>(`/admin/nodes/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(nodeData),
-    }, true);
+  async updateNode(
+    id: string,
+    nodeData: Partial<NodeData>,
+  ): Promise<ApiResponse<NodeData>> {
+    return this.request<NodeData>(
+      `/admin/nodes/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(nodeData),
+      },
+      true,
+    );
   }
 
   async deleteNode(id: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/admin/nodes/${id}`, {
-      method: 'DELETE',
-    }, true);
+    return this.request<void>(
+      `/admin/nodes/${id}`,
+      {
+        method: "DELETE",
+      },
+      true,
+    );
   }
 
-  async exportNodes(format: 'json' | 'csv' | 'markdown' = 'csv'): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
-    return this.download('/admin/nodes/export?format=' + format, {}, true);
+  async exportNodes(
+    format: "json" | "csv" | "markdown" = "csv",
+  ): Promise<{
+    success: boolean;
+    data?: Blob;
+    fileName?: string;
+    error?: string;
+  }> {
+    return this.download("/admin/nodes/export?format=" + format, {}, true);
   }
 
   // 统计信息 API
   async getStats(): Promise<ApiResponse<NodeStats>> {
-    return this.request<NodeStats>('/stats');
+    return this.request<NodeStats>("/stats");
   }
 
   // 诊断记录 API
-  async getNodeDiagnostics(nodeId: string, type?: string, limit?: number): Promise<ApiResponse<DiagnosticRecord[]>> {
+  async getNodeDiagnostics(
+    nodeId: string,
+    type?: string,
+    limit?: number,
+  ): Promise<ApiResponse<DiagnosticRecord[]>> {
     const queryParams = new URLSearchParams();
-    if (type) queryParams.append('type', type);
-    if (limit) queryParams.append('limit', limit.toString());
-    
+    if (type) queryParams.append("type", type);
+    if (limit) queryParams.append("limit", limit.toString());
+
     const query = queryParams.toString();
-    const endpoint = `/nodes/${nodeId}/diagnostics${query ? `?${query}` : ''}`;
-    
+    const endpoint = `/nodes/${nodeId}/diagnostics${query ? `?${query}` : ""}`;
+
     return this.request<DiagnosticRecord[]>(endpoint);
   }
 
@@ -572,13 +652,30 @@ class ApiService {
   }
 
   // 获取节点事件列表
-  async getNodeEvents(nodeId: string, limit: number = 100): Promise<ApiResponse<Array<{ id: string; type: string; message?: string; details?: unknown; timestamp: string }>>> {
-    const query = limit ? `?limit=${limit}` : '';
+  async getNodeEvents(
+    nodeId: string,
+    limit: number = 100,
+  ): Promise<
+    ApiResponse<
+      Array<{
+        id: string;
+        type: string;
+        message?: string;
+        details?: unknown;
+        timestamp: string;
+      }>
+    >
+  > {
+    const query = limit ? `?limit=${limit}` : "";
     return this.request(`/nodes/${nodeId}/events${query}`);
   }
 
   // Agent 诊断请求 API (直接调用Agent)
-  async callAgentDiagnostic(agentUrl: string, type: string, target?: string): Promise<unknown> {
+  async callAgentDiagnostic(
+    agentUrl: string,
+    type: string,
+    target?: string,
+  ): Promise<unknown> {
     const endpoint = target ? `${type}/${target}` : type;
     const url = `${agentUrl}/api/${endpoint}`;
 
@@ -590,7 +687,7 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
-      console.error('Agent diagnostic request failed:', error);
+      console.error("Agent diagnostic request failed:", error);
       throw error;
     }
   }
@@ -598,21 +695,22 @@ class ApiService {
   // 认证相关 API
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     // Primary path via API_BASE_URL (e.g. /api/auth/login)
-    let response = await this.request<LoginResponse>('/auth/login', {
-      method: 'POST',
+    let response = await this.request<LoginResponse>("/auth/login", {
+      method: "POST",
       body: JSON.stringify(credentials),
     });
 
     // Fallback: if 5xx/502/network error, try root-mapped path (/auth/login) which we proxy to backend in nginx
     if (!response.success) {
-      const err = response.error || '';
-      const likelyGateway = /HTTP error! status: 5\d\d|502|Bad Gateway|Failed to fetch/i.test(err);
+      const err = response.error || "";
+      const likelyGateway =
+        /HTTP error! status: 5\d\d|502|Bad Gateway|Failed to fetch/i.test(err);
       try {
-        if (likelyGateway && typeof window !== 'undefined') {
-          const r = await fetch('/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credentials)
+        if (likelyGateway && typeof window !== "undefined") {
+          const r = await fetch("/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(credentials),
           });
           if (r.ok) {
             response = await r.json();
@@ -637,7 +735,7 @@ class ApiService {
     TokenManager.removeTokens();
     // 可以调用后端的logout接口
     try {
-      await this.request('/auth/logout', { method: 'POST' }, true);
+      await this.request("/auth/logout", { method: "POST" }, true);
     } catch {
       // 忽略logout错误，因为令牌已经被清除
     }
@@ -668,8 +766,8 @@ class ApiService {
     }
 
     try {
-      const response = await this.request<LoginResponse>('/auth/refresh', {
-        method: 'POST',
+      const response = await this.request<LoginResponse>("/auth/refresh", {
+        method: "POST",
         body: JSON.stringify({ refreshToken }),
       });
 
@@ -681,47 +779,73 @@ class ApiService {
         return response.data;
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
     }
 
     return null;
   }
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
-    return this.request<User>('/auth/profile', {}, true);
+    return this.request<User>("/auth/profile", {}, true);
   }
 
   // 用户管理 API
   async getUsers(): Promise<ApiResponse<User[]>> {
-    return this.request<User[]>('/admin/users', {}, true);
+    return this.request<User[]>("/admin/users", {}, true);
   }
 
-  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'> & { password: string }): Promise<ApiResponse<User>> {
-    return this.request<User>('/admin/users', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    }, true);
+  async createUser(
+    userData: Omit<User, "id" | "createdAt" | "updatedAt" | "lastLogin"> & {
+      password: string;
+    },
+  ): Promise<ApiResponse<User>> {
+    return this.request<User>(
+      "/admin/users",
+      {
+        method: "POST",
+        body: JSON.stringify(userData),
+      },
+      true,
+    );
   }
 
-  async updateUser(id: string, userData: Partial<User>): Promise<ApiResponse<User>> {
-    return this.request<User>(`/admin/users/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    }, true);
+  async updateUser(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<ApiResponse<User>> {
+    return this.request<User>(
+      `/admin/users/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(userData),
+      },
+      true,
+    );
   }
 
   async deleteUser(id: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/admin/users/${id}`, {
-      method: 'DELETE',
-    }, true);
+    return this.request<void>(
+      `/admin/users/${id}`,
+      {
+        method: "DELETE",
+      },
+      true,
+    );
   }
 
-  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<void>> {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<ApiResponse<void>> {
     // Backend expects PUT /auth/password with { currentPassword, newPassword }
-    return this.request<void>('/auth/password', {
-      method: 'PUT',
-      body: JSON.stringify({ currentPassword, newPassword }),
-    }, true);
+    return this.request<void>(
+      "/auth/password",
+      {
+        method: "PUT",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      },
+      true,
+    );
   }
 
   // 检查是否已登录
@@ -738,10 +862,10 @@ class ApiService {
     }
 
     try {
-      const payloadPart = token.split('.')[1];
-      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const payloadPart = token.split(".")[1];
+      const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
       const padLen = (4 - (base64.length % 4)) % 4;
-      const padded = base64 + '='.repeat(padLen);
+      const padded = base64 + "=".repeat(padLen);
       const payload = JSON.parse(atob(padded));
       return payload.role || null;
     } catch {
@@ -751,96 +875,146 @@ class ApiService {
 
   // 系统配置管理 API
   async getSystemConfigs(): Promise<ApiResponse<SystemConfig[]>> {
-    return this.request<SystemConfig[]>('/admin/configs', {}, true);
+    return this.request<SystemConfig[]>("/admin/configs", {}, true);
   }
 
   async getConfigCategories(): Promise<ApiResponse<string[]>> {
-    return this.request<string[]>('/admin/configs/categories', {}, true);
+    return this.request<string[]>("/admin/configs/categories", {}, true);
   }
 
   async getSystemConfig(key: string): Promise<ApiResponse<SystemConfig>> {
     return this.request<SystemConfig>(`/admin/configs/${key}`, {}, true);
   }
 
-  async updateSystemConfig(key: string, value: string): Promise<ApiResponse<SystemConfig>> {
-    return this.request<SystemConfig>(`/admin/configs/${key}`, {
-      method: 'PUT',
-      body: JSON.stringify({ value }),
-    }, true);
+  async updateSystemConfig(
+    key: string,
+    value: string,
+  ): Promise<ApiResponse<SystemConfig>> {
+    return this.request<SystemConfig>(
+      `/admin/configs/${key}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ value }),
+      },
+      true,
+    );
   }
 
-  async batchUpdateConfigs(configs: Array<{ key: string; value: string }>): Promise<ApiResponse<SystemConfig[]>> {
-    return this.request<SystemConfig[]>('/admin/configs/batch', {
-      method: 'POST',
-      body: JSON.stringify({ configs }),
-    }, true);
+  async batchUpdateConfigs(
+    configs: Array<{ key: string; value: string }>,
+  ): Promise<ApiResponse<SystemConfig[]>> {
+    return this.request<SystemConfig[]>(
+      "/admin/configs/batch",
+      {
+        method: "POST",
+        body: JSON.stringify({ configs }),
+      },
+      true,
+    );
   }
 
   async resetConfigsToDefaults(): Promise<ApiResponse<SystemConfig[]>> {
-    return this.request<SystemConfig[]>('/admin/configs/reset', {
-      method: 'POST',
-    }, true);
+    return this.request<SystemConfig[]>(
+      "/admin/configs/reset",
+      {
+        method: "POST",
+      },
+      true,
+    );
   }
 
-  async cleanupOldConfigs(): Promise<ApiResponse<{ deleted: number; deletedKeys: string[]; remaining: number }>> {
-    return this.request<{ deleted: number; deletedKeys: string[]; remaining: number }>('/admin/configs/cleanup', {
-      method: 'POST',
-    }, true);
+  async cleanupOldConfigs(): Promise<
+    ApiResponse<{ deleted: number; deletedKeys: string[]; remaining: number }>
+  > {
+    return this.request<{
+      deleted: number;
+      deletedKeys: string[];
+      remaining: number;
+    }>(
+      "/admin/configs/cleanup",
+      {
+        method: "POST",
+      },
+      true,
+    );
   }
 
-  async cleanupHeartbeatLogs(retainHours?: number): Promise<ApiResponse<{ deleted: number; retainHours?: number }>> {
-    const payload =
-      retainHours && retainHours > 0 ? { retainHours } : {};
-    return this.request<{ deleted: number; retainHours?: number }>('/admin/heartbeats/cleanup', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, true);
+  async cleanupHeartbeatLogs(
+    retainHours?: number,
+  ): Promise<ApiResponse<{ deleted: number; retainHours?: number }>> {
+    const payload = retainHours && retainHours > 0 ? { retainHours } : {};
+    return this.request<{ deleted: number; retainHours?: number }>(
+      "/admin/heartbeats/cleanup",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      true,
+    );
   }
 
   async deleteSystemConfig(key: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/admin/configs/${key}`, {
-      method: 'DELETE',
-    }, true);
+    return this.request<void>(
+      `/admin/configs/${key}`,
+      {
+        method: "DELETE",
+      },
+      true,
+    );
   }
 
   // 健康检查
   async healthCheck(): Promise<ApiResponse<unknown>> {
-    return this.request<unknown>('/health');
+    return this.request<unknown>("/health");
   }
 
   // 获取公共地图配置（无需认证）
   async getPublicMapConfig(): Promise<ApiResponse<MapConfig>> {
-    return this.request<MapConfig>('/public/map-config');
+    return this.request<MapConfig>("/public/map-config");
   }
 
   // API信息
   async getApiInfo(): Promise<ApiResponse<unknown>> {
-    return this.request<unknown>('/info');
+    return this.request<unknown>("/info");
   }
 
   // 系统版本与更新
-  async getSystemVersion(): Promise<ApiResponse<{ localVersion: string; latestCommit?: string; updateAvailable?: boolean; repo: string; branch: string }>> {
-    return this.request('/system/version');
+  async getSystemVersion(): Promise<
+    ApiResponse<{
+      localVersion: string;
+      latestCommit?: string;
+      updateAvailable?: boolean;
+      repo: string;
+      branch: string;
+    }>
+  > {
+    return this.request("/system/version");
   }
 
   async getSystemOverview(): Promise<ApiResponse<SystemOverviewData>> {
-    return this.request('/admin/overview', {}, true);
+    return this.request("/admin/overview", {}, true);
   }
 
-  async triggerSystemUpdate(forceAgent: boolean = false): Promise<ApiResponse<{ body?: string }>> {
-    return this.request('/admin/system/update', {
-      method: 'POST',
-      body: JSON.stringify({ forceAgent })
-    }, true);
+  async triggerSystemUpdate(
+    forceAgent: boolean = false,
+  ): Promise<ApiResponse<{ body?: string }>> {
+    return this.request(
+      "/admin/system/update",
+      {
+        method: "POST",
+        body: JSON.stringify({ forceAgent }),
+      },
+      true,
+    );
   }
 
   async getUpdaterHealth(): Promise<ApiResponse<unknown>> {
-    return this.request('/admin/system/updater/health', {}, true);
+    return this.request("/admin/system/updater/health", {}, true);
   }
 
   // 访问者信息API
   async getVisitorInfo(): Promise<ApiResponse<VisitorInfo>> {
-    return this.request<VisitorInfo>('/visitor/info');
+    return this.request<VisitorInfo>("/visitor/info");
   }
 
   async getIPInfo(ip: string): Promise<ApiResponse<IPInfo>> {
@@ -849,49 +1023,92 @@ class ApiService {
 
   // API密钥管理 API（管理员专用）
   async getApiKeyInfo(): Promise<ApiResponse<ApiKeyInfo>> {
-    return this.request<ApiKeyInfo>('/admin/api-key/info', {}, true);
+    return this.request<ApiKeyInfo>("/admin/api-key/info", {}, true);
   }
 
   async regenerateApiKey(): Promise<ApiResponse<{ newApiKey: string }>> {
-    return this.request<{ newApiKey: string }>('/admin/api-key/regenerate', {
-      method: 'POST'
-    }, true);
+    return this.request<{ newApiKey: string }>(
+      "/admin/api-key/regenerate",
+      {
+        method: "POST",
+      },
+      true,
+    );
   }
 
   // 占位节点导入（管理员专用）
-  async importPlaceholderNodes(items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }>): Promise<ApiResponse<{ created: number; updated: number; skipped: number; total: number }>> {
-    return this.request('/admin/nodes/placeholders/import', {
-      method: 'POST',
-      body: JSON.stringify({ items })
-    }, true);
+  async importPlaceholderNodes(
+    items: Array<{
+      ip: string;
+      name?: string;
+      notes?: string;
+      tags?: string[];
+      neverAdopt?: boolean;
+    }>,
+  ): Promise<
+    ApiResponse<{
+      created: number;
+      updated: number;
+      skipped: number;
+      total: number;
+    }>
+  > {
+    return this.request(
+      "/admin/nodes/placeholders/import",
+      {
+        method: "POST",
+        body: JSON.stringify({ items }),
+      },
+      true,
+    );
   }
 
   // 获取Agent安装命令（公开接口）
   async getInstallCommand(): Promise<ApiResponse<InstallCommandData>> {
     // 该接口需要管理员权限
-    return this.request<InstallCommandData>('/agents/install-command', {}, true);
+    return this.request<InstallCommandData>(
+      "/agents/install-command",
+      {},
+      true,
+    );
   }
 
   // 客户端延迟测试 API
   async startLatencyTest(): Promise<ApiResponse<LatencyTestStart>> {
-    return this.request<LatencyTestStart>('/client-latency/test', {
-      method: 'POST'
-    }, true);
+    return this.request<LatencyTestStart>(
+      "/client-latency/test",
+      {
+        method: "POST",
+      },
+      true,
+    );
   }
 
   async getLatencyResults(): Promise<ApiResponse<LatencyTestResults>> {
-    return this.request<LatencyTestResults>('/client-latency/results', {}, true);
+    return this.request<LatencyTestResults>(
+      "/client-latency/results",
+      {},
+      true,
+    );
   }
 
   // 流媒体解锁 API
-  async getNodeStreaming(nodeId: string): Promise<ApiResponse<NodeStreamingData>> {
+  async getNodeStreaming(
+    nodeId: string,
+  ): Promise<ApiResponse<NodeStreamingData>> {
     return this.request<NodeStreamingData>(`/nodes/${nodeId}/streaming`);
   }
 
-  async triggerStreamingTest(nodeId: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request<{ message: string }>(`/nodes/${nodeId}/streaming/test`, {
-      method: 'POST'
-    }, true);
+  async triggerStreamingTest(
+    nodeId: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(
+      `/nodes/${nodeId}/streaming/test`,
+      {
+        method: "POST",
+      },
+      true,
+    );
   }
 
   async getNodesByStreaming(service: string): Promise<ApiResponse<NodeData[]>> {
@@ -899,116 +1116,192 @@ class ApiService {
   }
 
   async getStreamingStats(): Promise<ApiResponse<StreamingStats>> {
-    return this.request<StreamingStats>('/streaming/stats');
+    return this.request<StreamingStats>("/streaming/stats");
   }
 
   // 流媒体解锁总览 API
-  async getStreamingOverview(): Promise<ApiResponse<import('../types/streaming').StreamingOverview>> {
-    return this.request('/streaming/overview');
+  async getStreamingOverview(): Promise<
+    ApiResponse<import("../types/streaming").StreamingOverview>
+  > {
+    return this.request("/streaming/overview");
   }
 
-  async getStreamingNodeSummaries(filters?: import('../types/streaming').StreamingFilters): Promise<ApiResponse<import('../types/streaming').NodeStreamingSummary[]>> {
+  async getStreamingNodeSummaries(
+    filters?: import("../types/streaming").StreamingFilters,
+  ): Promise<ApiResponse<import("../types/streaming").NodeStreamingSummary[]>> {
     const params = new URLSearchParams();
-    if (filters?.platform) params.append('service', filters.platform);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.country) params.append('country', filters.country);
-    if (filters?.keyword) params.append('search', filters.keyword);
-    if (filters?.showExpired !== undefined) params.append('showExpired', String(filters.showExpired));
+    if (filters?.platform) params.append("service", filters.platform);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.country) params.append("country", filters.country);
+    if (filters?.keyword) params.append("search", filters.keyword);
+    if (filters?.showExpired !== undefined)
+      params.append("showExpired", String(filters.showExpired));
 
     const query = params.toString();
-    return this.request(`/streaming/nodes${query ? `?${query}` : ''}`);
+    return this.request(`/streaming/nodes${query ? `?${query}` : ""}`);
   }
 
-  async triggerBulkStreamingTest(nodeIds: string[]): Promise<ApiResponse<{ message: string; queued: number }>> {
-    return this.request('/streaming/test/bulk', {
-      method: 'POST',
-      body: JSON.stringify({ nodeIds })
-    }, true);
+  async triggerBulkStreamingTest(nodeIds: string[]): Promise<
+    ApiResponse<{
+      message?: string;
+      queued: number;
+      total?: number;
+      failures?: Array<{ nodeId: string; reason: string }>;
+    }>
+  > {
+    return this.request(
+      "/streaming/test/bulk",
+      {
+        method: "POST",
+        body: JSON.stringify({ nodeIds }),
+      },
+      true,
+    );
   }
 
-  async exportStreamingData(format: import('../types/streaming').StreamingExportFormat, filters?: import('../types/streaming').StreamingFilters): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+  async exportStreamingData(
+    format: import("../types/streaming").StreamingExportFormat,
+    filters?: import("../types/streaming").StreamingFilters,
+  ): Promise<{
+    success: boolean;
+    data?: Blob;
+    fileName?: string;
+    error?: string;
+  }> {
     const params = new URLSearchParams({ format });
-    if (filters?.platform) params.append('service', filters.platform);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.country) params.append('country', filters.country);
+    if (filters?.platform) params.append("service", filters.platform);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.country) params.append("country", filters.country);
 
     return this.download(`/streaming/export?${params.toString()}`, {}, true);
   }
 
   // 服务总览 API
-  async getServicesOverview(): Promise<ApiResponse<import('../types/services').ServicesOverviewStats>> {
-    return this.request('/services/overview');
+  async getServicesOverview(): Promise<
+    ApiResponse<import("../types/services").ServicesOverviewStats>
+  > {
+    return this.request("/services/overview");
   }
 
-  async getNodeServices(nodeId: string): Promise<ApiResponse<import('../types/services').NodeService[]>> {
+  async getNodeServices(
+    nodeId: string,
+  ): Promise<ApiResponse<import("../types/services").NodeService[]>> {
     return this.request(`/nodes/${nodeId}/services`);
   }
 
-  async getNodeServicesOverview(nodeId: string): Promise<ApiResponse<import('../types/services').NodeServicesOverview>> {
+  async getNodeServicesOverview(
+    nodeId: string,
+  ): Promise<ApiResponse<import("../types/services").NodeServicesOverview>> {
     return this.request(`/nodes/${nodeId}/services/overview`);
   }
 
-  async getAllServices(filters?: import('../types/services').ServiceFilters): Promise<ApiResponse<import('../types/services').NodeService[]>> {
+  async getAllServices(
+    filters?: import("../types/services").ServiceFilters,
+  ): Promise<ApiResponse<import("../types/services").NodeService[]>> {
     const params = new URLSearchParams();
-    if (filters?.nodeId) params.append('nodeId', filters.nodeId);
-    if (filters?.serviceType) params.append('serviceType', filters.serviceType);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.deploymentType) params.append('deploymentType', filters.deploymentType as string);
-    if (filters?.keyword) params.append('search', filters.keyword);
-    if (filters?.priority !== undefined) params.append('priority', String(filters.priority));
-    if (filters?.showExpired !== undefined) params.append('showExpired', String(filters.showExpired));
+    if (filters?.nodeId) params.append("nodeId", filters.nodeId);
+    if (filters?.serviceType) params.append("serviceType", filters.serviceType);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.deploymentType)
+      params.append("deploymentType", filters.deploymentType as string);
+    if (filters?.keyword) params.append("search", filters.keyword);
+    if (filters?.priority !== undefined)
+      params.append("priority", String(filters.priority));
+    if (filters?.showExpired !== undefined)
+      params.append("showExpired", String(filters.showExpired));
     if (filters?.tags && filters.tags.length > 0) {
-      filters.tags.forEach(tag => params.append('tag', tag));
+      filters.tags.forEach((tag) => params.append("tag", tag));
     }
 
     const query = params.toString();
-    return this.request(`/services${query ? `?${query}` : ''}`);
+    return this.request(`/services${query ? `?${query}` : ""}`);
   }
 
-  async getNodeServicesGrouped(): Promise<ApiResponse<import('../types/services').NodeServicesOverview[]>> {
-    return this.request('/services/grouped');
+  async getNodeServicesGrouped(): Promise<
+    ApiResponse<import("../types/services").NodeServicesOverview[]>
+  > {
+    return this.request("/services/grouped");
   }
 
-  async updateServiceTags(serviceId: string, tags: string[]): Promise<ApiResponse<import('../types/services').NodeService>> {
-    return this.request(`/services/${serviceId}/tags`, {
-      method: 'PUT',
-      body: JSON.stringify({ tags })
-    }, true);
+  async updateServiceTags(
+    serviceId: string,
+    tags: string[],
+  ): Promise<ApiResponse<import("../types/services").NodeService>> {
+    return this.request(
+      `/services/${serviceId}/tags`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ tags }),
+      },
+      true,
+    );
   }
 
-  async updateServicePriority(serviceId: string, priority: number): Promise<ApiResponse<import('../types/services').NodeService>> {
-    return this.request(`/services/${serviceId}/priority`, {
-      method: 'PUT',
-      body: JSON.stringify({ priority })
-    }, true);
+  async updateServicePriority(
+    serviceId: string,
+    priority: number,
+  ): Promise<ApiResponse<import("../types/services").NodeService>> {
+    return this.request(
+      `/services/${serviceId}/priority`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ priority }),
+      },
+      true,
+    );
   }
 
-  async updateServiceNotes(serviceId: string, notes: string): Promise<ApiResponse<import('../types/services').NodeService>> {
-    return this.request(`/services/${serviceId}/notes`, {
-      method: 'PUT',
-      body: JSON.stringify({ notes })
-    }, true);
+  async updateServiceNotes(
+    serviceId: string,
+    notes: string,
+  ): Promise<ApiResponse<import("../types/services").NodeService>> {
+    return this.request(
+      `/services/${serviceId}/notes`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ notes }),
+      },
+      true,
+    );
   }
 
   async deleteService(serviceId: string): Promise<ApiResponse<void>> {
-    return this.request(`/services/${serviceId}`, {
-      method: 'DELETE'
-    }, true);
+    return this.request(
+      `/services/${serviceId}`,
+      {
+        method: "DELETE",
+      },
+      true,
+    );
   }
 
-  async exportServices(format: 'json' | 'csv' | 'markdown', filters?: import('../types/services').ServiceFilters): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
+  async exportServices(
+    format: "json" | "csv" | "markdown",
+    filters?: import("../types/services").ServiceFilters,
+  ): Promise<{
+    success: boolean;
+    data?: Blob;
+    fileName?: string;
+    error?: string;
+  }> {
     const params = new URLSearchParams({ format });
-    if (filters?.nodeId) params.append('nodeId', filters.nodeId);
-    if (filters?.serviceType) params.append('serviceType', filters.serviceType);
-    if (filters?.status) params.append('status', filters.status);
+    if (filters?.nodeId) params.append("nodeId", filters.nodeId);
+    if (filters?.serviceType) params.append("serviceType", filters.serviceType);
+    if (filters?.status) params.append("status", filters.status);
 
     return this.download(`/services/export?${params.toString()}`, {}, true);
   }
 
-  async triggerServiceScan(nodeId: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request<{ message: string }>(`/nodes/${nodeId}/services/scan`, {
-      method: 'POST'
-    }, true);
+  async triggerServiceScan(
+    nodeId: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(
+      `/nodes/${nodeId}/services/scan`,
+      {
+        method: "POST",
+      },
+      true,
+    );
   }
 }
 

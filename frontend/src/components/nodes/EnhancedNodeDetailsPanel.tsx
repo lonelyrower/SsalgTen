@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { motion } from "framer-motion";
+import { useState } from "react";
 import {
   Server,
   Globe,
@@ -14,12 +14,12 @@ import {
   Zap,
   Terminal,
   BarChart3,
-} from 'lucide-react';
-import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { NodeData } from '@/services/api';
-import type { HeartbeatData } from '@/types/heartbeat';
+} from "lucide-react";
+import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { NodeData } from "@/services/api";
+import type { HeartbeatData } from "@/types/heartbeat";
 
 interface EnhancedNodeDetailsPanelProps {
   node: NodeData | null;
@@ -31,12 +31,12 @@ interface EnhancedNodeDetailsPanelProps {
 
 const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'online':
-      return '🟢';
-    case 'offline':
-      return '🔴';
+    case "online":
+      return "🟢";
+    case "offline":
+      return "🔴";
     default:
-      return '⚪';
+      return "⚪";
   }
 };
 
@@ -57,7 +57,9 @@ const DetailItem = ({
         <Icon className="h-4 w-4 text-cyan-400" />
         <span className="text-gray-400 text-sm">{label}</span>
       </div>
-      <span className={`text-white font-semibold text-sm ${mono ? 'font-mono' : ''}`}>
+      <span
+        className={`text-white font-semibold text-sm ${mono ? "font-mono" : ""}`}
+      >
         {value}
       </span>
     </div>
@@ -68,19 +70,19 @@ const ResourceBar = ({
   label,
   value,
   color,
-  unit = '%',
+  unit = "%",
 }: {
   label: string;
   value: number;
-  color: 'cyan' | 'purple' | 'green' | 'yellow' | 'red';
+  color: "cyan" | "purple" | "green" | "yellow" | "red";
   unit?: string;
 }) => {
   const colorMap = {
-    cyan: 'bg-cyan-500',
-    purple: 'bg-purple-500',
-    green: 'bg-green-500',
-    yellow: 'bg-yellow-500',
-    red: 'bg-red-500',
+    cyan: "bg-cyan-500",
+    purple: "bg-purple-500",
+    green: "bg-green-500",
+    yellow: "bg-yellow-500",
+    red: "bg-red-500",
   };
 
   return (
@@ -97,21 +99,23 @@ const ResourceBar = ({
           className={`h-full ${colorMap[color]} rounded-full`}
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(value, 100)}%` }}
-          transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+          transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
         />
       </div>
     </div>
   );
 };
 
-export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> = ({
+export const EnhancedNodeDetailsPanel: React.FC<
+  EnhancedNodeDetailsPanelProps
+> = ({
   node,
   heartbeatData,
   onRunDiagnostics,
   onViewLogs,
   onShowServerDetails,
 }) => {
-  const [activeTab, setActiveTab] = useState<'info' | 'resources'>('info');
+  const [activeTab, setActiveTab] = useState<"info" | "resources">("info");
 
   if (!node) {
     return (
@@ -147,7 +151,9 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
         <span className="text-5xl">{getStatusIcon(node.status)}</span>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            {node.country && <CountryFlagSvg country={node.country} className="w-6 h-6" />}
+            {node.country && (
+              <CountryFlagSvg country={node.country} className="w-6 h-6" />
+            )}
             <h3 className="text-2xl font-black text-white">{node.name}</h3>
           </div>
           <p className="text-sm text-gray-400 flex items-center gap-1">
@@ -155,7 +161,7 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
             {node.city}, {node.country}
           </p>
         </div>
-        <Badge variant={node.status === 'online' ? 'success' : 'destructive'}>
+        <Badge variant={node.status === "online" ? "success" : "destructive"}>
           {node.status.toUpperCase()}
         </Badge>
       </div>
@@ -163,22 +169,22 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
       {/* Tabs */}
       <div className="flex gap-2 mb-6 p-1 bg-gray-800/50 rounded-lg">
         <button
-          onClick={() => setActiveTab('info')}
+          onClick={() => setActiveTab("info")}
           className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
-            activeTab === 'info'
-              ? 'bg-cyan-600 text-white'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+            activeTab === "info"
+              ? "bg-cyan-600 text-white"
+              : "text-gray-400 hover:text-white hover:bg-gray-700/50"
           }`}
         >
           <Server className="h-4 w-4 inline mr-2" />
           基本信息
         </button>
         <button
-          onClick={() => setActiveTab('resources')}
+          onClick={() => setActiveTab("resources")}
           className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
-            activeTab === 'resources'
-              ? 'bg-cyan-600 text-white'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+            activeTab === "resources"
+              ? "bg-cyan-600 text-white"
+              : "text-gray-400 hover:text-white hover:bg-gray-700/50"
           }`}
         >
           <BarChart3 className="h-4 w-4 inline mr-2" />
@@ -188,15 +194,22 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
 
       {/* Content */}
       <div className="space-y-6">
-        {activeTab === 'info' ? (
+        {activeTab === "info" ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-1"
           >
             <DetailItem label="服务商" value={node.provider} icon={Globe} />
-            {node.ipv4 && <DetailItem label="IPv4 地址" value={node.ipv4} icon={Network} mono />}
-            {node.ipv6 && node.ipv6.includes(':') && (
+            {node.ipv4 && (
+              <DetailItem
+                label="IPv4 地址"
+                value={node.ipv4}
+                icon={Network}
+                mono
+              />
+            )}
+            {node.ipv6 && node.ipv6.includes(":") && (
               <DetailItem
                 label="IPv6 地址"
                 value={<span className="text-xs break-all">{node.ipv6}</span>}
@@ -207,21 +220,21 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
             {node.osType && (
               <DetailItem
                 label="操作系统"
-                value={`${node.osType}${node.osVersion ? ` ${node.osVersion}` : ''}`}
+                value={`${node.osType}${node.osVersion ? ` ${node.osVersion}` : ""}`}
                 icon={Terminal}
               />
             )}
             {node.lastSeen && (
               <DetailItem
                 label="最后在线"
-                value={new Date(node.lastSeen).toLocaleString('zh-CN')}
+                value={new Date(node.lastSeen).toLocaleString("zh-CN")}
                 icon={Clock}
               />
             )}
             {node.createdAt && (
               <DetailItem
                 label="注册时间"
-                value={new Date(node.createdAt).toLocaleDateString('zh-CN')}
+                value={new Date(node.createdAt).toLocaleDateString("zh-CN")}
                 icon={Calendar}
               />
             )}
@@ -232,7 +245,9 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            {heartbeatData?.cpuInfo || heartbeatData?.memoryInfo || heartbeatData?.diskInfo ? (
+            {heartbeatData?.cpuInfo ||
+            heartbeatData?.memoryInfo ||
+            heartbeatData?.diskInfo ? (
               <>
                 {heartbeatData?.cpuInfo && (
                   <div>
@@ -245,10 +260,10 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
                       value={heartbeatData.cpuInfo.usage || 0}
                       color={
                         (heartbeatData.cpuInfo.usage || 0) > 80
-                          ? 'red'
+                          ? "red"
                           : (heartbeatData.cpuInfo.usage || 0) > 60
-                            ? 'yellow'
-                            : 'green'
+                            ? "yellow"
+                            : "green"
                       }
                     />
                   </div>
@@ -264,17 +279,25 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
                       label="内存"
                       value={
                         heartbeatData.memoryInfo.total
-                          ? ((heartbeatData.memoryInfo.used / heartbeatData.memoryInfo.total) * 100)
+                          ? (heartbeatData.memoryInfo.used /
+                              heartbeatData.memoryInfo.total) *
+                            100
                           : 0
                       }
                       color={
                         heartbeatData.memoryInfo.total &&
-                        ((heartbeatData.memoryInfo.used / heartbeatData.memoryInfo.total) * 100) > 80
-                          ? 'red'
+                        (heartbeatData.memoryInfo.used /
+                          heartbeatData.memoryInfo.total) *
+                          100 >
+                          80
+                          ? "red"
                           : heartbeatData.memoryInfo.total &&
-                              ((heartbeatData.memoryInfo.used / heartbeatData.memoryInfo.total) * 100) > 60
-                            ? 'yellow'
-                            : 'purple'
+                              (heartbeatData.memoryInfo.used /
+                                heartbeatData.memoryInfo.total) *
+                                100 >
+                                60
+                            ? "yellow"
+                            : "purple"
                       }
                     />
                   </div>
@@ -290,17 +313,25 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
                       label="存储空间"
                       value={
                         heartbeatData.diskInfo.total
-                          ? ((heartbeatData.diskInfo.used / heartbeatData.diskInfo.total) * 100)
+                          ? (heartbeatData.diskInfo.used /
+                              heartbeatData.diskInfo.total) *
+                            100
                           : 0
                       }
                       color={
                         heartbeatData.diskInfo.total &&
-                        ((heartbeatData.diskInfo.used / heartbeatData.diskInfo.total) * 100) > 80
-                          ? 'red'
+                        (heartbeatData.diskInfo.used /
+                          heartbeatData.diskInfo.total) *
+                          100 >
+                          80
+                          ? "red"
                           : heartbeatData.diskInfo.total &&
-                              ((heartbeatData.diskInfo.used / heartbeatData.diskInfo.total) * 100) > 60
-                            ? 'yellow'
-                            : 'cyan'
+                              (heartbeatData.diskInfo.used /
+                                heartbeatData.diskInfo.total) *
+                                100 >
+                                60
+                            ? "yellow"
+                            : "cyan"
                       }
                     />
                   </div>
@@ -336,7 +367,7 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
           <Button
             onClick={onRunDiagnostics}
             className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
-            disabled={node.status !== 'online'}
+            disabled={node.status !== "online"}
           >
             <Zap className="h-4 w-4 mr-2" />
             运行网络诊断
@@ -349,7 +380,7 @@ export const EnhancedNodeDetailsPanel: React.FC<EnhancedNodeDetailsPanelProps> =
               onClick={onShowServerDetails}
               variant="outline"
               className="w-full border-gray-600 hover:bg-gray-700"
-              disabled={node.status !== 'online'}
+              disabled={node.status !== "online"}
             >
               <Terminal className="h-4 w-4 mr-2" />
               系统详情

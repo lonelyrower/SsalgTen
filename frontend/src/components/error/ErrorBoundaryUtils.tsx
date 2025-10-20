@@ -1,16 +1,18 @@
-import React from 'react';
-import type { ReactNode } from 'react';
-import ErrorBoundary from './ErrorBoundary';
-import { AlertCircle } from 'lucide-react';
+import React from "react";
+import type { ReactNode } from "react";
+import ErrorBoundary from "./ErrorBoundary";
+import { AlertCircle } from "lucide-react";
 
 // 高阶组件版本，用于包装特定组件
 
 // 用于页面级别的简化错误边界
-export const PageErrorBoundary: React.FC<{ children: ReactNode }> = ({ children }) => (
+export const PageErrorBoundary: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => (
   <ErrorBoundary
     onError={(error, errorInfo) => {
       // 在生产环境中，这里可以发送错误报告到监控服务
-      console.error('Page Error:', error, errorInfo);
+      console.error("Page Error:", error, errorInfo);
     }}
   >
     {children}
@@ -28,7 +30,7 @@ export const ComponentErrorBoundary: React.FC<{
         <div className="flex items-center space-x-2 text-red-700 dark:text-red-400">
           <AlertCircle className="h-5 w-5" />
           <span className="text-sm font-medium">
-            {componentName ? `${componentName} 组件` : '组件'}加载失败
+            {componentName ? `${componentName} 组件` : "组件"}加载失败
           </span>
         </div>
         <p className="text-xs text-red-600 dark:text-red-400 mt-1">

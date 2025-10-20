@@ -1,10 +1,10 @@
-import React from 'react';
-import { Header } from '@/components/layout/Header';
-import { NodeMonitoringSection } from '@/components/dashboard/NodeMonitoringSection';
-import { GeographicDistribution } from '@/components/dashboard/GeographicDistribution';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { MobilePullToRefresh } from '@/components/ui/MobilePullToRefresh';
-import { useRealTime } from '@/hooks/useRealTime';
+import React from "react";
+import { Header } from "@/components/layout/Header";
+import { NodeMonitoringSection } from "@/components/dashboard/NodeMonitoringSection";
+import { GeographicDistribution } from "@/components/dashboard/GeographicDistribution";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { MobilePullToRefresh } from "@/components/ui/MobilePullToRefresh";
+import { useRealTime } from "@/hooks/useRealTime";
 
 /**
  * 统一监控中心页面
@@ -41,7 +41,6 @@ export const UnifiedDashboardPage: React.FC = () => {
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
         <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe">
-
           {/* 地理分布 */}
           <section className="mb-6 sm:mb-8">
             <GeographicDistribution nodes={nodes} />

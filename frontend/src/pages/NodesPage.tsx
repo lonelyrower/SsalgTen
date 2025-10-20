@@ -10,7 +10,14 @@ import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
 import type { HeartbeatData } from "@/types/heartbeat";
 import { useClientLatency } from "@/hooks/useClientLatency";
-import { Search, Filter, RefreshCw, Activity, ChevronDown, Server } from "lucide-react";
+import {
+  Search,
+  Filter,
+  RefreshCw,
+  Activity,
+  ChevronDown,
+  Server,
+} from "lucide-react";
 import { ViewModeToggle } from "@/components/map/ViewModeToggle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { NodeData } from "@/services/api";

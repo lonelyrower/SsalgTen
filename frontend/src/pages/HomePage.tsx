@@ -1,21 +1,21 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Globe2, RefreshCw } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { StatsCards } from '@/components/layout/StatsCards';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorState } from '@/components/ui/ErrorState';
-import { MapSection } from '@/components/home/MapSection';
-import { NodeDetailsCard } from '@/components/home/NodeDetailsCard';
-import { ErrorBanner } from '@/components/home/ErrorBanner';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useRealTime } from '@/hooks/useRealTime';
-import type { NodeData } from '@/services/api';
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { Globe2, RefreshCw } from "lucide-react";
+import { Header } from "@/components/layout/Header";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { StatsCards } from "@/components/layout/StatsCards";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { MapSection } from "@/components/home/MapSection";
+import { NodeDetailsCard } from "@/components/home/NodeDetailsCard";
+import { ErrorBanner } from "@/components/home/ErrorBanner";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useRealTime } from "@/hooks/useRealTime";
+import type { NodeData } from "@/services/api";
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const { nodes, stats, connected, error, refreshData } = useRealTime();
   const { user } = useAuth();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -35,7 +35,7 @@ export const HomePage = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isInitialLoad && nodes.length === 0) {
-        console.warn('Data loading timeout, showing page anyway');
+        console.warn("Data loading timeout, showing page anyway");
         setIsInitialLoad(false);
         setLoadTimeout(true);
       }
@@ -67,7 +67,7 @@ export const HomePage = () => {
         <Header />
         <LoadingSpinner
           fullScreen
-          text={connected ? '正在加载节点数据...' : '正在尝试连接服务器...'}
+          text={connected ? "正在加载节点数据..." : "正在尝试连接服务器..."}
           size="xl"
           variant="elegant"
         />
@@ -104,8 +104,8 @@ export const HomePage = () => {
             title="暂无节点数据"
             message={
               connected
-                ? '系统已连接，但当前没有可用的节点信息。稍后刷新页面或联系管理员。'
-                : '正在尝试连接服务器，请稍后重试...'
+                ? "系统已连接，但当前没有可用的节点信息。稍后刷新页面或联系管理员。"
+                : "正在尝试连接服务器，请稍后重试..."
             }
             showRetry
             showHome={false}
@@ -117,7 +117,7 @@ export const HomePage = () => {
     );
   }
 
-  const welcomeName = user?.name || user?.username || '访客';
+  const welcomeName = user?.name || user?.username || "访客";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -135,7 +135,9 @@ export const HomePage = () => {
               className="gap-2"
               onClick={refreshData}
             >
-              <RefreshCw className={`h-4 w-4 ${!connected ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${!connected ? "animate-spin" : ""}`}
+              />
               刷新
             </Button>
           }
@@ -143,7 +145,7 @@ export const HomePage = () => {
           <p className="text-sm text-muted-foreground">
             {connected
               ? `当前共有 ${memoizedStats.totalNodes} 个节点在线监控，其中 ${memoizedStats.onlineNodes} 个处于在线状态。`
-              : '正在尝试重新连接实时数据通道，请稍候...'}
+              : "正在尝试重新连接实时数据通道，请稍候..."}
           </p>
         </PageHeader>
 
@@ -167,4 +169,3 @@ export const HomePage = () => {
     </div>
   );
 };
-

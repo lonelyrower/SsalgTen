@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { apiService, type SystemOverviewData } from '@/services/api';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useNotification } from '@/hooks/useNotification';
+import React, { useState, useEffect } from "react";
+import { apiService, type SystemOverviewData } from "@/services/api";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNotification } from "@/hooks/useNotification";
 import {
   Activity,
   Server,
@@ -14,7 +14,7 @@ import {
   Zap,
   HardDrive,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 
 export const SystemOverview: React.FC = () => {
   const [stats, setStats] = useState<SystemOverviewData | null>(null);
@@ -27,28 +27,28 @@ export const SystemOverview: React.FC = () => {
   const { addNotification } = useNotification();
 
   const cleanupOptions = [
-    { value: 0, label: '清除全部历史心跳' },
-    { value: 24, label: '保留最近 24 小时' },
-    { value: 72, label: '保留最近 3 天' },
-    { value: 168, label: '保留最近 7 天' },
+    { value: 0, label: "清除全部历史心跳" },
+    { value: 24, label: "保留最近 24 小时" },
+    { value: 72, label: "保留最近 3 天" },
+    { value: 168, label: "保留最近 7 天" },
   ];
 
   const fetchStats = async () => {
     try {
       setError(null);
-      
+
       // 使用统一的系统概览API
       const response = await apiService.getSystemOverview();
-      
+
       if (response.success && response.data) {
         setStats(response.data);
         setLastUpdate(new Date());
       } else {
-        setError(response.error || '获取系统概览数据失败');
+        setError(response.error || "获取系统概览数据失败");
       }
     } catch (err) {
-      console.error('Failed to fetch system overview:', err);
-      setError('网络错误，无法获取系统概览');
+      console.error("Failed to fetch system overview:", err);
+      setError("网络错误，无法获取系统概览");
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export const SystemOverview: React.FC = () => {
     const confirmMessage =
       retainHours && retainHours > 0
         ? `确认删除 ${retainHours} 小时前的心跳记录吗？此操作不可撤销。`
-        : '确认清空所有历史心跳记录吗？此操作不可撤销。';
+        : "确认清空所有历史心跳记录吗？此操作不可撤销。";
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -74,8 +74,8 @@ export const SystemOverview: React.FC = () => {
 
       if (response.success) {
         addNotification({
-          type: 'success',
-          title: '清理完成',
+          type: "success",
+          title: "清理完成",
           message:
             response.message ||
             `已删除 ${response.data?.deleted ?? 0} 条心跳记录`,
@@ -83,17 +83,17 @@ export const SystemOverview: React.FC = () => {
         await fetchStats();
       } else {
         addNotification({
-          type: 'error',
-          title: '清理失败',
-          message: response.error || '无法清理心跳记录，请稍后再试',
+          type: "error",
+          title: "清理失败",
+          message: response.error || "无法清理心跳记录，请稍后再试",
         });
       }
     } catch (err) {
-      console.error('Cleanup heartbeat logs error:', err);
+      console.error("Cleanup heartbeat logs error:", err);
       addNotification({
-        type: 'error',
-        title: '清理失败',
-        message: '服务器请求失败，请稍后再试',
+        type: "error",
+        title: "清理失败",
+        message: "服务器请求失败，请稍后再试",
       });
     } finally {
       setCleanupLoading(false);
@@ -102,7 +102,7 @@ export const SystemOverview: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-    
+
     // 调整为每1分钟自动刷新，使运行时间更贴近实际
     const interval = setInterval(fetchStats, 60 * 1000);
     return () => clearInterval(interval);
@@ -118,32 +118,32 @@ export const SystemOverview: React.FC = () => {
   };
 
   const getHealthStatus = () => {
-    if (!stats) return 'unknown';
+    if (!stats) return "unknown";
     const { nodes } = stats;
     const totalNodes = nodes.totalNodes;
     const onlineNodes = nodes.onlineNodes;
-    
-    if (totalNodes === 0) return 'warning';
+
+    if (totalNodes === 0) return "warning";
     const onlineRate = (onlineNodes / totalNodes) * 100;
-    
-    if (onlineRate >= 90) return 'excellent';
-    if (onlineRate >= 70) return 'good';
-    if (onlineRate >= 50) return 'warning';
-    return 'critical';
+
+    if (onlineRate >= 90) return "excellent";
+    if (onlineRate >= 70) return "good";
+    if (onlineRate >= 50) return "warning";
+    return "critical";
   };
 
   const getHealthColor = (status: string) => {
     switch (status) {
-      case 'excellent':
-        return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800';
-      case 'good':
-        return 'text-primary bg-primary/10 border-primary/30';
-      case 'warning':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800';
-      case 'critical':
-        return 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800';
+      case "excellent":
+        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800";
+      case "good":
+        return "text-primary bg-primary/10 border-primary/30";
+      case "warning":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
+      case "critical":
+        return "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800";
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800';
+        return "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800";
     }
   };
 
@@ -154,7 +154,10 @@ export const SystemOverview: React.FC = () => {
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div
+                key={i}
+                className="h-32 bg-gray-200 dark:bg-gray-700 rounded"
+              ></div>
             ))}
           </div>
           <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded mt-6"></div>
@@ -188,7 +191,9 @@ export const SystemOverview: React.FC = () => {
       {/* 头部信息 */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">系统统计总览</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            系统统计总览
+          </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             实时监控系统运行状况和关键指标
           </p>
@@ -211,7 +216,7 @@ export const SystemOverview: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="p-3 rounded-full bg-white/50">
-              {healthStatus === 'excellent' || healthStatus === 'good' ? (
+              {healthStatus === "excellent" || healthStatus === "good" ? (
                 <CheckCircle2 className="h-8 w-8" />
               ) : (
                 <AlertCircle className="h-8 w-8" />
@@ -219,23 +224,35 @@ export const SystemOverview: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-semibold">
-                系统健康状态: {
-                  healthStatus === 'excellent' ? '优秀' :
-                  healthStatus === 'good' ? '良好' :
-                  healthStatus === 'warning' ? '警告' :
-                  healthStatus === 'critical' ? '严重' : '未知'
-                }
+                系统健康状态:{" "}
+                {healthStatus === "excellent"
+                  ? "优秀"
+                  : healthStatus === "good"
+                    ? "良好"
+                    : healthStatus === "warning"
+                      ? "警告"
+                      : healthStatus === "critical"
+                        ? "严重"
+                        : "未知"}
               </h3>
               <p className="opacity-80">
-                {stats.nodes.onlineNodes}/{stats.nodes.totalNodes} 节点在线 
-                ({stats.nodes.totalNodes > 0 ? ((stats.nodes.onlineNodes / stats.nodes.totalNodes) * 100).toFixed(1) : 0}%)
+                {stats.nodes.onlineNodes}/{stats.nodes.totalNodes} 节点在线 (
+                {stats.nodes.totalNodes > 0
+                  ? (
+                      (stats.nodes.onlineNodes / stats.nodes.totalNodes) *
+                      100
+                    ).toFixed(1)
+                  : 0}
+                %)
               </p>
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm opacity-80">系统运行时间</div>
             <div className="text-lg font-semibold">
-              {formatUptime((stats.system.dbUptime ?? stats.system.uptime) || 0)}
+              {formatUptime(
+                (stats.system.dbUptime ?? stats.system.uptime) || 0,
+              )}
             </div>
           </div>
         </div>
@@ -247,8 +264,12 @@ export const SystemOverview: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">节点总数</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.nodes.totalNodes}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                节点总数
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.nodes.totalNodes}
+              </p>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
               <Server className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -270,8 +291,12 @@ export const SystemOverview: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">24小时心跳</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.heartbeats.last24h.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                24小时心跳
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.heartbeats.last24h.toLocaleString()}
+              </p>
             </div>
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
               <Activity className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -287,8 +312,12 @@ export const SystemOverview: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">内存使用</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.resources.memoryPercent}%</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                内存使用
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats?.resources.memoryPercent}%
+              </p>
             </div>
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
               <HardDrive className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -296,7 +325,8 @@ export const SystemOverview: React.FC = () => {
           </div>
           <div className="mt-4 flex items-center text-sm text-gray-600 dark:text-gray-400">
             <Database className="h-4 w-4 mr-1" />
-            {stats?.resources.memoryUsedMB}MB / {stats?.resources.memoryTotalMB}MB
+            {stats?.resources.memoryUsedMB}MB / {stats?.resources.memoryTotalMB}
+            MB
           </div>
         </Card>
 
@@ -304,8 +334,12 @@ export const SystemOverview: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">CPU使用率</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.resources.cpuPercent}%</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                CPU使用率
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats?.resources.cpuPercent}%
+              </p>
             </div>
             <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
               <Zap className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -328,8 +362,8 @@ export const SystemOverview: React.FC = () => {
                 </h3>
               </div>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
-                  手动清理历史心跳记录，确保每个节点仅保留最新数据
-                </p>
+                手动清理历史心跳记录，确保每个节点仅保留最新数据
+              </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
@@ -352,7 +386,7 @@ export const SystemOverview: React.FC = () => {
                 disabled={cleanupLoading}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                {cleanupLoading ? '清理中...' : '立即清理'}
+                {cleanupLoading ? "清理中..." : "立即清理"}
               </Button>
             </div>
           </div>
@@ -361,5 +395,3 @@ export const SystemOverview: React.FC = () => {
     </div>
   );
 };
-
-

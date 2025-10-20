@@ -1,14 +1,8 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { AgentInstallCommands } from '@/components/agent/AgentInstallCommands';
-import { 
-  X, 
-  Server, 
-  AlertCircle,
-  ExternalLink,
-  Terminal
-} from 'lucide-react';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { AgentInstallCommands } from "@/components/agent/AgentInstallCommands";
+import { X, Server, AlertCircle, ExternalLink, Terminal } from "lucide-react";
 
 interface AgentDeployModalProps {
   isOpen: boolean;
@@ -16,10 +10,10 @@ interface AgentDeployModalProps {
   onDeployed: () => void;
 }
 
-export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onDeployed 
+export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
+  isOpen,
+  onClose,
+  onDeployed,
 }) => {
   const handleDeploymentComplete = () => {
     onDeployed();
@@ -49,7 +43,6 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
           </Button>
         </div>
 
-
         {/* 内容区域 */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
@@ -71,21 +64,30 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div>
-                  <strong>操作系统:</strong><br />
-                  Ubuntu 18.04+<br />
-                  CentOS 7+<br />
+                  <strong>操作系统:</strong>
+                  <br />
+                  Ubuntu 18.04+
+                  <br />
+                  CentOS 7+
+                  <br />
                   Debian 9+
                 </div>
                 <div>
-                  <strong>硬件要求:</strong><br />
-                  CPU: 1核心<br />
-                  内存: 512MB<br />
+                  <strong>硬件要求:</strong>
+                  <br />
+                  CPU: 1核心
+                  <br />
+                  内存: 512MB
+                  <br />
                   磁盘: 1GB
                 </div>
                 <div>
-                  <strong>网络要求:</strong><br />
-                  公网IP地址<br />
-                  端口3002可访问<br />
+                  <strong>网络要求:</strong>
+                  <br />
+                  公网IP地址
+                  <br />
+                  端口3002可访问
+                  <br />
                   到主服务器连通
                 </div>
               </div>
@@ -96,9 +98,7 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
 
             {/* 安装说明 */}
             <Card className="p-4 bg-primary/10 border-primary/30">
-              <h4 className="font-medium text-primary mb-2">
-                安装说明
-              </h4>
+              <h4 className="font-medium text-primary mb-2">安装说明</h4>
               <ol className="text-sm text-primary space-y-1 list-decimal list-inside">
                 <li>确保您有VPS的root权限或sudo权限</li>
                 <li>将上述命令复制到您的VPS终端中</li>
@@ -126,7 +126,12 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open('https://github.com/lonelyrower/SsalgTen#agent-deployment', '_blank')}
+              onClick={() =>
+                window.open(
+                  "https://github.com/lonelyrower/SsalgTen#agent-deployment",
+                  "_blank",
+                )
+              }
               className="flex items-center space-x-1 text-blue-600 hover:text-blue-700"
             >
               <ExternalLink className="h-3 w-3" />

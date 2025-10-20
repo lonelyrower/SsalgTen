@@ -1,26 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { apiService, type InstallCommandData } from '@/services/api';
-import { 
-  Copy, 
-  Check, 
-  Terminal, 
-  Server, 
-  Key, 
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { apiService, type InstallCommandData } from "@/services/api";
+import {
+  Copy,
+  Check,
+  Terminal,
+  Server,
+  Key,
   Shield,
   RefreshCw,
   CheckCircle,
   ShieldAlert,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface AgentInstallCommandsProps {
   compact?: boolean;
 }
 
-export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ compact = false }) => {
-  const [installData, setInstallData] = useState<InstallCommandData | null>(null);
+export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({
+  compact = false,
+}) => {
+  const [installData, setInstallData] = useState<InstallCommandData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -30,18 +34,24 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
 
   const copyButtonClasses = (isCopied: boolean) =>
     cn(
-      'absolute top-3 right-3 z-10 h-9 w-9 min-h-0 min-w-0 p-0 rounded-md shadow-sm transition-colors',
-      'border bg-white/95 text-primary hover:bg-primary/10 dark:bg-slate-900/80 dark:text-primary',
+      "absolute top-3 right-3 z-10 h-9 w-9 min-h-0 min-w-0 p-0 rounded-md shadow-sm transition-colors",
+      "border bg-white/95 text-primary hover:bg-primary/10 dark:bg-slate-900/80 dark:text-primary",
       isCopied
-        ? 'border-emerald-300 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
-        : 'border-primary/40 dark:border-primary/40'
+        ? "border-emerald-300 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400"
+        : "border-primary/40 dark:border-primary/40",
     );
 
   const fetchInstallCommand = async () => {
     const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> => {
       return new Promise<T>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('timeout')), ms);
-        p.then(v => { clearTimeout(timer); resolve(v); }).catch(e => { clearTimeout(timer); reject(e); });
+        const timer = setTimeout(() => reject(new Error("timeout")), ms);
+        p.then((v) => {
+          clearTimeout(timer);
+          resolve(v);
+        }).catch((e) => {
+          clearTimeout(timer);
+          reject(e);
+        });
       });
     };
 
@@ -50,12 +60,26 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({ comp
       // 并行请求 + 超时降级（3s）
       const installPromise = withTimeout(apiService.getInstallCommand(), 3000);
       const cfgPromise = apiService.getSystemConfigs();
-      const [installRes, cfgRes] = await Promise.allSettled([installPromise, cfgPromise]);
+      const [installRes, cfgRes] = await Promise.allSettled([
+        installPromise,
+        cfgPromise,
+      ]);
 
-      const okInstall = installRes.status === 'fulfilled' && installRes.value.success && installRes.value.data;
-      const okCfg = cfgRes.status === 'fulfilled' && cfgRes.value.success && Array.isArray(cfgRes.value.data);
+      const okInstall =
+        installRes.status === "fulfilled" &&
+        installRes.value.success &&
+        installRes.value.data;
+      const okCfg =
+        cfgRes.status === "fulfilled" &&
+        cfgRes.value.success &&
+        Array.isArray(cfgRes.value.data);
 
-      const masterUrl = (okInstall ? (installRes as { value: { data: { masterUrl: string } } }).value.data.masterUrl : window.location.origin) as string;
+      const masterUrl = (
+        okInstall
+          ? (installRes as { value: { data: { masterUrl: string } } }).value
+              .data.masterUrl
+          : window.location.origin
+      ) as string;
       // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
       const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
       const base = {
@@ -105,29 +129,48 @@ sudo rm -f /etc/systemd/system/ssalgten-agent.service
 sudo systemctl daemon-reload
 sudo systemctl reset-failed`,
         security: {
-          isSecure: window.location.protocol === 'https:',
-          warnings: window.location.protocol === 'http:' ? ['使用HTTP连接，建议启用HTTPS'] : [],
+          isSecure: window.location.protocol === "https:",
+          warnings:
+            window.location.protocol === "http:"
+              ? ["使用HTTP连接，建议启用HTTPS"]
+              : [],
           recommendations: [
-            '安装前请确认服务器具有sudo权限',
-            '确保服务器能够访问互联网',
-            '建议在测试环境先行验证',
-            '使用真实的API密钥进行生产环境部署'
-          ]
-        }
+            "安装前请确认服务器具有sudo权限",
+            "确保服务器能够访问互联网",
+            "建议在测试环境先行验证",
+            "使用真实的API密钥进行生产环境部署",
+          ],
+        },
       } as InstallCommandData;
 
-      let sshEnabled = false, sshWindow = 10, sshThreshold = 10;
+      let sshEnabled = false,
+        sshWindow = 10,
+        sshThreshold = 10;
       if (okCfg) {
-        const cfgs = (cfgRes as { value: { data: Array<{key: string, value: unknown}> } }).value.data;
-        const getVal = (k: string) => cfgs.find(c => c.key === k)?.value;
-        sshEnabled = String(getVal('security.ssh_monitor_default_enabled')) === 'true';
-        sshWindow = parseInt(String(getVal('security.ssh_monitor_default_window_min') ?? '10'), 10) || 10;
-        sshThreshold = parseInt(String(getVal('security.ssh_monitor_default_threshold') ?? '10'), 10) || 10;
+        const cfgs = (
+          cfgRes as { value: { data: Array<{ key: string; value: unknown }> } }
+        ).value.data;
+        const getVal = (k: string) => cfgs.find((c) => c.key === k)?.value;
+        sshEnabled =
+          String(getVal("security.ssh_monitor_default_enabled")) === "true";
+        sshWindow =
+          parseInt(
+            String(getVal("security.ssh_monitor_default_window_min") ?? "10"),
+            10,
+          ) || 10;
+        sshThreshold =
+          parseInt(
+            String(getVal("security.ssh_monitor_default_threshold") ?? "10"),
+            10,
+          ) || 10;
       }
-      const tpl = sshEnabled ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n` : '';
+      const tpl = sshEnabled
+        ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n`
+        : "";
 
       if (okInstall) {
-      const data = (installRes as { value: { data: InstallCommandData } }).value.data;
+        const data = (installRes as { value: { data: InstallCommandData } })
+          .value.data;
         setInstallData({
           ...data,
           quickCommand: data.quickCommand + tpl,
@@ -135,10 +178,15 @@ sudo systemctl reset-failed`,
           interactiveCommand: data.interactiveCommand + tpl,
         });
       } else {
-        setInstallData({ ...base, quickCommand: base.quickCommand + tpl, command: base.command + tpl, interactiveCommand: base.interactiveCommand + tpl });
+        setInstallData({
+          ...base,
+          quickCommand: base.quickCommand + tpl,
+          command: base.command + tpl,
+          interactiveCommand: base.interactiveCommand + tpl,
+        });
       }
     } catch (error) {
-      console.error('Failed to build install command:', error);
+      console.error("Failed to build install command:", error);
       setInstallData(null);
     } finally {
       setLoading(false);
@@ -150,23 +198,23 @@ sudo systemctl reset-failed`,
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
       } else {
-        const textArea = document.createElement('textarea');
+        const textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        document.execCommand('copy');
+        document.execCommand("copy");
         textArea.remove();
       }
-      
+
       setCopied(type);
       setTimeout(() => setCopied(null), 3000);
     } catch (error) {
-      console.error('Failed to copy:', error);
-      alert('复制失败，请手动选择并复制命令');
+      console.error("Failed to copy:", error);
+      alert("复制失败，请手动选择并复制命令");
     }
   };
 
@@ -175,7 +223,9 @@ sudo systemctl reset-failed`,
       <div className="flex items-center justify-center h-32">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">正在获取安装命令...</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            正在获取安装命令...
+          </p>
         </div>
       </div>
     );
@@ -211,15 +261,21 @@ sudo systemctl reset-failed`,
         {/* 快速安装命令 (紧凑版) */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">快速安装命令</h3>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+              快速安装命令
+            </h3>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
-              className={copied === 'quick' ? 'text-green-600' : ''}
-              aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
+              onClick={() => copyToClipboard(installData.quickCommand, "quick")}
+              className={copied === "quick" ? "text-green-600" : ""}
+              aria-label={
+                copied === "quick"
+                  ? "安装命令已复制到剪贴板"
+                  : "复制安装命令到剪贴板"
+              }
             >
-              {copied === 'quick' ? (
+              {copied === "quick" ? (
                 <>
                   <Check className="h-3 w-3 mr-1" />
                   已复制
@@ -249,34 +305,51 @@ sudo systemctl reset-failed`,
           <div className="flex items-center space-x-3">
             <Server className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">主服务器地址</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">{installData.masterUrl}</p>
-            </div>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => copyToClipboard(installData.masterUrl, 'masterUrl')}
-          >
-            {copied === 'masterUrl' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          </Button>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="flex items-center space-x-3">
-            <Key className={`h-5 w-5 ${installData.security.isSecure ? 'text-green-600' : 'text-yellow-600'}`} />
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">API密钥</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                主服务器地址
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                {installData.apiKey.substring(0, 8)}...{installData.apiKey.slice(-4)}
+                {installData.masterUrl}
               </p>
             </div>
           </div>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => copyToClipboard(installData.apiKey, 'apiKey')}
+            onClick={() => copyToClipboard(installData.masterUrl, "masterUrl")}
           >
-            {copied === 'apiKey' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied === "masterUrl" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <Key
+              className={`h-5 w-5 ${installData.security.isSecure ? "text-green-600" : "text-yellow-600"}`}
+            />
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                API密钥
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                {installData.apiKey.substring(0, 8)}...
+                {installData.apiKey.slice(-4)}
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => copyToClipboard(installData.apiKey, "apiKey")}
+          >
+            {copied === "apiKey" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -341,7 +414,7 @@ sudo systemctl reset-failed`,
             快速安装（推荐）
           </h2>
         </div>
-        
+
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           在目标服务器上以root用户执行以下命令，自动完成节点安装和配置：
         </p>
@@ -353,12 +426,20 @@ sudo systemctl reset-failed`,
           <Button
             variant="outline"
             size="icon"
-            className={copyButtonClasses(copied === 'quick')}
-            onClick={() => copyToClipboard(installData.quickCommand, 'quick')}
-            aria-label={copied === 'quick' ? '安装命令已复制到剪贴板' : '复制安装命令到剪贴板'}
-            title={copied === 'quick' ? '已复制！' : '复制命令'}
+            className={copyButtonClasses(copied === "quick")}
+            onClick={() => copyToClipboard(installData.quickCommand, "quick")}
+            aria-label={
+              copied === "quick"
+                ? "安装命令已复制到剪贴板"
+                : "复制安装命令到剪贴板"
+            }
+            title={copied === "quick" ? "已复制！" : "复制命令"}
           >
-            {copied === 'quick' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied === "quick" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
@@ -382,7 +463,7 @@ sudo systemctl reset-failed`,
               交互式安装
             </h2>
           </div>
-          
+
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             适用于需要自定义配置的场景，运行后选择菜单选项"1"即可快速安装：
           </p>
@@ -394,12 +475,22 @@ sudo systemctl reset-failed`,
             <Button
               variant="outline"
               size="icon"
-              className={copyButtonClasses(copied === 'interactive')}
-              onClick={() => copyToClipboard(installData.interactiveCommand, 'interactive')}
-              aria-label={copied === 'interactive' ? '交互式安装命令已复制到剪贴板' : '复制交互式安装命令到剪贴板'}
-              title={copied === 'interactive' ? '已复制！' : '复制命令'}
+              className={copyButtonClasses(copied === "interactive")}
+              onClick={() =>
+                copyToClipboard(installData.interactiveCommand, "interactive")
+              }
+              aria-label={
+                copied === "interactive"
+                  ? "交互式安装命令已复制到剪贴板"
+                  : "复制交互式安装命令到剪贴板"
+              }
+              title={copied === "interactive" ? "已复制！" : "复制命令"}
             >
-              {copied === 'interactive' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied === "interactive" ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </Button>
           </div>
 
@@ -424,7 +515,7 @@ sudo systemctl reset-failed`,
               快速卸载
             </h2>
           </div>
-          
+
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             如需完全卸载监控探针，请在目标服务器上以root用户执行：
           </p>
@@ -436,12 +527,22 @@ sudo systemctl reset-failed`,
             <Button
               variant="outline"
               size="icon"
-              className={copyButtonClasses(copied === 'uninstall')}
-              onClick={() => copyToClipboard(installData.quickUninstallCommand, 'uninstall')}
-              aria-label={copied === 'uninstall' ? '卸载命令已复制到剪贴板' : '复制卸载命令到剪贴板'}
-              title={copied === 'uninstall' ? '已复制！' : '复制命令'}
+              className={copyButtonClasses(copied === "uninstall")}
+              onClick={() =>
+                copyToClipboard(installData.quickUninstallCommand, "uninstall")
+              }
+              aria-label={
+                copied === "uninstall"
+                  ? "卸载命令已复制到剪贴板"
+                  : "复制卸载命令到剪贴板"
+              }
+              title={copied === "uninstall" ? "已复制！" : "复制命令"}
             >
-              {copied === 'uninstall' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied === "uninstall" ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </Button>
           </div>
 

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Activity, Server } from 'lucide-react';
+import React, { useEffect, useMemo, useRef } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Activity, Server } from "lucide-react";
 
 interface NodeStatusChartProps {
   onlineNodes: number;
@@ -16,7 +16,8 @@ const CustomTooltip = ({ active, payload, total }: any) => {
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
         <p className="font-medium text-gray-900 dark:text-white">{data.name}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          数量: {data.value} ({total > 0 ? Math.round((data.value / total) * 100) : 0}%)
+          数量: {data.value} (
+          {total > 0 ? Math.round((data.value / total) * 100) : 0}%)
         </p>
       </div>
     );
@@ -27,16 +28,20 @@ const CustomTooltip = ({ active, payload, total }: any) => {
 export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
   onlineNodes,
   offlineNodes,
-  className = ''
+  className = "",
 }) => {
   const data = [
-    { name: '在线节点', value: onlineNodes, color: '#22c55e' },
-    { name: '离线节点', value: offlineNodes, color: '#ef4444' }
+    { name: "在线节点", value: onlineNodes, color: "#22c55e" },
+    { name: "离线节点", value: offlineNodes, color: "#ef4444" },
   ];
 
   const total = onlineNodes + offlineNodes;
   const progressRef = useRef<HTMLDivElement>(null);
-  const availabilityPercent = useMemo(() => (total > 0 ? Math.min(100, Math.max(0, (onlineNodes / total) * 100)) : 0), [onlineNodes, total]);
+  const availabilityPercent = useMemo(
+    () =>
+      total > 0 ? Math.min(100, Math.max(0, (onlineNodes / total) * 100)) : 0,
+    [onlineNodes, total],
+  );
 
   useEffect(() => {
     const progressElement = progressRef.current;
@@ -46,7 +51,9 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
   }, [availabilityPercent]);
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}
+    >
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
           <Activity className="h-5 w-5 mr-2 text-blue-600" />
@@ -87,10 +94,14 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
               <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm font-medium text-green-700 dark:text-green-300">在线节点</span>
+                  <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                    在线节点
+                  </span>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-green-600">{onlineNodes}</div>
+                  <div className="text-lg font-bold text-green-600">
+                    {onlineNodes}
+                  </div>
                   <div className="text-xs text-green-600">
                     {total > 0 ? Math.round((onlineNodes / total) * 100) : 0}%
                   </div>
@@ -100,10 +111,14 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
               <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span className="text-sm font-medium text-red-700 dark:text-red-300">离线节点</span>
+                  <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                    离线节点
+                  </span>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-red-600">{offlineNodes}</div>
+                  <div className="text-lg font-bold text-red-600">
+                    {offlineNodes}
+                  </div>
                   <div className="text-xs text-red-600">
                     {total > 0 ? Math.round((offlineNodes / total) * 100) : 0}%
                   </div>
@@ -114,7 +129,9 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
             {/* 可用率指示器 */}
             <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">系统可用率</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  系统可用率
+                </span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {total > 0 ? Math.round((onlineNodes / total) * 100) : 0}%
                 </span>

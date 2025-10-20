@@ -1,20 +1,20 @@
-import { lazy, Suspense } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { ViewModeToggle } from '@/components/map/ViewModeToggle';
-import { Globe, Activity } from 'lucide-react';
-import type { NodeData, NodeStats } from '@/services/api';
+import { lazy, Suspense } from "react";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { ViewModeToggle } from "@/components/map/ViewModeToggle";
+import { Globe, Activity } from "lucide-react";
+import type { NodeData, NodeStats } from "@/services/api";
 
 // 懒加载地图组件
 const EnhancedWorldMap = lazy(() =>
-  import('@/components/map/EnhancedWorldMap').then(module => ({
-    default: module.EnhancedWorldMap
-  }))
+  import("@/components/map/EnhancedWorldMap").then((module) => ({
+    default: module.EnhancedWorldMap,
+  })),
 );
 
 const Globe3D = lazy(() =>
-  import('@/components/map/Globe3D').then(module => ({
-    default: module.Globe3D
-  }))
+  import("@/components/map/Globe3D").then((module) => ({
+    default: module.Globe3D,
+  })),
 );
 
 // 地图加载骨架屏
@@ -32,9 +32,9 @@ const MapSkeleton = () => (
 interface MapSectionProps {
   nodes: NodeData[];
   stats: NodeStats;
-  viewMode: '2d' | '3d';
+  viewMode: "2d" | "3d";
   selectedNode: NodeData | null;
-  onViewModeChange: (mode: '2d' | '3d') => void;
+  onViewModeChange: (mode: "2d" | "3d") => void;
   onNodeClick: (node: NodeData) => void;
 }
 
@@ -44,7 +44,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
   viewMode,
   selectedNode,
   onViewModeChange,
-  onNodeClick
+  onNodeClick,
 }) => {
   return (
     <GlassCard variant="gradient" animated={true} className="p-6">
@@ -56,9 +56,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               <Globe className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold gradient-text">
-                全球节点网络
-              </h2>
+              <h2 className="text-2xl font-bold gradient-text">全球节点网络</h2>
               <p className="text-muted-foreground text-sm font-medium flex items-center">
                 <Activity className="h-4 w-4 mr-2 text-green-400" />
                 实时监控全球网络节点状态和性能
@@ -75,11 +73,15 @@ export const MapSection: React.FC<MapSectionProps> = ({
           {/* 状态统计 */}
           <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
             <div className="status-indicator bg-green-400" />
-            <span className="font-medium text-foreground">在线 {stats?.onlineNodes || 0}</span>
+            <span className="font-medium text-foreground">
+              在线 {stats?.onlineNodes || 0}
+            </span>
           </div>
           <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
             <div className="status-indicator bg-red-400" />
-            <span className="font-medium text-foreground">离线 {stats?.offlineNodes || 0}</span>
+            <span className="font-medium text-foreground">
+              离线 {stats?.offlineNodes || 0}
+            </span>
           </div>
         </div>
       </div>
@@ -87,7 +89,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
       {/* 地图容器 */}
       <div className="map-container relative h-[600px]">
         <Suspense fallback={<MapSkeleton />}>
-          {viewMode === '2d' ? (
+          {viewMode === "2d" ? (
             <EnhancedWorldMap
               nodes={nodes}
               onNodeClick={onNodeClick}
@@ -96,10 +98,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               showControlPanels={false}
             />
           ) : (
-            <Globe3D
-              nodes={nodes}
-              onNodeClick={onNodeClick}
-            />
+            <Globe3D nodes={nodes} onNodeClick={onNodeClick} />
           )}
         </Suspense>
       </div>

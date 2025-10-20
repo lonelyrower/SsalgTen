@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
-import { Server, Activity, Globe, Clock } from 'lucide-react';
-import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
-import type { NodeData } from '@/services/api';
-import { Badge } from '@/components/ui/badge';
+import { motion } from "framer-motion";
+import { Server, Activity, Globe, Clock } from "lucide-react";
+import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
+import type { NodeData } from "@/services/api";
+import { Badge } from "@/components/ui/badge";
 
 interface NodeCardProps {
   node: NodeData;
@@ -16,23 +16,23 @@ interface NodeCardProps {
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'online':
-      return 'text-green-400 bg-green-400/20 border-green-400/50';
-    case 'offline':
-      return 'text-red-400 bg-red-400/20 border-red-400/50';
+    case "online":
+      return "text-green-400 bg-green-400/20 border-green-400/50";
+    case "offline":
+      return "text-red-400 bg-red-400/20 border-red-400/50";
     default:
-      return 'text-gray-400 bg-gray-400/20 border-gray-400/50';
+      return "text-gray-400 bg-gray-400/20 border-gray-400/50";
   }
 };
 
 const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'online':
-      return '🟢';
-    case 'offline':
-      return '🔴';
+    case "online":
+      return "🟢";
+    case "offline":
+      return "🔴";
     default:
-      return '⚪';
+      return "⚪";
   }
 };
 
@@ -49,8 +49,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
     <motion.div
       className={`relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 border rounded-2xl p-6 backdrop-blur-sm cursor-pointer transition-all duration-300 ${
         isSelected
-          ? 'border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30'
-          : 'border-gray-700/50 hover:border-gray-600/50 hover:shadow-md'
+          ? "border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30"
+          : "border-gray-700/50 hover:border-gray-600/50 hover:shadow-md"
       }`}
       initial={{ opacity: 0, x: -50 }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -83,7 +83,9 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <CountryFlagSvg country={node.country} className="w-8 h-8" />
               )}
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">{node.name}</h3>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {node.name}
+                </h3>
                 <p className="text-sm text-gray-400 flex items-center gap-1">
                   <Globe className="h-3 w-3" />
                   {node.city}, {node.country}
@@ -91,7 +93,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
               </div>
             </div>
             <Badge
-              variant={node.status === 'online' ? 'success' : 'destructive'}
+              variant={node.status === "online" ? "success" : "destructive"}
               className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(node.status)}`}
             >
               {node.status.toUpperCase()}
@@ -101,7 +103,9 @@ export const NodeCard: React.FC<NodeCardProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2">
               <span className="text-gray-500 text-sm">提供商:</span>
-              <span className="text-gray-300 text-sm truncate">{node.provider}</span>
+              <span className="text-gray-300 text-sm truncate">
+                {node.provider}
+              </span>
             </div>
             {latency !== null && latency !== undefined && (
               <div className="flex items-center gap-2">
@@ -109,10 +113,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <span
                   className={`font-semibold text-sm ${
                     latency < 50
-                      ? 'text-green-400'
+                      ? "text-green-400"
                       : latency < 150
-                        ? 'text-yellow-400'
-                        : 'text-red-400'
+                        ? "text-yellow-400"
+                        : "text-red-400"
                   }`}
                 >
                   {latency}ms
@@ -122,18 +126,20 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {node.ipv4 && (
               <div className="flex items-center gap-2">
                 <span className="text-gray-500 text-sm">IPv4:</span>
-                <span className="text-cyan-400 font-mono text-xs">{node.ipv4}</span>
+                <span className="text-cyan-400 font-mono text-xs">
+                  {node.ipv4}
+                </span>
               </div>
             )}
             {node.lastSeen && (
               <div className="flex items-center gap-2">
                 <Clock className="h-3 w-3 text-gray-500" />
                 <span className="text-gray-400 text-xs">
-                  {new Date(node.lastSeen).toLocaleString('zh-CN', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
+                  {new Date(node.lastSeen).toLocaleString("zh-CN", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </span>
               </div>
@@ -141,7 +147,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
           </div>
 
           {/* Quick stats */}
-          {node.status === 'online' && (
+          {node.status === "online" && (
             <div className="mt-4 flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <Server className="h-4 w-4 text-cyan-400" />

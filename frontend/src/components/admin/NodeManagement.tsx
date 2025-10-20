@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { apiService, type NodeData } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { AgentDeployModal } from './AgentDeployModal';
-import { 
-  Server, 
-  Search, 
-  Edit2, 
-  Trash2, 
+import React, { useState, useEffect } from "react";
+import { apiService, type NodeData } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { AgentDeployModal } from "./AgentDeployModal";
+import {
+  Server,
+  Search,
+  Edit2,
+  Trash2,
   Plus,
   RefreshCw,
   Activity,
@@ -16,29 +16,38 @@ import {
   Clock,
   ExternalLink,
   Settings,
-  Download
-} from 'lucide-react';
-import CountryFlagSvg from '@/components/ui/CountryFlagSvg';
+  Download,
+} from "lucide-react";
+import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 
 interface NodeManagementProps {
   className?: string;
 }
 
-export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }) => {
+export const NodeManagement: React.FC<NodeManagementProps> = ({
+  className = "",
+}) => {
   const [nodes, setNodes] = useState<NodeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importText, setImportText] = useState('');
+  const [importText, setImportText] = useState("");
   const [importNeverAdopt, setImportNeverAdopt] = useState(true);
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<null | { created: number; updated: number; skipped: number; total: number }>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [importResult, setImportResult] = useState<null | {
+    created: number;
+    updated: number;
+    skipped: number;
+    total: number;
+  }>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null,
+  );
   const [showRenameModal, setShowRenameModal] = useState<string | null>(null);
-  const [newNodeName, setNewNodeName] = useState('');
+  const [newNodeName, setNewNodeName] = useState("");
   const [exporting, setExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
@@ -54,39 +63,43 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
         // 规范化状态为小写，避免统计/筛选误差
         const normalized = response.data.map((n: NodeData) => ({
           ...n,
-          status: (typeof n.status === 'string' ? n.status.toLowerCase() : n.status) as NodeData['status']
+          status: (typeof n.status === "string"
+            ? n.status.toLowerCase()
+            : n.status) as NodeData["status"],
         }));
         setNodes(normalized);
       } else {
-        setError(response.error || 'Failed to load nodes');
+        setError(response.error || "Failed to load nodes");
       }
     } catch {
-      setError('Failed to load nodes');
+      setError("Failed to load nodes");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExportNodes = async (format: 'json' | 'csv' | 'markdown' = 'csv') => {
+  const handleExportNodes = async (
+    format: "json" | "csv" | "markdown" = "csv",
+  ) => {
     try {
       setExporting(true);
       const result = await apiService.exportNodes(format);
       if (result.success && result.data) {
         const url = window.URL.createObjectURL(result.data);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        const fallbackName = `ssalgten-nodes-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`;
+        const fallbackName = `ssalgten-nodes-${new Date().toISOString().replace(/[:.]/g, "-")}.${format}`;
         link.download = result.fileName || fallbackName;
         document.body.appendChild(link);
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
       } else {
-        window.alert(`节点导出失败：${result.error || '未知错误'}`);
+        window.alert(`节点导出失败：${result.error || "未知错误"}`);
       }
     } catch (error) {
-      console.error('Export nodes failed:', error);
-      window.alert('节点导出失败，请稍后重试。');
+      console.error("Export nodes failed:", error);
+      window.alert("节点导出失败，请稍后重试。");
     } finally {
       setExporting(false);
     }
@@ -95,13 +108,13 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const getStatusIcon = (status: string) => {
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
-      case 'online':
+      case "online":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'offline':
+      case "offline":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'warning':
+      case "warning":
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'maintenance':
+      case "maintenance":
         return <Clock className="h-4 w-4 text-blue-500" />;
       default:
         return <Activity className="h-4 w-4 text-gray-500" />;
@@ -111,46 +124,50 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
   const getStatusBadgeClass = (status: string) => {
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
-      case 'online':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'offline':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'maintenance':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case "online":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "offline":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "warning":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "maintenance":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
   const getStatusText = (status: string) => {
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
-      case 'online':
-        return '在线';
-      case 'offline':
-        return '离线';
-      case 'maintenance':
-        return '维护';
+      case "online":
+        return "在线";
+      case "offline":
+        return "离线";
+      case "maintenance":
+        return "维护";
       default:
-        return '离线';
+        return "离线";
     }
   };
 
-  const filteredNodes = nodes.filter(node => {
-    const matchesSearch = 
+  const filteredNodes = nodes.filter((node) => {
+    const matchesSearch =
       node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       node.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
       node.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       node.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (node.ipv4 && node.ipv4.includes(searchTerm)) ||
       (node.ipv6 && node.ipv6.includes(searchTerm)) ||
-      (node.asnNumber && node.asnNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (node.asnName && node.asnName.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = filterStatus === 'all' || (node.status || '').toLowerCase() === filterStatus;
-    
+      (node.asnNumber &&
+        node.asnNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (node.asnName &&
+        node.asnName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus =
+      filterStatus === "all" ||
+      (node.status || "").toLowerCase() === filterStatus;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -158,34 +175,42 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
     try {
       const response = await apiService.deleteNode(nodeId);
       if (response.success) {
-        setNodes(nodes.filter(n => n.id !== nodeId));
+        setNodes(nodes.filter((n) => n.id !== nodeId));
         setShowDeleteConfirm(null);
       } else {
-        setError(response.error || 'Failed to delete node');
+        setError(response.error || "Failed to delete node");
       }
     } catch {
-      setError('Failed to delete node');
+      setError("Failed to delete node");
     }
   };
 
   const handleRenameNode = async (nodeId: string) => {
     if (!newNodeName.trim()) {
-      setError('节点名称不能为空');
+      setError("节点名称不能为空");
       return;
     }
 
     try {
-      const response = await apiService.updateNode(nodeId, { name: newNodeName.trim() });
+      const response = await apiService.updateNode(nodeId, {
+        name: newNodeName.trim(),
+      });
       if (response.success && response.data) {
-        setNodes(nodes.map(n => n.id === nodeId ? { ...n, name: response.data?.name || newNodeName.trim() } : n));
+        setNodes(
+          nodes.map((n) =>
+            n.id === nodeId
+              ? { ...n, name: response.data?.name || newNodeName.trim() }
+              : n,
+          ),
+        );
         setShowRenameModal(null);
-        setNewNodeName('');
-        setError('');
+        setNewNodeName("");
+        setError("");
       } else {
-        setError(response.error || 'Failed to rename node');
+        setError(response.error || "Failed to rename node");
       }
     } catch {
-      setError('Failed to rename node');
+      setError("Failed to rename node");
     }
   };
 
@@ -200,7 +225,10 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div
+              key={i}
+              className="h-16 bg-gray-200 dark:bg-gray-700 rounded"
+            ></div>
           ))}
         </div>
       </div>
@@ -221,18 +249,18 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               重命名、删除节点和部署新节点
             </p>
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              共 {filteredNodes.length} 个节点 • {filteredNodes.filter(n => n.status === 'online').length} 在线 • 
-              <a href="/nodes" className="text-primary hover:opacity-80 ml-1 inline-flex items-center">
+              共 {filteredNodes.length} 个节点 •{" "}
+              {filteredNodes.filter((n) => n.status === "online").length} 在线 •
+              <a
+                href="/nodes"
+                className="text-primary hover:opacity-80 ml-1 inline-flex items-center"
+              >
                 查看详细监控 <ExternalLink className="h-3 w-3 ml-1" />
               </a>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadNodes}
-            >
+            <Button variant="outline" size="sm" onClick={loadNodes}>
               <RefreshCw className="h-4 w-4 mr-1" />
               刷新
             </Button>
@@ -256,21 +284,21 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                 <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
                   <button
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleExportNodes('json')}
+                    onClick={() => handleExportNodes("json")}
                     className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
                   >
                     JSON
                   </button>
                   <button
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleExportNodes('csv')}
+                    onClick={() => handleExportNodes("csv")}
                     className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     CSV
                   </button>
                   <button
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleExportNodes('markdown')}
+                    onClick={() => handleExportNodes("markdown")}
                     className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
                   >
                     Markdown
@@ -336,7 +364,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setError('')}
+                onClick={() => setError("")}
                 className="text-red-600 hover:text-red-700 mt-2"
               >
                 关闭
@@ -351,15 +379,22 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-2xl w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
             <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">导入过期 VPS</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                导入过期 VPS
+              </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                支持两种方式：1) 选择文件（.txt 每行一个 IP；或 .json，数组为包含 ip 字段的对象）；2) 直接在文本框中粘贴 IP（每行一个）。
-                这些节点将以“离线”状态显示；默认设置为“纪念/冻结”，不会被后续相同 IP 的新 Agent 自动合并。
+                支持两种方式：1) 选择文件（.txt 每行一个 IP；或
+                .json，数组为包含 ip 字段的对象）；2) 直接在文本框中粘贴
+                IP（每行一个）。
+                这些节点将以“离线”状态显示；默认设置为“纪念/冻结”，不会被后续相同
+                IP 的新 Agent 自动合并。
               </p>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">选择文件（可选）</label>
+                  <label className="block text-sm font-medium mb-1">
+                    选择文件（可选）
+                  </label>
                   <input
                     type="file"
                     accept=".txt,.json"
@@ -370,9 +405,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                       if (!file) return;
                       try {
                         const text = await file.text();
-                        setImportText((prev) => prev ? (prev + '\n' + text) : text);
+                        setImportText((prev) =>
+                          prev ? prev + "\n" + text : text,
+                        );
                       } catch {
-                        setError('读取文件失败');
+                        setError("读取文件失败");
                       }
                     }}
                     className="block w-full text-sm text-gray-700 dark:text-gray-200"
@@ -380,24 +417,36 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">IP 列表（每行一个）或 JSON</label>
+                  <label className="block text-sm font-medium mb-1">
+                    IP 列表（每行一个）或 JSON
+                  </label>
                   <textarea
                     value={importText}
                     onChange={(e) => setImportText(e.target.value)}
                     rows={10}
-                    placeholder={"示例:\n203.0.113.10\n2001:db8::1234\n或 JSON:\n[{\"ip\":\"203.0.113.10\",\"name\":\"Expired-1\"}]"}
+                    placeholder={
+                      '示例:\n203.0.113.10\n2001:db8::1234\n或 JSON:\n[{"ip":"203.0.113.10","name":"Expired-1"}]'
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                   />
                 </div>
 
                 <label className="inline-flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={importNeverAdopt} onChange={(e) => setImportNeverAdopt(e.target.checked)} />
-                  <span className="text-gray-700 dark:text-gray-300">设置为“纪念/冻结”（neverAdopt）</span>
+                  <input
+                    type="checkbox"
+                    checked={importNeverAdopt}
+                    onChange={(e) => setImportNeverAdopt(e.target.checked)}
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">
+                    设置为“纪念/冻结”（neverAdopt）
+                  </span>
                 </label>
 
                 {importResult && (
                   <div className="text-sm text-gray-700 dark:text-gray-200 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded">
-                    导入完成：新增 {importResult.created}，更新 {importResult.updated}，跳过 {importResult.skipped}，共 {importResult.total}
+                    导入完成：新增 {importResult.created}，更新{" "}
+                    {importResult.updated}，跳过 {importResult.skipped}，共{" "}
+                    {importResult.total}
                   </div>
                 )}
               </div>
@@ -405,7 +454,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
               <div className="flex justify-end space-x-3 mt-6">
                 <Button
                   variant="outline"
-                  onClick={() => { setShowImportModal(false); setImportText(''); setImportResult(null); }}
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportText("");
+                    setImportResult(null);
+                  }}
                   className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   取消
@@ -415,43 +468,71 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   onClick={async () => {
                     // 解析 importText 为 items
                     const raw = importText.trim();
-                    if (!raw) { setError('请输入或选择包含 IP 的内容'); return; }
-                    let items: Array<{ ip: string; name?: string; notes?: string; tags?: string[]; neverAdopt?: boolean }> = [];
+                    if (!raw) {
+                      setError("请输入或选择包含 IP 的内容");
+                      return;
+                    }
+                    let items: Array<{
+                      ip: string;
+                      name?: string;
+                      notes?: string;
+                      tags?: string[];
+                      neverAdopt?: boolean;
+                    }> = [];
                     try {
-                      if (raw.startsWith('[') || raw.startsWith('{')) {
+                      if (raw.startsWith("[") || raw.startsWith("{")) {
                         const parsed = JSON.parse(raw);
                         if (Array.isArray(parsed)) items = parsed;
-                        else if (Array.isArray(parsed.items)) items = parsed.items;
+                        else if (Array.isArray(parsed.items))
+                          items = parsed.items;
                       }
                     } catch {
                       // JSON解析失败时忽略错误，继续处理原始文本
                     }
                     if (items.length === 0) {
                       // 逐行解析 IP
-                      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                      items = lines.map(ip => ({ ip }));
+                      const lines = raw
+                        .split(/\r?\n/)
+                        .map((l) => l.trim())
+                        .filter(Boolean);
+                      items = lines.map((ip) => ({ ip }));
                     }
                     // 填充 neverAdopt 默认值
-                    items = items.map(it => ({ ...it, neverAdopt: typeof it.neverAdopt === 'boolean' ? it.neverAdopt : importNeverAdopt }));
+                    items = items.map((it) => ({
+                      ...it,
+                      neverAdopt:
+                        typeof it.neverAdopt === "boolean"
+                          ? it.neverAdopt
+                          : importNeverAdopt,
+                    }));
 
                     setImporting(true);
-                    setError('');
+                    setError("");
                     setImportResult(null);
                     try {
-                      const resp = await apiService.importPlaceholderNodes(items);
+                      const resp =
+                        await apiService.importPlaceholderNodes(items);
                       if (resp.success && resp.data) {
                         setImportResult(resp.data);
                         // 刷新节点
                         await loadNodes();
                       } else {
-                        setError(resp.error || '导入失败');
+                        setError(resp.error || "导入失败");
                       }
                     } catch (e: unknown) {
-                      const msg = (e instanceof Error && e.message) ? String(e.message) : '';
-                      if (msg.includes('Placeholder feature not available') || msg.includes('501')) {
-                        setError('占位功能不可用：请先在后端执行数据库迁移（prisma migrate deploy）后重试。');
+                      const msg =
+                        e instanceof Error && e.message
+                          ? String(e.message)
+                          : "";
+                      if (
+                        msg.includes("Placeholder feature not available") ||
+                        msg.includes("501")
+                      ) {
+                        setError(
+                          "占位功能不可用：请先在后端执行数据库迁移（prisma migrate deploy）后重试。",
+                        );
                       } else {
-                        setError('导入失败');
+                        setError("导入失败");
                       }
                     } finally {
                       setImporting(false);
@@ -460,7 +541,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   disabled={importing || !importText.trim()}
                   className="min-w-[120px]"
                 >
-                  {importing ? '正在导入…' : '开始导入'}
+                  {importing ? "正在导入…" : "开始导入"}
                 </Button>
               </div>
             </div>
@@ -496,7 +577,10 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredNodes.map((node) => (
-                <tr key={node.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr
+                  key={node.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
                   <td className="w-8 px-1 py-4 text-center">
                     {getStatusIcon(node.status)}
                   </td>
@@ -510,8 +594,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                           IPv4: {node.ipv4}
                         </div>
                       )}
-                      {node.ipv6 && node.ipv6.includes(':') && (
-                        <div className="text-xs text-purple-600 dark:text-purple-400 font-mono truncate max-w-xs" title={node.ipv6}>
+                      {node.ipv6 && node.ipv6.includes(":") && (
+                        <div
+                          className="text-xs text-purple-600 dark:text-purple-400 font-mono truncate max-w-xs"
+                          title={node.ipv6}
+                        >
                           IPv6: {node.ipv6}
                         </div>
                       )}
@@ -521,9 +608,14 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                     <div className="flex flex-col items-center">
                       <div className="text-sm text-gray-900 dark:text-white inline-flex items-center gap-1.5">
                         <CountryFlagSvg country={node.country} />
-                        <span className="truncate">{node.city}, {node.country}</span>
+                        <span className="truncate">
+                          {node.city}, {node.country}
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs text-center" title={node.provider}>
+                      <div
+                        className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs text-center"
+                        title={node.provider}
+                      >
                         {node.provider}
                       </div>
                       {node.asnNumber && (
@@ -534,12 +626,16 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                     </div>
                   </td>
                   <td className="w-20 px-2 py-4 text-center">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusBadgeClass(node.status)}`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusBadgeClass(node.status)}`}
+                    >
                       {getStatusText(node.status)}
                     </span>
                   </td>
                   <td className="w-32 px-2 py-4 text-xs text-center text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {node.lastSeen ? new Date(node.lastSeen).toLocaleDateString('zh-CN') : '未知'}
+                    {node.lastSeen
+                      ? new Date(node.lastSeen).toLocaleDateString("zh-CN")
+                      : "未知"}
                   </td>
                   <td className="w-28 px-2 py-4 text-center text-sm font-medium">
                     <div className="inline-flex items-center justify-center space-x-1">
@@ -574,19 +670,17 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
         <div className="text-center py-8">
           <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {searchTerm || filterStatus !== 'all' ? '没有找到匹配的节点' : '还没有节点'}
+            {searchTerm || filterStatus !== "all"
+              ? "没有找到匹配的节点"
+              : "还没有节点"}
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mb-4">
-            {searchTerm || filterStatus !== 'all' 
-              ? '请尝试调整搜索条件' 
-              : '部署第一个节点开始监控'
-            }
+            {searchTerm || filterStatus !== "all"
+              ? "请尝试调整搜索条件"
+              : "部署第一个节点开始监控"}
           </p>
-          {(!searchTerm && filterStatus === 'all') && (
-            <Button
-              variant="info"
-              onClick={() => setShowDeployModal(true)}
-            >
+          {!searchTerm && filterStatus === "all" && (
+            <Button variant="info" onClick={() => setShowDeployModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               部署节点
             </Button>
@@ -602,7 +696,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
         }}
         onDeployed={() => {
           loadNodes();
-          setError('');
+          setError("");
         }}
       />
 
@@ -669,11 +763,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                     placeholder="输入节点名称"
                     autoFocus
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         handleRenameNode(showRenameModal);
-                      } else if (e.key === 'Escape') {
+                      } else if (e.key === "Escape") {
                         setShowRenameModal(null);
-                        setNewNodeName('');
+                        setNewNodeName("");
                       }
                     }}
                   />
@@ -684,7 +778,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({ className = '' }
                   variant="outline"
                   onClick={() => {
                     setShowRenameModal(null);
-                    setNewNodeName('');
+                    setNewNodeName("");
                   }}
                   className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
                 >

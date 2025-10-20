@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import type { StreamingFilters as FilterType } from '@/types/streaming';
-import { STREAMING_SERVICE_ORDER, STREAMING_SERVICES } from '@/types/streaming';
-import { Card } from '../ui/card';
-import { Search, Filter, X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import type { StreamingFilters as FilterType } from "@/types/streaming";
+import { STREAMING_SERVICE_ORDER, STREAMING_SERVICES } from "@/types/streaming";
+import { Card } from "../ui/card";
+import { Search, Filter, X } from "lucide-react";
 
 interface StreamingFiltersProps {
   filters: FilterType;
@@ -15,7 +15,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
   onFiltersChange,
   availableCountries = [],
 }) => {
-  const [localKeyword, setLocalKeyword] = useState(filters.keyword || '');
+  const [localKeyword, setLocalKeyword] = useState(filters.keyword || "");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // 防抖搜索
@@ -39,35 +39,35 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
   // Type-safe parsers for select values
   const parsePlatform = (v: string | undefined) => {
     if (!v) return undefined;
-    return (STREAMING_SERVICE_ORDER as Array<FilterType['platform']>).includes(
-      v as FilterType['platform'],
+    return (STREAMING_SERVICE_ORDER as Array<FilterType["platform"]>).includes(
+      v as FilterType["platform"],
     )
-      ? (v as FilterType['platform'])
+      ? (v as FilterType["platform"])
       : undefined;
   };
 
   const parseStatus = (v: string | undefined) => {
     if (!v) return undefined;
-    const allowed: Array<NonNullable<FilterType['status']>> = [
-      'yes',
-      'no',
-      'org',
-      'pending',
-      'failed',
-      'unknown',
+    const allowed: Array<NonNullable<FilterType["status"]>> = [
+      "yes",
+      "no",
+      "org",
+      "pending",
+      "failed",
+      "unknown",
     ];
-    return allowed.includes(v as NonNullable<FilterType['status']>)
-      ? (v as FilterType['status'])
+    return allowed.includes(v as NonNullable<FilterType["status"]>)
+      ? (v as FilterType["status"])
       : undefined;
   };
 
   const clearFilters = () => {
-    setLocalKeyword('');
+    setLocalKeyword("");
     onFiltersChange({});
   };
 
-  const hasActiveFilters = Object.keys(filters).some(key =>
-    key !== 'showExpired' && filters[key as keyof FilterType]
+  const hasActiveFilters = Object.keys(filters).some(
+    (key) => key !== "showExpired" && filters[key as keyof FilterType],
   );
 
   return (
@@ -89,25 +89,26 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
         <div className="flex flex-wrap gap-2">
           {/* 平台筛选 */}
           <select
-            value={filters.platform || ''}
+            value={filters.platform || ""}
             onChange={(e) =>
-              handleFilterChange('platform', parsePlatform(e.target.value))
+              handleFilterChange("platform", parsePlatform(e.target.value))
             }
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部平台</option>
             {STREAMING_SERVICE_ORDER.map((service) => (
               <option key={service} value={service}>
-                {STREAMING_SERVICES[service].icon} {STREAMING_SERVICES[service].name}
+                {STREAMING_SERVICES[service].icon}{" "}
+                {STREAMING_SERVICES[service].name}
               </option>
             ))}
           </select>
 
           {/* 状态筛选 */}
           <select
-            value={filters.status || ''}
+            value={filters.status || ""}
             onChange={(e) =>
-              handleFilterChange('status', parseStatus(e.target.value))
+              handleFilterChange("status", parseStatus(e.target.value))
             }
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -122,8 +123,10 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
           {/* 地区筛选 */}
           {availableCountries.length > 0 && (
             <select
-              value={filters.country || ''}
-              onChange={(e) => handleFilterChange('country', e.target.value || undefined)}
+              value={filters.country || ""}
+              onChange={(e) =>
+                handleFilterChange("country", e.target.value || undefined)
+              }
               className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">全部地区</option>
@@ -141,7 +144,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
             className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
           >
             <Filter className="h-4 w-4" />
-            <span>{showAdvanced ? '隐藏' : '高级'}筛选</span>
+            <span>{showAdvanced ? "隐藏" : "高级"}筛选</span>
           </button>
 
           {/* 清除筛选 */}
@@ -167,8 +170,10 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
               <input
                 type="text"
                 placeholder="如: US, JP, UK"
-                value={filters.region || ''}
-                onChange={(e) => handleFilterChange('region', e.target.value || undefined)}
+                value={filters.region || ""}
+                onChange={(e) =>
+                  handleFilterChange("region", e.target.value || undefined)
+                }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -179,10 +184,15 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
                 type="checkbox"
                 id="showExpired"
                 checked={filters.showExpired !== false}
-                onChange={(e) => handleFilterChange('showExpired', e.target.checked)}
+                onChange={(e) =>
+                  handleFilterChange("showExpired", e.target.checked)
+                }
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="showExpired" className="text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="showExpired"
+                className="text-sm text-gray-700 dark:text-gray-300"
+              >
                 显示超过 24 小时未检测的节点
               </label>
             </div>

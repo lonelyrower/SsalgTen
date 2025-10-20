@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface Tab {
   id: string;
@@ -18,7 +18,7 @@ interface TabButtonProps {
   tab: Tab;
   isActive: boolean;
   onClick: () => void;
-  variant: 'desktop' | 'mobile';
+  variant: "desktop" | "mobile";
   onKeyDown?: (e: React.KeyboardEvent) => void;
 }
 
@@ -27,7 +27,7 @@ const TabButton: React.FC<TabButtonProps> = ({
   isActive,
   onClick,
   variant,
-  onKeyDown
+  onKeyDown,
 }) => {
   const Icon = tab.icon;
 
@@ -36,9 +36,10 @@ const TabButton: React.FC<TabButtonProps> = ({
     flex items-center space-x-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap
     transition-all duration-200 rounded-t-lg transform
     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900
-    ${isActive
-      ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-sm font-semibold scale-105'
-      : 'border-transparent text-gray-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 dark:text-gray-400 dark:hover:text-primary hover:scale-105 hover:-translate-y-0.5 hover:shadow-sm'
+    ${
+      isActive
+        ? "border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-sm font-semibold scale-105"
+        : "border-transparent text-gray-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 dark:text-gray-400 dark:hover:text-primary hover:scale-105 hover:-translate-y-0.5 hover:shadow-sm"
     }
   `;
 
@@ -46,17 +47,18 @@ const TabButton: React.FC<TabButtonProps> = ({
   const mobileStyles = `
     w-full flex items-center space-x-3 p-3 text-left transition-all duration-200 transform
     focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary
-    ${isActive
-      ? 'bg-primary/10 text-primary font-semibold'
-      : 'text-gray-700 dark:text-gray-300 hover:bg-primary/5 hover:text-primary dark:hover:bg-gray-700/50 hover:translate-x-1'
+    ${
+      isActive
+        ? "bg-primary/10 text-primary font-semibold"
+        : "text-gray-700 dark:text-gray-300 hover:bg-primary/5 hover:text-primary dark:hover:bg-gray-700/50 hover:translate-x-1"
     }
   `;
 
-  const iconSize = variant === 'desktop' ? 'h-4 w-4' : 'h-5 w-5';
+  const iconSize = variant === "desktop" ? "h-4 w-4" : "h-5 w-5";
 
   // 根据变体决定属性
-  if (variant === 'desktop') {
-    const ariaSelected = isActive ? 'true' : 'false';
+  if (variant === "desktop") {
+    const ariaSelected = isActive ? "true" : "false";
     const ariaControls = `tabpanel-${tab.id}`;
 
     return (
@@ -75,7 +77,7 @@ const TabButton: React.FC<TabButtonProps> = ({
       </button>
     );
   } else {
-    const ariaSelected = isActive ? 'true' : 'false';
+    const ariaSelected = isActive ? "true" : "false";
 
     return (
       <button
@@ -96,12 +98,12 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
   tabs,
   activeTab,
   onTabChange,
-  className = ''
+  className = "",
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // 查找当前激活的标签信息，如果找不到则回退到第一个标签
-  const activeTabInfo = tabs.find(tab => tab.id === activeTab) || tabs[0];
+  const activeTabInfo = tabs.find((tab) => tab.id === activeTab) || tabs[0];
 
   // 统一的点击处理函数
   const handleTabClick = (tabId: string, closeDropdown = false) => {
@@ -119,19 +121,19 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
     let nextIndex = currentIndex;
 
     switch (e.key) {
-      case 'ArrowLeft':
+      case "ArrowLeft":
         e.preventDefault();
         nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
         break;
-      case 'ArrowRight':
+      case "ArrowRight":
         e.preventDefault();
         nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
         break;
-      case 'Home':
+      case "Home":
         e.preventDefault();
         nextIndex = 0;
         break;
-      case 'End':
+      case "End":
         e.preventDefault();
         nextIndex = tabs.length - 1;
         break;
@@ -175,7 +177,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
         <button
           type="button"
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          aria-expanded={dropdownOpen ? 'true' : 'false'}
+          aria-expanded={dropdownOpen ? "true" : "false"}
           aria-haspopup="listbox"
           aria-label="选择标签页"
           className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
@@ -188,21 +190,21 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
               {activeTabInfo?.label}
             </span>
           </div>
-          <ChevronDown 
+          <ChevronDown
             className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
-              dropdownOpen ? 'rotate-180' : ''
-            }`} 
+              dropdownOpen ? "rotate-180" : ""
+            }`}
           />
         </button>
 
         {dropdownOpen && (
           <>
             {/* 遮罩层 */}
-            <div 
-              className="fixed inset-0 z-10" 
+            <div
+              className="fixed inset-0 z-10"
               onClick={() => setDropdownOpen(false)}
             />
-            
+
             {/* 下拉菜单 */}
             <div
               className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden"

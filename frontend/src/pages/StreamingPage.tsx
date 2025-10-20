@@ -1,24 +1,25 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Header } from '@/components/layout/Header';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ErrorState } from '@/components/ui/ErrorState';
-import { StreamingOverviewStats } from '@/components/streaming/StreamingOverviewStats';
-import { PlatformStatsCard } from '@/components/streaming/PlatformStatsCard';
-import { StreamingNodeList } from '@/components/streaming/StreamingNodeList';
-import { StreamingFilters } from '@/components/streaming/StreamingFilters';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Header } from "@/components/layout/Header";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { StreamingOverviewStats } from "@/components/streaming/StreamingOverviewStats";
+import { PlatformStatsCard } from "@/components/streaming/PlatformStatsCard";
+import { StreamingNodeList } from "@/components/streaming/StreamingNodeList";
+import { StreamingFilters } from "@/components/streaming/StreamingFilters";
 import type {
   StreamingOverview,
   NodeStreamingSummary,
   StreamingFilters as FilterType,
-} from '@/types/streaming';
-import { STREAMING_SERVICE_ORDER } from '@/types/streaming';
-import { apiService } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Download, RefreshCw, Grid, List, Film } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+} from "@/types/streaming";
+import { STREAMING_SERVICE_ORDER } from "@/types/streaming";
+import { apiService } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Download, RefreshCw, Grid, List, Film } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useNotification } from "@/hooks/useNotification";
 
-type ViewMode = 'grid' | 'list';
+type ViewMode = "grid" | "list";
 
 export const StreamingPage: React.FC = () => {
   const { showError, showSuccess } = useNotification();
@@ -26,7 +27,7 @@ export const StreamingPage: React.FC = () => {
   const [overview, setOverview] = useState<StreamingOverview | null>(null);
   const [nodes, setNodes] = useState<NodeStreamingSummary[]>([]);
   const [filters, setFilters] = useState<FilterType>({ showExpired: true });
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,22 +36,26 @@ export const StreamingPage: React.FC = () => {
   // 获取可用的国家列表
   const availableCountries = useMemo(() => {
     const countries = new Set<string>();
-    nodes.forEach(node => countries.add(node.country));
+    nodes.forEach((node) => countries.add(node.country));
     return Array.from(countries).sort();
   }, [nodes]);
 
   // 筛选后的节点
   const filteredNodes = useMemo(() => {
-    return nodes.filter(node => {
+    return nodes.filter((node) => {
       // 平台筛选
       if (filters.platform) {
-        const hasService = node.services.some(s => s.service === filters.platform);
+        const hasService = node.services.some(
+          (s) => s.service === filters.platform,
+        );
         if (!hasService) return false;
       }
 
       // 状态筛选
       if (filters.status) {
-        const hasStatus = node.services.some(s => s.status === filters.status);
+        const hasStatus = node.services.some(
+          (s) => s.status === filters.status,
+        );
         if (!hasStatus) return false;
       }
 
@@ -61,8 +66,8 @@ export const StreamingPage: React.FC = () => {
 
       // 解锁区域筛选
       if (filters.region) {
-        const hasRegion = node.services.some(s =>
-          s.region?.toLowerCase().includes(filters.region!.toLowerCase())
+        const hasRegion = node.services.some((s) =>
+          s.region?.toLowerCase().includes(filters.region!.toLowerCase()),
         );
         if (!hasRegion) return false;
       }
@@ -96,16 +101,16 @@ export const StreamingPage: React.FC = () => {
       if (overviewRes.success && overviewRes.data) {
         setOverview(overviewRes.data);
       } else {
-        throw new Error(overviewRes.error || '获取流媒体总览失败');
+        throw new Error(overviewRes.error || "获取流媒体总览失败");
       }
 
       if (nodesRes.success && nodesRes.data) {
         setNodes(nodesRes.data);
       } else {
-        throw new Error(nodesRes.error || '获取节点数据失败');
+        throw new Error(nodesRes.error || "获取节点数据失败");
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : '加载失败';
+      const message = err instanceof Error ? err.message : "加载失败";
       setError(message);
       showError(message);
     } finally {
@@ -126,7 +131,7 @@ export const StreamingPage: React.FC = () => {
   const handleTriggerAll = useCallback(async () => {
     const nodeIds = filteredNodes.map((node) => node.nodeId);
     if (nodeIds.length === 0) {
-      showError('当前筛选条件下没有可检测的节点');
+      showError("当前筛选条件下没有可检测的节点");
       return;
     }
     try {
@@ -136,37 +141,43 @@ export const StreamingPage: React.FC = () => {
         const queued = resp.data?.queued ?? nodeIds.length;
         const total = resp.data?.total ?? nodeIds.length;
         const failureCount = resp.data?.failures?.length ?? 0;
-        const baseMessage = resp.message || resp.data?.message || `已触发 ${queued}/${total} 个节点的检测`;
-        const finalMessage = failureCount > 0 ? `${baseMessage}，失败 ${failureCount} 个` : baseMessage;
+        const baseMessage =
+          resp.message ||
+          resp.data?.message ||
+          `已触发 ${queued}/${total} 个节点的检测`;
+        const finalMessage =
+          failureCount > 0
+            ? `${baseMessage}，失败 ${failureCount} 个`
+            : baseMessage;
         showSuccess(finalMessage);
         await loadData();
       } else {
-        showError(resp.error || '触发流媒体检测失败');
+        showError(resp.error || "触发流媒体检测失败");
       }
     } catch (err) {
-      showError(err instanceof Error ? err.message : '触发流媒体检测失败');
+      showError(err instanceof Error ? err.message : "触发流媒体检测失败");
     } finally {
       setBulkTriggering(false);
     }
   }, [filteredNodes, loadData, showError, showSuccess]);
-  const handleExport = async (format: 'json' | 'csv' | 'markdown') => {
+  const handleExport = async (format: "json" | "csv" | "markdown") => {
     try {
       const result = await apiService.exportStreamingData(format, filters);
       if (result.success && result.data) {
         const url = URL.createObjectURL(result.data);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = result.fileName || `streaming-export.${format}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showSuccess('导出成功');
+        showSuccess("导出成功");
       } else {
-        throw new Error(result.error || '导出失败');
+        throw new Error(result.error || "导出失败");
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : '导出失败';
+      const message = err instanceof Error ? err.message : "导出失败";
       showError(message);
     }
   };
@@ -187,7 +198,10 @@ export const StreamingPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-8">
-          <ErrorState message={error || '无法加载数据'} onRetry={handleRefresh} />
+          <ErrorState
+            message={error || "无法加载数据"}
+            onRetry={handleRefresh}
+          />
         </main>
       </div>
     );
@@ -208,22 +222,22 @@ export const StreamingPage: React.FC = () => {
               {/* 视图切换 */}
               <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
                 <button
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewMode("grid")}
                   className={`p-2 rounded ${
-                    viewMode === 'grid'
-                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    viewMode === "grid"
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="网格视图"
                 >
                   <Grid className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewMode("list")}
                   className={`p-2 rounded ${
-                    viewMode === 'list'
-                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    viewMode === "list"
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="列表视图"
                 >
@@ -237,34 +251,35 @@ export const StreamingPage: React.FC = () => {
                 onClick={handleTriggerAll}
                 disabled={bulkTriggering || filteredNodes.length === 0}
               >
-                <Film className={`h-4 w-4 ${bulkTriggering ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">{bulkTriggering ? '检测中...' : '手动检测'}</span>
+                <Film
+                  className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`}
+                />
+                <span className="hidden sm:inline">
+                  {bulkTriggering ? "检测中..." : "手动检测"}
+                </span>
               </Button>
-
 
               {/* 导出 */}
               <div className="relative group">
-                <button
-                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-                >
+                <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
                   <Download className="h-4 w-4" />
                   <span className="hidden sm:inline">导出</span>
                 </button>
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                   <button
-                    onClick={() => handleExport('json')}
+                    onClick={() => handleExport("json")}
                     className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
                   >
                     JSON
                   </button>
                   <button
-                    onClick={() => handleExport('csv')}
+                    onClick={() => handleExport("csv")}
                     className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     CSV
                   </button>
                   <button
-                    onClick={() => handleExport('markdown')}
+                    onClick={() => handleExport("markdown")}
                     className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
                   >
                     Markdown
@@ -278,8 +293,12 @@ export const StreamingPage: React.FC = () => {
                 disabled={refreshing}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">{refreshing ? '刷新中...' : '刷新'}</span>
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
+                <span className="hidden sm:inline">
+                  {refreshing ? "刷新中..." : "刷新"}
+                </span>
               </button>
             </>
           }
@@ -295,15 +314,18 @@ export const StreamingPage: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {overview.platformStats
-              .sort((a, b) =>
-                STREAMING_SERVICE_ORDER.indexOf(a.service) -
-                STREAMING_SERVICE_ORDER.indexOf(b.service)
+              .sort(
+                (a, b) =>
+                  STREAMING_SERVICE_ORDER.indexOf(a.service) -
+                  STREAMING_SERVICE_ORDER.indexOf(b.service),
               )
               .map((stat) => (
                 <PlatformStatsCard
                   key={stat.service}
                   stats={stat}
-                  onClick={() => setFilters({ ...filters, platform: stat.service })}
+                  onClick={() =>
+                    setFilters({ ...filters, platform: stat.service })
+                  }
                 />
               ))}
           </div>

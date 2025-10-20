@@ -1,29 +1,36 @@
-import React, { useState, useEffect, useMemo, useRef, Suspense, lazy } from 'react';
-import { useInView } from 'framer-motion';
-import { useAuth } from '@/hooks/useAuth';
-import { Header } from '@/components/layout/Header';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { useRealTime } from '@/hooks/useRealTime';
-import { useConnectivityDiagnostics } from '@/hooks/useConnectivityDiagnostics';
-import { ConnectivityDiagnostics } from '@/components/nodes/ConnectivityDiagnostics';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Button } from '@/components/ui/button';
-import { NodeCard } from '@/components/nodes/NodeCard';
-import { EnhancedNodeDetailsPanel } from '@/components/nodes/EnhancedNodeDetailsPanel';
-import { ServerDetailsPanel } from '@/components/nodes/ServerDetailsPanel';
-import type { NodeData } from '@/services/api';
-import type { HeartbeatData } from '@/types/heartbeat';
-import { apiService } from '@/services/api';
-import { socketService } from '@/services/socketService';
-import { useClientLatency } from '@/hooks/useClientLatency';
-import { Search, RefreshCw, Filter, Server } from 'lucide-react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  Suspense,
+  lazy,
+} from "react";
+import { useInView } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { Header } from "@/components/layout/Header";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { useRealTime } from "@/hooks/useRealTime";
+import { useConnectivityDiagnostics } from "@/hooks/useConnectivityDiagnostics";
+import { ConnectivityDiagnostics } from "@/components/nodes/ConnectivityDiagnostics";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import { NodeCard } from "@/components/nodes/NodeCard";
+import { EnhancedNodeDetailsPanel } from "@/components/nodes/EnhancedNodeDetailsPanel";
+import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
+import type { NodeData } from "@/services/api";
+import type { HeartbeatData } from "@/types/heartbeat";
+import { apiService } from "@/services/api";
+import { socketService } from "@/services/socketService";
+import { useClientLatency } from "@/hooks/useClientLatency";
+import { Search, RefreshCw, Filter, Server } from "lucide-react";
 
-type StatusFilter = 'all' | 'online' | 'offline';
+type StatusFilter = "all" | "online" | "offline";
 
 const NetworkToolkit = lazy(() =>
-  import('@/components/diagnostics/NetworkToolkit').then((module) => ({
+  import("@/components/diagnostics/NetworkToolkit").then((module) => ({
     default: module.NetworkToolkit,
-  }))
+  })),
 );
 
 export const NodesPageNew: React.FC = () => {
@@ -31,14 +38,16 @@ export const NodesPageNew: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [heartbeatData, setHeartbeatData] = useState<HeartbeatData | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [heartbeatData, setHeartbeatData] = useState<HeartbeatData | null>(
+    null,
+  );
 
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
   const containerRef = useRef<HTMLElement>(null);
-  const isInView = useInView(containerRef, { once: true, margin: '-100px' });
+  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
   // 客户端延迟测试
   const { results: latencyResults } = useClientLatency();
@@ -80,7 +89,7 @@ export const NodesPageNew: React.FC = () => {
         setHeartbeatData(null);
       }
     } catch (error) {
-      console.error('Failed to fetch heartbeat data:', error);
+      console.error("Failed to fetch heartbeat data:", error);
       setHeartbeatData(null);
     }
   };
@@ -100,7 +109,9 @@ export const NodesPageNew: React.FC = () => {
       const id = selectedNode.id;
       const handler = (payload: { nodeId: string; data: unknown }) => {
         if (payload?.nodeId === id) {
-          setHeartbeatData((payload.data as HeartbeatData | null | undefined) ?? null);
+          setHeartbeatData(
+            (payload.data as HeartbeatData | null | undefined) ?? null,
+          );
         }
       };
       socketService.subscribeToNodeHeartbeat(id, handler);
@@ -124,9 +135,9 @@ export const NodesPageNew: React.FC = () => {
         (node.ipv6 && node.ipv6.includes(searchTerm));
 
       const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'online' && node.status === 'online') ||
-        (statusFilter === 'offline' && node.status === 'offline');
+        statusFilter === "all" ||
+        (statusFilter === "online" && node.status === "online") ||
+        (statusFilter === "offline" && node.status === "offline");
 
       return matchesSearch && matchesStatus;
     });
@@ -147,10 +158,15 @@ export const NodesPageNew: React.FC = () => {
             lastCheckedAt={diagnostics.lastCheckedAt}
             issues={diagnostics.issues}
             onRefresh={diagnostics.refresh}
-            isAdmin={hasRole('ADMIN')}
+            isAdmin={hasRole("ADMIN")}
           />
-          <Suspense fallback={<LoadingSpinner text="加载网络工具..." size="md" />}>
-            <NetworkToolkit node={selectedNode} onClose={() => setShowDiagnostics(false)} />
+          <Suspense
+            fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
+          >
+            <NetworkToolkit
+              selectedNode={selectedNode}
+              onClose={() => setShowDiagnostics(false)}
+            />
           </Suspense>
         </main>
       </div>
@@ -163,7 +179,11 @@ export const NodesPageNew: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
-          <Button onClick={() => setShowServerDetails(false)} variant="outline" className="mb-4">
+          <Button
+            onClick={() => setShowServerDetails(false)}
+            variant="outline"
+            className="mb-4"
+          >
             ← 返回节点列表
           </Button>
           <ServerDetailsPanel
@@ -184,11 +204,14 @@ export const NodesPageNew: React.FC = () => {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" />
         <div
           className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: '1s' }}
+          style={{ animationDelay: "1s" }}
         />
       </div>
 
-      <main ref={containerRef} className="relative max-w-7xl mx-auto px-4 py-8 space-y-6">
+      <main
+        ref={containerRef}
+        className="relative max-w-7xl mx-auto px-4 py-8 space-y-6"
+      >
         {/* Connectivity Diagnostics */}
         <ConnectivityDiagnostics
           checking={diagnostics.checking}
@@ -199,13 +222,13 @@ export const NodesPageNew: React.FC = () => {
           lastCheckedAt={diagnostics.lastCheckedAt}
           issues={diagnostics.issues}
           onRefresh={diagnostics.refresh}
-          isAdmin={hasRole('ADMIN')}
+          isAdmin={hasRole("ADMIN")}
         />
 
         {/* Page Header */}
         <PageHeader
           title="节点管理"
-          description={`全局监控 ${nodes.length} 个节点 - 在线 ${nodes.filter((n) => n.status === 'online').length} 台`}
+          description={`全局监控 ${nodes.length} 个节点 - 在线 ${nodes.filter((n) => n.status === "online").length} 台`}
           icon={Server}
           actions={
             <Button
@@ -277,7 +300,7 @@ export const NodesPageNew: React.FC = () => {
               onShowServerDetails={handleShowServerDetails}
               onViewLogs={() => {
                 // TODO: Implement view logs
-                console.log('View logs for:', selectedNode);
+                console.log("View logs for:", selectedNode);
               }}
             />
           </div>

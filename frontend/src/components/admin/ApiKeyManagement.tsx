@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { apiService } from '@/services/api';
-import type { ApiKeyInfo } from '@/services/api';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { apiService } from "@/services/api";
+import type { ApiKeyInfo } from "@/services/api";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Key,
   RotateCcw,
@@ -16,8 +16,8 @@ import {
   Eye,
   EyeOff,
   Info,
-  Zap
-} from 'lucide-react';
+  Zap,
+} from "lucide-react";
 
 export const ApiKeyManagement: React.FC = () => {
   const [apiKeyInfo, setApiKeyInfo] = useState<ApiKeyInfo | null>(null);
@@ -33,24 +33,28 @@ export const ApiKeyManagement: React.FC = () => {
     try {
       setError(null);
       setLoading(true);
-      
+
       const response = await apiService.getApiKeyInfo();
-      
+
       if (response.success && response.data) {
         setApiKeyInfo(response.data);
       } else {
-        setError(response.error || '获取API密钥信息失败');
+        setError(response.error || "获取API密钥信息失败");
       }
     } catch (err) {
-      console.error('Failed to fetch API key info:', err);
-      setError('网络错误，无法获取API密钥信息');
+      console.error("Failed to fetch API key info:", err);
+      setError("网络错误，无法获取API密钥信息");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRegenerateApiKey = async () => {
-    if (!confirm('确定要重新生成API密钥吗？这将使所有现有的Agent节点失去连接，需要手动更新配置文件。')) {
+    if (
+      !confirm(
+        "确定要重新生成API密钥吗？这将使所有现有的Agent节点失去连接，需要手动更新配置文件。",
+      )
+    ) {
       return;
     }
 
@@ -60,7 +64,7 @@ export const ApiKeyManagement: React.FC = () => {
       setSuccess(null);
 
       const response = await apiService.regenerateApiKey();
-      
+
       if (response.success && response.data) {
         setSuccess(`新API密钥已生成！请尽快更新所有Agent配置。`);
         await fetchApiKeyInfo(); // 重新获取密钥信息
@@ -68,11 +72,11 @@ export const ApiKeyManagement: React.FC = () => {
           setSuccess(null);
         }, 10000); // 10秒后自动隐藏成功消息
       } else {
-        setError(response.error || 'API密钥重新生成失败');
+        setError(response.error || "API密钥重新生成失败");
       }
     } catch (err) {
-      console.error('Failed to regenerate API key:', err);
-      setError('API密钥重新生成失败');
+      console.error("Failed to regenerate API key:", err);
+      setError("API密钥重新生成失败");
     } finally {
       setRegenerating(false);
     }
@@ -83,62 +87,62 @@ export const ApiKeyManagement: React.FC = () => {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
       } else {
-        const textArea = document.createElement('textarea');
+        const textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        document.execCommand('copy');
+        document.execCommand("copy");
         textArea.remove();
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      console.error('复制失败:', e);
-      alert('复制失败，请手动选择并复制');
+      console.error("复制失败:", e);
+      alert("复制失败，请手动选择并复制");
     }
   };
 
   const formatLastUsed = (lastUsed?: string) => {
-    if (!lastUsed) return '从未使用';
+    if (!lastUsed) return "从未使用";
     const date = new Date(lastUsed);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffDays > 0) {
       return `${diffDays}天前`;
     } else if (diffHours > 0) {
       return `${diffHours}小时前`;
     } else {
-      return '刚刚';
+      return "刚刚";
     }
   };
 
   const getSecurityStatus = () => {
-    if (!apiKeyInfo?.security) return 'unknown';
-    return apiKeyInfo.security.isSecure ? 'secure' : 'warning';
+    if (!apiKeyInfo?.security) return "unknown";
+    return apiKeyInfo.security.isSecure ? "secure" : "warning";
   };
 
   const getSecurityColor = () => {
     const status = getSecurityStatus();
     switch (status) {
-      case 'secure':
-        return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800';
-      case 'warning':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800';
+      case "secure":
+        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800";
+      case "warning":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800';
+        return "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800";
     }
   };
 
   useEffect(() => {
     fetchApiKeyInfo();
-    
+
     // 每5分钟刷新一次
     const interval = setInterval(fetchApiKeyInfo, 5 * 60 * 1000);
     return () => clearInterval(interval);
@@ -151,7 +155,10 @@ export const ApiKeyManagement: React.FC = () => {
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div
+                key={i}
+                className="h-4 bg-gray-200 dark:bg-gray-700 rounded"
+              ></div>
             ))}
           </div>
         </div>
@@ -225,7 +232,7 @@ export const ApiKeyManagement: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-lg bg-white/50">
-                    {getSecurityStatus() === 'secure' ? (
+                    {getSecurityStatus() === "secure" ? (
                       <Shield className="h-6 w-6" />
                     ) : (
                       <AlertTriangle className="h-6 w-6" />
@@ -233,10 +240,11 @@ export const ApiKeyManagement: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold">
-                      密钥状态: {getSecurityStatus() === 'secure' ? '安全' : '需要注意'}
+                      密钥状态:{" "}
+                      {getSecurityStatus() === "secure" ? "安全" : "需要注意"}
                     </h4>
                     <p className="text-sm opacity-80">
-                      {apiKeyInfo.description || '系统默认API密钥'}
+                      {apiKeyInfo.description || "系统默认API密钥"}
                     </p>
                   </div>
                 </div>
@@ -258,12 +266,18 @@ export const ApiKeyManagement: React.FC = () => {
                     size="sm"
                     className="h-auto p-1"
                   >
-                    {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <div className="flex items-center space-x-2">
                   <code className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 rounded font-mono text-sm">
-                    {showKey ? apiKeyInfo.key : `${apiKeyInfo.key.slice(0, 8)}${'*'.repeat(32)}`}
+                    {showKey
+                      ? apiKeyInfo.key
+                      : `${apiKeyInfo.key.slice(0, 8)}${"*".repeat(32)}`}
                   </code>
                   <Button
                     onClick={() => copyToClipboard(apiKeyInfo.key)}
@@ -286,7 +300,9 @@ export const ApiKeyManagement: React.FC = () => {
               <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">使用次数</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      使用次数
+                    </p>
                     <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                       {apiKeyInfo.usageCount.toLocaleString()}
                     </p>
@@ -298,7 +314,9 @@ export const ApiKeyManagement: React.FC = () => {
               <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-300">最后使用</p>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      最后使用
+                    </p>
                     <p className="text-lg font-semibold text-green-900 dark:text-green-100">
                       {formatLastUsed(apiKeyInfo.lastUsed)}
                     </p>
@@ -310,9 +328,11 @@ export const ApiKeyManagement: React.FC = () => {
               <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">密钥类型</p>
+                    <p className="text-sm text-purple-700 dark:text-purple-300">
+                      密钥类型
+                    </p>
                     <p className="text-lg font-semibold text-purple-900 dark:text-purple-100">
-                      {apiKeyInfo.isDefault ? '系统默认' : '自定义'}
+                      {apiKeyInfo.isDefault ? "系统默认" : "自定义"}
                     </p>
                   </div>
                   <Zap className="h-8 w-8 text-purple-600 dark:text-purple-400" />
@@ -346,13 +366,22 @@ export const ApiKeyManagement: React.FC = () => {
                     Agent更新指南
                   </h5>
                   <div className="text-sm text-primary space-y-2">
-                    <p>如果您重新生成了API密钥，需要更新所有Agent节点的配置：</p>
+                    <p>
+                      如果您重新生成了API密钥，需要更新所有Agent节点的配置：
+                    </p>
                     <div className="bg-primary/15 p-3 rounded font-mono text-xs">
-                      # 1. 编辑Agent配置文件<br/>
-                      nano /etc/ssalgten-agent/.env<br/><br/>
-                      # 2. 更新API密钥<br/>
-                      AGENT_API_KEY=新的密钥<br/><br/>
-                      # 3. 重启Agent服务<br/>
+                      # 1. 编辑Agent配置文件
+                      <br />
+                      nano /etc/ssalgten-agent/.env
+                      <br />
+                      <br />
+                      # 2. 更新API密钥
+                      <br />
+                      AGENT_API_KEY=新的密钥
+                      <br />
+                      <br />
+                      # 3. 重启Agent服务
+                      <br />
                       systemctl restart ssalgten-agent
                     </div>
                   </div>

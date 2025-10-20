@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useMobile } from '@/hooks/useMobile';
-import { Expand, Minimize } from 'lucide-react';
-import { Button } from './button';
+import React, { useState, useRef, useEffect } from "react";
+import { useMobile } from "@/hooks/useMobile";
+import { Expand, Minimize } from "lucide-react";
+import { Button } from "./button";
 
 interface ResponsiveChartProps {
   children: React.ReactNode;
@@ -16,11 +16,11 @@ interface ResponsiveChartProps {
 export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
   children,
   title,
-  className = '',
-  minHeight = '300px',
-  mobileHeight = '250px',
+  className = "",
+  minHeight = "300px",
+  mobileHeight = "250px",
   allowFullscreen = false,
-  scrollable = false
+  scrollable = false,
 }) => {
   const { isMobile, screenHeight } = useMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -33,21 +33,21 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
   // ESC 键退出全屏
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isFullscreen) {
+      if (event.key === "Escape" && isFullscreen) {
         setIsFullscreen(false);
       }
     };
 
     if (isFullscreen) {
-      document.addEventListener('keydown', handleEscKey);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscKey);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "";
     };
   }, [isFullscreen]);
 
@@ -60,7 +60,7 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
         {/* 全屏模式头部 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {title || '图表'}
+            {title || "图表"}
           </h3>
           <Button
             variant="ghost"
@@ -117,14 +117,17 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
 
       {/* 图表内容 */}
       <div
-        className={`p-4 ${scrollable ? 'overflow-auto mobile-scroll' : 'overflow-hidden'}`}
+        className={`p-4 ${scrollable ? "overflow-auto mobile-scroll" : "overflow-hidden"}`}
         style={{
           height: chartHeight,
           minHeight: chartHeight,
         }}
       >
         {/* 移动端优化容器 */}
-        <div className="w-full h-full" style={{ minWidth: isMobile ? '100%' : 'auto' }}>
+        <div
+          className="w-full h-full"
+          style={{ minWidth: isMobile ? "100%" : "auto" }}
+        >
           {children}
         </div>
       </div>
@@ -147,14 +150,12 @@ interface ChartGridProps {
 
 export const ChartGrid: React.FC<ChartGridProps> = ({
   children,
-  gap = '1rem',
-  className = ''
+  gap = "1rem",
+  className = "",
 }) => {
   const { isMobile } = useMobile();
 
-  const gridColumns = isMobile
-    ? 1
-    : `repeat(auto-fit, minmax(350px, 1fr))`;
+  const gridColumns = isMobile ? 1 : `repeat(auto-fit, minmax(350px, 1fr))`;
 
   return (
     <div
@@ -188,20 +189,24 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   subtitle,
   icon: Icon,
   trend,
-  className = ''
+  className = "",
 }) => {
   const { isMobile } = useMobile();
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mobile-text-readable">
             {title}
           </p>
-          <p className={`mt-2 font-bold text-gray-900 dark:text-white mobile-text-readable ${
-            isMobile ? 'text-2xl' : 'text-3xl'
-          }`}>
+          <p
+            className={`mt-2 font-bold text-gray-900 dark:text-white mobile-text-readable ${
+              isMobile ? "text-2xl" : "text-3xl"
+            }`}
+          >
             {value}
           </p>
           {subtitle && (
@@ -212,7 +217,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         </div>
         {Icon && (
           <div className="flex-shrink-0">
-            <Icon className={`text-gray-400 ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`} />
+            <Icon
+              className={`text-gray-400 ${isMobile ? "h-6 w-6" : "h-8 w-8"}`}
+            />
           </div>
         )}
       </div>
@@ -221,15 +228,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <span
             className={`font-medium ${
               trend.isPositive
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400'
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
             }`}
           >
-            {trend.isPositive ? '+' : ''}{trend.value}%
+            {trend.isPositive ? "+" : ""}
+            {trend.value}%
           </span>
-          <span className="ml-2 text-gray-500 dark:text-gray-400">
-            较上期
-          </span>
+          <span className="ml-2 text-gray-500 dark:text-gray-400">较上期</span>
         </div>
       )}
     </div>

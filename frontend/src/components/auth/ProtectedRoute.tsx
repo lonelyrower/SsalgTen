@@ -1,10 +1,10 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'ADMIN' | 'OPERATOR' | 'VIEWER';
+  requiredRole?: "ADMIN" | "OPERATOR" | "VIEWER";
   requireAuth?: boolean;
 }
 
@@ -41,14 +41,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           <div className="mb-6">
             <div className="mx-auto h-24 w-24 text-red-500 mb-4">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               权限不足
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              您没有访问此页面的权限。需要 {requiredRole === 'ADMIN' ? '管理员' : requiredRole === 'OPERATOR' ? '操作员' : '查看者'} 权限。
+              您没有访问此页面的权限。需要{" "}
+              {requiredRole === "ADMIN"
+                ? "管理员"
+                : requiredRole === "OPERATOR"
+                  ? "操作员"
+                  : "查看者"}{" "}
+              权限。
             </p>
             <button
               onClick={() => window.history.back()}

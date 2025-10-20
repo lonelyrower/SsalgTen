@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -14,40 +14,40 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
-} from 'recharts';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
+  ResponsiveContainer,
+} from "recharts";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
   BarChart3,
-  PieChart as PieChartIcon
-} from 'lucide-react';
+  PieChart as PieChartIcon,
+} from "lucide-react";
 
 interface NetworkMetricsChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any[];
-  type: 'line' | 'area' | 'bar' | 'pie';
+  type: "line" | "area" | "bar" | "pie";
   title: string;
   metric: string;
-  timeRange?: '1h' | '24h' | '7d' | '30d';
+  timeRange?: "1h" | "24h" | "7d" | "30d";
   className?: string;
   height?: number;
 }
 
 // 颜色主题
 const COLORS = {
-  primary: '#3b82f6',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  purple: '#8b5cf6',
-  indigo: '#6366f1',
-  teal: '#14b8a6',
-  pink: '#ec4899'
+  primary: "#3b82f6",
+  success: "#22c55e",
+  warning: "#f59e0b",
+  danger: "#ef4444",
+  purple: "#8b5cf6",
+  indigo: "#6366f1",
+  teal: "#14b8a6",
+  pink: "#ec4899",
 };
 
 const CHART_COLORS = [
@@ -56,7 +56,7 @@ const CHART_COLORS = [
   COLORS.warning,
   COLORS.danger,
   COLORS.purple,
-  COLORS.indigo
+  COLORS.indigo,
 ];
 
 // 自定义Tooltip组件
@@ -72,13 +72,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center space-x-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
+              <div
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
               <span className="text-xs text-gray-600 dark:text-gray-300">
-                {entry.name}: <span className="font-semibold">{entry.value}</span>
-                {entry.unit && <span className="text-gray-400 ml-1">{entry.unit}</span>}
+                {entry.name}:{" "}
+                <span className="font-semibold">{entry.value}</span>
+                {entry.unit && (
+                  <span className="text-gray-400 ml-1">{entry.unit}</span>
+                )}
               </span>
             </div>
           ))}
@@ -91,226 +94,242 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // 仅显示传入的真实数据
 
-export const NetworkMetricsChart = memo(({
-  data,
-  type,
-  title,
-  metric,
-  timeRange = '24h',
-  className = '',
-  height = 300
-}: NetworkMetricsChartProps) => {
-  const chartData = useMemo(() => Array.isArray(data) ? data : [], [data]);
+export const NetworkMetricsChart = memo(
+  ({
+    data,
+    type,
+    title,
+    metric,
+    timeRange = "24h",
+    className = "",
+    height = 300,
+  }: NetworkMetricsChartProps) => {
+    const chartData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
-  const renderChart = () => {
-    if (!chartData.length) {
-      return (
-        <div className="w-full h-[160px] flex items-center justify-center text-gray-500 dark:text-gray-400">
-          暂无数据
-        </div>
-      );
-    }
-
-    switch (type) {
-      case 'line':
+    const renderChart = () => {
+      if (!chartData.length) {
         return (
-          <ResponsiveContainer width="100%" height={height}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="time" 
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-              />
-              <YAxis 
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey={metric} 
-                stroke={COLORS.primary}
-                strokeWidth={2}
-                dot={{ fill: COLORS.primary, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: COLORS.primary, strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="w-full h-[160px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+            暂无数据
+          </div>
         );
+      }
 
-      case 'area':
-        return (
-          <ResponsiveContainer width="100%" height={height}>
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="time" 
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-              />
-              <YAxis 
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey={metric} 
-                stroke={COLORS.primary}
-                fill={`${COLORS.primary}20`}
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        );
+      switch (type) {
+        case "line":
+          return (
+            <ResponsiveContainer width="100%" height={height}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="time"
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey={metric}
+                  stroke={COLORS.primary}
+                  strokeWidth={2}
+                  dot={{ fill: COLORS.primary, strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: COLORS.primary, strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          );
 
-      case 'bar':
-        return (
-          <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="region" 
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-              />
-              <YAxis 
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar 
-                dataKey="nodes" 
-                fill={COLORS.primary}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        );
+        case "area":
+          return (
+            <ResponsiveContainer width="100%" height={height}>
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="time"
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey={metric}
+                  stroke={COLORS.primary}
+                  fill={`${COLORS.primary}20`}
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          );
 
-      case 'pie':
-        return (
-          <ResponsiveContainer width="100%" height={height}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                outerRadius={height / 3}
-                fill="#8884d8"
-                dataKey="value"
-                label={(entry) => `${entry.name}: ${entry.value}`}
-              >
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {chartData.map((entry: any, index: number) => (
-                  <Cell key={`cell-${index}`} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        );
+        case "bar":
+          return (
+            <ResponsiveContainer width="100%" height={height}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="region"
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar
+                  dataKey="nodes"
+                  fill={COLORS.primary}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          );
 
-      default:
-        return null;
-    }
-  };
+        case "pie":
+          return (
+            <ResponsiveContainer width="100%" height={height}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={height / 3}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                >
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {chartData.map((entry: any, index: number) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry.color || CHART_COLORS[index % CHART_COLORS.length]
+                      }
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          );
 
-  // 计算趋势
-  const calculateTrend = () => {
-    if (type === 'pie' || type === 'bar' || !chartData.length) return null;
-    
-    const recent = chartData.slice(-6);
-    const earlier = chartData.slice(-12, -6);
-    
-    if (recent.length === 0 || earlier.length === 0) return null;
-    
-    const recentAvg = recent.reduce((sum, item) => sum + (item[metric] || 0), 0) / recent.length;
-    const earlierAvg = earlier.reduce((sum, item) => sum + (item[metric] || 0), 0) / earlier.length;
-    
-    const change = ((recentAvg - earlierAvg) / earlierAvg) * 100;
-    
-    return {
-      direction: change > 0 ? 'up' : 'down',
-      percentage: Math.abs(change).toFixed(1),
-      isPositive: metric === 'throughput' || metric === 'uptime' || metric === 'online_nodes' ? change > 0 : change < 0
+        default:
+          return null;
+      }
     };
-  };
 
-  const trend = calculateTrend();
+    // 计算趋势
+    const calculateTrend = () => {
+      if (type === "pie" || type === "bar" || !chartData.length) return null;
 
-  return (
-    <GlassCard className={`p-6 ${className}`} animated>
-      {/* 图表标题和控制 */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            {type === 'pie' ? (
-              <PieChartIcon className="h-5 w-5 text-primary" />
-            ) : type === 'bar' ? (
-              <BarChart3 className="h-5 w-5 text-primary" />
-            ) : (
-              <Activity className="h-5 w-5 text-primary" />
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">
-              {metric.replace('_', ' ')} · {timeRange}
-            </p>
-          </div>
-        </div>
-        
-        {trend && (
-          <div className="flex items-center space-x-2">
-            <Badge 
-              variant={trend.isPositive ? 'default' : 'destructive'}
-              className="flex items-center space-x-1"
-            >
-              {trend.direction === 'up' ? (
-                <TrendingUp className="h-3 w-3" />
+      const recent = chartData.slice(-6);
+      const earlier = chartData.slice(-12, -6);
+
+      if (recent.length === 0 || earlier.length === 0) return null;
+
+      const recentAvg =
+        recent.reduce((sum, item) => sum + (item[metric] || 0), 0) /
+        recent.length;
+      const earlierAvg =
+        earlier.reduce((sum, item) => sum + (item[metric] || 0), 0) /
+        earlier.length;
+
+      const change = ((recentAvg - earlierAvg) / earlierAvg) * 100;
+
+      return {
+        direction: change > 0 ? "up" : "down",
+        percentage: Math.abs(change).toFixed(1),
+        isPositive:
+          metric === "throughput" ||
+          metric === "uptime" ||
+          metric === "online_nodes"
+            ? change > 0
+            : change < 0,
+      };
+    };
+
+    const trend = calculateTrend();
+
+    return (
+      <GlassCard className={`p-6 ${className}`} animated>
+        {/* 图表标题和控制 */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              {type === "pie" ? (
+                <PieChartIcon className="h-5 w-5 text-primary" />
+              ) : type === "bar" ? (
+                <BarChart3 className="h-5 w-5 text-primary" />
               ) : (
-                <TrendingDown className="h-3 w-3" />
+                <Activity className="h-5 w-5 text-primary" />
               )}
-              <span>{trend.percentage}%</span>
-            </Badge>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                {title}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                {metric.replace("_", " ")} · {timeRange}
+              </p>
+            </div>
+          </div>
+
+          {trend && (
+            <div className="flex items-center space-x-2">
+              <Badge
+                variant={trend.isPositive ? "default" : "destructive"}
+                className="flex items-center space-x-1"
+              >
+                {trend.direction === "up" ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                <span>{trend.percentage}%</span>
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* 图表内容 */}
+        <div className="w-full">{renderChart()}</div>
+
+        {/* 时间范围选择器 */}
+        {type !== "pie" && (
+          <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            {["1h", "24h", "7d", "30d"].map((range) => (
+              <Button
+                key={range}
+                variant={timeRange === range ? "default" : "ghost"}
+                size="sm"
+                className="text-xs"
+              >
+                {range}
+              </Button>
+            ))}
           </div>
         )}
-      </div>
+      </GlassCard>
+    );
+  },
+);
 
-      {/* 图表内容 */}
-      <div className="w-full">
-        {renderChart()}
-      </div>
-
-      {/* 时间范围选择器 */}
-      {type !== 'pie' && (
-        <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          {['1h', '24h', '7d', '30d'].map((range) => (
-            <Button
-              key={range}
-              variant={timeRange === range ? 'default' : 'ghost'}
-              size="sm"
-              className="text-xs"
-            >
-              {range}
-            </Button>
-          ))}
-        </div>
-      )}
-    </GlassCard>
-  );
-});
-
-NetworkMetricsChart.displayName = 'NetworkMetricsChart';
+NetworkMetricsChart.displayName = "NetworkMetricsChart";

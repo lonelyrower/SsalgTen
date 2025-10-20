@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Lock, User, Eye, EyeOff, Shield } from 'lucide-react';
+import React, { useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Lock, User, Eye, EyeOff, Shield } from "lucide-react";
 
 interface LocationState {
   from?: {
@@ -15,26 +15,26 @@ export const LoginPage: React.FC = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // 如果已经登录，重定向到目标页面或首页
   if (isAuthenticated) {
     const state = location.state as LocationState | null;
-    const redirectTo = state?.from?.pathname ?? '/dashboard';
+    const redirectTo = state?.from?.pathname ?? "/dashboard";
     return <Navigate to={redirectTo} replace />;
   }
 
   // 如果正在加载，显示加载状态
   if (isLoading) {
     return (
-      <LoadingSpinner 
-        fullScreen 
-        text="正在验证身份..." 
+      <LoadingSpinner
+        fullScreen
+        text="正在验证身份..."
         size="xl"
         variant="elegant"
       />
@@ -43,33 +43,33 @@ export const LoginPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
     // 清除错误信息
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.username || !formData.password) {
-      setError('请输入用户名和密码');
+      setError("请输入用户名和密码");
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       const success = await login(formData.username, formData.password);
       if (!success) {
-        setError('用户名或密码错误');
+        setError("用户名或密码错误");
       }
     } catch (error) {
-      console.error('Login failed:', error);
-      setError('登录失败，请稍后重试');
+      console.error("Login failed:", error);
+      setError("登录失败，请稍后重试");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,7 +106,10 @@ export const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 用户名输入 */}
             <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              <label
+                htmlFor="username"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"
+              >
                 用户名
               </label>
               <div className="relative">
@@ -125,59 +128,64 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-          {/* 密码输入 */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              密码
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
-                placeholder="请输入密码"
-                autoComplete="current-password"
-                disabled={isSubmitting}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                aria-label={showPassword ? '隐藏密码' : '显示密码'}
-                disabled={isSubmitting}
+            {/* 密码输入 */}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </button>
-            </div>
-          </div>
-
-          {/* 错误信息 */}
-          {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* 登录按钮 */}
-          <Button
-            type="submit"
-            className="w-full py-3"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                登录中...
+                密码
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+                  placeholder="请输入密码"
+                  autoComplete="current-password"
+                  disabled={isSubmitting}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                  disabled={isSubmitting}
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
               </div>
-            ) : (
-              '登录'
+            </div>
+
+            {/* 错误信息 */}
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </p>
+              </div>
             )}
-          </Button>
-        </form>
+
+            {/* 登录按钮 */}
+            <Button
+              type="submit"
+              className="w-full py-3"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  登录中...
+                </div>
+              ) : (
+                "登录"
+              )}
+            </Button>
+          </form>
 
           {/* 默认账户提示 */}
           <div className="mt-8 p-4 bg-primary/10 rounded-lg">

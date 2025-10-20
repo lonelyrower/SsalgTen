@@ -1,10 +1,19 @@
-import { Network, Activity, LogOut, LayoutDashboard, Server, Settings, Film, Layers } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { MobileNav } from '@/components/layout/MobileNav';
-import { useAuth } from '@/hooks/useAuth';
-import { useRealTime } from '@/hooks/useRealTime';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import {
+  Network,
+  Activity,
+  LogOut,
+  LayoutDashboard,
+  Server,
+  Settings,
+  Film,
+  Layers,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { MobileNav } from "@/components/layout/MobileNav";
+import { useAuth } from "@/hooks/useAuth";
+import { useRealTime } from "@/hooks/useRealTime";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -14,7 +23,7 @@ export const Header = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -24,9 +33,13 @@ export const Header = () => {
       {/* 科技感渐变背景 + 扫描线效果 */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-blue-900/90 to-slate-900">
         {/* 扫描线动画 */}
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6, 182, 212, 0.03) 2px, rgba(6, 182, 212, 0.03) 4px)',
-        }} />
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6, 182, 212, 0.03) 2px, rgba(6, 182, 212, 0.03) 4px)",
+          }}
+        />
         {/* 顶部发光线 */}
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
         {/* 底部发光线 */}
@@ -43,7 +56,10 @@ export const Header = () => {
               <div className="absolute inset-0 bg-cyan-500/30 blur-md group-hover:bg-cyan-400/40 transition-all" />
               {/* 六边形背景 */}
               <div className="relative p-2.5 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400/50 backdrop-blur-sm transition-all">
-                <Network className="h-6 w-6 text-cyan-400 group-hover:text-cyan-300 transition-colors" strokeWidth={2.5} />
+                <Network
+                  className="h-6 w-6 text-cyan-400 group-hover:text-cyan-300 transition-colors"
+                  strokeWidth={2.5}
+                />
                 {/* 内部闪光点 */}
                 <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
               </div>
@@ -67,56 +83,56 @@ export const Header = () => {
                 <Link
                   to="/dashboard"
                   className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/dashboard')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                    isActive("/dashboard")
+                      ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                      : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   <span>监控中心</span>
-                  {isActive('/dashboard') && (
+                  {isActive("/dashboard") && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}
                 </Link>
                 <Link
                   to="/nodes"
                   className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/nodes')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                    isActive("/nodes")
+                      ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                      : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <Server className="h-4 w-4" />
                   <span>节点总览</span>
-                  {isActive('/nodes') && (
+                  {isActive("/nodes") && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}
                 </Link>
                 <Link
                   to="/streaming"
                   className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/streaming')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                    isActive("/streaming")
+                      ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                      : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <Film className="h-4 w-4" />
                   <span>流媒体</span>
-                  {isActive('/streaming') && (
+                  {isActive("/streaming") && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}
                 </Link>
                 <Link
                   to="/services"
                   className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/services')
-                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                    isActive("/services")
+                      ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                      : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <Layers className="h-4 w-4" />
                   <span>服务总览</span>
-                  {isActive('/services') && (
+                  {isActive("/services") && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                   )}
                 </Link>
@@ -124,14 +140,14 @@ export const Header = () => {
                   <Link
                     to="/admin"
                     className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      isActive('/admin')
-                        ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                        : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                      isActive("/admin")
+                        ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                        : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
                     }`}
                   >
                     <Settings className="h-4 w-4" />
                     <span>系统管理</span>
-                    {isActive('/admin') && (
+                    {isActive("/admin") && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
                     )}
                   </Link>
@@ -147,13 +163,15 @@ export const Header = () => {
               <div
                 className={`hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                   connected
-                    ? 'bg-green-500/15 text-green-300 border border-green-500/30 hover:border-green-500/50'
-                    : 'bg-red-500/15 text-red-300 border border-red-500/30 hover:border-red-500/50'
+                    ? "bg-green-500/15 text-green-300 border border-green-500/30 hover:border-green-500/50"
+                    : "bg-red-500/15 text-red-300 border border-red-500/30 hover:border-red-500/50"
                 }`}
-                title={connected ? '实时连接正常' : '实时连接断开'}
+                title={connected ? "实时连接正常" : "实时连接断开"}
               >
-                <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                <span>{connected ? '已连接' : '断开'}</span>
+                <div
+                  className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-green-400 animate-pulse" : "bg-red-400"}`}
+                />
+                <span>{connected ? "已连接" : "断开"}</span>
               </div>
             )}
 

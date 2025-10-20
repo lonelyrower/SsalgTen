@@ -1,15 +1,17 @@
-import React from 'react';
-import type { StreamingOverview } from '@/types/streaming';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Server, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import React from "react";
+import type { StreamingOverview } from "@/types/streaming";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Server, Clock, AlertTriangle, TrendingUp } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 interface StreamingOverviewStatsProps {
   overview: StreamingOverview;
 }
 
-export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = ({ overview }) => {
+export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = ({
+  overview,
+}) => {
   const formatTime = (isoString: string) => {
     try {
       return formatDistanceToNow(new Date(isoString), {
@@ -17,7 +19,7 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = ({ 
         locale: zhCN,
       });
     } catch {
-      return '未知';
+      return "未知";
     }
   };
 
@@ -50,11 +52,15 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = ({ 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`text-3xl font-bold ${
-            overview.globalUnlockRate >= 80 ? 'text-green-600 dark:text-green-400' :
-            overview.globalUnlockRate >= 50 ? 'text-yellow-600 dark:text-yellow-400' :
-            'text-red-600 dark:text-red-400'
-          }`}>
+          <div
+            className={`text-3xl font-bold ${
+              overview.globalUnlockRate >= 80
+                ? "text-green-600 dark:text-green-400"
+                : overview.globalUnlockRate >= 50
+                  ? "text-yellow-600 dark:text-yellow-400"
+                  : "text-red-600 dark:text-red-400"
+            }`}
+          >
             {Math.round(overview.globalUnlockRate)}%
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -76,7 +82,7 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = ({ 
             {formatTime(overview.lastScanTime)}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {new Date(overview.lastScanTime).toLocaleString('zh-CN')}
+            {new Date(overview.lastScanTime).toLocaleString("zh-CN")}
           </p>
         </CardContent>
       </Card>
@@ -90,11 +96,15 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = ({ 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`text-3xl font-bold ${
-            overview.expiredNodes === 0 ? 'text-green-600 dark:text-green-400' :
-            overview.expiredNodes <= 3 ? 'text-yellow-600 dark:text-yellow-400' :
-            'text-red-600 dark:text-red-400'
-          }`}>
+          <div
+            className={`text-3xl font-bold ${
+              overview.expiredNodes === 0
+                ? "text-green-600 dark:text-green-400"
+                : overview.expiredNodes <= 3
+                  ? "text-yellow-600 dark:text-yellow-400"
+                  : "text-red-600 dark:text-red-400"
+            }`}
+          >
             {overview.expiredNodes}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

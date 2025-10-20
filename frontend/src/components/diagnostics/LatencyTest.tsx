@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Play, Clock, Target, BarChart3, Globe, Zap } from 'lucide-react';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Play, Clock, Target, BarChart3, Globe, Zap } from "lucide-react";
 
 interface LatencyResult {
   target: string;
   latency: number | null;
-  status: 'excellent' | 'good' | 'poor' | 'failed';
+  status: "excellent" | "good" | "poor" | "failed";
   error?: string;
 }
 
 interface LatencyTestResult {
-  testType: 'standard' | 'comprehensive';
+  testType: "standard" | "comprehensive";
   results: LatencyResult[];
   summary: {
     total: number;
@@ -36,61 +36,63 @@ interface LatencyTestProps {
 
 export const LatencyTest: React.FC<LatencyTestProps> = ({
   agentEndpoint,
-  onTestComplete
+  onTestComplete,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [testResult, setTestResult] = useState<LatencyTestResult | null>(null);
-  const [testType, setTestType] = useState<'standard' | 'comprehensive'>('standard');
+  const [testType, setTestType] = useState<"standard" | "comprehensive">(
+    "standard",
+  );
   const [error, setError] = useState<string | null>(null);
 
-  const getStatusColor = (status: LatencyResult['status']): string => {
+  const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
-      case 'excellent':
-        return 'bg-green-500/20 text-green-300 border-green-500/30';
-      case 'good':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
-      case 'poor':
-        return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
-      case 'failed':
-        return 'bg-red-500/20 text-red-300 border-red-500/30';
+      case "excellent":
+        return "bg-green-500/20 text-green-300 border-green-500/30";
+      case "good":
+        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+      case "poor":
+        return "bg-orange-500/20 text-orange-300 border-orange-500/30";
+      case "failed":
+        return "bg-red-500/20 text-red-300 border-red-500/30";
       default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
     }
   };
 
-  const getStatusIcon = (status: LatencyResult['status']): string => {
+  const getStatusIcon = (status: LatencyResult["status"]): string => {
     switch (status) {
-      case 'excellent':
-        return '🟢';
-      case 'good':
-        return '🟡';
-      case 'poor':
-        return '🔴';
-      case 'failed':
-        return '⚫';
+      case "excellent":
+        return "🟢";
+      case "good":
+        return "🟡";
+      case "poor":
+        return "🔴";
+      case "failed":
+        return "⚫";
       default:
-        return '⚫';
+        return "⚫";
     }
   };
 
-  const getStatusDescription = (status: LatencyResult['status']): string => {
+  const getStatusDescription = (status: LatencyResult["status"]): string => {
     switch (status) {
-      case 'excellent':
-        return '优秀 - 适合游戏和视频通话';
-      case 'good':
-        return '良好 - 适合网页浏览和视频';
-      case 'poor':
-        return '较差 - 仅适合基本使用';
-      case 'failed':
-        return '失败 - 无法连接';
+      case "excellent":
+        return "优秀 - 适合游戏和视频通话";
+      case "good":
+        return "良好 - 适合网页浏览和视频";
+      case "poor":
+        return "较差 - 仅适合基本使用";
+      case "failed":
+        return "失败 - 无法连接";
       default:
-        return '未知';
+        return "未知";
     }
   };
 
   const runLatencyTest = async () => {
     if (!agentEndpoint) {
-      setError('缺少Agent端点配置');
+      setError("缺少Agent端点配置");
       return;
     }
 
@@ -98,12 +100,15 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
     setError(null);
 
     try {
-      const response = await fetch(`${agentEndpoint}/api/latency-test?testType=${testType}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${agentEndpoint}/api/latency-test?testType=${testType}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -112,14 +117,13 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || '延迟测试失败');
+        throw new Error(data.error || "延迟测试失败");
       }
 
       setTestResult(data.data);
       onTestComplete?.(data.data);
-
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '未知错误';
+      const errorMessage = err instanceof Error ? err.message : "未知错误";
       setError(`延迟测试失败: ${errorMessage}`);
     } finally {
       setIsLoading(false);
@@ -127,7 +131,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
   };
 
   const formatLatency = (latency: number | null): string => {
-    if (latency === null) return 'N/A';
+    if (latency === null) return "N/A";
     return `${latency.toFixed(1)}ms`;
   };
 
@@ -145,9 +149,9 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             <div className="flex gap-2">
               <Button
-                variant={testType === 'standard' ? 'default' : 'outline'}
+                variant={testType === "standard" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setTestType('standard')}
+                onClick={() => setTestType("standard")}
                 disabled={isLoading}
                 className="text-xs"
               >
@@ -155,9 +159,9 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                 标准测试 (8站点)
               </Button>
               <Button
-                variant={testType === 'comprehensive' ? 'default' : 'outline'}
+                variant={testType === "comprehensive" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setTestType('comprehensive')}
+                onClick={() => setTestType("comprehensive")}
                 disabled={isLoading}
                 className="text-xs"
               >
@@ -165,7 +169,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                 完整测试 (20站点)
               </Button>
             </div>
-            
+
             <Button
               onClick={runLatencyTest}
               disabled={isLoading || !agentEndpoint}
@@ -202,7 +206,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                 <Clock className="w-5 h-5 text-green-400" />
                 测试结果概览
                 <Badge variant="outline" className="ml-2">
-                  {testResult.testType === 'standard' ? '标准测试' : '完整测试'}
+                  {testResult.testType === "standard" ? "标准测试" : "完整测试"}
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -214,21 +218,21 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                   </div>
                   <div className="text-sm text-gray-400">成功率</div>
                 </div>
-                
+
                 <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
                   <div className="text-2xl font-bold text-primary">
                     {testResult.summary.averageLatency.toFixed(1)}ms
                   </div>
                   <div className="text-sm text-gray-400">平均延迟</div>
                 </div>
-                
+
                 <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
                   <div className="text-2xl font-bold text-green-400">
                     {testResult.summary.excellentCount}
                   </div>
                   <div className="text-sm text-gray-400">优秀连接</div>
                 </div>
-                
+
                 <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
                   <div className="text-2xl font-bold text-yellow-400">
                     {(testResult.duration / 1000).toFixed(1)}s
@@ -255,15 +259,19 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                     className="flex items-center justify-between p-3 bg-gray-800/30 rounded border border-gray-600"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">{getStatusIcon(result.status)}</span>
+                      <span className="text-lg">
+                        {getStatusIcon(result.status)}
+                      </span>
                       <div>
-                        <div className="font-medium text-white">{result.target}</div>
+                        <div className="font-medium text-white">
+                          {result.target}
+                        </div>
                         <div className="text-xs text-gray-400">
                           {getStatusDescription(result.status)}
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <Badge className={getStatusColor(result.status)}>
                         {formatLatency(result.latency)}

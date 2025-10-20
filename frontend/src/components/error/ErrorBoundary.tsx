@@ -1,6 +1,6 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { AlertCircle, RefreshCw, Home, Bug } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { AlertCircle, RefreshCw, Home, Bug } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   children: ReactNode;
@@ -20,7 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -28,16 +28,16 @@ class ErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       error,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // 调用外部错误处理回调
@@ -46,11 +46,11 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     // 在开发环境中记录更详细的错误信息
-    if (process.env.NODE_ENV === 'development') {
-      console.group('🚨 Error Boundary Details');
-      console.error('Error:', error);
-      console.error('Error Info:', errorInfo);
-      console.error('Component Stack:', errorInfo.componentStack);
+    if (process.env.NODE_ENV === "development") {
+      console.group("🚨 Error Boundary Details");
+      console.error("Error:", error);
+      console.error("Error Info:", errorInfo);
+      console.error("Component Stack:", errorInfo.componentStack);
       console.groupEnd();
     }
   }
@@ -59,7 +59,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
@@ -68,7 +68,7 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   render() {
@@ -88,17 +88,17 @@ class ErrorBoundary extends Component<Props, State> {
                   <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
                 </div>
               </div>
-              
+
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 应用程序出现错误
               </h1>
-              
+
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 很抱歉，应用程序遇到了意外错误。请尝试刷新页面或返回首页。
               </p>
 
               {/* 错误详情（仅开发环境显示） */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {process.env.NODE_ENV === "development" && this.state.error && (
                 <details className="text-left mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                     <Bug className="h-4 w-4 mr-2" />
@@ -133,7 +133,7 @@ class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   重试
                 </Button>
-                
+
                 <div className="flex space-x-3">
                   <Button
                     onClick={this.handleReload}
@@ -143,7 +143,7 @@ class ErrorBoundary extends Component<Props, State> {
                   >
                     刷新页面
                   </Button>
-                  
+
                   <Button
                     onClick={this.handleGoHome}
                     size="sm"
@@ -172,4 +172,3 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
-

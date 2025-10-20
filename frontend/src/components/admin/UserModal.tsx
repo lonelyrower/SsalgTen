@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { apiService, type User } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { useNotification } from '@/hooks/useNotification';
-import { 
-  X, 
-  User as UserIcon, 
-  Mail, 
-  Lock, 
-  Shield, 
-  Eye, 
+import React, { useState, useEffect } from "react";
+import { apiService, type User } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useNotification } from "@/hooks/useNotification";
+import {
+  X,
+  User as UserIcon,
+  Mail,
+  Lock,
+  Shield,
+  Eye,
   EyeOff,
   Save,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -28,19 +28,24 @@ interface FormData {
   name: string;
   password: string;
   confirmPassword: string;
-  role: 'ADMIN' | 'OPERATOR' | 'VIEWER';
+  role: "ADMIN" | "OPERATOR" | "VIEWER";
   active: boolean;
 }
 
-export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onSaved }) => {
+export const UserModal: React.FC<UserModalProps> = ({
+  isOpen,
+  onClose,
+  user,
+  onSaved,
+}) => {
   const { showSuccess } = useNotification();
   const [formData, setFormData] = useState<FormData>({
-    username: '',
-    email: '',
-    name: '',
-    password: '',
-    confirmPassword: '',
-    role: 'VIEWER',
+    username: "",
+    email: "",
+    name: "",
+    password: "",
+    confirmPassword: "",
+    role: "VIEWER",
     active: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -55,40 +60,43 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
       setFormData({
         username: user.username,
         email: user.email,
-        name: user.name || '',
-        password: '',
-        confirmPassword: '',
+        name: user.name || "",
+        password: "",
+        confirmPassword: "",
         role: user.role,
         active: user.active,
       });
     } else {
       setFormData({
-        username: '',
-        email: '',
-        name: '',
-        password: '',
-        confirmPassword: '',
-        role: 'VIEWER',
+        username: "",
+        email: "",
+        name: "",
+        password: "",
+        confirmPassword: "",
+        role: "VIEWER",
         active: true,
       });
     }
     setErrors({});
   }, [user, isOpen]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value, type } = e.target;
-    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
-    
-    setFormData(prev => ({
+    const newValue =
+      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+
+    setFormData((prev) => ({
       ...prev,
       [name]: newValue,
     }));
 
     // 清除相关错误
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: '',
+        [name]: "",
       }));
     }
   };
@@ -97,42 +105,42 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
     const newErrors: Record<string, string> = {};
 
     if (!formData.username.trim()) {
-      newErrors.username = '用户名不能为空';
+      newErrors.username = "用户名不能为空";
     } else if (formData.username.length < 3) {
-      newErrors.username = '用户名至少3个字符';
+      newErrors.username = "用户名至少3个字符";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = '邮箱不能为空';
+      newErrors.email = "邮箱不能为空";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '请输入有效的邮箱地址';
+      newErrors.email = "请输入有效的邮箱地址";
     }
 
     // 密码验证逻辑
     if (!isEditing) {
       // 新建用户：密码必填
       if (!formData.password.trim()) {
-        newErrors.password = '密码不能为空';
+        newErrors.password = "密码不能为空";
       } else if (formData.password.length < 6) {
-        newErrors.password = '密码至少6个字符';
+        newErrors.password = "密码至少6个字符";
       }
 
       if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = '密码确认不匹配';
+        newErrors.confirmPassword = "密码确认不匹配";
       }
     } else {
       // 编辑用户：如果输入了密码，则进行验证
       if (formData.password.trim()) {
         if (formData.password.length < 6) {
-          newErrors.password = '密码至少6个字符';
+          newErrors.password = "密码至少6个字符";
         }
 
         if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = '密码确认不匹配';
+          newErrors.confirmPassword = "密码确认不匹配";
         }
       } else if (formData.confirmPassword.trim()) {
         // 如果只填了确认密码而没填密码
-        newErrors.password = '请输入新密码';
+        newErrors.password = "请输入新密码";
       }
     }
 
@@ -142,7 +150,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -156,7 +164,9 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
         name: formData.name,
         role: formData.role,
         active: formData.active,
-        ...((!isEditing || formData.password.trim()) && { password: formData.password }),
+        ...((!isEditing || formData.password.trim()) && {
+          password: formData.password,
+        }),
       };
 
       let response;
@@ -165,29 +175,29 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
       } else {
         response = await apiService.createUser({
           ...userData,
-          password: formData.password || ''
+          password: formData.password || "",
         });
       }
 
       if (response.success) {
         // 显示成功提示
         if (isEditing && formData.password.trim()) {
-          showSuccess('密码修改成功', '用户密码已成功更新');
+          showSuccess("密码修改成功", "用户密码已成功更新");
         } else if (isEditing) {
-          showSuccess('用户更新成功', '用户信息已成功更新');
+          showSuccess("用户更新成功", "用户信息已成功更新");
         } else {
-          showSuccess('用户创建成功', '新用户已成功创建');
+          showSuccess("用户创建成功", "新用户已成功创建");
         }
         onSaved();
         onClose();
       } else {
         setErrors({
-          submit: response.error || `${isEditing ? '更新' : '创建'}用户失败`,
+          submit: response.error || `${isEditing ? "更新" : "创建"}用户失败`,
         });
       }
     } catch {
       setErrors({
-        submit: `${isEditing ? '更新' : '创建'}用户失败`,
+        submit: `${isEditing ? "更新" : "创建"}用户失败`,
       });
     } finally {
       setLoading(false);
@@ -207,10 +217,10 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {isEditing ? '编辑用户' : '添加用户'}
+                {isEditing ? "编辑用户" : "添加用户"}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {isEditing ? '修改用户信息和权限' : '创建新的系统用户'}
+                {isEditing ? "修改用户信息和权限" : "创建新的系统用户"}
               </p>
             </div>
           </div>
@@ -230,7 +240,9 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
           {errors.submit && (
             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
-              <span className="text-red-700 dark:text-red-400">{errors.submit}</span>
+              <span className="text-red-700 dark:text-red-400">
+                {errors.submit}
+              </span>
             </div>
           )}
 
@@ -247,14 +259,18 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 value={formData.username}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                  errors.username ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  errors.username
+                    ? "border-red-300 dark:border-red-600"
+                    : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder="请输入用户名"
                 disabled={loading}
               />
             </div>
             {errors.username && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.username}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.username}
+              </p>
             )}
           </div>
 
@@ -271,14 +287,18 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 value={formData.email}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                  errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  errors.email
+                    ? "border-red-300 dark:border-red-600"
+                    : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder="请输入邮箱地址"
                 disabled={loading}
               />
             </div>
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -292,7 +312,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="请输入显示名称（可选）"
               disabled={loading}
             />
@@ -301,17 +321,19 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
           {/* 密码 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {isEditing ? '新密码（留空则不修改）' : '密码 *'}
+              {isEditing ? "新密码（留空则不修改）" : "密码 *"}
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                  errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  errors.password
+                    ? "border-red-300 dark:border-red-600"
+                    : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder={isEditing ? "留空表示不修改密码" : "请输入密码"}
                 disabled={loading}
@@ -322,11 +344,17 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={loading}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.password}
+              </p>
             )}
           </div>
 
@@ -339,12 +367,14 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
-                    errors.confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    errors.confirmPassword
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="请再次输入密码"
                   disabled={loading}
@@ -355,11 +385,17 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   disabled={loading}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
           )}
@@ -376,7 +412,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
                 aria-label="用户角色"
                 value={formData.role}
                 onChange={handleInputChange}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={loading}
               >
                 <option value="VIEWER">查看者 - 只读权限</option>
@@ -397,7 +433,10 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
               className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               disabled={loading}
             />
-            <label htmlFor="active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="active"
+              className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+            >
               启用账户
             </label>
           </div>
@@ -412,20 +451,16 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user, onS
             >
               取消
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className=""
-            >
+            <Button type="submit" disabled={loading} className="">
               {loading ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>{isEditing ? '更新中...' : '创建中...'}</span>
+                  <span>{isEditing ? "更新中..." : "创建中..."}</span>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
                   <Save className="h-4 w-4" />
-                  <span>{isEditing ? '更新用户' : '创建用户'}</span>
+                  <span>{isEditing ? "更新用户" : "创建用户"}</span>
                 </div>
               )}
             </Button>
