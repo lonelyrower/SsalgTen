@@ -1538,13 +1538,21 @@ export class NodeService {
 
       // 聚合所有节点的网络流量
       for (const heartbeat of latestHeartbeats) {
-        if (heartbeat.networkInfo && typeof heartbeat.networkInfo === "object") {
-          const networkData = heartbeat.networkInfo as any;
+        if (
+          heartbeat.networkInfo &&
+          typeof heartbeat.networkInfo === "object"
+        ) {
+          const networkData = heartbeat.networkInfo as unknown;
 
           // networkInfo 是一个接口数组
           if (Array.isArray(networkData)) {
             for (const iface of networkData) {
-              if (iface && typeof iface === "object") {
+              if (
+                iface &&
+                typeof iface === "object" &&
+                "bytesReceived" in iface &&
+                "bytesSent" in iface
+              ) {
                 // 累加接收和发送的字节数
                 if (typeof iface.bytesReceived === "number") {
                   totalDownload += iface.bytesReceived;

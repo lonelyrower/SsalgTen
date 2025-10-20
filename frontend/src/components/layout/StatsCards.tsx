@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Badge } from '@/components/ui/badge';
 import { Globe, Server, Building, HardDrive } from 'lucide-react';
 
 interface StatsCardsProps {
