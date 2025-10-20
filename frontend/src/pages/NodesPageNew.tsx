@@ -212,22 +212,11 @@ export const NodesPageNew: React.FC = () => {
         ref={containerRef}
         className="relative max-w-7xl mx-auto px-4 py-8 space-y-6"
       >
-        {/* Connectivity Diagnostics */}
-        <ConnectivityDiagnostics
-          checking={diagnostics.checking}
-          apiReachable={diagnostics.apiReachable}
-          socketConnected={diagnostics.socketConnected}
-          authOk={diagnostics.authOk}
-          nodesCount={diagnostics.nodesCount}
-          lastCheckedAt={diagnostics.lastCheckedAt}
-          issues={diagnostics.issues}
-          onRefresh={diagnostics.refresh}
-          isAdmin={hasRole("ADMIN")}
-        />
+        {/* Connectivity Diagnostics removed for nodes overview page */}
 
         {/* Page Header */}
         <PageHeader
-          title="节点管理"
+          title="节点看板"
           description={`全局监控 ${nodes.length} 个节点 - 在线 ${nodes.filter((n) => n.status === "online").length} 台`}
           icon={Server}
           actions={

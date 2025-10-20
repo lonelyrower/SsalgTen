@@ -374,7 +374,7 @@ export const NodesPage: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* 页面标题 */}
         <PageHeader
-          title="节点总览"
+          title="节点看板"
           description={`管理和监控所有节点 - 显示 ${filteredNodes.length} / ${nodes.length} 个节点`}
           icon={Server}
           actions={
