@@ -99,7 +99,7 @@ export class ServicesController {
               data: serviceData,
             });
           }
-        })
+        }),
       );
 
       // 广播服务检测结果给前端
@@ -113,7 +113,7 @@ export class ServicesController {
       }
 
       logger.info(
-        `Saved ${savedServices.length} service detection results for node ${nodeId}`
+        `Saved ${savedServices.length} service detection results for node ${nodeId}`,
       );
 
       return res.json({
@@ -126,7 +126,7 @@ export class ServicesController {
     } catch (error) {
       if (isMissingServicesTableError(error)) {
         logger.warn(
-          "Services table missing when reporting services, returning failure response."
+          "Services table missing when reporting services, returning failure response.",
         );
         return res.status(503).json({
           success: false,
@@ -719,7 +719,7 @@ export class ServicesController {
 
       const axios = require("axios");
       const AGENT_CONTROL_TIMEOUT = parseInt(
-        process.env.AGENT_CONTROL_TIMEOUT || "8000"
+        process.env.AGENT_CONTROL_TIMEOUT || "8000",
       );
 
       try {
@@ -734,16 +734,16 @@ export class ServicesController {
               "x-agent-api-key": AGENT_CONTROL_API_KEY,
             },
             timeout: AGENT_CONTROL_TIMEOUT,
-          }
+          },
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error(
           `Failed to trigger service scan on agent ${node.agentId} (${agentBaseUrl}):`,
-          error
+          error,
         );
 
         const errorMessage =
-          error.code === "ECONNREFUSED"
+          (error as { code?: string }).code === "ECONNREFUSED"
             ? "Agent is not reachable (connection refused)"
             : "Failed to contact agent for service scan";
 
@@ -759,7 +759,7 @@ export class ServicesController {
       }
 
       logger.info(
-        `Triggered service scan for node ${nodeId} via agent ${node.agentId}`
+        `Triggered service scan for node ${nodeId} via agent ${node.agentId}`,
       );
 
       return res.json({
@@ -773,7 +773,7 @@ export class ServicesController {
     } catch (error) {
       if (isMissingServicesTableError(error)) {
         logger.warn(
-          "Services table missing when triggering service scan, returning failure response."
+          "Services table missing when triggering service scan, returning failure response.",
         );
         return res.status(503).json({
           success: false,
