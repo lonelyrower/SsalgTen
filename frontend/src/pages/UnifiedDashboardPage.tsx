@@ -1,15 +1,15 @@
 import React, { useMemo } from "react";
 import { Header } from "@/components/layout/Header";
-import { NodeMonitoringSection } from "@/components/dashboard/NodeMonitoringSection";
 import { GeographicDistribution } from "@/components/dashboard/GeographicDistribution";
 import { StatsCards } from "@/components/layout/StatsCards";
+import { SystemMetrics } from "@/components/dashboard/SystemMetrics";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MobilePullToRefresh } from "@/components/ui/MobilePullToRefresh";
 import { useRealTime } from "@/hooks/useRealTime";
 
 /**
  * 统一监控中心页面
- * 整合了旧版监控视图的核心能力 + 统计信息
+ * 展示核心统计信息、系统资源概览和地理分布
  */
 export const UnifiedDashboardPage: React.FC = () => {
   const { nodes, stats, connected, refreshData } = useRealTime();
@@ -59,19 +59,19 @@ export const UnifiedDashboardPage: React.FC = () => {
 
       <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
         <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe space-y-6">
-          {/* 统计卡片 */}
+          {/* 核心统计卡片 */}
           <section>
             <StatsCards {...memoizedStats} />
+          </section>
+
+          {/* 系统资源概览 */}
+          <section>
+            <SystemMetrics nodes={nodes} />
           </section>
 
           {/* 地理分布 */}
           <section>
             <GeographicDistribution nodes={nodes} />
-          </section>
-
-          {/* 节点监控区块 */}
-          <section>
-            <NodeMonitoringSection />
           </section>
         </main>
       </MobilePullToRefresh>
