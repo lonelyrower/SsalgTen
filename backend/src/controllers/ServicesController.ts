@@ -393,9 +393,9 @@ export class ServicesController {
    * GET /api/services/export
    */
   static async exportServices(req: Request, res: Response) {
-    try {
-      const { format = "json", nodeId, serviceType, status } = req.query;
+    const { format = "json", nodeId, serviceType, status } = req.query;
 
+    try {
       // 获取服务数据
       const whereClause: Prisma.DetectedServiceWhereInput = {
         node: {

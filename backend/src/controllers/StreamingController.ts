@@ -671,9 +671,9 @@ export class StreamingController {
    * GET /api/streaming/export
    */
   static async exportStreamingData(req: Request, res: Response) {
-    try {
-      const { format = "json", service, status, country } = req.query;
+    const { format = "json", service, status, country } = req.query;
 
+    try {
       // 获取流媒体节点摘要数据（复用现有逻辑）
       const nodes = await prisma.node.findMany({
         where: {
