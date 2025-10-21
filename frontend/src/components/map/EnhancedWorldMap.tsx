@@ -132,14 +132,26 @@ const resolvePreferredProvider = (): MapProvider => {
   const w: any = typeof window !== "undefined" ? (window as any) : {};
   const runtimeProvider = normalizeProvider(w.APP_CONFIG?.MAP_PROVIDER);
   if (runtimeProvider) {
-    return runtimeProvider;
+    if (runtimeProvider === "mapbox" && !hasAnyApiKeyAvailable()) {
+      console.warn(
+        "[EnhancedWorldMap] MAP_PROVIDER=mapbox but no API key detected, falling back to carto",
+      );
+    } else {
+      return runtimeProvider;
+    }
   }
 
   const envProvider = normalizeProvider(
     import.meta.env.VITE_MAP_PROVIDER as string | undefined,
   );
   if (envProvider) {
-    return envProvider;
+    if (envProvider === "mapbox" && !hasAnyApiKeyAvailable()) {
+      console.warn(
+        "[EnhancedWorldMap] VITE_MAP_PROVIDER=mapbox without API key, falling back to carto",
+      );
+    } else {
+      return envProvider;
+    }
   }
 
   return hasAnyApiKeyAvailable() ? "mapbox" : "carto";
@@ -1486,4 +1498,3 @@ export const EnhancedWorldMap = memo(
     );
   },
 );
-
