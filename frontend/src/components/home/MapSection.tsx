@@ -53,8 +53,9 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
   return (
     <div className="relative h-full w-full bg-black">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 px-4 sm:px-6 pt-4 sm:pt-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Top-left controls - 左上角：2D/3D切换 + 状态统计 */}
+      <div className="pointer-events-none absolute top-4 sm:top-6 left-4 sm:left-6 z-40">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="pointer-events-auto">
             <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
           </div>
