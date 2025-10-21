@@ -101,9 +101,9 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="relative flex min-h-[100vh] w-screen flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
+    <div className="flex h-screen flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
       <Header />
-      <main className="relative flex-1 min-h-0 overflow-hidden">
+      <main className="relative flex-1 overflow-hidden">
         <MapSection
           nodes={nodes}
           stats={stats}
