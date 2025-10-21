@@ -106,10 +106,10 @@
   html {
     /* 防止横向滚动 */
     overflow-x: hidden;
-    /* iOS Safari 安全区域适配 */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    /* 确保 html 和 body 撑满视口 */
+    /* 确保 html 撑满视口 */
     height: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   body {
@@ -563,22 +563,34 @@
   /* 移动端优化 */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  /* 正确的光标样式 */
-  cursor: grab;
+  /* 正确的光标样式 - 强制覆盖 Leaflet 默认 */
+  cursor: grab !important;
 }
 
 .leaflet-container:active {
-  cursor: grabbing;
+  cursor: grabbing !important;
+}
+
+/* 覆盖 Leaflet 所有可能的光标类 */
+.leaflet-grab {
+  cursor: grab !important;
+}
+
+.leaflet-grab:active,
+.leaflet-grabbing {
+  cursor: grabbing !important;
 }
 
 /* Leaflet 标记点应该是可点击的指针 */
 .leaflet-marker-icon,
-.leaflet-popup-close-button {
+.leaflet-popup-close-button,
+.leaflet-interactive {
   cursor: pointer !important;
 }
 
 /* 地图拖动时的光标 */
-.leaflet-dragging .leaflet-container {
+.leaflet-dragging .leaflet-container,
+.leaflet-dragging {
   cursor: grabbing !important;
 }
 
