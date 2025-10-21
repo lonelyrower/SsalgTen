@@ -70,34 +70,34 @@ export const UnifiedDashboardPage: React.FC = () => {
 
           {/* 网格布局：6个统计区块 - 2列×3行 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 系统资源概览 */}
+            {/* 左列第1行：系统资源概览 */}
             <div>
               <SystemMetrics nodes={nodes} />
             </div>
 
-            {/* 地理分布 */}
+            {/* 右列第1行：地理分布 */}
             <div>
               <GeographicDistribution nodes={nodes} compact={true} />
             </div>
 
-            {/* 服务商分布 */}
-            <div>
-              <ProviderDistribution nodes={nodes} />
-            </div>
-
-            {/* 流量排行 */}
+            {/* 左列第2行：流量排行 */}
             <div>
               <TrafficRanking nodes={nodes} />
             </div>
 
-            {/* 正常运行时间排行 */}
+            {/* 右列第2行：正常运行时间排行 */}
             <div>
               <UptimeRanking nodes={nodes} />
             </div>
 
-            {/* 节点健康度排行 */}
+            {/* 左列第3行：节点健康度排行 */}
             <div>
               <HealthRanking nodes={nodes} />
+            </div>
+
+            {/* 右列第3行：服务商分布 */}
+            <div>
+              <ProviderDistribution nodes={nodes} />
             </div>
           </div>
         </main>
