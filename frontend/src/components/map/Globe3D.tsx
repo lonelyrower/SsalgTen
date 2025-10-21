@@ -222,6 +222,27 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+        // 添加鼠标移动事件监听器 - 动态改变光标样式
+        viewer.screenSpaceEventHandler.setInputAction((movement: any) => {
+          const pickedObject = viewer.scene.pick(movement.endPosition);
+          const canvas = viewer.canvas as HTMLCanvasElement;
+
+          if (Cesium.defined(pickedObject) && pickedObject.id) {
+            const entity = pickedObject.id;
+            const nodeData = (entity as any)._nodeData;
+
+            // 如果悬停在节点或聚合点上，显示指针
+            if (nodeData || entity.billboard) {
+              canvas.style.cursor = 'pointer';
+            } else {
+              canvas.style.cursor = 'grab';
+            }
+          } else {
+            // 没有悬停在任何对象上，显示抓手
+            canvas.style.cursor = 'grab';
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
         // 慢速自动旋转地球（可控制）
         let lastTime = Date.now();
         const tickListener = () => {
