@@ -539,16 +539,16 @@ export const NodesPage: React.FC = () => {
                       </div>
 
                       {/* 状态信息 */}
-                      <div className="grid grid-cols-1 gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <div className="grid grid-cols-1 gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             状态:
                           </span>
                           <span
-                            className={`text-sm font-medium ${
+                            className={`text-sm font-bold px-3 py-1 rounded-full ${
                               selectedNode.status === "online"
-                                ? "text-green-600"
-                                : "text-red-600"
+                                ? "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30"
+                                : "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30"
                             }`}
                           >
                             {selectedNode.status.toUpperCase()}
@@ -557,10 +557,10 @@ export const NodesPage: React.FC = () => {
 
                         {selectedNode.ipv4 && (
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               IPv4:
                             </span>
-                            <span className="text-sm font-mono text-primary">
+                            <span className="text-sm font-mono font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
                               {selectedNode.ipv4}
                             </span>
                           </div>
@@ -569,30 +569,30 @@ export const NodesPage: React.FC = () => {
                         {selectedNode.ipv6 &&
                           selectedNode.ipv6.includes(":") && (
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 IPv6:
                               </span>
-                              <span className="text-xs font-mono text-primary break-all">
+                              <span className="text-xs font-mono font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 px-2 py-0.5 rounded break-all">
                                 {selectedNode.ipv6}
                               </span>
                             </div>
                           )}
 
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             系统:
                           </span>
-                          <span className="text-sm">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
                             {selectedNode.osType || "Unknown"}
                           </span>
                         </div>
 
                         {selectedNode.lastSeen && (
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               最后在线:
                             </span>
-                            <span className="text-xs">
+                            <span className="text-xs font-medium text-gray-900 dark:text-white">
                               {new Date(selectedNode.lastSeen).toLocaleString()}
                             </span>
                           </div>
@@ -600,13 +600,13 @@ export const NodesPage: React.FC = () => {
                       </div>
 
                       {/* 地理信息 */}
-                      <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div className="grid grid-cols-1 gap-2">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div className="grid grid-cols-1 gap-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               坐标:
                             </span>
-                            <span className="text-sm font-mono">
+                            <span className="text-sm font-mono font-semibold text-gray-900 dark:text-white">
                               {selectedNode.latitude.toFixed(4)},{" "}
                               {selectedNode.longitude.toFixed(4)}
                             </span>
@@ -614,10 +614,10 @@ export const NodesPage: React.FC = () => {
 
                           {selectedNode.asnNumber && (
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 ASN:
                               </span>
-                              <span className="text-sm font-mono">
+                              <span className="text-sm font-mono font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
                                 {selectedNode.asnNumber}
                               </span>
                             </div>
@@ -625,10 +625,10 @@ export const NodesPage: React.FC = () => {
 
                           {selectedNode.asnName && (
                             <div className="flex justify-between items-start">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 ASN名称:
                               </span>
-                              <span className="text-xs text-right max-w-[200px]">
+                              <span className="text-xs font-medium text-gray-900 dark:text-white text-right max-w-[200px]">
                                 {selectedNode.asnName}
                               </span>
                             </div>
@@ -670,111 +670,120 @@ export const NodesPage: React.FC = () => {
                   <div className="space-y-3 flex-1 overflow-y-auto min-h-0">
                     {filteredNodes
                       .slice(0, Math.min(filteredNodes.length, visibleCount))
-                      .map((node) => (
-                        <div
-                          key={node.id}
-                          onClick={() => handleNodeClick(node)}
-                          className="p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 relative">
-                              {/* 状态指示器在左上角 */}
-                              <div
-                                className={`absolute top-0 left-0 w-2 h-2 rounded-full ${
-                                  node.status === "online"
-                                    ? "bg-green-500"
-                                    : "bg-red-500"
-                                }`}
-                              ></div>
-                              {/* 节点名称居中 */}
-                              <div className="text-center mb-1">
-                                <h4 className="font-medium text-gray-900 dark:text-white text-sm">
-                                  {node.name}
-                                </h4>
+                      .map((node) => {
+                        const isOnline = node.status === "online";
+                        return (
+                          <div
+                            key={node.id}
+                            onClick={() => handleNodeClick(node)}
+                            className={`rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
+                              isOnline
+                                ? "border-green-200 dark:border-green-900/30 hover:border-green-300 dark:hover:border-green-800/50 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/10 dark:to-emerald-950/10"
+                                : "border-red-200 dark:border-red-900/30 hover:border-red-300 dark:hover:border-red-800/50 bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-950/10 dark:to-rose-950/10"
+                            }`}
+                          >
+                            <div className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 relative">
+                                  {/* 状态指示器在左上角 */}
+                                  <div
+                                    className={`absolute top-0 left-0 w-2.5 h-2.5 rounded-full shadow-sm ${
+                                      isOnline
+                                        ? "bg-green-500 animate-pulse shadow-green-500/50"
+                                        : "bg-red-500 shadow-red-500/50"
+                                    }`}
+                                  ></div>
+                                  {/* 节点名称居中 */}
+                                  <div className="text-center mb-2">
+                                    <h4 className="font-bold text-gray-900 dark:text-white text-base">
+                                      {node.name}
+                                    </h4>
+                                  </div>
+                                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center flex items-center justify-center gap-1.5">
+                                    <CountryFlagSvg
+                                      country={node.country}
+                                      className="w-5 h-5"
+                                    />
+                                    <span>
+                                      {node.city}, {node.country}
+                                    </span>
+                                  </div>
+                                  {node.ipv4 && (
+                                    <p className="text-sm text-primary font-mono font-semibold mb-1.5 text-center bg-white/50 dark:bg-gray-800/50 py-1 px-2 rounded">
+                                      {node.ipv4}
+                                    </p>
+                                  )}
+                                  {node.ipv6 && node.ipv6.includes(":") && (
+                                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-medium mb-1.5 text-center break-all bg-white/50 dark:bg-gray-800/50 py-1 px-2 rounded">
+                                      {node.ipv6}
+                                    </p>
+                                  )}
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
+                                    {node.provider}
+                                  </p>
+                                  {node.asnNumber && (
+                                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-2 text-center bg-gray-100 dark:bg-gray-700 py-1 px-2 rounded-full inline-block w-auto mx-auto">
+                                      {node.asnNumber}
+                                    </p>
+                                  )}
+                                  {/* 延迟信息 */}
+                                  {(() => {
+                                    const latencyData = getNodeLatency(node.id);
+                                    if (
+                                      latencyData &&
+                                      latencyData.status !== "testing"
+                                    ) {
+                                      const colorClass =
+                                        latencyData.latency !== null
+                                          ? getLatencyColor(latencyData.latency) ===
+                                            "green"
+                                            ? "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30"
+                                            : getLatencyColor(
+                                                  latencyData.latency,
+                                                ) === "yellow"
+                                              ? "text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30"
+                                              : getLatencyColor(
+                                                    latencyData.latency,
+                                                  ) === "red"
+                                                ? "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30"
+                                                : "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700"
+                                          : "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30";
+                                      return (
+                                        <div className="mt-2 text-center">
+                                          <span
+                                            className={`text-sm font-mono font-semibold px-3 py-1 rounded-full ${colorClass}`}
+                                          >
+                                            {latencyData.status === "success"
+                                              ? formatLatency(latencyData.latency)
+                                              : latencyData.status === "failed"
+                                                ? "失败"
+                                                : latencyData.status === "timeout"
+                                                  ? "超时"
+                                                  : "--"}
+                                          </span>
+                                        </div>
+                                      );
+                                    }
+                                    if (
+                                      latencyData &&
+                                      latencyData.status === "testing"
+                                    ) {
+                                      return (
+                                        <div className="mt-2 text-center">
+                                          <span className="text-sm font-medium text-primary">
+                                            测试中...
+                                          </span>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 text-center flex items-center justify-center gap-1">
-                                <CountryFlagSvg
-                                  country={node.country}
-                                  className="w-4 h-4"
-                                />
-                                <span>
-                                  {node.city}, {node.country}
-                                </span>
-                              </div>
-                              {node.ipv4 && (
-                                <p className="text-xs text-primary font-mono mb-1 text-center">
-                                  {node.ipv4}
-                                </p>
-                              )}
-                              {node.ipv6 && node.ipv6.includes(":") && (
-                                <p className="text-[10px] text-indigo-500 dark:text-indigo-300 font-mono mb-1 text-center break-all">
-                                  {node.ipv6}
-                                </p>
-                              )}
-                              <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
-                                {node.provider}
-                              </p>
-                              {node.asnNumber && (
-                                <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">
-                                  {node.asnNumber}
-                                </p>
-                              )}
-                              {/* 延迟信息 */}
-                              {(() => {
-                                const latencyData = getNodeLatency(node.id);
-                                if (
-                                  latencyData &&
-                                  latencyData.status !== "testing"
-                                ) {
-                                  const colorClass =
-                                    latencyData.latency !== null
-                                      ? getLatencyColor(latencyData.latency) ===
-                                        "green"
-                                        ? "text-green-600"
-                                        : getLatencyColor(
-                                              latencyData.latency,
-                                            ) === "yellow"
-                                          ? "text-yellow-600"
-                                          : getLatencyColor(
-                                                latencyData.latency,
-                                              ) === "red"
-                                            ? "text-red-600"
-                                            : "text-gray-400"
-                                      : "text-red-400";
-                                  return (
-                                    <div className="mt-1 text-center">
-                                      <span
-                                        className={`text-xs font-mono ${colorClass}`}
-                                      >
-                                        {latencyData.status === "success"
-                                          ? formatLatency(latencyData.latency)
-                                          : latencyData.status === "failed"
-                                            ? "失败"
-                                            : latencyData.status === "timeout"
-                                              ? "超时"
-                                              : "--"}
-                                      </span>
-                                    </div>
-                                  );
-                                }
-                                if (
-                                  latencyData &&
-                                  latencyData.status === "testing"
-                                ) {
-                                  return (
-                                    <div className="mt-1 text-center">
-                                      <span className="text-xs text-primary">
-                                        测试中...
-                                      </span>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })()}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     {filteredNodes.length > visibleCount && (
                       <button
                         className="w-full py-2 mt-2 text-sm rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
