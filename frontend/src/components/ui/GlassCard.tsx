@@ -7,6 +7,7 @@ interface GlassCardProps {
   variant?: "default" | "subtle" | "strong" | "tech" | "gradient";
   animated?: boolean;
   glow?: boolean;
+  hoverTransform?: boolean;
 }
 
 export const GlassCard = memo(
@@ -16,6 +17,7 @@ export const GlassCard = memo(
     variant = "default",
     animated = false,
     glow = false,
+    hoverTransform = true,
   }: GlassCardProps) => {
     const variants = {
       // 默认：轻量模糊（桌面10px，移动禁用）
@@ -38,8 +40,10 @@ export const GlassCard = memo(
     };
 
     const animationClass = animated
-      ? "transition-all duration-500 hover:transform hover:scale-[1.02] hover:-translate-y-1 card-3d"
-      : "transition-all duration-300";
+      ? hoverTransform
+        ? "transition-transform duration-500 hover:transform hover:scale-[1.02] hover:-translate-y-1 card-3d"
+        : "transition-shadow duration-500 hover:shadow-xl"
+      : "transition-colors duration-300";
 
     const glowClass = glow
       ? "pulse-glow shadow-2xl shadow-[hsl(var(--primary))]/25"

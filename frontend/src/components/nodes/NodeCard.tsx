@@ -45,12 +45,18 @@ export const NodeCard: React.FC<NodeCardProps> = ({
   latency,
   showTimeline = true,
 }) => {
+  const isOnline = node.status.toLowerCase() === "online";
+
   return (
     <motion.div
-      className={`relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 border rounded-2xl p-6 backdrop-blur-sm cursor-pointer transition-all duration-300 ${
+      className={`relative rounded-xl border-2 p-6 cursor-pointer transition-all duration-300 ${
         isSelected
-          ? "border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30"
-          : "border-gray-700/50 hover:border-gray-600/50 hover:shadow-md"
+          ? isOnline
+            ? "border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:from-cyan-900/20 dark:to-blue-900/20"
+            : "border-purple-500 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/30 bg-gradient-to-br from-purple-50/80 to-pink-50/80 dark:from-purple-900/20 dark:to-pink-900/20"
+          : isOnline
+            ? "border-green-200 dark:border-green-900/30 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 hover:shadow-lg hover:-translate-y-0.5"
+            : "border-red-200 dark:border-red-900/30 bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-900/10 dark:to-rose-900/10 hover:shadow-lg hover:-translate-y-0.5"
       }`}
       initial={{ opacity: 0, x: -50 }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -83,10 +89,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <CountryFlagSvg country={node.country} className="w-8 h-8" />
               )}
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                   {node.name}
                 </h3>
-                <p className="text-sm text-gray-400 flex items-center gap-1">
+                <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1">
                   <Globe className="h-3 w-3" />
                   {node.city}, {node.country}
                 </p>
@@ -102,21 +108,21 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-gray-500 text-sm">提供商:</span>
-              <span className="text-gray-300 text-sm truncate">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">提供商:</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                 {node.provider}
               </span>
             </div>
             {latency !== null && latency !== undefined && (
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">延迟:</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">延迟:</span>
                 <span
-                  className={`font-semibold text-sm ${
+                  className={`font-bold text-sm ${
                     latency < 50
-                      ? "text-green-400"
+                      ? "text-green-600 dark:text-green-400"
                       : latency < 150
-                        ? "text-yellow-400"
-                        : "text-red-400"
+                        ? "text-yellow-600 dark:text-yellow-400"
+                        : "text-red-600 dark:text-red-400"
                   }`}
                 >
                   {latency}ms
@@ -125,16 +131,16 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             )}
             {node.ipv4 && (
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">IPv4:</span>
-                <span className="text-cyan-400 font-mono text-xs">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">IPv4:</span>
+                <span className="text-sm font-mono font-semibold text-cyan-600 dark:text-cyan-400 bg-white/50 dark:bg-gray-800/50 px-2 py-0.5 rounded">
                   {node.ipv4}
                 </span>
               </div>
             )}
             {node.lastSeen && (
               <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3 text-gray-500" />
-                <span className="text-gray-400 text-xs">
+                <Clock className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                   {new Date(node.lastSeen).toLocaleString("zh-CN", {
                     month: "short",
                     day: "numeric",
@@ -150,12 +156,12 @@ export const NodeCard: React.FC<NodeCardProps> = ({
           {node.status === "online" && (
             <div className="mt-4 flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <Server className="h-4 w-4 text-cyan-400" />
-                <span className="text-xs text-gray-400">在线</span>
+                <Server className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">在线</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Activity className="h-4 w-4 text-green-400" />
-                <span className="text-xs text-gray-400">运行中</span>
+                <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">运行中</span>
               </div>
             </div>
           )}

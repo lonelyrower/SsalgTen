@@ -18,13 +18,15 @@ const Globe3D = lazy(() =>
 );
 
 // 地图加载骨架屏
-const MapSkeleton = () => (
-  <div className="w-full h-[600px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+const MapSkeleton = ({ mode = "generic" }: { mode?: "generic" | "3d" }) => (
+  <div className="w-full h-full min-h-[320px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
     <div className="text-center space-y-4">
       <div className="animate-pulse">
         <Globe className="w-16 h-16 mx-auto text-primary" />
       </div>
-      <p className="text-muted-foreground">正在加载地图组件...</p>
+      <p className="text-muted-foreground">
+        {mode === "3d" ? "正在按需加载 3D Cesium 模块..." : "正在加载地图组件..."}
+      </p>
     </div>
   </div>
 );
@@ -47,9 +49,14 @@ export const MapSection: React.FC<MapSectionProps> = ({
   onNodeClick,
 }) => {
   return (
-    <GlassCard variant="gradient" animated={true} className="p-6">
+    <GlassCard
+      variant="gradient"
+      animated
+      hoverTransform={false}
+      className="p-4 sm:p-6 lg:p-8"
+    >
       {/* 标题区域 */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-primary/15 rounded-xl backdrop-blur-sm">
@@ -71,13 +78,13 @@ export const MapSection: React.FC<MapSectionProps> = ({
           <ViewModeToggle value={viewMode} onChange={onViewModeChange} />
 
           {/* 状态统计 */}
-          <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
+          <div className="hidden md:flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
             <div className="status-indicator bg-green-400" />
             <span className="font-medium text-foreground">
               在线 {stats?.onlineNodes || 0}
             </span>
           </div>
-          <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
+          <div className="hidden md:flex items-center space-x-2 glass px-4 py-2 rounded-full border border-white/20">
             <div className="status-indicator bg-red-400" />
             <span className="font-medium text-foreground">
               离线 {stats?.offlineNodes || 0}
@@ -87,7 +94,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
       </div>
 
       {/* 地图容器 */}
-      <div className="map-container relative h-[600px]">
+      <div className="map-container relative h-[400px] sm:h-[520px] lg:min-h-[calc(100vh-18rem)] lg:h-auto">
         <Suspense fallback={<MapSkeleton />}>
           {viewMode === "2d" ? (
             <EnhancedWorldMap
