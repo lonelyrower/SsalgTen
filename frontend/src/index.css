@@ -108,6 +108,8 @@
     overflow-x: hidden;
     /* iOS Safari 安全区域适配 */
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    /* 确保 html 和 body 撑满视口 */
+    height: 100%;
   }
 
   body {
@@ -117,12 +119,22 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     /* 防止横向滚动 */
     overflow-x: hidden;
+    /* 确保 body 撑满 */
+    min-height: 100%;
+    margin: 0;
     min-width: 320px; /* 最小宽度确保在极小屏幕上可用 */
   }
 
   .dark body {
     background: var(--bg-pattern), hsl(222.2 84% 4.9%);
     background-attachment: fixed;
+  }
+
+  /* 确保 #root 撑满并覆盖 body 背景 */
+  #root {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   /* 移动端基础优化 */
