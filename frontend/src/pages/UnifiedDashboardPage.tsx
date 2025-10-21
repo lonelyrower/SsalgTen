@@ -68,8 +68,8 @@ export const UnifiedDashboardPage: React.FC = () => {
             <StatsCards {...memoizedStats} />
           </section>
 
-          {/* 网格布局：6个统计区块 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* 网格布局：6个统计区块 - 2列×3行 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 系统资源概览 */}
             <div>
               <SystemMetrics nodes={nodes} />

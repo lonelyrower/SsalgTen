@@ -120,6 +120,7 @@ export type NodeWithStats = ManagedNode & {
     status: string;
     uptime: number | null;
   };
+  uptime?: number | null;
   cpuUsage?: number | null;
   memoryUsage?: number | null;
   diskUsage?: number | null;
@@ -379,6 +380,7 @@ export class NodeService {
                   uptime: lh.uptime ?? null,
                 }
               : undefined,
+            uptime: lh?.uptime ?? null,
             cpuUsage: lh?.cpuUsage ?? null,
             memoryUsage: lh?.memoryUsage ?? null,
             diskUsage: lh?.diskUsage ?? null,

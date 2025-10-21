@@ -19,13 +19,19 @@ const formatUptime = (seconds: number): string => {
   return `${hours}小时`;
 };
 
-const calculateUptimePercentage = (uptime: number, lastSeen: string): number => {
-  if (!uptime || !lastSeen) return 0;
+const calculateUptimePercentage = (
+  uptime: number,
+  createdAt: string,
+): number => {
+  if (!uptime || !createdAt) return 0;
 
-  // 计算从创建到现在的时间
+  // 计算从创建到现在的总时间
   const now = new Date();
-  const lastSeenDate = new Date(lastSeen);
-  const totalSeconds = (now.getTime() - lastSeenDate.getTime()) / 1000 + uptime;
+  const createdDate = new Date(createdAt);
+  const totalSeconds = (now.getTime() - createdDate.getTime()) / 1000;
+
+  // 如果总时间小于uptime（可能数据不准），返回100%
+  if (totalSeconds <= 0 || uptime > totalSeconds) return 100;
 
   // 正常运行时间占比
   return Math.min((uptime / totalSeconds) * 100, 100);
@@ -39,7 +45,7 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
         ...node,
         uptimePercent: calculateUptimePercentage(
           node.uptime || 0,
-          node.lastSeen || new Date().toISOString(),
+          node.createdAt || new Date().toISOString(),
         ),
       }))
       .sort((a, b) => (b.uptime || 0) - (a.uptime || 0))
