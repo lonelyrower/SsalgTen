@@ -54,12 +54,8 @@ export class TrafficStatsService {
         );
       } else {
         // 计算增量（处理网络接口重启导致的计数器重置）
-        const lastRx = existing.lastRxBytes
-          ? Number(existing.lastRxBytes)
-          : 0;
-        const lastTx = existing.lastTxBytes
-          ? Number(existing.lastTxBytes)
-          : 0;
+        const lastRx = existing.lastRxBytes ? Number(existing.lastRxBytes) : 0;
+        const lastTx = existing.lastTxBytes ? Number(existing.lastTxBytes) : 0;
 
         // 如果当前值小于上次记录，说明计数器可能重置了，只记录当前值
         const rxDelta = totalRx >= lastRx ? totalRx - lastRx : totalRx;
