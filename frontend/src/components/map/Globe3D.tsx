@@ -621,7 +621,7 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
       </div>
 
       {/* Layer switcher */}
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-10">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
         <div className="relative layer-menu-container">
           <Button
             variant="secondary"
@@ -638,7 +638,7 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
           {/* 图层选择菜单（简化列表样式，每个选项使用不同主题色） */}
           {showLayerMenu && (
             <div
-              className="absolute bottom-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
               role="menu"
             >
               <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">

@@ -46,7 +46,7 @@ export const HomePage = () => {
 
   if (isInitialLoad && nodes.length === 0 && !loadTimeout) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
         <Header />
         <LoadingSpinner
           fullScreen
@@ -60,7 +60,7 @@ export const HomePage = () => {
 
   if (error && nodes.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
@@ -79,7 +79,7 @@ export const HomePage = () => {
 
   if (loadTimeout && nodes.length === 0 && !error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
