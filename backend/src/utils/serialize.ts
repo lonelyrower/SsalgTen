@@ -6,7 +6,18 @@ export function sanitizeNode(
 ): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { apiKey: _apiKey, agentId: _agentId, ...rest } = node || {};
-  return rest;
+
+  // Convert BigInt fields to strings for JSON serialization
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rest)) {
+    if (typeof value === "bigint") {
+      result[key] = value.toString();
+    } else {
+      result[key] = value;
+    }
+  }
+
+  return result;
 }
 
 export function sanitizeNodes(

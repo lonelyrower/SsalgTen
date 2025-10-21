@@ -123,6 +123,11 @@ export type NodeWithStats = ManagedNode & {
   cpuUsage?: number | null;
   memoryUsage?: number | null;
   diskUsage?: number | null;
+  loadAverage?: number[] | null;
+  totalUpload?: bigint | null;
+  totalDownload?: bigint | null;
+  periodUpload?: bigint | null;
+  periodDownload?: bigint | null;
 };
 
 type PlaceholderImportItem = {
@@ -314,6 +319,7 @@ export class NodeService {
             cpuUsage: number | null;
             memoryUsage: number | null;
             diskUsage: number | null;
+            loadAverage: unknown | null;
           }>
         >(`
           SELECT DISTINCT ON ("nodeId")
@@ -323,7 +329,8 @@ export class NodeService {
             "uptime",
             "cpuUsage",
             "memoryUsage",
-            "diskUsage"
+            "diskUsage",
+            "loadAverage"
           FROM "heartbeat_logs"
           WHERE "timestamp" > NOW() - INTERVAL '7 days'
           ORDER BY "nodeId", "timestamp" DESC
@@ -334,9 +341,34 @@ export class NodeService {
           latestMap.set(r.nodeId, r);
         }
 
-        // 3) 组装返回（不再 include 关系，显著降低查询负载）
+        // 3) 获取所有节点的流量统计
+        const trafficStatsService = await import("./TrafficStatsService");
+        const trafficStatsMap =
+          await trafficStatsService.trafficStatsService.getAllTrafficStats();
+
+        // 4) 组装返回（不再 include 关系，显著降低查询负载）
         const result = nodes.map((node): NodeWithStats => {
           const lh = latestMap.get(node.id);
+          const traffic = trafficStatsMap.get(node.id);
+
+          // Parse loadAverage from JSON if it exists
+          let loadAverage: number[] | null = null;
+          if (lh?.loadAverage) {
+            try {
+              const parsed = Array.isArray(lh.loadAverage)
+                ? lh.loadAverage
+                : JSON.parse(lh.loadAverage as string);
+              if (
+                Array.isArray(parsed) &&
+                parsed.every((v) => typeof v === "number")
+              ) {
+                loadAverage = parsed as number[];
+              }
+            } catch {
+              // Ignore parsing errors
+            }
+          }
+
           return {
             ...node,
             provider: node.asnName || node.provider,
@@ -350,6 +382,11 @@ export class NodeService {
             cpuUsage: lh?.cpuUsage ?? null,
             memoryUsage: lh?.memoryUsage ?? null,
             diskUsage: lh?.diskUsage ?? null,
+            loadAverage,
+            totalUpload: traffic?.totalUpload ?? null,
+            totalDownload: traffic?.totalDownload ?? null,
+            periodUpload: traffic?.periodUpload ?? null,
+            periodDownload: traffic?.periodDownload ?? null,
           };
         });
         return result;
@@ -885,6 +922,15 @@ export class NodeService {
           data: logData,
         });
       });
+
+      // 更新流量统计
+      if (heartbeatData.systemInfo?.network) {
+        const trafficStatsService = await import("./TrafficStatsService");
+        await trafficStatsService.trafficStatsService.updateTrafficStats(
+          node.id,
+          heartbeatData.systemInfo.network,
+        );
+      }
 
       // 心跳日志降噪：仅每 N 次输出一次详细字段
       this.heartbeatLogCounter[agentId] =
