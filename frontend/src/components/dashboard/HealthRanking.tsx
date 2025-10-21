@@ -131,7 +131,7 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
                       />
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 mt-1 text-xs text-gray-500">
+                  <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-gray-500">
                     <span>
                       CPU: {node.cpuUsage?.toFixed(1) || "N/A"}%
                     </span>

@@ -85,7 +85,7 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {node.name}
                 </p>
-                <div className="flex items-center space-x-2 mt-1 text-xs text-gray-500">
+                <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-gray-500">
                   <span className="flex items-center">
                     <ArrowUp className="h-3 w-3 mr-0.5 text-green-500" />
                     {formatBytes(node.upload)}
