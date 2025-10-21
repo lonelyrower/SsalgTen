@@ -45,7 +45,7 @@ export const UnifiedDashboardPage: React.FC = () => {
   // 如果没有连接且没有数据，显示加载状态
   if (!connected && nodes.length === 0) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:bg-slate-950 dark:bg-none">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900/95 dark:to-slate-950 transition-colors duration-300">
         <Header />
         <LoadingSpinner
           fullScreen
@@ -58,7 +58,7 @@ export const UnifiedDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:bg-slate-950 dark:bg-none">
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900/95 dark:to-slate-950 transition-colors duration-300">
       <Header />
 
       <MobilePullToRefresh
