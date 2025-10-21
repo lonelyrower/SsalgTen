@@ -1,8 +1,25 @@
 # 快速更新指南 🚀
 
-## 一键更新（推荐）
+## 方式一：使用交互式脚本（最简单）
 
 在生产服务器上执行：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash
+```
+
+然后选择：
+- **选项 2** - 更新系统
+- 进入子菜单后选择：
+  - **选项 1** - 🚀 镜像快速更新（推荐，1-2分钟）
+  - **选项 2** - 🔧 源码完整更新（10-30分钟）
+  - **选项 3** - 📦 归档包更新（无需Git，10-30分钟）
+
+**所有更新模式都会自动运行数据库迁移！** ✨
+
+## 方式二：使用部署脚本
+
+在项目目录执行：
 
 ```bash
 git pull origin main && bash scripts/deploy-production.sh
