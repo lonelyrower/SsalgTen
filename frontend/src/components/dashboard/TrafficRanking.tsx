@@ -17,18 +17,26 @@ const formatBytes = (bytes: number): string => {
 
 export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
   const topNodes = useMemo(() => {
-    // TODO: 实际应该从节点的流量数据中获取
-    // 这里先用模拟数据展示布局
-    return nodes
+    // 过滤出有流量数据的节点并计算总流量
+    const nodesWithTraffic = nodes
       .filter((n) => n.status === "online")
-      .slice(0, 8)
-      .map((node) => ({
-        ...node,
-        totalTraffic: Math.random() * 1000000000000, // 模拟流量数据 (0-1TB)
-        upload: Math.random() * 500000000000,
-        download: Math.random() * 500000000000,
-      }))
-      .sort((a, b) => b.totalTraffic - a.totalTraffic);
+      .map((node) => {
+        const upload = Number(node.totalUpload || node.periodUpload || 0);
+        const download = Number(node.totalDownload || node.periodDownload || 0);
+        const totalTraffic = upload + download;
+
+        return {
+          ...node,
+          upload,
+          download,
+          totalTraffic,
+        };
+      })
+      .filter((n) => n.totalTraffic > 0) // 只显示有流量的节点
+      .sort((a, b) => b.totalTraffic - a.totalTraffic)
+      .slice(0, 8);
+
+    return nodesWithTraffic;
   }, [nodes]);
 
   return (
@@ -44,7 +52,12 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
       </div>
 
       <div className="space-y-3 flex-1 overflow-y-auto">
-        {topNodes.map((node, index) => (
+        {topNodes.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+            <p className="text-sm">暂无流量数据</p>
+          </div>
+        ) : (
+          topNodes.map((node, index) => (
           <div
             key={node.id}
             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -76,7 +89,8 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
               </p>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

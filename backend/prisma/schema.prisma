@@ -68,6 +68,7 @@ model Node {
   eventLogs         EventLog[]
   streamingTests    StreamingTest[]
   detectedServices  DetectedService[]
+  trafficStats      TrafficStats?
 
   @@map("nodes")
   @@index([isPlaceholder])
@@ -394,4 +395,30 @@ enum ServiceStatus {
   RUNNING
   STOPPED
   UNKNOWN
+}
+
+// 流量统计表 - 持久化节点流量数据
+model TrafficStats {
+  id     String @id @default(cuid())
+  nodeId String @unique
+  node   Node   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  // 累计流量（字节）- 永久保存，不会因重启丢失
+  totalUpload   BigInt @default(0)   // 总上传流量
+  totalDownload BigInt @default(0)   // 总下载流量
+
+  // 当前周期流量（可按需重置）
+  periodUpload   BigInt   @default(0)   // 本周期上传
+  periodDownload BigInt   @default(0)   // 本周期下载
+  periodStart    DateTime @default(now()) // 周期开始时间
+
+  // 上次网络接口数据（用于计算增量）
+  lastRxBytes BigInt? // 上次接收字节数
+  lastTxBytes BigInt? // 上次发送字节数
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("traffic_stats")
 }

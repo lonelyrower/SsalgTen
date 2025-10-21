@@ -131,6 +131,12 @@ export interface NodeData {
   memoryUsage?: number | null;
   diskUsage?: number | null;
   uptime?: number | null;
+  loadAverage?: number[] | null; // [1min, 5min, 15min]
+  // Traffic statistics
+  totalUpload?: bigint | number | null;
+  totalDownload?: bigint | number | null;
+  periodUpload?: bigint | number | null;
+  periodDownload?: bigint | number | null;
   // ASN信息
   asnNumber?: string;
   asnName?: string;

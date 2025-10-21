@@ -4,6 +4,8 @@ import { GeographicDistribution } from "@/components/dashboard/GeographicDistrib
 import { SystemMetrics } from "@/components/dashboard/SystemMetrics";
 import { ProviderDistribution } from "@/components/dashboard/ProviderDistribution";
 import { TrafficRanking } from "@/components/dashboard/TrafficRanking";
+import { UptimeRanking } from "@/components/dashboard/UptimeRanking";
+import { HealthRanking } from "@/components/dashboard/HealthRanking";
 import { StatsCards } from "@/components/layout/StatsCards";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MobilePullToRefresh } from "@/components/ui/MobilePullToRefresh";
@@ -66,8 +68,8 @@ export const UnifiedDashboardPage: React.FC = () => {
             <StatsCards {...memoizedStats} />
           </section>
 
-          {/* 网格布局：4个统计区块 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 网格布局：6个统计区块 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {/* 系统资源概览 */}
             <div>
               <SystemMetrics nodes={nodes} />
@@ -86,6 +88,16 @@ export const UnifiedDashboardPage: React.FC = () => {
             {/* 流量排行 */}
             <div>
               <TrafficRanking nodes={nodes} />
+            </div>
+
+            {/* 正常运行时间排行 */}
+            <div>
+              <UptimeRanking nodes={nodes} />
+            </div>
+
+            {/* 节点健康度排行 */}
+            <div>
+              <HealthRanking nodes={nodes} />
             </div>
           </div>
         </main>

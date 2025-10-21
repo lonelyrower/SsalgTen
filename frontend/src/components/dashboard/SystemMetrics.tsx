@@ -59,6 +59,8 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
         avgMemory: 0,
         avgDisk: 0,
         avgLoad: 0,
+        avgUptimeDays: 0,
+        healthRate: 0,
         totalCpu: 0,
         totalMemory: 0,
         nodesWithData: 0,
@@ -74,6 +76,9 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
     );
     const nodesWithDisk = onlineNodes.filter(
       (n) => n.diskUsage !== null && n.diskUsage !== undefined,
+    );
+    const nodesWithLoad = onlineNodes.filter(
+      (n) => n.loadAverage && Array.isArray(n.loadAverage) && n.loadAverage.length > 0,
     );
 
     // 计算平均CPU使用率
@@ -99,15 +104,43 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           nodesWithDisk.length
         : 0;
 
-    // 计算平均负载（基于uptime，这里简单处理）
-    // 如果后端提供了loadAverage，应该使用那个数据
-    const avgLoad = 0; // 暂时设为0，等待后端提供真实的系统负载数据
+    // 计算平均系统负载（使用1分钟负载平均值）
+    const avgLoad =
+      nodesWithLoad.length > 0
+        ? nodesWithLoad.reduce((acc, node) => {
+            const load = node.loadAverage?.[0] || 0;
+            return acc + load;
+          }, 0) / nodesWithLoad.length
+        : 0;
+
+    // 计算平均正常运行时间（转换为天）
+    const nodesWithUptime = onlineNodes.filter((n) => n.uptime && n.uptime > 0);
+    const avgUptimeDays =
+      nodesWithUptime.length > 0
+        ? nodesWithUptime.reduce((acc, node) => acc + (node.uptime || 0), 0) /
+          nodesWithUptime.length /
+          86400 // 转换为天
+        : 0;
+
+    // 计算资源健康度（低于80%为健康）
+    const healthyNodes = onlineNodes.filter(
+      (n) =>
+        (n.cpuUsage || 0) < 80 &&
+        (n.memoryUsage || 0) < 80 &&
+        (n.diskUsage || 0) < 80,
+    );
+    const healthRate =
+      onlineNodes.length > 0
+        ? (healthyNodes.length / onlineNodes.length) * 100
+        : 0;
 
     return {
       avgCpu,
       avgMemory,
       avgDisk,
       avgLoad,
+      avgUptimeDays,
+      healthRate,
       totalCpu: avgCpu * onlineNodes.length,
       totalMemory: avgMemory * onlineNodes.length,
       nodesWithData: Math.max(
@@ -153,6 +186,33 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
             value={Math.min((metrics.avgLoad / 4) * 100, 100)}
             color="green"
           />
+          <ResourceBar
+            label="节点健康度"
+            value={metrics.healthRate}
+            color="cyan"
+          />
+
+          {/* 额外的统计信息 */}
+          <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {metrics.avgUptimeDays.toFixed(1)}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  平均运行天数
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-500">
+                  {metrics.avgLoad.toFixed(2)}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  平均负载 (1分钟)
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </GlassCard>
     </div>
