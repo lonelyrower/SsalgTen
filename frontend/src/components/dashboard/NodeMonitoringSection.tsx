@@ -278,66 +278,80 @@ const NodeCardGrid: React.FC<{
   node: NodeData;
   streamingData: StreamingServiceResult[];
 }> = ({ node, streamingData }) => {
+  const isOnline = node.status === "online";
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg transition-shadow">
-      {/* 状态指示器 */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              node.status === "online"
-                ? "bg-green-500 animate-pulse"
-                : "bg-red-500"
-            }`}
-          ></div>
-          <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-            {node.name}
-          </h4>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md border-2 transition-all duration-200 hover:shadow-xl hover:-translate-y-1 ${
+      isOnline
+        ? "border-green-200 dark:border-green-900/30 hover:border-green-300 dark:hover:border-green-800/50"
+        : "border-red-200 dark:border-red-900/30 hover:border-red-300 dark:hover:border-red-800/50"
+    }`}>
+      {/* 顶部状态栏 */}
+      <div className={`px-4 py-3 rounded-t-xl ${
+        isOnline
+          ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20"
+          : "bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20"
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-2.5 h-2.5 rounded-full shadow-sm ${
+                isOnline
+                  ? "bg-green-500 animate-pulse shadow-green-500/50"
+                  : "bg-red-500 shadow-red-500/50"
+              }`}
+            ></div>
+            <h4 className="font-bold text-gray-900 dark:text-white text-base truncate">
+              {node.name}
+            </h4>
+          </div>
         </div>
       </div>
 
-      {/* 位置 */}
-      <div className="flex items-center space-x-2 mb-3">
-        <CountryFlagSvg country={node.country} size={16} />
-        <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
-          {node.city}, {node.country}
-        </span>
-      </div>
-
-      {/* 资源使用 */}
-      <div className="space-y-2 mb-3">
-        <div className="flex justify-between items-center text-xs">
-          <span className="text-gray-600 dark:text-gray-400">CPU</span>
-          <span className="font-mono text-gray-900 dark:text-white">
-            {node.cpuUsage !== undefined && node.cpuUsage !== null
-              ? `${node.cpuUsage.toFixed(1)}%`
-              : "--"}
+      <div className="p-4">
+        {/* 位置 */}
+        <div className="flex items-center space-x-2 mb-4">
+          <CountryFlagSvg country={node.country} size={18} />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+            {node.city}, {node.country}
           </span>
         </div>
-        <div className="flex justify-between items-center text-xs">
-          <span className="text-gray-600 dark:text-gray-400">内存</span>
-          <span className="font-mono text-gray-900 dark:text-white">
-            {node.memoryUsage !== undefined && node.memoryUsage !== null
-              ? `${node.memoryUsage.toFixed(1)}%`
-              : "--"}
-          </span>
-        </div>
-      </div>
 
-      {/* 流媒体标签 */}
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-          流媒体解锁
+        {/* 资源使用 */}
+        <div className="space-y-2.5 mb-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">CPU</span>
+            <span className="font-mono font-semibold text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+              {node.cpuUsage !== undefined && node.cpuUsage !== null
+                ? `${node.cpuUsage.toFixed(1)}%`
+                : "--"}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">内存</span>
+            <span className="font-mono font-semibold text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+              {node.memoryUsage !== undefined && node.memoryUsage !== null
+                ? `${node.memoryUsage.toFixed(1)}%`
+                : "--"}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {streamingData.slice(0, 7).map((service) => (
-            <StreamingBadge
-              key={service.service}
-              service={service}
-              size="sm"
-              showStatus={false}
-            />
-          ))}
+
+        {/* 流媒体标签 */}
+        <div className="border-t-2 border-gray-100 dark:border-gray-700 pt-3">
+          <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+            流媒体解锁
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {streamingData.slice(0, 7).map((service) => (
+              <StreamingBadge
+                key={service.service}
+                service={service}
+                size="sm"
+                showStatus={false}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -349,28 +363,34 @@ const NodeCardList: React.FC<{
   node: NodeData;
   streamingData: StreamingServiceResult[];
 }> = ({ node, streamingData }) => {
+  const isOnline = node.status === "online";
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md border-2 transition-all duration-200 hover:shadow-lg ${
+      isOnline
+        ? "border-green-200 dark:border-green-900/30 hover:border-green-300 dark:hover:border-green-800/50"
+        : "border-red-200 dark:border-red-900/30 hover:border-red-300 dark:hover:border-red-800/50"
+    }`}>
+      <div className="flex items-center justify-between p-4">
         <div className="flex items-center space-x-4 flex-1 min-w-0">
-          {/* 状态 */}
+          {/* 状态指示器 */}
           <div
-            className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              node.status === "online"
-                ? "bg-green-500 animate-pulse"
-                : "bg-red-500"
+            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm ${
+              isOnline
+                ? "bg-green-500 animate-pulse shadow-green-500/50"
+                : "bg-red-500 shadow-red-500/50"
             }`}
           ></div>
 
           {/* 节点信息 */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center space-x-3">
-              <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+              <h4 className="font-bold text-base text-gray-900 dark:text-white truncate">
                 {node.name}
               </h4>
-              <div className="flex items-center space-x-1">
-                <CountryFlagSvg country={node.country} size={14} />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center space-x-1.5">
+                <CountryFlagSvg country={node.country} size={16} />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {node.city}
                 </span>
               </div>
@@ -378,7 +398,7 @@ const NodeCardList: React.FC<{
           </div>
 
           {/* 流媒体标签 */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1.5">
             {streamingData.slice(0, 7).map((service) => (
               <StreamingBadge
                 key={service.service}
@@ -390,18 +410,18 @@ const NodeCardList: React.FC<{
           </div>
 
           {/* 资源使用 */}
-          <div className="hidden md:flex items-center space-x-4 text-sm">
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">CPU: </span>
-              <span className="font-mono text-gray-900 dark:text-white">
+          <div className="hidden md:flex items-center space-x-3">
+            <div className="flex items-center space-x-1.5">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">CPU:</span>
+              <span className="font-mono font-semibold text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
                 {node.cpuUsage !== undefined && node.cpuUsage !== null
                   ? `${node.cpuUsage.toFixed(1)}%`
                   : "--"}
               </span>
             </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">内存: </span>
-              <span className="font-mono text-gray-900 dark:text-white">
+            <div className="flex items-center space-x-1.5">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">内存:</span>
+              <span className="font-mono font-semibold text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
                 {node.memoryUsage !== undefined && node.memoryUsage !== null
                   ? `${node.memoryUsage.toFixed(1)}%`
                   : "--"}
