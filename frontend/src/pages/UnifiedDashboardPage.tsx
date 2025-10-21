@@ -45,7 +45,7 @@ export const UnifiedDashboardPage: React.FC = () => {
   // 如果没有连接且没有数据，显示加载状态
   if (!connected && nodes.length === 0) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-gray-950 dark:via-slate-950 dark:to-black">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:bg-slate-950 dark:bg-none">
         <Header />
         <LoadingSpinner
           fullScreen
@@ -58,14 +58,14 @@ export const UnifiedDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-gray-950 dark:via-slate-950 dark:to-black">
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:bg-slate-950 dark:bg-none">
       <Header />
 
       <MobilePullToRefresh
         onRefresh={handleRefresh}
         className="flex-1 overflow-hidden"
       >
-        <main className="relative mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto rounded-[32px] border border-white/60 bg-white/80 px-4 py-6 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:px-8 sm:py-10 dark:border-slate-900/60 dark:bg-slate-950/90">
+        <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
           {/* 核心统计卡片 */}
           <section>
             <StatsCards {...memoizedStats} />
