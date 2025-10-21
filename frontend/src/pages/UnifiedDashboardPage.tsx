@@ -45,74 +45,66 @@ export const UnifiedDashboardPage: React.FC = () => {
   // 如果没有连接且没有数据，显示加载状态
   if (!connected && nodes.length === 0) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-slate-100 dark:bg-slate-950 relative">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-100 via-white to-slate-100 opacity-80 dark:hidden" />
-        <div className="relative z-10">
-          <Header />
-        </div>
-        <div className="relative z-10 flex-1">
-          <LoadingSpinner
-            fullScreen
-            text="正在连接实时服务器..."
-            size="xl"
-            variant="elegant"
-          />
-        </div>
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-gray-950 dark:via-slate-950 dark:to-black">
+        <Header />
+        <LoadingSpinner
+          fullScreen
+          text="正在连接实时服务器..."
+          size="xl"
+          variant="elegant"
+        />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-slate-100 dark:bg-slate-950 relative">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-100 via-white to-slate-100 opacity-80 dark:hidden" />
-      <div className="relative z-10 flex flex-col flex-1">
-        <Header />
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-gray-950 dark:via-slate-950 dark:to-black">
+      <Header />
 
-        <MobilePullToRefresh
-          onRefresh={handleRefresh}
-          className="flex-1 overflow-hidden"
-        >
-          <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
-            {/* 核心统计卡片 */}
-            <section>
-              <StatsCards {...memoizedStats} />
-            </section>
+      <MobilePullToRefresh
+        onRefresh={handleRefresh}
+        className="flex-1 overflow-hidden"
+      >
+        <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
+          {/* 核心统计卡片 */}
+          <section>
+            <StatsCards {...memoizedStats} />
+          </section>
 
-            {/* 网格布局：6个统计区块 - 2列×3行 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* 第1行左：系统资源概览 */}
-              <div>
-                <SystemMetrics nodes={nodes} />
-              </div>
-
-              {/* 第1行右：地理分布 */}
-              <div>
-                <GeographicDistribution nodes={nodes} compact={true} />
-              </div>
-
-              {/* 第2行左：流量排行 */}
-              <div>
-                <TrafficRanking nodes={nodes} />
-              </div>
-
-              {/* 第2行右：节点健康度排行 */}
-              <div>
-                <HealthRanking nodes={nodes} />
-              </div>
-
-              {/* 第3行左：正常运行时间排行 */}
-              <div>
-                <UptimeRanking nodes={nodes} />
-              </div>
-
-              {/* 第3行右：服务商分布 */}
-              <div>
-                <ProviderDistribution nodes={nodes} />
-              </div>
+          {/* 网格布局：6个统计区块 - 2列×3行 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* 第1行左：系统资源概览 */}
+            <div>
+              <SystemMetrics nodes={nodes} />
             </div>
-          </main>
-        </MobilePullToRefresh>
-      </div>
+
+            {/* 第1行右：地理分布 */}
+            <div>
+              <GeographicDistribution nodes={nodes} compact={true} />
+            </div>
+
+            {/* 第2行左：流量排行 */}
+            <div>
+              <TrafficRanking nodes={nodes} />
+            </div>
+
+            {/* 第2行右：节点健康度排行 */}
+            <div>
+              <HealthRanking nodes={nodes} />
+            </div>
+
+            {/* 第3行左：正常运行时间排行 */}
+            <div>
+              <UptimeRanking nodes={nodes} />
+            </div>
+
+            {/* 第3行右：服务商分布 */}
+            <div>
+              <ProviderDistribution nodes={nodes} />
+            </div>
+          </div>
+        </main>
+      </MobilePullToRefresh>
     </div>
   );
 };
