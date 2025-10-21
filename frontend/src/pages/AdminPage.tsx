@@ -28,7 +28,7 @@ export const AdminPage: React.FC = () => {
 
   if (!hasRole("ADMIN")) {
     return (
-      <div className="min-h-screen">
+      <div className="fixed inset-0 flex flex-col">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ErrorState
@@ -44,7 +44,7 @@ export const AdminPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="fixed inset-0 flex flex-col">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-6">

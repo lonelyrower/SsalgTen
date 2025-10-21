@@ -160,7 +160,7 @@ export const NodesPageNew: React.FC = () => {
   // 如果显示诊断界面
   if (showDiagnostics && selectedNode) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <ConnectivityDiagnostics
@@ -190,7 +190,7 @@ export const NodesPageNew: React.FC = () => {
   // 如果显示服务器详情面板
   if (showServerDetails && selectedNode) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <Button
@@ -210,7 +210,7 @@ export const NodesPageNew: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
       {/* Background effects */}

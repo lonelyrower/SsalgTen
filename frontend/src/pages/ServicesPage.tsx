@@ -184,7 +184,7 @@ export const ServicesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-8">
           <LoadingSpinner size="lg" text="加载服务数据..." />
@@ -195,7 +195,7 @@ export const ServicesPage: React.FC = () => {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-8">
           <ErrorState
@@ -208,7 +208,7 @@ export const ServicesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">

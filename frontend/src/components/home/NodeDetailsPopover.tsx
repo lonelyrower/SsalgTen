@@ -48,8 +48,8 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
           glow
           className="p-4 sm:p-5 shadow-2xl"
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col items-center gap-3 flex-1">
+          <div className="relative">
+            <div className="absolute top-0 left-0">
               <div className="relative">
                 <div className="p-2 bg-primary/15 rounded-xl border border-white/10">
                   <Activity className="h-5 w-5 text-primary" />
@@ -58,23 +58,23 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
                   <span className="absolute -top-1 -right-1 status-indicator bg-green-400" />
                 )}
               </div>
-              <div className="text-center">
-                <h3 className="text-xl font-semibold text-foreground">
-                  {node.name}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  正在监控该节点的实时状态
-                </p>
-              </div>
             </div>
             <button
               type="button"
               aria-label="关闭节点详情"
               onClick={onClose}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+              className="absolute top-0 right-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
+            <div className="text-center pt-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {node.name}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                正在监控该节点的实时状态
+              </p>
+            </div>
           </div>
 
           <div className="mt-4 space-y-3 text-sm">
