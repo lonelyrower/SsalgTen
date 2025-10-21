@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { MapSection } from "@/components/home/MapSection";
-import { NodeDetailsCard } from "@/components/home/NodeDetailsCard";
+import { NodeDetailsPopover } from "@/components/home/NodeDetailsPopover";
 import { ErrorBanner } from "@/components/home/ErrorBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealTime } from "@/hooks/useRealTime";
@@ -11,7 +11,7 @@ import type { NodeData } from "@/services/api";
 
 export const HomePage = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [viewMode, setViewMode] = useState<"2d" | "3d">("3d");
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const { nodes, stats, connected, error } = useRealTime();
   const { user } = useAuth();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -19,6 +19,10 @@ export const HomePage = () => {
 
   const handleNodeClick = useCallback((node: NodeData) => {
     setSelectedNode(node);
+  }, []);
+
+  const handleNodeClose = useCallback(() => {
+    setSelectedNode(null);
   }, []);
 
   useEffect(() => {
@@ -120,12 +124,16 @@ export const HomePage = () => {
           onNodeClick={handleNodeClick}
         />
 
-        {selectedNode && (
-          <NodeDetailsCard node={selectedNode} showNetworkInfo={!!user} />
-        )}
-
         {error && <ErrorBanner error={error} />}
       </main>
+
+      {selectedNode && (
+        <NodeDetailsPopover
+          node={selectedNode}
+          showNetworkInfo={!!user}
+          onClose={handleNodeClose}
+        />
+      )}
     </div>
   );
 };

@@ -35,13 +35,13 @@ async function collectFiles() {
   const targets = patterns.length > 0 ? patterns : DEFAULT_PATTERNS;
 
   for (const pattern of targets) {
-    const matches = await glob(pattern, {
+    const iterator = glob(pattern, {
       cwd,
       withFileTypes: false,
       nodir: true,
       ignore: IGNORE,
     });
-    for (const match of matches) {
+    for await (const match of iterator) {
       files.add(resolve(cwd, match));
     }
   }
@@ -100,4 +100,3 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-

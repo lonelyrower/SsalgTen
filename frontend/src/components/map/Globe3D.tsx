@@ -19,6 +19,7 @@ import {
 interface Globe3DProps {
   nodes: NodeData[];
   onNodeClick?: (node: NodeData) => void;
+  onReady?: () => void;
 }
 
 // 创建聚合节点图标
@@ -55,7 +56,7 @@ function createClusterIcon(
   return canvas;
 }
 
-export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
+export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -313,6 +314,12 @@ export function Globe3D({ nodes, onNodeClick }: Globe3DProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // ← 仅初始化一次，不依赖nodes或onNodeClick
+
+  useEffect(() => {
+    if (!isLoading) {
+      onReady?.();
+    }
+  }, [isLoading, onReady]);
 
   // useEffect 2: 更新节点标记（当nodes变化时）
   useEffect(() => {
