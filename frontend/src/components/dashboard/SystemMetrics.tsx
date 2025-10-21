@@ -50,9 +50,10 @@ const ResourceBar: React.FC<ResourceBarProps> = ({ label, value, color }) => {
 
 export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
   const metrics = useMemo(() => {
+    const totalNodes = nodes.length;
     const onlineNodes = nodes.filter((n) => n.status === "online");
 
-    if (onlineNodes.length === 0) {
+    if (totalNodes === 0) {
       return {
         avgCpu: 0,
         avgMemory: 0,
@@ -60,6 +61,8 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
         avgLoad: 0,
         avgUptimeDays: 0,
         healthRate: 0,
+        onlineRate: 0,
+        ipv6CoverageRate: 0,
         totalCpu: 0,
         totalMemory: 0,
         nodesWithData: 0,
@@ -142,6 +145,18 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
         ? (healthyNodes.length / nodesWithCompleteData.length) * 100
         : 0;
 
+    // 计算在线率
+    const onlineRate = (onlineNodes.length / totalNodes) * 100;
+
+    // 计算 IPv6 覆盖率（基于在线节点）
+    const onlineNodesWithIpv6 = onlineNodes.filter(
+      (n) => n.ipv6 && n.ipv6.trim() !== "",
+    );
+    const ipv6CoverageRate =
+      onlineNodes.length > 0
+        ? (onlineNodesWithIpv6.length / onlineNodes.length) * 100
+        : 0;
+
     return {
       avgCpu,
       avgMemory,
@@ -149,6 +164,8 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
       avgLoad,
       avgUptimeDays,
       healthRate,
+      onlineRate,
+      ipv6CoverageRate,
       totalCpu: avgCpu * onlineNodes.length,
       totalMemory: avgMemory * onlineNodes.length,
       nodesWithData: Math.max(
@@ -187,6 +204,16 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           label="节点健康度"
           value={metrics.healthRate}
           color="green"
+        />
+        <ResourceBar
+          label="在线率"
+          value={metrics.onlineRate}
+          color="cyan"
+        />
+        <ResourceBar
+          label="IPv6 覆盖率"
+          value={metrics.ipv6CoverageRate}
+          color="purple"
         />
 
         {/* 额外的统计信息 */}
