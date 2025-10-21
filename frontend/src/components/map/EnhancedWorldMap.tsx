@@ -375,7 +375,7 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
            style="width: ${size}px; height: ${size}px;">
         <div class="w-full h-full rounded-full border-2 border-white shadow-lg flex items-center justify-center" 
              style="background-color: ${style.color};">
-          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+          <div class="rounded-full" style="width: 6px; height: 6px; background-color: #ffffff;"></div>
         </div>
       </div>
     `,
@@ -1162,12 +1162,12 @@ export const EnhancedWorldMap = memo(
               variant="secondary"
               size="sm"
               onClick={() => setShowLayerMenu(!showLayerMenu)}
-              className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-1 md:gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px] px-2 md:px-3 py-1.5 md:py-2"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-lg border border-gray-200/60 lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-slate-900/85 dark:hover:bg-slate-900 dark:text-slate-100 dark:border-slate-600/60"
               aria-expanded={showLayerMenu}
               aria-haspopup="menu"
             >
-              <Layers className="h-3 w-3 md:h-4 md:w-4 text-gray-700 dark:text-gray-200" />
-              <span className="text-xs md:text-sm text-gray-700 dark:text-gray-200">
+              <Layers className="h-3 w-3 md:h-4 md:w-4 text-gray-700 dark:text-slate-100" />
+              <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-slate-100">
                 图层
               </span>
             </Button>

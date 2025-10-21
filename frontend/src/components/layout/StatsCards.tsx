@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { Globe, Server, Building, HardDrive } from "lucide-react";
 
 interface StatsCardsProps {
@@ -44,76 +43,106 @@ const StatsCardsComponent = ({
       title: "网络节点",
       value: totalNodes.toString(),
       subtitle: `${onlineNodes} 在线 · ${offlineNodes} 离线`,
-      icon: <Server className="h-6 w-6 text-primary" />,
+      Icon: Server,
       badge: "实时监控",
-      badgeVariant: "default",
-      gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-500/10 to-cyan-500/10",
+      accent: {
+        bg: "from-sky-50 via-white to-cyan-50 dark:from-slate-950/70 dark:via-slate-950/80 dark:to-cyan-950/30",
+        border: "border-sky-200/70 dark:border-cyan-900/50",
+        iconWrapper:
+          "bg-cyan-500/12 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-200 border border-white/60 dark:border-white/10",
+        badge:
+          "bg-white/80 text-cyan-700 border border-sky-200/60 dark:bg-cyan-500/15 dark:text-cyan-100 dark:border-cyan-700/40",
+        glow: "from-cyan-400/25 via-transparent to-blue-500/20",
+      },
     },
     {
       title: "全球覆盖",
       value: totalCountries.toString(),
       subtitle: "全球节点分布",
-      icon: <Globe className="h-6 w-6 text-emerald-400" />,
+      Icon: Globe,
       badge: "国际化",
-      badgeVariant: "secondary" as const,
-      gradient: "from-emerald-500 to-green-500",
-      bgGradient: "from-emerald-500/10 to-green-500/10",
+      accent: {
+        bg: "from-emerald-50 via-white to-teal-50 dark:from-slate-950/70 dark:via-emerald-950/30 dark:to-teal-950/25",
+        border: "border-emerald-200/70 dark:border-emerald-900/50",
+        iconWrapper:
+          "bg-emerald-500/12 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200 border border-white/60 dark:border-white/10",
+        badge:
+          "bg-white/80 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-500/15 dark:text-emerald-100 dark:border-emerald-700/40",
+        glow: "from-emerald-400/25 via-transparent to-teal-500/20",
+      },
     },
     {
       title: "服务提供商",
       value: totalProviders.toString(),
       subtitle: "多样化基础设施",
-      icon: <Building className="h-6 w-6 text-purple-400" />,
+      Icon: Building,
       badge: "多元化",
-      badgeVariant: "outline" as const,
-      gradient: "from-purple-500 to-pink-500",
-      bgGradient: "from-purple-500/10 to-pink-500/10",
+      accent: {
+        bg: "from-fuchsia-50 via-white to-purple-50 dark:from-slate-950/75 dark:via-fuchsia-950/25 dark:to-purple-950/25",
+        border: "border-fuchsia-200/70 dark:border-fuchsia-900/40",
+        iconWrapper:
+          "bg-fuchsia-500/12 text-fuchsia-600 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 border border-white/60 dark:border-white/10",
+        badge:
+          "bg-white/80 text-fuchsia-700 border border-fuchsia-200/60 dark:bg-fuchsia-500/15 dark:text-fuchsia-100 dark:border-fuchsia-700/40",
+        glow: "from-fuchsia-400/25 via-transparent to-purple-500/20",
+      },
     },
     {
       title: "总流量",
       value: formatBytes(trafficTotal),
       subtitle: `↑ ${formatBytes(trafficUpload)} · ↓ ${formatBytes(trafficDownload)}`,
-      icon: <HardDrive className="h-6 w-6 text-orange-400" />,
+      Icon: HardDrive,
       badge: "累计",
-      badgeVariant: "outline" as const,
-      gradient: "from-orange-500 to-amber-500",
-      bgGradient: "from-orange-500/10 to-amber-500/10",
+      accent: {
+        bg: "from-amber-50 via-white to-orange-50 dark:from-slate-950/75 dark:via-amber-950/25 dark:to-orange-950/25",
+        border: "border-amber-200/70 dark:border-amber-900/40",
+        iconWrapper:
+          "bg-amber-500/12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-200 border border-white/60 dark:border-white/10",
+        badge:
+          "bg-white/80 text-amber-700 border border-amber-200/60 dark:bg-amber-500/15 dark:text-amber-100 dark:border-amber-700/40",
+        glow: "from-amber-400/25 via-transparent to-orange-500/20",
+      },
     },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => (
-        <GlassCard
+        <div
           key={index}
-          variant="tech"
-          animated={false}
-          glow={false}
-          className="p-6 hover:border-white/30 transition-colors"
+          className={`group relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl ${stat.accent.border} ${stat.accent.bg}`}
         >
-          <div className="relative">
-            {/* 简洁头部 - 只保留图标和标题 */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-lg bg-white/10">{stat.icon}</div>
-                <h3 className="text-sm font-medium text-muted-foreground">
+          <div
+            className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${stat.accent.glow}`}
+          />
+          <div className="relative flex flex-col gap-4 p-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`rounded-xl p-3 shadow-sm ${stat.accent.iconWrapper}`}
+                >
+                  <stat.Icon className="h-6 w-6" />
+                </div>
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-200">
                   {stat.title}
-                </h3>
+                </p>
               </div>
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide ${stat.accent.badge}`}
+              >
+                {stat.badge}
+              </span>
             </div>
-
-            {/* 数值显示 - 简洁版 */}
             <div className="space-y-2">
-              <div className="text-3xl font-bold text-foreground">
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">
                 {stat.value}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-slate-600 dark:text-slate-300">
                 {stat.subtitle}
               </div>
             </div>
           </div>
-        </GlassCard>
+        </div>
       ))}
     </div>
   );

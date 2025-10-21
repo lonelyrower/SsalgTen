@@ -29,9 +29,9 @@ export const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 relative bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900">
       {/* 清晰的渐变背景 + 轻微模糊 */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-blue-900/80 to-slate-900/85 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-blue-900/85 to-slate-900/90 backdrop-blur-sm">
         {/* 扫描线动画 - 进一步减弱 */}
         <div
           className="absolute inset-0 opacity-5"
