@@ -58,11 +58,14 @@ export const UnifiedDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen mobile-safe bg-gray-50 dark:bg-gray-900">
+    <div className="relative flex min-h-[100vh] w-screen flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
       <Header />
 
-      <MobilePullToRefresh onRefresh={handleRefresh} className="min-h-screen">
-        <main className="max-w-7xl mx-auto mobile-container py-4 sm:py-8 mobile-safe space-y-6">
+      <MobilePullToRefresh
+        onRefresh={handleRefresh}
+        className="flex-1 overflow-hidden"
+      >
+        <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
           {/* 核心统计卡片 */}
           <section>
             <StatsCards {...memoizedStats} />
