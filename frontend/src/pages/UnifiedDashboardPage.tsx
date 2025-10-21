@@ -65,7 +65,7 @@ export const UnifiedDashboardPage: React.FC = () => {
         onRefresh={handleRefresh}
         className="flex-1 overflow-hidden"
       >
-        <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
+        <main className="relative mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto rounded-[32px] border border-white/60 bg-white/80 px-4 py-6 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:px-8 sm:py-10 dark:border-slate-900/60 dark:bg-slate-950/90">
           {/* 核心统计卡片 */}
           <section>
             <StatsCards {...memoizedStats} />
