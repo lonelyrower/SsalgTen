@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import type { NodeData } from "@/services/api";
@@ -122,16 +121,25 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           86400 // 转换为天
         : 0;
 
-    // 计算资源健康度（低于80%为健康）
-    const healthyNodes = onlineNodes.filter(
+    // 计算资源健康度（低于80%为健康，只统计有数据的节点）
+    const nodesWithCompleteData = onlineNodes.filter(
+      (n) =>
+        n.cpuUsage !== null &&
+        n.cpuUsage !== undefined &&
+        n.memoryUsage !== null &&
+        n.memoryUsage !== undefined &&
+        n.diskUsage !== null &&
+        n.diskUsage !== undefined,
+    );
+    const healthyNodes = nodesWithCompleteData.filter(
       (n) =>
         (n.cpuUsage || 0) < 80 &&
         (n.memoryUsage || 0) < 80 &&
         (n.diskUsage || 0) < 80,
     );
     const healthRate =
-      onlineNodes.length > 0
-        ? (healthyNodes.length / onlineNodes.length) * 100
+      nodesWithCompleteData.length > 0
+        ? (healthyNodes.length / nodesWithCompleteData.length) * 100
         : 0;
 
     return {
@@ -152,69 +160,62 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="w-full">
-      {/* System Resource Overview */}
-      <GlassCard variant="gradient" animated={false} className="p-6 h-full flex flex-col">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-primary/15 rounded-xl backdrop-blur-sm">
-            <Zap className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold gradient-text">系统资源概览</h2>
-            <p className="text-muted-foreground text-sm">
-              {metrics.nodesWithData > 0
-                ? `基于 ${metrics.nodesWithData} 个在线节点的实时资源数据`
-                : "等待节点上报资源数据..."}
-            </p>
-          </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <Zap className="h-5 w-5 mr-2 text-primary" />
+          系统资源概览
+        </h3>
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          {metrics.nodesWithData > 0 ? `${metrics.nodesWithData} 节点` : "无数据"}
         </div>
+      </div>
 
-        <div className="space-y-4 flex-1">
-          <ResourceBar label="CPU 使用率" value={metrics.avgCpu} color="cyan" />
-          <ResourceBar
-            label="内存使用率"
-            value={metrics.avgMemory}
-            color="purple"
-          />
-          <ResourceBar
-            label="磁盘使用率"
-            value={metrics.avgDisk}
-            color="orange"
-          />
-          <ResourceBar
-            label="系统负载 (归一化)"
-            value={Math.min((metrics.avgLoad / 4) * 100, 100)}
-            color="green"
-          />
-          <ResourceBar
-            label="节点健康度"
-            value={metrics.healthRate}
-            color="cyan"
-          />
+      <div className="space-y-4 flex-1 overflow-y-auto">
+        <ResourceBar label="CPU 使用率" value={metrics.avgCpu} color="cyan" />
+        <ResourceBar
+          label="内存使用率"
+          value={metrics.avgMemory}
+          color="purple"
+        />
+        <ResourceBar
+          label="磁盘使用率"
+          value={metrics.avgDisk}
+          color="orange"
+        />
+        <ResourceBar
+          label="系统负载 (归一化)"
+          value={Math.min((metrics.avgLoad / 4) * 100, 100)}
+          color="green"
+        />
+        <ResourceBar
+          label="节点健康度"
+          value={metrics.healthRate}
+          color="cyan"
+        />
 
-          {/* 额外的统计信息 */}
-          <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {metrics.avgUptimeDays.toFixed(1)}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  平均运行天数
-                </div>
+        {/* 额外的统计信息 */}
+        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">
+                {metrics.avgUptimeDays.toFixed(1)}
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">
-                  {metrics.avgLoad.toFixed(2)}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  平均负载 (1分钟)
-                </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                平均运行天数
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-500">
+                {metrics.avgLoad.toFixed(2)}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                平均负载 (1分钟)
               </div>
             </div>
           </div>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 };

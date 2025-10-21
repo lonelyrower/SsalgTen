@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, Award } from "lucide-react";
 import type { NodeData } from "@/services/api";
 
 interface ProviderDistributionProps {
@@ -63,9 +63,23 @@ export const ProviderDistribution: React.FC<ProviderDistributionProps> = ({
             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-6">
-                #{index + 1}
-              </span>
+              <div className="flex items-center space-x-2">
+                {index < 3 ? (
+                  <Award
+                    className={`h-5 w-5 ${
+                      index === 0
+                        ? "text-yellow-500"
+                        : index === 1
+                          ? "text-gray-400"
+                          : "text-orange-600"
+                    }`}
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-5">
+                    #{index + 1}
+                  </span>
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {item.provider}

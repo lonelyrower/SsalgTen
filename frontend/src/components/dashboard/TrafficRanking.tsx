@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
+import { TrendingUp, ArrowUp, ArrowDown, Award } from "lucide-react";
 import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import type { NodeData } from "@/services/api";
 
@@ -63,9 +63,23 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-6">
-                #{index + 1}
-              </span>
+              <div className="flex items-center space-x-2">
+                {index < 3 ? (
+                  <Award
+                    className={`h-5 w-5 ${
+                      index === 0
+                        ? "text-yellow-500"
+                        : index === 1
+                          ? "text-gray-400"
+                          : "text-orange-600"
+                    }`}
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-5">
+                    #{index + 1}
+                  </span>
+                )}
+              </div>
               <CountryFlagSvg country={node.country} className="w-6 h-6" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">

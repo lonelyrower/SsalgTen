@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Globe, MapPin } from "lucide-react";
+import { Globe, MapPin, Award } from "lucide-react";
 import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import type { NodeData } from "@/services/api";
 
@@ -64,7 +64,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
   compact = false,
 }) => {
   const CHART_LIMIT = compact ? 8 : 12;
-  const LIST_LIMIT = compact ? 6 : 12;
+  const LIST_LIMIT = compact ? 8 : 12;
 
   // 计算国家分布数据
   const { countryStats, totalCountries } = useMemo(() => {
@@ -151,9 +151,21 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
                 className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
               >
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    #{index + 1}
-                  </span>
+                  {index < 3 ? (
+                    <Award
+                      className={`h-4 w-4 ${
+                        index === 0
+                          ? "text-yellow-500"
+                          : index === 1
+                            ? "text-gray-400"
+                            : "text-orange-600"
+                      }`}
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-4">
+                      #{index + 1}
+                    </span>
+                  )}
                   <CountryFlagSvg country={item.country} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {item.country}
