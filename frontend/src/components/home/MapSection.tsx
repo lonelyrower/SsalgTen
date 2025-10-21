@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense } from "react";
 import { ViewModeToggle } from "@/components/map/ViewModeToggle";
 import { Globe } from "lucide-react";
 import type { NodeData, NodeStats } from "@/services/api";
