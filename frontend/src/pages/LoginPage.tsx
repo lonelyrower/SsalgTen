@@ -86,21 +86,25 @@ export const LoginPage: React.FC = () => {
 
       <div className="relative z-10 w-full max-w-md">
         {/* 登录卡片 */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 p-8">
-          {/* Logo 和标题 */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-6">
-              <div className="p-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg">
-                <Shield className="h-12 w-12 text-white" />
+        <div className="relative overflow-hidden rounded-3xl border-2 border-cyan-200/70 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-[0_25px_45px_-20px_rgba(14,116,144,0.35)] backdrop-blur-xl dark:border-cyan-900/40 dark:from-slate-950/90 dark:via-sky-950/30 dark:to-cyan-950/25">
+          <div className="pointer-events-none absolute inset-0 opacity-60 mix-blend-screen dark:mix-blend-normal bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.25),transparent_55%),radial-gradient(circle_at_bottom_right,rgba(6,182,212,0.25),transparent_45%)]" />
+          <div className="absolute -top-24 -right-16 h-40 w-40 rounded-full bg-cyan-200/40 blur-3xl dark:bg-cyan-500/20" />
+          <div className="absolute -bottom-24 -left-20 h-44 w-44 rounded-full bg-blue-200/40 blur-3xl dark:bg-blue-500/20" />
+          <div className="relative z-10 p-8">
+            {/* Logo 和标题 */}
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center mb-6">
+                <div className="p-4 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-sky-500/40">
+                  <Shield className="h-12 w-12 text-white" />
+                </div>
               </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-sky-700 to-indigo-700 dark:from-white dark:via-sky-200 dark:to-indigo-200 bg-clip-text text-transparent mb-2">
+                SsalgTen
+              </h1>
+              <p className="text-slate-600 dark:text-slate-300 text-lg">
+                网络监控管理系统
+              </p>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-700 dark:from-white dark:to-blue-300 bg-clip-text text-transparent mb-2">
-              SsalgTen
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              网络监控管理系统
-            </p>
-          </div>
 
           {/* 登录表单 */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -108,19 +112,19 @@ export const LoginPage: React.FC = () => {
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3"
               >
                 用户名
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary" />
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-cyan-500" />
                 <input
                   type="text"
                   id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-primary/20 focus:border-primary dark:bg-gray-700/30 dark:text-white transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80 rounded-xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-all duration-200 bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
                   placeholder="请输入用户名"
                   autoComplete="username"
                   disabled={isSubmitting}
@@ -132,19 +136,19 @@ export const LoginPage: React.FC = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
               >
                 密码
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-colors"
                   placeholder="请输入密码"
                   autoComplete="current-password"
                   disabled={isSubmitting}
@@ -152,7 +156,7 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                   aria-label={showPassword ? "隐藏密码" : "显示密码"}
                   disabled={isSubmitting}
                 >
@@ -163,8 +167,8 @@ export const LoginPage: React.FC = () => {
 
             {/* 错误信息 */}
             {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">
+              <div className="p-3 border border-red-300/80 bg-red-50/80 dark:border-red-800/60 dark:bg-red-900/30 rounded-lg shadow-inner shadow-red-500/10">
+                <p className="text-sm text-red-600 dark:text-red-300">
                   {error}
                 </p>
               </div>
@@ -173,7 +177,7 @@ export const LoginPage: React.FC = () => {
             {/* 登录按钮 */}
             <Button
               type="submit"
-              className="w-full py-3"
+              className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 hover:from-cyan-400 hover:via-blue-400 hover:to-indigo-400 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -188,16 +192,17 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* 默认账户提示 */}
-          <div className="mt-8 p-4 bg-primary/10 rounded-lg">
-            <p className="text-sm text-primary text-center">
+          <div className="mt-8 rounded-xl border border-cyan-200/70 bg-cyan-50/70 p-4 text-cyan-700 shadow-inner shadow-cyan-500/10 dark:border-cyan-900/50 dark:bg-sky-900/20 dark:text-cyan-200">
+            <p className="text-sm text-center font-semibold">
               <strong>默认管理员账户：</strong>
             </p>
-            <p className="text-sm text-primary text-center mt-1">
+            <p className="text-sm text-center mt-1">
               用户名: admin | 密码: admin123
             </p>
-            <p className="text-xs text-primary text-center mt-2">
+            <p className="text-xs text-center mt-2 opacity-80">
               ⚠️ 首次登录后请立即更改密码
             </p>
+          </div>
           </div>
         </div>
       </div>
