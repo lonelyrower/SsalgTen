@@ -44,8 +44,8 @@ export const Header = () => {
         <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
       </div>
 
-      <div className="relative mobile-container pointer-events-auto">
-        <div className="flex items-center justify-between h-16 max-w-7xl mx-auto mobile-safe">
+      <div className="relative pointer-events-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
           {/* Logo - 科技感设计 */}
           <Link to="/" className="flex items-center space-x-3 group pointer-events-auto">
             {/* Logo 图标 - 六边形边框 */}
