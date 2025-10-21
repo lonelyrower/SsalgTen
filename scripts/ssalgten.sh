@@ -1780,6 +1780,18 @@ update_system() {
         return 1
     fi
     
+    # 先启动数据库
+    log_info "启动数据库服务..."
+    docker_compose up -d database
+    log_info "等待数据库就绪..."
+    sleep 5
+
+    # 运行数据库迁移
+    log_info "运行数据库迁移..."
+    if ! docker_compose run --rm backend npx prisma migrate deploy; then
+        log_warning "数据库迁移执行失败，请手动检查"
+    fi
+
     # 重新构建并启动
     log_info "重新构建并启动服务..."
     # 强制刷新输出缓冲区，确保SSH终端显示完整输出
@@ -1965,6 +1977,18 @@ update_system_from_archive() {
             fi
         fi
     done
+
+    # 先启动数据库
+    log_info "启动数据库服务..."
+    docker_compose up -d database
+    log_info "等待数据库就绪..."
+    sleep 5
+
+    # 运行数据库迁移
+    log_info "运行数据库迁移..."
+    if ! docker_compose run --rm backend npx prisma migrate deploy; then
+        log_warning "数据库迁移执行失败，请手动检查"
+    fi
 
     # 重新启动服务
     log_info "重新构建并启动服务..."
