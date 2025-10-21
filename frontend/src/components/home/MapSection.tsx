@@ -53,8 +53,8 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
   return (
     <div className="relative h-full w-full">
-      {/* 右上角：2D/3D 切换 + 状态统计悬浮卡片 */}
-      <div className="absolute top-4 right-4 z-40 flex items-center gap-3">
+      {/* 右上角：2D/3D 切换 + 状态统计悬浮卡片 - z-[60] 确保在 Header (z-50) 之上 */}
+      <div className="absolute top-20 right-4 z-[60] flex items-center gap-3">
         {/* 2D/3D 切换按钮 */}
         <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
 

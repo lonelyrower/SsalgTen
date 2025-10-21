@@ -102,8 +102,8 @@ export const HomePage = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
-      {/* 透明悬浮 Header */}
-      <div className="absolute top-0 left-0 right-0 z-50">
+      {/* 透明悬浮 Header - pointer-events-none 让地图可交互，内部元素单独设置 pointer-events-auto */}
+      <div className="absolute top-0 left-0 right-0 z-50 pointer-events-none">
         <Header />
       </div>
 
