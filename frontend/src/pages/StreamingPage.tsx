@@ -186,7 +186,7 @@ export const StreamingPage: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-8">
+        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 w-full">
           <LoadingSpinner size="lg" text="加载流媒体数据..." />
         </main>
       </div>
@@ -197,7 +197,7 @@ export const StreamingPage: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-8">
+        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 w-full">
           <ErrorState
             message={error || "无法加载数据"}
             onRetry={handleRefresh}
@@ -211,7 +211,7 @@ export const StreamingPage: React.FC = () => {
     <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
         {/* 页面标题 */}
         <PageHeader
           title="流媒体解锁"

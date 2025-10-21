@@ -30,7 +30,7 @@ export const AdminPage: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
+        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
           <ErrorState
             type="access-denied"
             title="访问被拒绝"
@@ -47,7 +47,7 @@ export const AdminPage: React.FC = () => {
     <div className="fixed inset-0 flex flex-col">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
         {/* 响应式标签页导航 */}
         <ResponsiveTabs
           tabs={adminTabs}

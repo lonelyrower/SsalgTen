@@ -162,7 +162,7 @@ export const NodesPageNew: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
+        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
           <ConnectivityDiagnostics
             checking={diagnostics.checking}
             apiReachable={diagnostics.apiReachable}
@@ -192,7 +192,7 @@ export const NodesPageNew: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">
+        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
           <Button
             onClick={() => setShowServerDetails(false)}
             variant="outline"
@@ -224,7 +224,7 @@ export const NodesPageNew: React.FC = () => {
 
       <main
         ref={containerRef}
-        className="relative max-w-7xl mx-auto px-4 py-8 space-y-6"
+        className="relative flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 space-y-6 w-full"
       >
         {/* Connectivity Diagnostics removed for nodes overview page */}
 
