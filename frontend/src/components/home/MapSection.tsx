@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState } from "react";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { ViewModeToggle } from "@/components/map/ViewModeToggle";
-import { Globe, Activity } from "lucide-react";
+import { Globe } from "lucide-react";
 import type { NodeData, NodeStats } from "@/services/api";
 
 // 懒加载地图组件
@@ -18,17 +17,6 @@ const Globe3D = lazy(() =>
 );
 
 // 地图加载骨架屏
-type ConnectionInfo = {
-  effectiveType?: string;
-  downlink?: number;
-};
-
-type ExtendedNavigator = Navigator & {
-  connection?: ConnectionInfo;
-  mozConnection?: ConnectionInfo;
-  webkitConnection?: ConnectionInfo;
-};
-
 const MapSkeleton = ({ mode = "generic" }: { mode?: "generic" | "3d" }) => (
   <div className="w-full h-full min-h-[320px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
     <div className="text-center space-y-4">
@@ -59,12 +47,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
   onViewModeChange,
   onNodeClick,
 }) => {
-  const [globeReady, setGlobeReady] = useState(viewMode !== "3d");
-
   const handleViewModeChange = (mode: "2d" | "3d") => {
-    if (mode === "3d") {
-      setGlobeReady(false);
-    }
     onViewModeChange(mode);
   };
 
@@ -107,11 +90,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               showControlPanels={false}
             />
           ) : (
-            <Globe3D
-              nodes={nodes}
-              onNodeClick={onNodeClick}
-              onReady={() => setGlobeReady(true)}
-            />
+            <Globe3D nodes={nodes} onNodeClick={onNodeClick} />
           )}
         </Suspense>
       </div>
