@@ -18,7 +18,7 @@ const Globe3D = lazy(() =>
 
 // 地图加载骨架屏
 const MapSkeleton = ({ mode = "generic" }: { mode?: "generic" | "3d" }) => (
-  <div className="w-full h-full min-h-[320px] bg-gray-100/60 dark:bg-gray-900/60 flex items-center justify-center">
+  <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90">
     <div className="text-center space-y-4">
       <div className="animate-pulse">
         <Globe className="w-16 h-16 mx-auto text-primary" />
@@ -52,32 +52,31 @@ export const MapSection: React.FC<MapSectionProps> = ({
   };
 
   return (
-    <div className="relative h-full w-full">
-      {/* Top-right controls */}
-      <div className="pointer-events-auto absolute top-4 sm:top-6 right-4 z-40 flex items-center gap-3">
-        {/* 2D/3D 切换按钮 */}
-        <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
-
-        {/* 状态统计小卡片 */}
-        <div className="hidden md:flex items-center gap-2 glass px-4 py-2 rounded-full border border-white/20 backdrop-blur-md">
-          <div className="flex items-center space-x-2">
-            <div className="status-indicator bg-green-400" />
-            <span className="font-medium text-white text-sm">
-              {stats?.onlineNodes || 0}
-            </span>
+    <div className="relative h-full w-full bg-black">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-40 px-4 sm:px-6 pt-4 sm:pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="pointer-events-auto">
+            <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
           </div>
-          <div className="w-px h-4 bg-white/30" />
-          <div className="flex items-center space-x-2">
-            <div className="status-indicator bg-red-400" />
-            <span className="font-medium text-white text-sm">
-              {stats?.offlineNodes || 0}
-            </span>
+          <div className="pointer-events-auto">
+            <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg dark:bg-black/40">
+              <div className="flex items-center gap-1 text-white">
+                <span className="status-indicator bg-green-400" />
+                <span className="font-medium">
+                  {stats?.onlineNodes ?? 0}
+                </span>
+              </div>
+              <span className="h-4 w-px bg-white/30" />
+              <div className="flex items-center gap-1 text-white/80">
+                <span className="status-indicator bg-red-400" />
+                <span>{stats?.offlineNodes ?? 0}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Map canvas */}
-      <div className="relative h-full w-full">
+      <div className="absolute inset-0">
         <Suspense
           fallback={<MapSkeleton mode={viewMode === "3d" ? "3d" : "generic"} />}
         >

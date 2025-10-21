@@ -101,21 +101,9 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
+    <div className="flex h-screen flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
       <Header />
       <main className="relative flex-1 min-h-0 overflow-hidden">
-        {/* Summary badge - top left */}
-        <div className="pointer-events-none absolute top-20 sm:top-24 left-4 sm:left-6 z-30">
-          <div className="glass rounded-lg px-5 py-3 border border-white/20 backdrop-blur-md shadow-lg">
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-              全球节点监控平台
-            </h1>
-            <p className="text-gray-300 text-xs sm:text-sm mt-1">
-              实时监控 {nodes.length} 个节点
-            </p>
-          </div>
-        </div>
-
         <MapSection
           nodes={nodes}
           stats={stats}
