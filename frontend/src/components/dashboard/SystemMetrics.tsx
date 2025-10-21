@@ -184,14 +184,9 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
           color="orange"
         />
         <ResourceBar
-          label="系统负载 (归一化)"
-          value={Math.min((metrics.avgLoad / 4) * 100, 100)}
-          color="green"
-        />
-        <ResourceBar
           label="节点健康度"
           value={metrics.healthRate}
-          color="cyan"
+          color="green"
         />
 
         {/* 额外的统计信息 */}
@@ -210,7 +205,7 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
                 {metrics.avgLoad.toFixed(2)}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                平均负载 (1分钟)
+                系统负载
               </div>
             </div>
           </div>
