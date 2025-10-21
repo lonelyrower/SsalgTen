@@ -1564,49 +1564,66 @@ export class NodeService {
     const countries = new Set(nodes.map((node) => node.country));
     const providers = new Set(nodes.map((node) => node.provider));
 
-    // 计算总流量：从所有节点的最新心跳中获取网络流量数据
+    // Prefer persisted traffic totals when calculating global usage
     let totalUpload = 0;
     let totalDownload = 0;
+    const nodeIds = nodes.map((node) => node.id);
 
     try {
-      // 获取所有节点的最新心跳记录
-      const nodeIds = nodes.map((node) => node.id);
-      const latestHeartbeats = await prisma.heartbeatLog.findMany({
-        where: {
-          nodeId: { in: nodeIds },
-          networkInfo: { not: Prisma.DbNull },
-        },
-        orderBy: { timestamp: "desc" },
-        distinct: ["nodeId"],
-        select: {
-          nodeId: true,
-          networkInfo: true,
-        },
-      });
+      if (nodeIds.length > 0) {
+        const aggregated = await prisma.trafficStats.aggregate({
+          where: { nodeId: { in: nodeIds } },
+          _sum: {
+            totalUpload: true,
+            totalDownload: true,
+          },
+        });
 
-      // 聚合所有节点的网络流量
-      for (const heartbeat of latestHeartbeats) {
-        if (
-          heartbeat.networkInfo &&
-          typeof heartbeat.networkInfo === "object"
-        ) {
-          const networkData = heartbeat.networkInfo as unknown;
+        const aggregatedUpload = aggregated._sum?.totalUpload;
+        const aggregatedDownload = aggregated._sum?.totalDownload;
+        const hasPersistentTraffic =
+          (aggregatedUpload !== null && aggregatedUpload !== undefined) ||
+          (aggregatedDownload !== null && aggregatedDownload !== undefined);
 
-          // networkInfo 是一个接口数组
-          if (Array.isArray(networkData)) {
-            for (const iface of networkData) {
-              if (
-                iface &&
-                typeof iface === "object" &&
-                "bytesReceived" in iface &&
-                "bytesSent" in iface
-              ) {
-                // 累加接收和发送的字节数
-                if (typeof iface.bytesReceived === "number") {
-                  totalDownload += iface.bytesReceived;
-                }
-                if (typeof iface.bytesSent === "number") {
-                  totalUpload += iface.bytesSent;
+        if (hasPersistentTraffic) {
+          totalUpload = Number(aggregatedUpload ?? BigInt(0));
+          totalDownload = Number(aggregatedDownload ?? BigInt(0));
+        } else {
+          const latestHeartbeats = await prisma.heartbeatLog.findMany({
+            where: {
+              nodeId: { in: nodeIds },
+              networkInfo: { not: Prisma.DbNull },
+            },
+            orderBy: { timestamp: "desc" },
+            distinct: ["nodeId"],
+            select: {
+              nodeId: true,
+              networkInfo: true,
+            },
+          });
+
+          for (const heartbeat of latestHeartbeats) {
+            if (
+              heartbeat.networkInfo &&
+              typeof heartbeat.networkInfo === "object"
+            ) {
+              const networkData = heartbeat.networkInfo as unknown;
+
+              if (Array.isArray(networkData)) {
+                for (const iface of networkData) {
+                  if (
+                    iface &&
+                    typeof iface === "object" &&
+                    "bytesReceived" in iface &&
+                    "bytesSent" in iface
+                  ) {
+                    if (typeof iface.bytesReceived === "number") {
+                      totalDownload += iface.bytesReceived;
+                    }
+                    if (typeof iface.bytesSent === "number") {
+                      totalUpload += iface.bytesSent;
+                    }
+                  }
                 }
               }
             }
@@ -1615,11 +1632,10 @@ export class NodeService {
       }
     } catch (error) {
       logger.error("Failed to calculate traffic stats:", error);
-      // 出错时返回0
+      // ����ʱ����0
       totalUpload = 0;
       totalDownload = 0;
     }
-
     return {
       totalNodes,
       onlineNodes,

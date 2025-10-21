@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import type { StreamingPlatformStats } from "@/types/streaming";
+import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { CheckCircle2, XCircle, AlertCircle, HelpCircle } from "lucide-react";
 
 interface PlatformStatsCardProps {
@@ -23,7 +24,7 @@ export const PlatformStatsCard: React.FC<PlatformStatsCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2">
-            <span className="text-2xl">{stats.icon}</span>
+            <StreamingIcon service={stats.service} size="lg" />
             <span>{stats.name}</span>
           </span>
           <span
