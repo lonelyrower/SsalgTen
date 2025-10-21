@@ -63,7 +63,7 @@ export const UnifiedDashboardPage: React.FC = () => {
 
       <MobilePullToRefresh
         onRefresh={handleRefresh}
-        className="flex-1 overflow-hidden"
+        className="flex-1 overflow-hidden bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-black"
       >
         <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
           {/* 核心统计卡片 */}
