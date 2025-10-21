@@ -30,18 +30,18 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* 透明悬浮背景 + 毛玻璃效果 */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-blue-900/50 to-slate-900/60 backdrop-blur-md">
-        {/* 扫描线动画 - 减弱效果 */}
+      {/* 清晰的渐变背景 + 轻微模糊 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-blue-900/80 to-slate-900/85 backdrop-blur-sm">
+        {/* 扫描线动画 - 进一步减弱 */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage:
               "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6, 182, 212, 0.03) 2px, rgba(6, 182, 212, 0.03) 4px)",
           }}
         />
         {/* 底部发光线 */}
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
       </div>
 
       <div className="relative pointer-events-auto px-4 sm:px-6">

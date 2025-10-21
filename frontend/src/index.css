@@ -563,6 +563,39 @@
   /* 移动端优化 */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* 正确的光标样式 */
+  cursor: grab;
+}
+
+.leaflet-container:active {
+  cursor: grabbing;
+}
+
+/* Leaflet 标记点应该是可点击的指针 */
+.leaflet-marker-icon,
+.leaflet-popup-close-button {
+  cursor: pointer !important;
+}
+
+/* 地图拖动时的光标 */
+.leaflet-dragging .leaflet-container {
+  cursor: grabbing !important;
+}
+
+/* Cesium 3D 地球光标样式 */
+.cesium-viewer,
+.cesium-viewer-cesiumWidgetContainer {
+  cursor: grab !important;
+}
+
+.cesium-viewer:active {
+  cursor: grabbing !important;
+}
+
+/* Cesium 可点击元素 */
+.cesium-viewer .cesium-button,
+.cesium-infoBox-close {
+  cursor: pointer !important;
 }
 
 .fullscreen-map .leaflet-container {

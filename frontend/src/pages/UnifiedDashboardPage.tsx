@@ -58,7 +58,7 @@ export const UnifiedDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="relative flex min-h-[100vh] w-screen flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
       <Header />
 
       <MobilePullToRefresh
