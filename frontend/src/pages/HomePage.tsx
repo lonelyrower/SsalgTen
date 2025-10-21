@@ -101,26 +101,21 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
-      {/* 透明悬浮 Header - pointer-events-none 让地图可交互，内部元素单独设置 pointer-events-auto */}
-      <div className="absolute top-0 left-0 right-0 z-50 pointer-events-none">
-        <Header />
-      </div>
-
-      {/* 小型半透明标题卡片 - 左上角 */}
-      <div className="absolute top-20 left-6 z-40 pointer-events-none">
-        <div className="glass rounded-lg px-6 py-3 border border-white/20 backdrop-blur-md">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-            全球节点监控平台
-          </h1>
-          <p className="text-gray-300 text-sm mt-1">
-            实时监控 {nodes.length} 个节点
-          </p>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 dark:from-black dark:via-gray-900 dark:to-black">
+      <Header />
+      <main className="relative flex-1 min-h-0 overflow-hidden">
+        {/* Summary badge - top left */}
+        <div className="pointer-events-none absolute top-20 sm:top-24 left-4 sm:left-6 z-30">
+          <div className="glass rounded-lg px-5 py-3 border border-white/20 backdrop-blur-md shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              全球节点监控平台
+            </h1>
+            <p className="text-gray-300 text-xs sm:text-sm mt-1">
+              实时监控 {nodes.length} 个节点
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* 全屏地图 */}
-      <main className="h-full w-full">
         <MapSection
           nodes={nodes}
           stats={stats}
@@ -131,7 +126,7 @@ export const HomePage = () => {
         />
 
         {error && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-2xl w-full px-4">
+          <div className="pointer-events-auto absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-4">
             <ErrorBanner error={error} />
           </div>
         )}
@@ -147,3 +142,4 @@ export const HomePage = () => {
     </div>
   );
 };
+

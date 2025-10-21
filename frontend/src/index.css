@@ -560,32 +560,6 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 }
-
-.map-container {
-  position: relative;
-  overflow: hidden;
-  /* 全屏模式：移除所有装饰性样式，让地图真正全屏显示 */
-  max-width: 100vw;
-  overflow-x: hidden;
-  /* 移动端最小高度 */
-  min-height: 300px;
-}
-
-@media (max-width: 640px) {
-  .map-container {
-    min-height: 250px;
-  }
-}
-
-/* 移除 .map-container::before 装饰线，全屏模式不需要 */
-
-@media (max-width: 640px) {
-  /* .map-container::before 已移除 */
-  .removed-map-container-before {
-    border-radius: 12px 12px 0 0;
-  }
-}
-
 /* 移动端地图控制优化 */
 @media (max-width: 640px) {
   .leaflet-control-zoom {
@@ -631,3 +605,4 @@
     transform: scale(1.2);
   }
 }
+

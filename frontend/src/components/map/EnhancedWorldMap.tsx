@@ -273,6 +273,7 @@ interface EnhancedWorldMapProps {
   className?: string;
   // 是否显示右上角的控制面板（节点统计与显示模式）
   showControlPanels?: boolean;
+  layout?: "card" | "fullscreen";
 }
 
 // 聚合节点类型
@@ -536,6 +537,7 @@ interface EnhancedWorldMapProps {
   className?: string;
   // 是否显示右上角的控制面板（节点统计）
   showControlPanels?: boolean;
+  layout?: "card" | "fullscreen";
 }
 
 export const EnhancedWorldMap = memo(
@@ -544,6 +546,7 @@ export const EnhancedWorldMap = memo(
     onNodeClick,
     selectedNode,
     className = "",
+    layout = "card",
     showControlPanels = true,
   }: EnhancedWorldMapProps) => {
     const storedProvider = useMemo(() => resolveStoredProvider(), []);
@@ -1048,6 +1051,11 @@ export const EnhancedWorldMap = memo(
       return els;
     }, [clusteredItems, clusterIndex, onNodeClick, selectedNode]);
 
+    const isFullscreen = layout === "fullscreen";
+    const mapWrapperClasses = isFullscreen
+      ? "flex-1 min-h-full w-full"
+      : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800";
+
     return (
       <div
         ref={mapContainerRef}
@@ -1293,7 +1301,7 @@ export const EnhancedWorldMap = memo(
         </div>
 
         {/* 地图容器：占满可用空间，移动端使用较小的最小高度 */}
-        <div className="flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+        <div className={mapWrapperClasses}>
           <MapContainer
             center={[20, 0]}
             zoom={2}
@@ -1339,14 +1347,16 @@ export const EnhancedWorldMap = memo(
         </div>
 
         {/* 底部信息栏（固定高度不参与伸缩） */}
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500 shrink-0">
-          <div className="flex items-center space-x-4">
-            <span>共 {nodes.length} 个节点</span>
-            {selectedNode && (
-              <span className="text-primary">已选择: {selectedNode.name}</span>
-            )}
+        {!isFullscreen && (
+          <div className="mt-4 flex items-center justify-between text-sm text-gray-500 shrink-0">
+            <div className="flex items-center space-x-4">
+              <span>共 {nodes.length} 个节点</span>
+              {selectedNode && (
+                <span className="text-primary">已选择: {selectedNode.name}</span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 聚合节点详情模态框 */}
         {showClusterModal && (
@@ -1473,3 +1483,4 @@ export const EnhancedWorldMap = memo(
     );
   },
 );
+

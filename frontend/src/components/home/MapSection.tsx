@@ -18,7 +18,7 @@ const Globe3D = lazy(() =>
 
 // 地图加载骨架屏
 const MapSkeleton = ({ mode = "generic" }: { mode?: "generic" | "3d" }) => (
-  <div className="w-full h-full min-h-[320px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+  <div className="w-full h-full min-h-[320px] bg-gray-100/60 dark:bg-gray-900/60 flex items-center justify-center">
     <div className="text-center space-y-4">
       <div className="animate-pulse">
         <Globe className="w-16 h-16 mx-auto text-primary" />
@@ -53,8 +53,8 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
   return (
     <div className="relative h-full w-full">
-      {/* 右上角：2D/3D 切换 + 状态统计悬浮卡片 - z-[60] 确保在 Header (z-50) 之上 */}
-      <div className="absolute top-20 right-4 z-[60] flex items-center gap-3">
+      {/* Top-right controls */}
+      <div className="pointer-events-auto absolute top-4 sm:top-6 right-4 z-40 flex items-center gap-3">
         {/* 2D/3D 切换按钮 */}
         <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
 
@@ -76,8 +76,8 @@ export const MapSection: React.FC<MapSectionProps> = ({
         </div>
       </div>
 
-      {/* 地图容器 - 全屏 */}
-      <div className="map-container relative h-full w-full">
+      {/* Map canvas */}
+      <div className="relative h-full w-full">
         <Suspense
           fallback={<MapSkeleton mode={viewMode === "3d" ? "3d" : "generic"} />}
         >
@@ -86,8 +86,9 @@ export const MapSection: React.FC<MapSectionProps> = ({
               nodes={nodes}
               onNodeClick={onNodeClick}
               selectedNode={selectedNode}
-              className="h-full"
+              className="h-full w-full"
               showControlPanels={false}
+              layout="fullscreen"
             />
           ) : (
             <Globe3D nodes={nodes} onNodeClick={onNodeClick} />
@@ -97,3 +98,4 @@ export const MapSection: React.FC<MapSectionProps> = ({
     </div>
   );
 };
+
