@@ -553,6 +553,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.fullscreen-map .leaflet-container {
+  border-radius: 0;
+  box-shadow: none;
+}
+
 @media (max-width: 640px) {
   .leaflet-container {
     border-radius: 12px;
@@ -605,4 +610,5 @@
     transform: scale(1.2);
   }
 }
+
 

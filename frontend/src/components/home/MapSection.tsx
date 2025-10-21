@@ -53,26 +53,21 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
   return (
     <div className="relative h-full w-full bg-black">
-      {/* Top-left controls - 左上角：2D/3D切换 + 状态统计 */}
-      <div className="pointer-events-none absolute top-4 sm:top-6 left-4 sm:left-6 z-40">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="pointer-events-auto">
-            <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
+      {/* Top controls (centered) */}
+      <div className="pointer-events-none absolute top-4 sm:top-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center">
+        <div className="pointer-events-auto flex flex-wrap items-center gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg dark:bg-black/40">
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
+          <span className="h-4 w-px bg-white/30" />
+          <div className="flex items-center gap-1 text-white">
+            <span className="status-indicator bg-green-400" />
+            <span className="font-medium">
+              {stats?.onlineNodes ?? 0}
+            </span>
           </div>
-          <div className="pointer-events-auto">
-            <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg dark:bg-black/40">
-              <div className="flex items-center gap-1 text-white">
-                <span className="status-indicator bg-green-400" />
-                <span className="font-medium">
-                  {stats?.onlineNodes ?? 0}
-                </span>
-              </div>
-              <span className="h-4 w-px bg-white/30" />
-              <div className="flex items-center gap-1 text-white/80">
-                <span className="status-indicator bg-red-400" />
-                <span>{stats?.offlineNodes ?? 0}</span>
-              </div>
-            </div>
+          <span className="h-4 w-px bg-white/30" />
+          <div className="flex items-center gap-1 text-white">
+            <span className="status-indicator bg-red-400" />
+            <span>{stats?.offlineNodes ?? 0}</span>
           </div>
         </div>
       </div>

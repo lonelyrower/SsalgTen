@@ -1053,8 +1053,11 @@ export const EnhancedWorldMap = memo(
 
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen
-      ? "flex-1 min-h-full w-full"
+      ? "fullscreen-map flex-1 min-h-full w-full"
       : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800";
+    const mapContainerClassName = isFullscreen
+      ? "z-0 rounded-none border-none shadow-none"
+      : "z-0";
 
     return (
       <div
@@ -1307,7 +1310,7 @@ export const EnhancedWorldMap = memo(
             zoom={2}
             style={{ height: "100%", width: "100%" }}
             ref={mapRef}
-            className="z-0"
+            className={mapContainerClassName}
             preferCanvas={true}
             worldCopyJump={true}
             maxBounds={[
