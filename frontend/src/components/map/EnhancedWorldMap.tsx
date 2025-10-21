@@ -1155,8 +1155,8 @@ export const EnhancedWorldMap = memo(
           </div>
         )}
 
-        {/* Layer switcher - bottom right */}
-        <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
+        {/* Layer switcher - top right */}
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40">
           <div className="layer-menu-container relative">
             <Button
               variant="secondary"
@@ -1174,7 +1174,7 @@ export const EnhancedWorldMap = memo(
 
             {/* 图层选择菜单 */}
             {showLayerMenu && (
-              <div className="absolute bottom-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 layer-menu-container">
+              <div className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
                 <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
                     选择地图图层
