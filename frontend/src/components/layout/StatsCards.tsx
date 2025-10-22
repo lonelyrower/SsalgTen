@@ -46,8 +46,8 @@ const StatsCardsComponent = ({
       Icon: Server,
       badge: "实时监控",
       accent: {
-        bg: "from-sky-50 via-white to-cyan-50 dark:from-slate-950/70 dark:via-slate-950/80 dark:to-cyan-950/30",
-        border: "border-sky-200/70 dark:border-cyan-900/50",
+        bg: "from-sky-50 via-white to-cyan-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60",
+        border: "border-sky-200/70 dark:border-cyan-700/60",
         iconWrapper:
           "bg-cyan-500/12 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-200 border border-white/60 dark:border-white/10",
         badge:
@@ -62,8 +62,8 @@ const StatsCardsComponent = ({
       Icon: Globe,
       badge: "国际化",
       accent: {
-        bg: "from-emerald-50 via-white to-teal-50 dark:from-slate-950/70 dark:via-emerald-950/30 dark:to-teal-950/25",
-        border: "border-emerald-200/70 dark:border-emerald-900/50",
+        bg: "from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60",
+        border: "border-emerald-200/70 dark:border-emerald-700/60",
         iconWrapper:
           "bg-emerald-500/12 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200 border border-white/60 dark:border-white/10",
         badge:
@@ -78,8 +78,8 @@ const StatsCardsComponent = ({
       Icon: Building,
       badge: "多元化",
       accent: {
-        bg: "from-fuchsia-50 via-white to-purple-50 dark:from-slate-950/75 dark:via-fuchsia-950/25 dark:to-purple-950/25",
-        border: "border-fuchsia-200/70 dark:border-fuchsia-900/40",
+        bg: "from-fuchsia-50 via-white to-purple-50 dark:from-slate-800 dark:via-fuchsia-950/60 dark:to-purple-950/60",
+        border: "border-fuchsia-200/70 dark:border-fuchsia-700/60",
         iconWrapper:
           "bg-fuchsia-500/12 text-fuchsia-600 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 border border-white/60 dark:border-white/10",
         badge:
@@ -94,8 +94,8 @@ const StatsCardsComponent = ({
       Icon: HardDrive,
       badge: "累计",
       accent: {
-        bg: "from-amber-50 via-white to-orange-50 dark:from-slate-950/75 dark:via-amber-950/25 dark:to-orange-950/25",
-        border: "border-amber-200/70 dark:border-amber-900/40",
+        bg: "from-amber-50 via-white to-orange-50 dark:from-slate-800 dark:via-amber-950/60 dark:to-orange-950/60",
+        border: "border-amber-200/70 dark:border-amber-700/60",
         iconWrapper:
           "bg-amber-500/12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-200 border border-white/60 dark:border-white/10",
         badge:

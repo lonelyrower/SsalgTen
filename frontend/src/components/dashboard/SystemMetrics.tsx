@@ -179,7 +179,7 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-cyan-200/60 dark:border-cyan-900/40 bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-slate-950/80 dark:via-cyan-950/30 dark:to-blue-950/30 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
+    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-cyan-400/15 via-transparent to-blue-500/15" />
       <div className="absolute -top-12 -right-16 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
