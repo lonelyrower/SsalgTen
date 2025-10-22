@@ -14,7 +14,7 @@ interface NodeEvent {
   id: string;
   type: string;
   message?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -70,6 +70,7 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
 
   useEffect(() => {
     fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node.id]);
 
   return (
