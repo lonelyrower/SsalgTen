@@ -50,9 +50,9 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 }) => {
   const isOnline = node.status.toLowerCase() === "online";
 
-  // 计算 CPU 和内存使用率
-  const cpuUsage = heartbeatData?.cpuInfo?.usage ?? 0;
-  const memoryUsage = heartbeatData?.memoryInfo?.usage ?? 0;
+  // 计算 CPU 和内存使用率 - 优先使用心跳数据，否则使用节点自身数据
+  const cpuUsage = heartbeatData?.cpuInfo?.usage ?? node.cpuUsage ?? 0;
+  const memoryUsage = heartbeatData?.memoryInfo?.usage ?? node.memoryUsage ?? 0;
 
   return (
     <motion.div
@@ -136,7 +136,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
             {/* 服务商 */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">服务商:</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">服务商:</span>
               <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                 {node.provider}
               </span>

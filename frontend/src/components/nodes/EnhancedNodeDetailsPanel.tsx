@@ -86,7 +86,7 @@ const DetailItem = ({
     <div className="flex items-center justify-between py-3 border-b border-slate-200/70 dark:border-slate-700/30 last:border-0">
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-        <span className="text-slate-600 dark:text-slate-400 text-sm">{label}</span>
+        <span className="text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap">{label}</span>
       </div>
       <span
         className={`text-slate-900 dark:text-slate-900 dark:text-white font-semibold text-sm ${mono ? "font-mono" : ""}`}
@@ -284,7 +284,6 @@ export const EnhancedNodeDetailsPanel: React.FC<
             {/* 网络信息区域 */}
             <div className="pb-2 mb-2 border-b border-slate-200/70 dark:border-slate-700/30">
               <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">网络信息</h4>
-              <DetailItem label="服务商" value={node.provider} icon={Globe} />
               {node.asnNumber && (
                 <DetailItem
                   label="ASN"
@@ -292,6 +291,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
                   icon={Hash}
                 />
               )}
+              <DetailItem label="服务商" value={node.provider} icon={Globe} />
             </div>
 
             {/* 系统信息区域 */}
