@@ -42,6 +42,35 @@ const getStatusIcon = (status: string) => {
   }
 };
 
+// 简化操作系统显示
+const simplifyOsString = (osType?: string, osVersion?: string): string => {
+  if (!osType) return "未知";
+
+  // 移除多余的内核和版本信息
+  let simplified = osType;
+
+  // 提取主要发行版名称和版本号
+  // 例如: "Alpine Linux v3.21 #1 SMP..." -> "Alpine Linux v3.21"
+  // "Ubuntu 24.04.1 LTS (Noble...)" -> "Ubuntu 24.04"
+
+  // 移除 #1 SMP 及之后的内容
+  simplified = simplified.replace(/#\d+\s+SMP.*$/i, '').trim();
+
+  // 移除 LTS 后面括号内的内容
+  simplified = simplified.replace(/\s*LTS\s*\([^)]+\)/i, ' LTS').trim();
+
+  // 移除其他括号内容
+  simplified = simplified.replace(/\([^)]+\)/g, '').trim();
+
+  // 如果 osVersion 已经包含在 osType 中，直接返回
+  if (osVersion && simplified.includes(osVersion)) {
+    return simplified;
+  }
+
+  // 否则组合显示
+  return osVersion ? `${simplified} ${osVersion}`.trim() : simplified;
+};
+
 const DetailItem = ({
   label,
   value,
@@ -259,7 +288,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
               {node.asnNumber && (
                 <DetailItem
                   label="ASN"
-                  value={node.asnName ? `${node.asnNumber} (${node.asnName})` : node.asnNumber}
+                  value={node.asnNumber}
                   icon={Hash}
                 />
               )}
@@ -271,14 +300,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
               {node.osType && (
                 <DetailItem
                   label="操作系统"
-                  value={(() => {
-                    // 如果 osVersion 已经包含在 osType 中，只显示 osType
-                    if (node.osVersion && node.osType.includes(node.osVersion)) {
-                      return node.osType;
-                    }
-                    // 否则组合显示
-                    return `${node.osType}${node.osVersion ? ` ${node.osVersion}` : ""}`;
-                  })()}
+                  value={simplifyOsString(node.osType, node.osVersion)}
                   icon={Terminal}
                 />
               )}
@@ -338,9 +360,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
                       label="内存"
                       value={
                         heartbeatData.memoryInfo.total
-                          ? (heartbeatData.memoryInfo.used /
+                          ? Number(((heartbeatData.memoryInfo.used /
                               heartbeatData.memoryInfo.total) *
-                            100
+                            100).toFixed(2))
                           : 0
                       }
                       color={
@@ -372,9 +394,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
                       label="存储空间"
                       value={
                         heartbeatData.diskInfo.total
-                          ? (heartbeatData.diskInfo.used /
+                          ? Number(((heartbeatData.diskInfo.used /
                               heartbeatData.diskInfo.total) *
-                            100
+                            100).toFixed(2))
                           : 0
                       }
                       color={
@@ -403,43 +425,46 @@ export const EnhancedNodeDetailsPanel: React.FC<
                       <ArrowUpDown className="h-4 w-4 text-blue-400" />
                       网络流量
                     </h4>
-                    {heartbeatData.networkInfo.slice(0, 3).map((netInfo, idx) => (
-                      <div key={idx} className="mb-3 last:mb-0">
-                        <div className="text-xs text-slate-600 dark:text-slate-400 mb-1 font-semibold">
-                          {netInfo.interface}
-                        </div>
+                    {(() => {
+                      // 合并所有网卡的流量数据
+                      const totalRx = heartbeatData.networkInfo.reduce((sum, ni) => sum + (ni.bytesReceived || 0), 0);
+                      const totalTx = heartbeatData.networkInfo.reduce((sum, ni) => sum + (ni.bytesSent || 0), 0);
+                      const totalRxBps = heartbeatData.networkInfo.reduce((sum, ni) => sum + (ni.rxBps || 0), 0);
+                      const totalTxBps = heartbeatData.networkInfo.reduce((sum, ni) => sum + (ni.txBps || 0), 0);
+
+                      return (
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div className="flex justify-between">
                             <span className="text-slate-500 dark:text-slate-400">↓ 接收:</span>
                             <span className="text-slate-900 dark:text-white font-medium">
-                              {(netInfo.bytesReceived / 1024 / 1024 / 1024).toFixed(2)} GB
+                              {(totalRx / 1024 / 1024 / 1024).toFixed(2)} GB
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500 dark:text-slate-400">↑ 发送:</span>
                             <span className="text-slate-900 dark:text-white font-medium">
-                              {(netInfo.bytesSent / 1024 / 1024 / 1024).toFixed(2)} GB
+                              {(totalTx / 1024 / 1024 / 1024).toFixed(2)} GB
                             </span>
                           </div>
-                          {(netInfo.rxBps !== undefined || netInfo.txBps !== undefined) && (
+                          {(totalRxBps > 0 || totalTxBps > 0) && (
                             <>
                               <div className="flex justify-between">
                                 <span className="text-slate-500 dark:text-slate-400">速率 ↓:</span>
                                 <span className="text-green-600 dark:text-green-400 font-medium">
-                                  {netInfo.rxBps ? `${(netInfo.rxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
+                                  {totalRxBps > 0 ? `${(totalRxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-slate-500 dark:text-slate-400">速率 ↑:</span>
                                 <span className="text-blue-600 dark:text-blue-400 font-medium">
-                                  {netInfo.txBps ? `${(netInfo.txBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
+                                  {totalTxBps > 0 ? `${(totalTxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
                                 </span>
                               </div>
                             </>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })()}
                   </div>
                 )}
 
