@@ -30,15 +30,17 @@ export const AdminPage: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col">
         <Header />
-        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
-          <ErrorState
-            type="access-denied"
-            title="访问被拒绝"
-            message="您需要管理员权限才能访问此页面"
-            showHome={true}
-            size="lg"
-          />
-        </main>
+        <div className="flex-1 overflow-y-auto">
+          <main className="max-w-7xl mx-auto px-4 py-6 w-full">
+            <ErrorState
+              type="access-denied"
+              title="访问被拒绝"
+              message="您需要管理员权限才能访问此页面"
+              showHome={true}
+              size="lg"
+            />
+          </main>
+        </div>
       </div>
     );
   }
@@ -47,27 +49,29 @@ export const AdminPage: React.FC = () => {
     <div className="fixed inset-0 flex flex-col">
       <Header />
 
-      <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
-        {/* 标签页导航 */}
-        <div className="flex justify-center mb-8">
-          <AdminTabs
-            tabs={adminTabs}
-            value={activeTab}
-            onChange={setActiveTab}
-          />
-        </div>
+      <div className="flex-1 overflow-y-auto">
+        <main className="max-w-7xl mx-auto px-4 py-6 w-full">
+          {/* 标签页导航 */}
+          <div className="flex justify-center mb-8">
+            <AdminTabs
+              tabs={adminTabs}
+              value={activeTab}
+              onChange={setActiveTab}
+            />
+          </div>
 
-        {/* 标签页内容 */}
-        {activeTab === "overview" && <SystemOverview />}
+          {/* 标签页内容 */}
+          {activeTab === "overview" && <SystemOverview />}
 
-        {activeTab === "system" && <SystemSettings />}
+          {activeTab === "system" && <SystemSettings />}
 
-        {activeTab === "nodes" && <NodeManagement />}
+          {activeTab === "nodes" && <NodeManagement />}
 
-        {activeTab === "users" && <UserManagement />}
+          {activeTab === "users" && <UserManagement />}
 
-        {activeTab === "keys" && <ApiKeyManagement />}
-      </main>
+          {activeTab === "keys" && <ApiKeyManagement />}
+        </main>
+      </div>
 
       {/* 修改密码模态框 */}
       <ChangePasswordModal

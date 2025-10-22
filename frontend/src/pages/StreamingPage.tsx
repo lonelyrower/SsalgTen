@@ -186,9 +186,11 @@ export const StreamingPage: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 w-full">
-          <LoadingSpinner size="lg" text="加载流媒体数据..." />
-        </main>
+        <div className="flex-1 overflow-y-auto">
+          <main className="max-w-7xl mx-auto px-4 py-8 w-full">
+            <LoadingSpinner size="lg" text="加载流媒体数据..." />
+          </main>
+        </div>
       </div>
     );
   }
@@ -197,12 +199,14 @@ export const StreamingPage: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 w-full">
-          <ErrorState
-            message={error || "无法加载数据"}
-            onRetry={handleRefresh}
-          />
-        </main>
+        <div className="flex-1 overflow-y-auto">
+          <main className="max-w-7xl mx-auto px-4 py-8 w-full">
+            <ErrorState
+              message={error || "无法加载数据"}
+              onRetry={handleRefresh}
+            />
+          </main>
+        </div>
       </div>
     );
   }
@@ -211,7 +215,8 @@ export const StreamingPage: React.FC = () => {
     <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
+      <div className="flex-1 overflow-y-auto">
+        <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
         {/* 页面标题 */}
         <PageHeader
           title="流媒体解锁"
@@ -361,7 +366,8 @@ export const StreamingPage: React.FC = () => {
             <StreamingNodeList nodes={filteredNodes} />
           )}
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

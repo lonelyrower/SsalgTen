@@ -61,7 +61,7 @@ export const NodesPageNew: React.FC = () => {
 
   const { nodes, connected, refreshData } = useRealTime();
   const diagnostics = useConnectivityDiagnostics(connected);
-  const containerRef = useRef<HTMLElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
   // 客户端延迟测试
@@ -167,27 +167,29 @@ export const NodesPageNew: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
-          <ConnectivityDiagnostics
-            checking={diagnostics.checking}
-            apiReachable={diagnostics.apiReachable}
-            socketConnected={diagnostics.socketConnected}
-            authOk={diagnostics.authOk}
-            nodesCount={diagnostics.nodesCount}
-            lastCheckedAt={diagnostics.lastCheckedAt}
-            issues={diagnostics.issues}
-            onRefresh={diagnostics.refresh}
-            isAdmin={hasRole("ADMIN")}
-          />
-          <Suspense
-            fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
-          >
-            <NetworkToolkit
-              selectedNode={selectedNode}
-              onClose={() => setShowDiagnostics(false)}
+        <div className="flex-1 overflow-y-auto">
+          <main className="max-w-7xl mx-auto px-4 py-6 w-full">
+            <ConnectivityDiagnostics
+              checking={diagnostics.checking}
+              apiReachable={diagnostics.apiReachable}
+              socketConnected={diagnostics.socketConnected}
+              authOk={diagnostics.authOk}
+              nodesCount={diagnostics.nodesCount}
+              lastCheckedAt={diagnostics.lastCheckedAt}
+              issues={diagnostics.issues}
+              onRefresh={diagnostics.refresh}
+              isAdmin={hasRole("ADMIN")}
             />
-          </Suspense>
-        </main>
+            <Suspense
+              fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
+            >
+              <NetworkToolkit
+                selectedNode={selectedNode}
+                onClose={() => setShowDiagnostics(false)}
+              />
+            </Suspense>
+          </main>
+        </div>
       </div>
     );
   }
@@ -197,19 +199,21 @@ export const NodesPageNew: React.FC = () => {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
-          <Button
-            onClick={() => setShowServerDetails(false)}
-            variant="outline"
-            className="mb-4"
-          >
-            ← 返回节点列表
-          </Button>
-          <ServerDetailsPanel
-            node={selectedNode}
-            heartbeatData={heartbeatData || undefined}
-          />
-        </main>
+        <div className="flex-1 overflow-y-auto">
+          <main className="max-w-7xl mx-auto px-4 py-6 w-full">
+            <Button
+              onClick={() => setShowServerDetails(false)}
+              variant="outline"
+              className="mb-4"
+            >
+              ← 返回节点列表
+            </Button>
+            <ServerDetailsPanel
+              node={selectedNode}
+              heartbeatData={heartbeatData || undefined}
+            />
+          </main>
+        </div>
       </div>
     );
   }
@@ -227,10 +231,8 @@ export const NodesPageNew: React.FC = () => {
         />
       </div>
 
-      <main
-        ref={containerRef}
-        className="relative flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 space-y-6 w-full"
-      >
+      <div ref={containerRef} className="relative flex-1 overflow-y-auto">
+        <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
         {/* Search and Filters - Enhanced Design */}
         <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-lg p-4">
           {/* Subtle glow effect */}
@@ -354,7 +356,8 @@ export const NodesPageNew: React.FC = () => {
             />
           </div>
         </div>
-      </main>
+        </main>
+      </div>
 
       {/* Logs Panel Modal */}
       {showLogs && selectedNode && (
