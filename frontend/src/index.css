@@ -2,6 +2,8 @@
 @import 'leaflet/dist/leaflet.css';
 
 @theme {
+  /* Dark mode selector variant - Tailwind v4 */
+  @variant dark (&:where(.dark, .dark *));
   /* Container configuration */
   --breakpoint-2xl: 1400px;
 
