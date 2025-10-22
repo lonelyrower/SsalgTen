@@ -120,7 +120,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
   if (!node) {
     return (
       <motion.div
-        className="group sticky top-24 relative h-full overflow-hidden rounded-2xl border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8"
+        className="group sticky top-24 relative lg:h-[800px] overflow-hidden rounded-2xl border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8 flex flex-col"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -158,7 +158,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
   return (
     <motion.div
-      className={`group sticky top-24 relative h-full overflow-hidden rounded-2xl border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8`}
+      className={`group sticky top-24 relative lg:h-[800px] overflow-y-auto rounded-2xl border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8 flex flex-col`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -218,8 +218,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
         </button>
       </div>
 
-      {/* Content */}
-      <div className="space-y-6">
+      {/* Content - scrollable area */}
+      <div className="flex-1 overflow-y-auto space-y-6">
         {activeTab === "info" ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -394,8 +394,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="mt-8 space-y-3">
+      {/* Action Buttons - fixed at bottom */}
+      <div className="mt-6 space-y-3 flex-shrink-0">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             onClick={onRunDiagnostics}

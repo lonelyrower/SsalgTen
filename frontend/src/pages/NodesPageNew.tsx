@@ -280,10 +280,10 @@ export const NodesPageNew: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start">
           {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[calc(100vh-240px)] lg:h-auto lg:min-h-[600px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 lg:h-[800px] flex flex-col">
               {viewMode === "list" ? (
                 /* List View */
-                <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div className="space-y-4 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                   {filteredNodes.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
                       <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -305,7 +305,7 @@ export const NodesPageNew: React.FC = () => {
                 </div>
               ) : (
                 /* Map Views (2D/3D) */
-                <div className="h-[600px]">
+                <div className="flex-1 min-h-0">
                   <Suspense
                     fallback={
                       <LoadingSpinner

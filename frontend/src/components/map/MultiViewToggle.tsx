@@ -13,8 +13,8 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/90 p-1",
-        "shadow-sm overflow-hidden",
+        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-500 bg-gray-100 dark:bg-gray-900 p-1",
+        "shadow-sm dark:shadow-md overflow-hidden",
         className,
       )}
       role="tablist"
@@ -24,7 +24,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
       <div
         className={cn(
           "absolute top-1 bottom-1 w-1/3 rounded-lg transition-all duration-200 ease-out",
-          "bg-white dark:bg-gray-600 shadow-md dark:shadow-gray-900/50",
+          "bg-white dark:bg-gradient-to-br dark:from-gray-600 dark:to-gray-500 shadow-md dark:shadow-lg dark:shadow-cyan-500/20",
           value === "list"
             ? "left-1"
             : value === "2d"
