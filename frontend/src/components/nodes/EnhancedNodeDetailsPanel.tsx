@@ -14,6 +14,8 @@ import {
   Zap,
   Terminal,
   BarChart3,
+  Hash,
+  ArrowUpDown,
 } from "lucide-react";
 import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import { Button } from "@/components/ui/button";
@@ -170,16 +172,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
       <div className="relative flex items-center gap-4 mb-6">
         <span className="text-5xl">{getStatusIcon(node.status)}</span>
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {node.country && (
-              <CountryFlagSvg country={node.country} className="w-6 h-6" />
-            )}
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white">{node.name}</h3>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {node.city}, {node.country}
-          </p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white">{node.name}</h3>
         </div>
         <Badge
           variant={node.status === "online" ? "success" : "destructive"}
@@ -226,51 +219,84 @@ export const EnhancedNodeDetailsPanel: React.FC<
             animate={{ opacity: 1, y: 0 }}
             className="space-y-1"
           >
-            <DetailItem label="服务商" value={node.provider} icon={Globe} />
-            {node.ipv4 && (
+            {/* 地址信息区域 */}
+            <div className="pb-2 mb-2 border-b border-slate-200/70 dark:border-slate-700/30">
+              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">地址信息</h4>
               <DetailItem
-                label="IPv4 地址"
-                value={node.ipv4}
-                icon={Network}
-                mono
+                label="位置"
+                value={
+                  <div className="flex items-center gap-2">
+                    {node.country && (
+                      <CountryFlagSvg country={node.country} className="w-4 h-4" />
+                    )}
+                    <span>{node.city}, {node.country}</span>
+                  </div>
+                }
+                icon={MapPin}
               />
-            )}
-            {node.ipv6 && node.ipv6.includes(":") && (
-              <DetailItem
-                label="IPv6 地址"
-                value={<span className="text-xs break-all">{node.ipv6}</span>}
-                icon={Network}
-                mono
-              />
-            )}
-            {node.osType && (
-              <DetailItem
-                label="操作系统"
-                value={(() => {
-                  // 如果 osVersion 已经包含在 osType 中，只显示 osType
-                  if (node.osVersion && node.osType.includes(node.osVersion)) {
-                    return node.osType;
-                  }
-                  // 否则组合显示
-                  return `${node.osType}${node.osVersion ? ` ${node.osVersion}` : ""}`;
-                })()}
-                icon={Terminal}
-              />
-            )}
-            {node.lastSeen && (
-              <DetailItem
-                label="最后在线"
-                value={new Date(node.lastSeen).toLocaleString("zh-CN")}
-                icon={Clock}
-              />
-            )}
-            {node.createdAt && (
-              <DetailItem
-                label="注册时间"
-                value={new Date(node.createdAt).toLocaleDateString("zh-CN")}
-                icon={Calendar}
-              />
-            )}
+              {node.ipv4 && (
+                <DetailItem
+                  label="IPv4 地址"
+                  value={node.ipv4}
+                  icon={Network}
+                  mono
+                />
+              )}
+              {node.ipv6 && node.ipv6.includes(":") && (
+                <DetailItem
+                  label="IPv6 地址"
+                  value={<span className="text-xs break-all">{node.ipv6}</span>}
+                  icon={Network}
+                  mono
+                />
+              )}
+            </div>
+
+            {/* 网络信息区域 */}
+            <div className="pb-2 mb-2 border-b border-slate-200/70 dark:border-slate-700/30">
+              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">网络信息</h4>
+              <DetailItem label="服务商" value={node.provider} icon={Globe} />
+              {node.asnNumber && (
+                <DetailItem
+                  label="ASN"
+                  value={node.asnName ? `${node.asnNumber} (${node.asnName})` : node.asnNumber}
+                  icon={Hash}
+                />
+              )}
+            </div>
+
+            {/* 系统信息区域 */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">系统信息</h4>
+              {node.osType && (
+                <DetailItem
+                  label="操作系统"
+                  value={(() => {
+                    // 如果 osVersion 已经包含在 osType 中，只显示 osType
+                    if (node.osVersion && node.osType.includes(node.osVersion)) {
+                      return node.osType;
+                    }
+                    // 否则组合显示
+                    return `${node.osType}${node.osVersion ? ` ${node.osVersion}` : ""}`;
+                  })()}
+                  icon={Terminal}
+                />
+              )}
+              {node.lastSeen && (
+                <DetailItem
+                  label="最后在线"
+                  value={new Date(node.lastSeen).toLocaleString("zh-CN")}
+                  icon={Clock}
+                />
+              )}
+              {node.createdAt && (
+                <DetailItem
+                  label="注册时间"
+                  value={new Date(node.createdAt).toLocaleDateString("zh-CN")}
+                  icon={Calendar}
+                />
+              )}
+            </div>
           </motion.div>
         ) : (
           <motion.div
@@ -367,6 +393,53 @@ export const EnhancedNodeDetailsPanel: React.FC<
                             : "cyan"
                       }
                     />
+                  </div>
+                )}
+
+                {/* 网络流量 */}
+                {heartbeatData?.networkInfo && heartbeatData.networkInfo.length > 0 && (
+                  <div className="pt-4 border-t border-slate-200/70 dark:border-slate-700/30">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <ArrowUpDown className="h-4 w-4 text-blue-400" />
+                      网络流量
+                    </h4>
+                    {heartbeatData.networkInfo.slice(0, 3).map((netInfo, idx) => (
+                      <div key={idx} className="mb-3 last:mb-0">
+                        <div className="text-xs text-slate-600 dark:text-slate-400 mb-1 font-semibold">
+                          {netInfo.interface}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 dark:text-slate-400">↓ 接收:</span>
+                            <span className="text-slate-900 dark:text-white font-medium">
+                              {(netInfo.bytesReceived / 1024 / 1024 / 1024).toFixed(2)} GB
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 dark:text-slate-400">↑ 发送:</span>
+                            <span className="text-slate-900 dark:text-white font-medium">
+                              {(netInfo.bytesSent / 1024 / 1024 / 1024).toFixed(2)} GB
+                            </span>
+                          </div>
+                          {(netInfo.rxBps !== undefined || netInfo.txBps !== undefined) && (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500 dark:text-slate-400">速率 ↓:</span>
+                                <span className="text-green-600 dark:text-green-400 font-medium">
+                                  {netInfo.rxBps ? `${(netInfo.rxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500 dark:text-slate-400">速率 ↑:</span>
+                                <span className="text-blue-600 dark:text-blue-400 font-medium">
+                                  {netInfo.txBps ? `${(netInfo.txBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 

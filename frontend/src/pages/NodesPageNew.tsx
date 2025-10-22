@@ -139,13 +139,16 @@ export const NodesPageNew: React.FC = () => {
   // 过滤节点
   const filteredNodes = useMemo(() => {
     return nodes.filter((node) => {
+      const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
-        node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        node.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        node.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        node.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        node.name.toLowerCase().includes(searchLower) ||
+        node.country.toLowerCase().includes(searchLower) ||
+        node.city.toLowerCase().includes(searchLower) ||
+        node.provider.toLowerCase().includes(searchLower) ||
         (node.ipv4 && node.ipv4.includes(searchTerm)) ||
-        (node.ipv6 && node.ipv6.includes(searchTerm));
+        (node.ipv6 && node.ipv6.includes(searchTerm)) ||
+        (node.asnNumber && node.asnNumber.toLowerCase().includes(searchLower)) ||
+        (node.asnName && node.asnName.toLowerCase().includes(searchLower));
 
       const matchesStatus =
         statusFilter === "all" ||
@@ -236,7 +239,7 @@ export const NodesPageNew: React.FC = () => {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
               <input
                 type="text"
-                placeholder="搜索节点名称、位置、IP 地址..."
+                placeholder="搜索节点名称、位置、IP、ASN、服务商..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
@@ -299,6 +302,7 @@ export const NodesPageNew: React.FC = () => {
                         isSelected={selectedNode?.id === node.id}
                         onClick={() => handleNodeClick(node)}
                         latency={getNodeLatency(node.id)}
+                        heartbeatData={selectedNode?.id === node.id ? heartbeatData : null}
                       />
                     ))
                   )}
