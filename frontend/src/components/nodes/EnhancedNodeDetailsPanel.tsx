@@ -246,7 +246,14 @@ export const EnhancedNodeDetailsPanel: React.FC<
             {node.osType && (
               <DetailItem
                 label="操作系统"
-                value={`${node.osType}${node.osVersion ? ` ${node.osVersion}` : ""}`}
+                value={(() => {
+                  // 如果 osVersion 已经包含在 osType 中，只显示 osType
+                  if (node.osVersion && node.osType.includes(node.osVersion)) {
+                    return node.osType;
+                  }
+                  // 否则组合显示
+                  return `${node.osType}${node.osVersion ? ` ${node.osVersion}` : ""}`;
+                })()}
                 icon={Terminal}
               />
             )}

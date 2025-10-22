@@ -62,7 +62,6 @@ export const NodeCard: React.FC<NodeCardProps> = ({
       animate={isInView ? { opacity: 1, x: 0 } : {}}
       transition={{ duration: 0.5, delay: index * 0.05 }}
       onClick={onClick}
-      whileHover={{ x: 8 }}
     >
       <div className="flex items-start gap-4">
         {/* Timeline indicator */}

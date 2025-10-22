@@ -262,10 +262,10 @@ export const NodesPageNew: React.FC = () => {
         </div>
 
         {/* Main Content: Multi-View + Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start">
           {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-h-[600px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[calc(100vh-240px)] lg:h-auto lg:min-h-[600px]">
               {viewMode === "list" ? (
                 /* List View */
                 <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
