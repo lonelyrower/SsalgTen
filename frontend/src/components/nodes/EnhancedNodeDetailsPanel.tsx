@@ -159,9 +159,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
   return (
     <motion.div
       className={`group sticky top-24 relative h-full overflow-hidden rounded-2xl border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8`}
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
       key={node.id}
     >
       <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${themeColors.glow}`} />
