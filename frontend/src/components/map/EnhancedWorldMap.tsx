@@ -1162,12 +1162,12 @@ export const EnhancedWorldMap = memo(
               variant="secondary"
               size="sm"
               onClick={() => setShowLayerMenu(!showLayerMenu)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-lg border border-gray-200/60 lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-slate-900/85 dark:hover:bg-slate-900 dark:text-slate-100 dark:border-slate-600/60"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-lg border border-gray-200/60 lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-gray-800/95 dark:hover:bg-gray-700/95 dark:text-white dark:border-gray-600"
               aria-expanded={showLayerMenu}
               aria-haspopup="menu"
             >
-              <Layers className="h-3 w-3 md:h-4 md:w-4 text-gray-700 dark:text-slate-100" />
-              <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-slate-100">
+              <Layers className="h-3 w-3 md:h-4 md:w-4 text-gray-700 dark:text-white" />
+              <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-white">
                 图层
               </span>
             </Button>
