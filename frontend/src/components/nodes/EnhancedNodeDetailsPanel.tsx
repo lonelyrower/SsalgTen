@@ -158,7 +158,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
   return (
     <motion.div
-      className={`group sticky top-24 relative lg:h-[800px] overflow-y-auto rounded-2xl border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8 flex flex-col`}
+      className={`group sticky top-24 relative lg:h-[800px] overflow-y-auto overflow-x-hidden rounded-2xl border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8 flex flex-col`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

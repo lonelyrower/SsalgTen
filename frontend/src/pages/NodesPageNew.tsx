@@ -283,7 +283,7 @@ export const NodesPageNew: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 lg:h-[800px] flex flex-col">
               {viewMode === "list" ? (
                 /* List View */
-                <div className="space-y-4 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div className="space-y-4 flex-1 overflow-y-auto pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                   {filteredNodes.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
                       <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
