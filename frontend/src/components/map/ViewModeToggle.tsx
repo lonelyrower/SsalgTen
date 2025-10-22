@@ -15,7 +15,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 p-1",
+        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/90 p-1",
         "shadow-sm overflow-hidden",
         className,
       )}
@@ -26,7 +26,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
       <div
         className={cn(
           "absolute top-1 bottom-1 w-1/2 rounded-lg transition-all duration-200 ease-out",
-          "bg-white dark:bg-gray-700 shadow",
+          "bg-white dark:bg-gray-600 shadow-md dark:shadow-gray-900/50",
           value === "2d" ? "left-1" : "left-1/2",
         )}
         aria-hidden
