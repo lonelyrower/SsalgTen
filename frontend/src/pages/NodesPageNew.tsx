@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { NodeCard } from "@/components/nodes/NodeCard";
 import { EnhancedNodeDetailsPanel } from "@/components/nodes/EnhancedNodeDetailsPanel";
 import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
+import { NodeLogsPanel } from "@/components/nodes/NodeLogsPanel";
 import { MultiViewToggle, type MultiViewMode } from "@/components/map/MultiViewToggle";
 import type { NodeData } from "@/services/api";
 import type { HeartbeatData } from "@/types/heartbeat";
@@ -50,6 +51,7 @@ export const NodesPageNew: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<MultiViewMode>("list");
@@ -74,6 +76,7 @@ export const NodesPageNew: React.FC = () => {
     setSelectedNode(node);
     setShowDiagnostics(false);
     setShowServerDetails(false);
+    setShowLogs(false);
   };
 
   const handleRunDiagnostics = () => {
@@ -347,13 +350,16 @@ export const NodesPageNew: React.FC = () => {
               heartbeatData={heartbeatData}
               onRunDiagnostics={handleRunDiagnostics}
               onShowServerDetails={handleShowServerDetails}
-              onViewLogs={() => {
-                console.log("View logs for:", selectedNode);
-              }}
+              onViewLogs={() => setShowLogs(true)}
             />
           </div>
         </div>
       </main>
+
+      {/* Logs Panel Modal */}
+      {showLogs && selectedNode && (
+        <NodeLogsPanel node={selectedNode} onClose={() => setShowLogs(false)} />
+      )}
     </div>
   );
 };
