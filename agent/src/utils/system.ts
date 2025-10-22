@@ -541,23 +541,37 @@ export const getServicesStatus = async () => {
 export const getOSDistro = async (): Promise<string> => {
   try {
     if (os.platform() === 'linux') {
-      // 优先尝试 /etc/os-release (现代Linux发行版标准)
+      // 检查是否在Docker容器中，如果是则尝试读取宿主机信息
+      let isInDocker = false;
       try {
-        const osRelease = await readFile('/etc/os-release', 'utf8');
-        const prettyName = osRelease.match(/PRETTY_NAME="(.+)"/);
-        if (prettyName) {
-          return prettyName[1];
-        }
-
-        // 回退：尝试提取 NAME 和 VERSION
-        const name = osRelease.match(/^NAME="?(.+?)"?$/m);
-        const version = osRelease.match(/^VERSION="?(.+?)"?$/m);
-        if (name) {
-          const distro = name[1].replace(/"/g, '');
-          const ver = version ? version[1].replace(/"/g, '') : '';
-          return ver ? `${distro} ${ver}` : distro;
-        }
+        const cgroupContent = await readFile('/proc/1/cgroup', 'utf8');
+        isInDocker = cgroupContent.includes('docker') || cgroupContent.includes('containerd');
       } catch {}
+
+      // 如果在Docker容器中，尝试通过宿主机路径读取
+      const osReleasePaths = isInDocker
+        ? ['/host/etc/os-release', '/etc/os-release']
+        : ['/etc/os-release'];
+
+      // 优先尝试 /etc/os-release (现代Linux发行版标准)
+      for (const path of osReleasePaths) {
+        try {
+          const osRelease = await readFile(path, 'utf8');
+          const prettyName = osRelease.match(/PRETTY_NAME="(.+)"/);
+          if (prettyName) {
+            return prettyName[1];
+          }
+
+          // 回退：尝试提取 NAME 和 VERSION
+          const name = osRelease.match(/^NAME="?(.+?)"?$/m);
+          const version = osRelease.match(/^VERSION="?(.+?)"?$/m);
+          if (name) {
+            const distro = name[1].replace(/"/g, '');
+            const ver = version ? version[1].replace(/"/g, '') : '';
+            return ver ? `${distro} ${ver}` : distro;
+          }
+        } catch {}
+      }
 
       // 回退：尝试 lsb_release 命令
       try {
@@ -568,11 +582,10 @@ export const getOSDistro = async (): Promise<string> => {
         }
       } catch {}
 
-      // 回退：检查特定发行版文件
+      // 回退：检查特定发行版文件（Alpine最后检查，避免容器OS误判）
       const distroFiles = [
         { file: '/etc/redhat-release', name: 'RedHat/CentOS' },
         { file: '/etc/debian_version', name: 'Debian' },
-        { file: '/etc/alpine-release', name: 'Alpine Linux' },
       ];
 
       for (const { file, name } of distroFiles) {
@@ -580,6 +593,14 @@ export const getOSDistro = async (): Promise<string> => {
           const content = await readFile(file, 'utf8');
           const version = content.trim();
           return name === 'Debian' ? `Debian ${version}` : version || name;
+        } catch {}
+      }
+
+      // 最后才检查Alpine（防止容器OS覆盖宿主机OS）
+      if (!isInDocker) {
+        try {
+          const alpineContent = await readFile('/etc/alpine-release', 'utf8');
+          return `Alpine Linux v${alpineContent.trim()}`;
         } catch {}
       }
 
