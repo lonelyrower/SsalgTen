@@ -63,9 +63,9 @@ export const UnifiedDashboardPage: React.FC = () => {
 
       <MobilePullToRefresh
         onRefresh={handleRefresh}
-        className="flex-1 overflow-hidden bg-slate-100 transition-colors duration-300 dark:bg-slate-900"
+        className="flex-1 overflow-y-auto bg-slate-100 transition-colors duration-300 dark:bg-slate-900"
       >
-        <main className="mx-auto flex h-full w-full max-w-[1400px] flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-8 sm:py-10">
+        <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
           {/* 核心统计卡片 */}
           <section>
             <StatsCards {...memoizedStats} />
