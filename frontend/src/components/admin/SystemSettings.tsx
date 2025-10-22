@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiService, type SystemConfig } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/admin/GlassCard";
 import {
   Settings,
   Save,
@@ -244,7 +244,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
 
       {/* 状态消息 */}
       {error && (
-        <Card className="p-4 mb-6 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <GlassCard variant="danger" hover={false} className="mb-6 p-4">
           <div className="flex items-start">
             <AlertCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
             <div className="flex-1">
@@ -259,16 +259,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
               </Button>
             </div>
           </div>
-        </Card>
+        </GlassCard>
       )}
 
       {success && (
-        <Card className="p-4 mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+        <GlassCard variant="success" hover={false} className="mb-6 p-4">
           <div className="flex items-center">
             <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
             <p className="text-green-800 dark:text-green-200">{success}</p>
           </div>
-        </Card>
+        </GlassCard>
       )}
 
       {/* 配置项列表 - 3列布局 */}
@@ -301,18 +301,19 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
           };
 
           return (
-            <Card
+            <GlassCard
               key={config.id}
-              className={`overflow-hidden transition-all duration-200 ${
+              variant="default"
+              className={`overflow-hidden ${
                 hasChanged
-                  ? "border-2 border-blue-500 dark:border-blue-400 shadow-lg shadow-blue-500/20"
-                  : "border border-gray-200 dark:border-gray-700 hover:shadow-md"
+                  ? "ring-2 ring-blue-500 dark:ring-blue-400"
+                  : ""
               }`}
             >
               <div
-                className={`h-2 bg-gradient-to-r ${configStyle.color}`}
+                className={`h-2 bg-gradient-to-r ${configStyle.color} -mt-6 -mx-6 mb-4`}
               ></div>
-              <div className="p-6">
+              <div>
                 <div className="flex items-start gap-4">
                   <div
                     className={`flex-shrink-0 w-12 h-12 rounded-xl ${configStyle.bg} flex items-center justify-center text-2xl`}
@@ -337,16 +338,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
                   </div>
                 </div>
               </div>
-            </Card>
+            </GlassCard>
           );
         })}
       </div>
 
       {configs.length === 0 && (
-        <Card className="p-12 text-center">
+        <GlassCard hover={false} className="text-center p-12">
           <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500 dark:text-gray-400">暂无系统配置</p>
-        </Card>
+        </GlassCard>
       )}
 
       {/* 保存按钮 */}

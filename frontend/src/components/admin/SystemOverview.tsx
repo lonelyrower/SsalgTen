@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiService, type SystemOverviewData } from "@/services/api";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/admin/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/hooks/useNotification";
 import {
@@ -132,21 +132,6 @@ export const SystemOverview: React.FC = () => {
     return "critical";
   };
 
-  const getHealthColor = (status: string) => {
-    switch (status) {
-      case "excellent":
-        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800";
-      case "good":
-        return "text-primary bg-primary/10 border-primary/30";
-      case "warning":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
-      case "critical":
-        return "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800";
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800";
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -168,7 +153,7 @@ export const SystemOverview: React.FC = () => {
 
   if (error) {
     return (
-      <Card className="p-8 text-center bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+      <GlassCard variant="danger" hover={false} className="text-center">
         <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
           数据加载失败
@@ -178,13 +163,27 @@ export const SystemOverview: React.FC = () => {
           <RefreshCw className="h-4 w-4 mr-2" />
           重新加载
         </Button>
-      </Card>
+      </GlassCard>
     );
   }
 
   if (!stats) return null;
 
   const healthStatus = getHealthStatus();
+  const getHealthVariant = (status: string): "success" | "info" | "warning" | "danger" | "default" => {
+    switch (status) {
+      case "excellent":
+        return "success";
+      case "good":
+        return "info";
+      case "warning":
+        return "warning";
+      case "critical":
+        return "danger";
+      default:
+        return "default";
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -212,10 +211,10 @@ export const SystemOverview: React.FC = () => {
       </div>
 
       {/* 系统健康状态卡片 */}
-      <Card className={`p-6 border-2 ${getHealthColor(healthStatus)}`}>
+      <GlassCard variant={getHealthVariant(healthStatus)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-white/50">
+            <div className="p-3 rounded-full bg-white/50 dark:bg-black/20">
               {healthStatus === "excellent" || healthStatus === "good" ? (
                 <CheckCircle2 className="h-8 w-8" />
               ) : (
@@ -256,12 +255,12 @@ export const SystemOverview: React.FC = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </GlassCard>
 
       {/* 核心监控卡片 - 2列2行布局 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 节点统计 */}
-        <Card className="p-6">
+        <GlassCard variant="info">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -285,10 +284,10 @@ export const SystemOverview: React.FC = () => {
               离线 {stats.nodes.offlineNodes}
             </span>
           </div>
-        </Card>
+        </GlassCard>
 
         {/* 心跳统计 */}
-        <Card className="p-6">
+        <GlassCard variant="success">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -306,10 +305,10 @@ export const SystemOverview: React.FC = () => {
             <TrendingUp className="h-4 w-4 mr-1" />
             平均 {stats.heartbeats.avgPerHour}/小时
           </div>
-        </Card>
+        </GlassCard>
 
         {/* 内存使用 */}
-        <Card className="p-6">
+        <GlassCard variant="default">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -328,10 +327,10 @@ export const SystemOverview: React.FC = () => {
             {stats?.resources.memoryUsedMB}MB / {stats?.resources.memoryTotalMB}
             MB
           </div>
-        </Card>
+        </GlassCard>
 
         {/* CPU使用 */}
-        <Card className="p-6">
+        <GlassCard variant="default">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -349,10 +348,10 @@ export const SystemOverview: React.FC = () => {
             <Activity className="h-4 w-4 mr-1" />
             进程负载
           </div>
-        </Card>
+        </GlassCard>
 
-        {/* ����ʷ������� */}
-        <Card className="p-6 md:col-span-2 bg-gray-50 dark:bg-gray-900/40 border-dashed border-gray-300 dark:border-gray-700">
+        {/* 历史心跳清理 */}
+        <GlassCard variant="warning" className="md:col-span-2" hover={false}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -390,7 +389,7 @@ export const SystemOverview: React.FC = () => {
               </Button>
             </div>
           </div>
-        </Card>
+        </GlassCard>
       </div>
     </div>
   );

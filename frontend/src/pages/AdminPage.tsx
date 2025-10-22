@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
-import { ResponsiveTabs } from "@/components/ui/ResponsiveTabs";
+import { AdminTabs } from "@/components/admin/AdminTabs";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { NodeManagement } from "@/components/admin/NodeManagement";
@@ -48,13 +48,14 @@ export const AdminPage: React.FC = () => {
       <Header />
 
       <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-6 w-full">
-        {/* 响应式标签页导航 */}
-        <ResponsiveTabs
-          tabs={adminTabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          className="mb-6"
-        />
+        {/* 标签页导航 */}
+        <div className="flex justify-center mb-8">
+          <AdminTabs
+            tabs={adminTabs}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
+        </div>
 
         {/* 标签页内容 */}
         {activeTab === "overview" && <SystemOverview />}
