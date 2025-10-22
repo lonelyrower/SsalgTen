@@ -23,7 +23,7 @@ import type { HeartbeatData } from "@/types/heartbeat";
 import { apiService } from "@/services/api";
 import { socketService } from "@/services/socketService";
 import { useClientLatency } from "@/hooks/useClientLatency";
-import { Search, RefreshCw, Filter } from "lucide-react";
+import { Search, RefreshCw, Filter, Server } from "lucide-react";
 
 type StatusFilter = "all" | "online" | "offline";
 
