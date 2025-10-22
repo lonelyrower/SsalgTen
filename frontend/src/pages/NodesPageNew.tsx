@@ -9,7 +9,6 @@ import React, {
 import { useInView } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { useRealTime } from "@/hooks/useRealTime";
 import { useConnectivityDiagnostics } from "@/hooks/useConnectivityDiagnostics";
 import { ConnectivityDiagnostics } from "@/components/nodes/ConnectivityDiagnostics";
@@ -24,7 +23,7 @@ import type { HeartbeatData } from "@/types/heartbeat";
 import { apiService } from "@/services/api";
 import { socketService } from "@/services/socketService";
 import { useClientLatency } from "@/hooks/useClientLatency";
-import { Search, RefreshCw, Filter, Server } from "lucide-react";
+import { Search, RefreshCw, Filter } from "lucide-react";
 
 type StatusFilter = "all" | "online" | "offline";
 
@@ -226,24 +225,6 @@ export const NodesPageNew: React.FC = () => {
         ref={containerRef}
         className="relative flex-1 overflow-y-auto max-w-7xl mx-auto px-4 py-8 space-y-6 w-full"
       >
-        {/* Connectivity Diagnostics removed for nodes overview page */}
-
-        {/* Page Header */}
-        <PageHeader
-          title="节点看板"
-          description={`全局监控 ${nodes.length} 个节点 - 在线 ${nodes.filter((n) => n.status === "online").length} 台`}
-          icon={Server}
-          actions={
-            <Button
-              onClick={handleRefresh}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              刷新
-            </Button>
-          }
-        />
-
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
@@ -253,15 +234,24 @@ export const NodesPageNew: React.FC = () => {
               placeholder="搜索节点名称、位置、IP..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 dark:text-gray-100"
             />
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span className="hidden sm:inline">刷新</span>
+            </Button>
             <Filter className="h-4 w-4 text-gray-400" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500"
+              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-gray-100"
             >
               <option value="all">全部状态</option>
               <option value="online">在线</option>
