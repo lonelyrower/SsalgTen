@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { memo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/admin/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -272,14 +272,14 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
         {activeTab === "system" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 系统概览 */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-base">
+            <GlassCard variant="default">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                   <Server className="h-4 w-4" />
                   <span>系统概览</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+                </h3>
+              </div>
+              <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600 dark:text-gray-400">主机名</p>
@@ -336,18 +336,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             {/* CPU 信息 */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-base">
+            <GlassCard variant="default">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                   <Cpu className="h-4 w-4" />
                   <span>CPU</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <div>
                 {heartbeatData?.cpuInfo ? (
                   <div className="space-y-3">
                     <div>
@@ -416,18 +416,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     暂无CPU信息
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             {/* 内存信息 */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-base">
+            <GlassCard variant="default">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                   <MemoryStick className="h-4 w-4" />
                   <span>内存</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <div>
                 {heartbeatData?.memoryInfo ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -501,18 +501,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     暂无内存信息
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             {/* 磁盘信息 */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-base">
+            <GlassCard variant="default">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                   <HardDrive className="h-4 w-4" />
                   <span>磁盘</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <div>
                 {heartbeatData?.diskInfo ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -596,18 +596,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     暂无磁盘信息
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             {/* 网络信息 */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-base">
+            <GlassCard variant="default">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                   <Network className="h-4 w-4" />
                   <span>网络</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <div>
                 <div className="space-y-3">
                   {/* 基础网络信息 */}
                   <div className="grid grid-cols-1 gap-2 text-sm">
@@ -732,18 +732,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                       </div>
                     )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             {/* 进程和服务 */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-base">
+            <GlassCard variant="default">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                   <Activity className="h-4 w-4" />
                   <span>进程和服务</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h3>
+              </div>
+              <div className="space-y-4">
                 {/* 进程信息 */}
                 {heartbeatData?.processInfo && (
                   <div>
@@ -894,21 +894,21 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                       </div>
                     );
                   })()}
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
           </div>
         )}
 
         {activeTab === "diagnostics" && (
           <div className="space-y-6">
             {/* 诊断记录控制面板 */}
-            <Card>
-              <CardHeader className="pb-3">
+            <GlassCard variant="default">
+              <div className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center space-x-2 text-base">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
                     <History className="h-4 w-4" />
                     <span>诊断历史记录</span>
-                  </CardTitle>
+                  </h3>
                   <div className="flex items-center space-x-3">
                     <select
                       value={diagnosticFilter}
@@ -937,8 +937,8 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div>
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                   <p>显示最近50条诊断记录，按时间倒序排列</p>
                   <div className="flex items-center space-x-4">
@@ -946,12 +946,12 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     <span>筛选结果: {filteredDiagnostics.length}</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             {/* 诊断记录列表 */}
-            <Card>
-              <CardContent className="p-0">
+            <GlassCard variant="default">
+              <div className="p-0">
                 {loadingDiagnostics ? (
                   <div className="flex items-center justify-center py-12">
                     <RefreshCw className="animate-spin h-6 w-6 text-primary mr-2" />
@@ -1048,8 +1048,8 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
           </div>
         )}
       </div>
