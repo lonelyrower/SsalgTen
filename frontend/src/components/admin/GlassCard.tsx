@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: "default" | "success" | "warning" | "danger" | "info";
+  variant?: "default" | "success" | "warning" | "danger" | "info" | "purple" | "orange";
   hover?: boolean;
 }
 
@@ -44,6 +44,18 @@ export function GlassCard({
       bg: "from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60",
       glow: "from-cyan-400/15 via-transparent to-blue-500/15",
       glowCircle: "bg-cyan-400/20",
+    },
+    purple: {
+      border: "border-purple-200/60 dark:border-purple-700/60",
+      bg: "from-purple-50 via-white to-violet-50 dark:from-slate-800 dark:via-purple-950/60 dark:to-violet-950/60",
+      glow: "from-purple-400/15 via-transparent to-violet-500/15",
+      glowCircle: "bg-purple-400/20",
+    },
+    orange: {
+      border: "border-orange-200/60 dark:border-orange-700/60",
+      bg: "from-orange-50 via-white to-amber-50 dark:from-slate-800 dark:via-orange-950/60 dark:to-amber-950/60",
+      glow: "from-orange-400/15 via-transparent to-amber-500/15",
+      glowCircle: "bg-orange-400/20",
     },
   };
 

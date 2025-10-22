@@ -308,7 +308,7 @@ export const SystemOverview: React.FC = () => {
         </GlassCard>
 
         {/* 内存使用 */}
-        <GlassCard variant="default">
+        <GlassCard variant="purple">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -330,7 +330,7 @@ export const SystemOverview: React.FC = () => {
         </GlassCard>
 
         {/* CPU使用 */}
-        <GlassCard variant="default">
+        <GlassCard variant="orange">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
