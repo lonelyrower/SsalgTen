@@ -227,15 +227,29 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
   };
 
   const handleCostSave = async (nodeId: string) => {
-    const cost = costValue.trim() === "" ? null : parseFloat(costValue);
-
-    if (costValue.trim() !== "" && (isNaN(cost as number) || (cost as number) < 0)) {
-      setError("请输入有效的价格（非负数字）");
-      return;
-    }
-
     try {
+      // 处理空值或无效输入
+      let cost: number | null = null;
+
+      if (costValue.trim() !== "") {
+        const parsedCost = parseFloat(costValue);
+
+        if (isNaN(parsedCost)) {
+          setError("请输入有效的数字");
+          return;
+        }
+
+        if (parsedCost < 0) {
+          setError("价格不能为负数");
+          return;
+        }
+
+        // 保留两位小数
+        cost = Math.round(parsedCost * 100) / 100;
+      }
+
       const response = await apiService.updateNode(nodeId, { monthlyCost: cost });
+
       if (response.success && response.data) {
         setNodes(
           nodes.map((n) =>
@@ -246,10 +260,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
         setCostValue("");
         setError("");
       } else {
-        setError(response.error || "Failed to update cost");
+        setError(response.error || "更新失败");
       }
-    } catch {
-      setError("Failed to update cost");
+    } catch (err) {
+      console.error("Cost update error:", err);
+      setError(err instanceof Error ? err.message : "更新失败");
     }
   };
 
