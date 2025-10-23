@@ -6,16 +6,7 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import {
-  Activity,
-  History,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Target,
-  Wrench,
-} from "lucide-react";
+import { History, RefreshCw, CheckCircle, XCircle, Clock, Target, Wrench } from "lucide-react";
 import { ConnectionCheck } from "@/components/diagnostics/ConnectionCheck";
 import { PingTool } from "@/components/diagnostics/PingTool";
 import { TracerouteTool } from "@/components/diagnostics/TracerouteTool";
@@ -138,14 +129,8 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) 
             <SpeedtestTool nodeId={selectedNode.id} />
           </div>
 
-          {/* 延迟测试 - 独立区域 */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              延迟测试 - 节点到全球站点
-            </h3>
-            <LatencyTest nodeId={selectedNode.id} onTestComplete={() => {}} />
-          </div>
+          {/* 延迟测试 */}
+          <LatencyTest nodeId={selectedNode.id} onTestComplete={() => {}} />
         </div>
       ) : (
         <div className="space-y-6">
