@@ -5,10 +5,12 @@ import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 
 interface StreamingPlatformMatrixProps {
   stats: StreamingPlatformStats[];
+  onSelect?: (service: StreamingPlatformStats["service"]) => void;
 }
 
 export const StreamingPlatformMatrix: React.FC<StreamingPlatformMatrixProps> = ({
   stats,
+  onSelect,
 }) => {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
@@ -37,7 +39,13 @@ export const StreamingPlatformMatrix: React.FC<StreamingPlatformMatrixProps> = (
         </thead>
         <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
           {stats.map((platform) => (
-            <tr key={platform.service} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <tr
+              key={platform.service}
+              className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
+                onSelect ? "cursor-pointer" : ""
+              }`}
+              onClick={() => onSelect?.(platform.service)}
+            >
               <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <StreamingIcon service={platform.service} size="md" />

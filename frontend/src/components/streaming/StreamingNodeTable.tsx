@@ -54,6 +54,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
   onNodeClick,
 }) => {
   const handleRetest = async (nodeId: string) => {
+    if (!onRetest) return;
     await onRetest(nodeId);
   };
 
@@ -205,8 +206,11 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleRetest(node.nodeId)}
-                    disabled={isTesting}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void handleRetest(node.nodeId);
+                    }}
+                    disabled={isTesting || !onRetest}
                   >
                     {isTesting ? "检测中..." : "检测"}
                   </Button>

@@ -4,6 +4,7 @@ import axios, {
   type RawAxiosResponseHeaders,
 } from 'axios';
 import { promises as dns } from 'dns';
+import zlib from 'zlib';
 
 /**
  * 支持的流媒体服务
@@ -55,6 +56,33 @@ export class StreamingDetector {
   private userAgent =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
   private geoCache: { country?: string; region?: string; isp?: string } | null = null;
+
+  private readonly netflixTitles = {
+    global: 'https://www.netflix.com/title/81280792',
+    original: 'https://www.netflix.com/title/70143836',
+  };
+
+  private readonly disneyTokenPayloadTemplate =
+    'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&latitude=0&longitude=0&platform=browser&subject_token=DISNEYASSERTION&subject_token_type=urn%3Abamtech%3Aparams%3Aoauth%3Atoken-type%3Adevice';
+
+  private readonly disneyGraphPayloadTemplate = {
+    query:
+      'mutation refreshToken($input: RefreshTokenInput!) {\n            refreshToken(refreshToken: $input) {\n                activeSession {\n                    sessionId\n                }\n            }\n        }',
+    variables: {
+      input: {
+        refreshToken: 'ILOVEDISNEY',
+      },
+    },
+  };
+
+  private readonly disneyAuthorization =
+    'Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84';
+
+  private readonly spotifySignupBody =
+    'birth_day=11&birth_month=11&birth_year=2000&collect_personal_info=undefined&creation_flow=&creation_point=https%3A%2F%2Fwww.spotify.com%2Fhk-en%2F&displayname=Gay%20Lord&gender=male&iagree=1&key=a1e486e2729f46d6bb368d6b2bcda326&platform=www&identifier_token=AgE6YTvEzkReHNfJpO114514&referrer=&send-email=0&thirdpartyemail=0';
+
+  private readonly youtubeCookie =
+    'YSC=BiCUU3-5Gdk; CONSENT=YES+cb.20220301-11-p0.en+FX+700; GPS=1; VISITOR_INFO1_LIVE=4VwPMkB7W5A; PREF=tz=Asia.Shanghai; _gcl_au=1.1.1809531354.1646633279';
 
   constructor() {
     this.axios = axios.create({
@@ -134,22 +162,48 @@ export class StreamingDetector {
    */
   private async detectNetflix(): Promise<StreamingResult> {
     try {
-      const globalTitle = 'https://www.netflix.com/title/81280792';
-      const originalTitle = 'https://www.netflix.com/title/80018499';
-
       const [globalResp, originalResp] = await Promise.all([
-        this.axios.get(globalTitle),
-        this.axios.get(originalTitle),
+        this.axios.get(this.netflixTitles.global, {
+          headers: {
+            'User-Agent': this.userAgent,
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
+        }),
+        this.axios.get(this.netflixTitles.original, {
+          headers: {
+            'User-Agent': this.userAgent,
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
+        }),
       ]);
 
+      const htmlGlobal = typeof globalResp.data === 'string' ? globalResp.data : '';
+      const htmlOriginal = typeof originalResp.data === 'string' ? originalResp.data : '';
+
+      if (!htmlGlobal || !htmlOriginal) {
+        return {
+          service: 'netflix',
+          status: 'failed',
+          errorMsg: 'Empty response from Netflix titles',
+          testedAt: new Date(),
+        };
+      }
+
       const region =
-        this.extractRegionFromHeaders(globalResp.headers) ??
-        this.extractRegionFromHeaders(originalResp.headers) ??
+        this.parseNetflixRegion(htmlGlobal) ||
+        this.parseNetflixRegion(htmlOriginal) ||
+        this.extractRegionFromHeaders(globalResp.headers) ||
+        this.extractRegionFromHeaders(originalResp.headers) ||
         (await this.lookupGeoInfo()).country;
 
       const unlockType = await this.detectUnlockType('www.netflix.com');
 
-      if (globalResp.status === 200) {
+      const globalOk = globalResp.status === 200;
+      const originalOk = originalResp.status === 200;
+      const globalError = /Not Available|Unavailable|Complete the sentence|Oh no!/i.test(htmlGlobal);
+      const originalError = /Not Available|Unavailable|Complete the sentence|Oh no!/i.test(htmlOriginal);
+
+      if (globalOk && !globalError) {
         return {
           service: 'netflix',
           status: 'yes',
@@ -163,7 +217,7 @@ export class StreamingDetector {
         };
       }
 
-      if (globalResp.status === 404 && originalResp.status === 200) {
+      if (!globalOk && originalOk && !originalError) {
         return {
           service: 'netflix',
           status: 'org',
@@ -177,7 +231,7 @@ export class StreamingDetector {
         };
       }
 
-      if (globalResp.status === 403) {
+      if (globalResp.status === 403 || globalError) {
         return {
           service: 'netflix',
           status: 'no',
@@ -216,50 +270,148 @@ export class StreamingDetector {
    */
   private async detectDisneyPlus(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get('https://www.disneyplus.com/');
-      const html = typeof response.data === 'string' ? response.data : '';
+      const deviceResp = await this.axios.post(
+        'https://disney.api.edge.bamgrid.com/devices',
+        {
+          deviceFamily: 'browser',
+          applicationRuntime: 'chrome',
+          deviceProfile: 'windows',
+          attributes: {},
+        },
+        {
+          headers: {
+            Authorization: this.disneyAuthorization,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': this.userAgent,
+          },
+        },
+      );
 
-      const unavailable =
-        /unavailable in your region/i.test(html) ||
-        /not available in your (location|country)/i.test(html);
+      const assertion: string | undefined = deviceResp.data?.assertion;
+      if (!assertion) {
+        return {
+          service: 'disney_plus',
+          status: 'failed',
+          errorMsg: 'Failed to obtain Disney+ device assertion',
+          testedAt: new Date(),
+        };
+      }
 
-      const region =
-        this.extractRegionFromHeaders(response.headers) ??
-        (await this.lookupGeoInfo()).country;
+      const tokenPayload = this.disneyTokenPayloadTemplate.replace(
+        'DISNEYASSERTION',
+        encodeURIComponent(assertion),
+      );
 
-      if (response.status === 200 && !unavailable) {
+      const tokenResp = await this.axios.post(
+        'https://disney.api.edge.bamgrid.com/token',
+        tokenPayload,
+        {
+          headers: {
+            Authorization: this.disneyAuthorization,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept: 'application/json',
+            'User-Agent': this.userAgent,
+          },
+        },
+      );
+
+      const forbidden = tokenResp.data?.error_description === 'forbidden-location';
+      if (forbidden || tokenResp.status === 403) {
+        return {
+          service: 'disney_plus',
+          status: 'no',
+          details: {
+            tokenStatus: tokenResp.status,
+            error: tokenResp.data?.error_description,
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      const refreshToken: string | undefined = tokenResp.data?.refresh_token;
+      if (!refreshToken) {
+        return {
+          service: 'disney_plus',
+          status: 'failed',
+          errorMsg: 'No refresh token returned from Disney+ token endpoint',
+          testedAt: new Date(),
+        };
+      }
+
+      const graphPayload = JSON.parse(
+        JSON.stringify(this.disneyGraphPayloadTemplate).replace(
+          'ILOVEDISNEY',
+          refreshToken,
+        ),
+      );
+
+      const graphResp = await this.axios.post(
+        'https://disney.api.edge.bamgrid.com/graph/v1/device/graphql',
+        graphPayload,
+        {
+          headers: {
+            Authorization: this.disneyAuthorization,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': this.userAgent,
+          },
+        },
+      );
+
+      const region = graphResp.data?.extensions?.sdk?.session?.location?.countryCode;
+      const inSupportedLocation = graphResp.data?.extensions?.sdk?.session?.inSupportedLocation;
+
+      const previewResp = await this.axios.get('https://disneyplus.com', {
+        maxRedirects: 5,
+      });
+      const previewUrl: string | undefined =
+        (previewResp.request as any)?.res?.responseUrl || previewResp.headers?.location;
+      const isUnavailable = typeof previewUrl === 'string' && /unavailable|preview/i.test(previewUrl);
+
+      const unlockType = await this.detectUnlockType('www.disneyplus.com');
+
+      if (region === 'JP') {
         return {
           service: 'disney_plus',
           status: 'yes',
           region,
-          unlockType: await this.detectUnlockType('www.disneyplus.com'),
-          details: { homepageStatus: response.status },
+          unlockType,
           testedAt: new Date(),
         };
       }
 
-      if (response.status === 200 && unavailable) {
+      if (region && inSupportedLocation === false && !isUnavailable) {
         return {
           service: 'disney_plus',
-          status: 'no',
+          status: 'pending',
           region,
+          unlockType,
           details: {
-            homepageStatus: response.status,
-            reason: 'unavailable_notice',
+            inSupportedLocation,
+            previewUrl,
           },
           testedAt: new Date(),
         };
       }
 
-      if (response.status === 403) {
+      if ((region && isUnavailable) || !region) {
         return {
           service: 'disney_plus',
           status: 'no',
-          region,
+          region: region || undefined,
           details: {
-            homepageStatus: response.status,
-            reason: 'http_403',
+            inSupportedLocation,
+            previewUrl,
           },
+          testedAt: new Date(),
+        };
+      }
+
+      if (region && inSupportedLocation === true) {
+        return {
+          service: 'disney_plus',
+          status: 'yes',
+          region,
+          unlockType,
           testedAt: new Date(),
         };
       }
@@ -267,8 +419,11 @@ export class StreamingDetector {
       return {
         service: 'disney_plus',
         status: 'failed',
-        errorMsg: `Unexpected status ${response.status}`,
-        details: { homepageStatus: response.status },
+        errorMsg: 'Unable to determine Disney+ availability',
+        details: {
+          inSupportedLocation,
+          previewUrl,
+        },
         testedAt: new Date(),
       };
     } catch (error) {
@@ -286,19 +441,25 @@ export class StreamingDetector {
    */
   private async detectAmazonPrime(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get('https://www.primevideo.com/');
+      const response = await this.axios.get('https://www.primevideo.com/', {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      });
       const html = typeof response.data === 'string' ? response.data : '';
 
-      const blocked =
-        /not available in your location/i.test(html) ||
-        /geographic restriction/i.test(html) ||
-        /unavailable in your territory/i.test(html);
-
+      const regionMatch = html.match(/"currentTerritory":"([A-Z]{2})"/i);
       const region =
-        this.extractRegionFromHeaders(response.headers) ??
+        (regionMatch ? regionMatch[1] : undefined) ||
+        this.extractRegionFromHeaders(response.headers) ||
         (await this.lookupGeoInfo()).country;
 
-      if (response.status === 200 && !blocked) {
+      const blocked =
+        /not available in your (location|territory)/i.test(html) ||
+        /geographic restriction/i.test(html);
+
+      if (response.status === 200 && !blocked && region) {
         return {
           service: 'amazon_prime',
           status: 'yes',
@@ -344,29 +505,62 @@ export class StreamingDetector {
    */
   private async detectYouTube(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get('https://www.youtube.com/premium');
+      const response = await this.axios.get('https://www.youtube.com/premium', {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept-Language': 'en',
+          Cookie: this.youtubeCookie,
+        },
+      });
 
-      if (response.status === 403 || response.status === 429) {
+      const html = typeof response.data === 'string' ? response.data : '';
+
+      const regionMatch = html.match(/"contentRegion":"([A-Z]{2})"/i);
+      const region =
+        (regionMatch ? regionMatch[1] : undefined) ||
+        this.extractRegionFromHeaders(response.headers) ||
+        (await this.lookupGeoInfo()).country;
+
+      const isCn = /www\.google\.cn/i.test(html);
+      const notAvailable = /Premium is not available in your country/i.test(html);
+      const hasPremiumCopy = /Premium benefits/i.test(html) || /Ad-free/i.test(html);
+
+      const unlockType = await this.detectUnlockType('www.youtube.com');
+
+      if (isCn) {
         return {
           service: 'youtube',
           status: 'no',
+          region: 'CN',
+          details: { reason: 'google_cn_redirect' },
           testedAt: new Date(),
         };
       }
 
-      const regionMatch = response.data.match(/"contentRegion":"([^"]+)"/);
-      const region =
-        (regionMatch ? regionMatch[1] : null) ?? (await this.lookupGeoInfo()).country ?? 'Global';
+      if (notAvailable) {
+        return {
+          service: 'youtube',
+          status: 'no',
+          region,
+          details: { reason: 'not_available' },
+          testedAt: new Date(),
+        };
+      }
 
-      const isAvailable =
-        typeof response.data === 'string' &&
-        (response.data.includes('Premium benefits') || response.data.includes('Ad-free'));
+      if (hasPremiumCopy) {
+        return {
+          service: 'youtube',
+          status: 'yes',
+          region,
+          unlockType,
+          testedAt: new Date(),
+        };
+      }
 
       return {
         service: 'youtube',
-        status: isAvailable ? 'yes' : 'no',
-        region,
-        unlockType: await this.detectUnlockType('www.youtube.com'),
+        status: 'failed',
+        errorMsg: 'Unable to determine YouTube Premium availability',
         testedAt: new Date(),
       };
     } catch (error) {
@@ -384,11 +578,48 @@ export class StreamingDetector {
    */
   private async detectTikTok(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get('https://www.tiktok.com/');
+      const response = await this.axios.get('https://www.tiktok.com/', {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept-Language': 'en',
+        },
+      });
 
-      const regionMatch = response.data.match(/"region":"([^"]+)"/);
+      let html = typeof response.data === 'string' ? response.data : '';
+      let regionMatch = html.match(/"region":"([A-Z]{2})"/i);
+
+      if (!regionMatch) {
+        const compressed = await this.axios.get('https://www.tiktok.com/', {
+          headers: {
+            'User-Agent': this.userAgent,
+            Accept:
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'Accept-Encoding': 'gzip',
+            'Accept-Language': 'en',
+          },
+          responseType: 'arraybuffer',
+        });
+
+        try {
+          html = zlib.gunzipSync(Buffer.from(compressed.data)).toString('utf-8');
+          regionMatch = html.match(/"region":"([A-Z]{2})"/i);
+          if (regionMatch) {
+            return {
+              service: 'tiktok',
+              status: 'yes',
+              region: regionMatch[1],
+              unlockType: 'idc',
+              details: { detection: 'gzipped' },
+              testedAt: new Date(),
+            };
+          }
+        } catch {
+          // Ignore decompression errors
+        }
+      }
+
       const region =
-        (regionMatch ? regionMatch[1] : null) ?? (await this.lookupGeoInfo()).country ?? undefined;
+        (regionMatch ? regionMatch[1] : undefined) || (await this.lookupGeoInfo()).country;
 
       if (region) {
         return {
@@ -420,37 +651,64 @@ export class StreamingDetector {
    */
   private async detectSpotify(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get(
-        'https://spclient.wg.spotify.com/signup/public/v1/account/availability',
+      const response = await this.axios.post(
+        'https://spclient.wg.spotify.com/signup/public/v1/account',
+        this.spotifySignupBody,
         {
-          params: {
-            key: '142b583129b2df829de3656f9eb484e6',
-          },
           headers: {
             'User-Agent': 'Spotify/8.6.44 Android/29 (SM-G960F)',
             'Accept-Language': 'en',
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
         },
       );
 
-      const availability = response.data?.countries ?? response.data?.countryList ?? null;
-      const countryCode =
-        (Array.isArray(availability) && availability[0]) ||
-        response.data?.country ||
-        response.data?.countryCode ||
-        (await this.lookupGeoInfo()).country;
+      if (typeof response.data !== 'object') {
+        return {
+          service: 'spotify',
+          status: 'failed',
+          errorMsg: 'Unexpected Spotify response',
+          testedAt: new Date(),
+        };
+      }
 
-      const status =
-        response.status === 200 && countryCode ? 'yes' : 'no';
+      const statusCode = String(response.data.status ?? '000');
+      const region = response.data.country || (await this.lookupGeoInfo()).country;
+      const isLaunched = response.data.is_country_launched === true;
+      const unlockType = await this.detectUnlockType('spclient.wg.spotify.com');
+
+      if (statusCode === '320' || statusCode === '120') {
+        return {
+          service: 'spotify',
+          status: 'no',
+          region,
+          details: {
+            statusCode,
+            message: response.data.message,
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      if (statusCode === '311' && isLaunched && region) {
+        return {
+          service: 'spotify',
+          status: 'yes',
+          region,
+          unlockType,
+          details: {
+            statusCode,
+          },
+          testedAt: new Date(),
+        };
+      }
 
       return {
         service: 'spotify',
-        status,
-        region: countryCode,
-        unlockType: await this.detectUnlockType('spclient.wg.spotify.com'),
+        status: 'failed',
+        errorMsg: `Unhandled Spotify status ${statusCode}`,
         details: {
-          availability,
-          httpStatus: response.status,
+          response: response.data,
         },
         testedAt: new Date(),
       };
@@ -469,26 +727,70 @@ export class StreamingDetector {
    */
   private async detectChatGPT(): Promise<StreamingResult> {
     try {
-      const response = await this.axios.get('https://chat.openai.com/');
+      const [complianceResp, iosResp] = await Promise.all([
+        this.axios.get('https://api.openai.com/compliance/cookie_requirements', {
+          headers: {
+            Authorization: 'Bearer null',
+            Origin: 'https://platform.openai.com',
+            Referer: 'https://platform.openai.com/',
+            'User-Agent': this.userAgent,
+          },
+        }),
+        this.axios.get('https://ios.chat.openai.com/', {
+          headers: {
+            'User-Agent': this.userAgent,
+            Accept:
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en',
+          },
+        }),
+      ]);
 
-      const isBlocked =
-        response.status === 403 ||
-        (typeof response.data === 'string' &&
-          (response.data.includes('not available in your country') ||
-            response.data.includes('VPN or proxy')));
+      const complianceBlocked =
+        typeof complianceResp.data === 'object' &&
+        complianceResp.data?.error === 'unsupported_country';
 
-      if (isBlocked) {
+      const iosHtml = typeof iosResp.data === 'string' ? iosResp.data : '';
+      const iosBlocked = /not available in your country/i.test(iosHtml) || /VPN/i.test(iosHtml);
+
+      if (complianceBlocked || iosBlocked) {
         return {
           service: 'chatgpt',
           status: 'no',
+          details: {
+            complianceStatus: complianceResp.status,
+            iosBlocked,
+          },
           testedAt: new Date(),
         };
       }
 
+      let region: string | undefined;
+      try {
+        const trace = await this.axios.get('https://chat.openai.com/cdn-cgi/trace', {
+          headers: {
+            'User-Agent': this.userAgent,
+          },
+        });
+        if (typeof trace.data === 'string') {
+          const locMatch = trace.data.match(/loc=([A-Z]{2})/i);
+          if (locMatch) {
+            region = locMatch[1];
+          }
+        }
+      } catch {
+        // ignore trace failure
+      }
+
+      if (!region) {
+        region = (await this.lookupGeoInfo()).country;
+      }
+
       return {
         service: 'chatgpt',
-        status: response.status === 200 ? 'yes' : 'no',
-        region: response.status === 200 ? (await this.lookupGeoInfo()).country : undefined,
+        status: 'yes',
+        region,
+        unlockType: await this.detectUnlockType('api.openai.com'),
         testedAt: new Date(),
       };
     } catch (error) {
@@ -612,6 +914,18 @@ export class StreamingDetector {
       this.geoCache = {};
       return this.geoCache;
     }
+  }
+
+  private parseNetflixRegion(html: string): string | undefined {
+    const match = html.match(/data-country="([A-Z]{2})"/i);
+    if (match && match[1]) {
+      return match[1].toUpperCase();
+    }
+    const altMatch = html.match(/"country":"([A-Z]{2})"/i);
+    if (altMatch && altMatch[1]) {
+      return altMatch[1].toUpperCase();
+    }
+    return undefined;
   }
 }
 

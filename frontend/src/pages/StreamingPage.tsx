@@ -362,6 +362,9 @@ export const StreamingPage: React.FC = () => {
                 STREAMING_SERVICE_ORDER.indexOf(a.service) -
                 STREAMING_SERVICE_ORDER.indexOf(b.service),
             )}
+            onSelect={(service) =>
+              setFilters((prev) => ({ ...prev, platform: service }))
+            }
           />
         </div>
 
