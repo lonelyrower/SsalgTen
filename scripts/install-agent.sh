@@ -45,7 +45,7 @@ docker_compose() {
 }
 
 # 版本信息
-SCRIPT_VERSION="1.4.0"
+SCRIPT_VERSION="1.5.0"
 SCRIPT_URL="https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh"
 AGENT_VERSION="latest"
 DEFAULT_AGENT_IPV6_SUBNET="fd00:6a:6c:10::/64"
@@ -1323,16 +1323,14 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
 User=$USER
 Group=$USER
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/docker compose up -d
+ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=0
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -2054,7 +2052,7 @@ update_heartbeat_config() {
     log_info "检查 systemd 服务配置..."
     if [ -f /etc/systemd/system/ssalgten-agent.service ]; then
         # 检查是否是旧的 Type=forking 配置
-        if grep -q "Type=forking" /etc/systemd/system/ssalgten-agent.service; then
+        if ! grep -q "ExecStart=/usr/bin/docker compose up" /etc/systemd/system/ssalgten-agent.service; then
             log_warning "检测到旧版本的 systemd 配置，正在修复..."
 
             # 修复 systemd 配置
@@ -2065,23 +2063,21 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
 User=root
 Group=root
 WorkingDirectory=/opt/ssalgten-agent
-ExecStart=/usr/bin/docker compose up -d
+ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=0
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 SYSTEMD_EOF
 
             sudo systemctl daemon-reload
-            log_success "systemd 配置已修复（Type=forking → Type=oneshot）"
+            log_success "systemd 配置已修复为最新版本（前台运行 docker compose up）"
         else
             log_success "systemd 配置正常"
         fi
@@ -2114,7 +2110,7 @@ SYSTEMD_EOF
     # 重启服务
     log_info "重启 Agent 服务..."
 
-    # 先停止服务（oneshot 类型需要先 stop）
+    # 先停止服务以确保最新配置生效
     if systemctl is-active --quiet ssalgten-agent.service 2>/dev/null; then
         systemctl stop ssalgten-agent.service
         sleep 1
