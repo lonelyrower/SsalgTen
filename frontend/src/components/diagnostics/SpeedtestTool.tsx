@@ -184,13 +184,6 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
           </div>
         </div>
 
-        {/* 说明 */}
-        <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            <strong>提示：</strong>速度测试会连接 Speedtest.net 或备用服务器，过程可能需要 30-90 秒。
-          </p>
-        </div>
-
         {/* 结果显示区域 - 始终显示框架 */}
         <div className="space-y-3">
           {/* 测试完成标记 */}
@@ -281,6 +274,13 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
             </>
           )}
         </Button>
+
+        {/* 说明 */}
+        <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            <strong>提示：</strong>速度测试会连接 Speedtest.net 或备用服务器，过程可能需要 30-90 秒
+          </p>
+        </div>
 
         {/* 错误提示 */}
         {error && (
