@@ -168,7 +168,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
 
   return (
     <GlassCard variant="warning">
-      <div className="space-y-4">
+      <div className="space-y-4 text-left">
         {/* 标题 */}
         <div className="flex items-center gap-2 pb-3 border-b border-yellow-200/30 dark:border-yellow-700/30">
           <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">

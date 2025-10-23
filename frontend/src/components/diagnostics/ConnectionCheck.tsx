@@ -123,7 +123,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
   return (
     <GlassCard variant="info">
-      <div className="space-y-4">
+      <div className="space-y-4 text-left">
         {/* 标题 - 统一样式 */}
         <div className="flex items-center justify-between pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
           <div className="flex items-center gap-2">

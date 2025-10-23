@@ -102,7 +102,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
   return (
     <GlassCard variant="success">
-      <div className="space-y-4">
+      <div className="space-y-4 text-left">
         {/* 标题 */}
         <div className="flex items-center gap-2 pb-3 border-b border-green-200/30 dark:border-green-700/30">
           <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">

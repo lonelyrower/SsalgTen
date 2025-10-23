@@ -167,7 +167,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
   return (
     <GlassCard variant="orange">
-      <div className="space-y-4">
+      <div className="space-y-4 text-left">
         {/* 标题 */}
         <div className="flex items-center gap-2 pb-3 border-b border-orange-200/30 dark:border-orange-700/30">
           <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">

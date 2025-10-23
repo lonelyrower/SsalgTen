@@ -114,7 +114,7 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
 
   return (
     <GlassCard variant="purple">
-      <div className="space-y-4">
+      <div className="space-y-4 text-left">
         {/* 标题 */}
         <div className="flex items-center gap-2 pb-3 border-b border-purple-200/30 dark:border-purple-700/30">
           <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
