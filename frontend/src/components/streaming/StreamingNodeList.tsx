@@ -1,11 +1,18 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { NodeStreamingSummary } from "@/types/streaming";
-import { STREAMING_DATA_EXPIRY_THRESHOLD } from "@/types/streaming";
+import {
+  STREAMING_DATA_EXPIRY_THRESHOLD,
+  STATUS_TEXT,
+  STATUS_COLORS,
+  UNLOCK_TYPE_LABELS,
+  UNLOCK_TYPE_COLORS,
+} from "@/types/streaming";
 import { Card } from "../ui/card";
 import { CountryFlag } from "../ui/CountryFlag";
-import { StreamingBadge } from "./StreamingBadge";
+import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { Badge } from "../ui/badge";
+import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
@@ -13,11 +20,15 @@ import { zhCN } from "date-fns/locale";
 interface StreamingNodeListProps {
   nodes: NodeStreamingSummary[];
   onNodeClick?: (nodeId: string) => void;
+  onRetest?: (nodeId: string) => void;
+  testingMap?: Record<string, boolean>;
 }
 
 export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
   nodes,
   onNodeClick,
+  onRetest,
+  testingMap = {},
 }) => {
   const navigate = useNavigate();
 
@@ -35,6 +46,8 @@ export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
         <NodeStreamingCard
           key={node.nodeId}
           node={node}
+          testing={!!testingMap[node.nodeId]}
+          onRetest={onRetest}
           onClick={() => handleNodeClick(node.nodeId)}
         />
       ))}
@@ -45,11 +58,15 @@ export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
 interface NodeStreamingCardProps {
   node: NodeStreamingSummary;
   onClick: () => void;
+  onRetest?: (nodeId: string) => void;
+  testing: boolean;
 }
 
 const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
   node,
   onClick,
+  onRetest,
+  testing,
 }) => {
   const isExpired = useMemo(() => {
     if (!node.lastScanned) return true;
@@ -84,8 +101,8 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
       <div className="space-y-3">
         {/* 节点信息 */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3 flex-1">
-            <CountryFlag country={node.country} size="lg" />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <CountryFlag country={node.country} size="md" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
@@ -121,32 +138,85 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
         </div>
 
         {/* 流媒体服务状态 */}
-        <div className="flex flex-wrap gap-2">
-          {node.services.map((service) => (
-            <StreamingBadge
-              key={service.service}
-              service={service}
-              size="md"
-              showRegion
-            />
-          ))}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {node.services.map((service) => {
+            const unlockType = service.unlockType ?? "unknown";
+            return (
+              <div
+                key={service.service}
+                className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 px-3 py-2"
+              >
+                <div className="mt-0.5">
+                  <StreamingIcon service={service.service} size="md" />
+                </div>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className={`text-sm font-semibold ${STATUS_COLORS[service.status]}`}>
+                    {service.name} · {STATUS_TEXT[service.status]}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800/60">
+                      {service.region ? service.region.toUpperCase() : "未知区域"}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
+                    >
+                      {UNLOCK_TYPE_LABELS[unlockType]}
+                    </span>
+                    {service.lastTested && (
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatRelativeTime(service.lastTested)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* 底部信息栏 */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <Clock className="h-4 w-4" />
             <span>{timeAgo}</span>
           </div>
 
-          {isExpired && (
-            <Badge variant="warning" className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              <span>数据过期</span>
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {isExpired && (
+              <Badge variant="warning" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                <span>数据过期</span>
+              </Badge>
+            )}
+            {onRetest && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={testing}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRetest(node.nodeId);
+                }}
+              >
+                {testing ? "检测中..." : "重新检测"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </Card>
   );
+};
+
+const formatRelativeTime = (iso?: string) => {
+  if (!iso) return "从未检测";
+  try {
+    return formatDistanceToNow(new Date(iso), {
+      addSuffix: true,
+      locale: zhCN,
+    });
+  } catch {
+    return "未知";
+  }
 };

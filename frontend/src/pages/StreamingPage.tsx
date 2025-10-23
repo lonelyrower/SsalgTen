@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -6,6 +7,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { StreamingOverviewStats } from "@/components/streaming/StreamingOverviewStats";
 import { PlatformStatsCard } from "@/components/streaming/PlatformStatsCard";
 import { StreamingNodeList } from "@/components/streaming/StreamingNodeList";
+import { StreamingNodeTable } from "@/components/streaming/StreamingNodeTable";
 import { StreamingFilters } from "@/components/streaming/StreamingFilters";
 import type {
   StreamingOverview,
@@ -32,6 +34,9 @@ export const StreamingPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bulkTriggering, setBulkTriggering] = useState(false);
+  const [testingMap, setTestingMap] = useState<Record<string, boolean>>({});
+
+  const navigate = useNavigate();
 
   // 获取可用的国家列表
   const availableCountries = useMemo(() => {
@@ -123,6 +128,10 @@ export const StreamingPage: React.FC = () => {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    setTestingMap({});
+  }, [filters]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     loadData();
@@ -160,6 +169,37 @@ export const StreamingPage: React.FC = () => {
       setBulkTriggering(false);
     }
   }, [filteredNodes, loadData, showError, showSuccess]);
+
+  const handleRetestNode = useCallback(
+    async (nodeId: string) => {
+      setTestingMap((prev) => ({ ...prev, [nodeId]: true }));
+      try {
+        const resp = await apiService.triggerStreamingTest(nodeId);
+        if (resp.success) {
+          showSuccess(resp.data?.message || "已触发节点流媒体检测");
+          await loadData();
+        } else {
+          showError(resp.error || "触发节点检测失败");
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : "触发节点检测失败");
+      } finally {
+        setTestingMap((prev) => {
+          const next = { ...prev };
+          delete next[nodeId];
+          return next;
+        });
+      }
+    },
+    [loadData, showError, showSuccess],
+  );
+
+  const handleNavigateNode = useCallback(
+    (nodeId: string) => {
+      navigate(`/nodes?id=${nodeId}&tab=streaming`);
+    },
+    [navigate],
+  );
   const handleExport = async (format: "json" | "csv" | "markdown") => {
     try {
       const result = await apiService.exportStreamingData(format, filters);
@@ -220,7 +260,7 @@ export const StreamingPage: React.FC = () => {
         {/* 页面标题 */}
         <PageHeader
           title="流媒体解锁"
-          description={`监控节点流媒体服务解锁状态 - ${filteredNodes.length} 个节点`}
+          description={`监控节点流媒体服务解锁状态 - 共 ${overview.totalNodes} 个节点`}
           icon={Film}
           actions={
             <>
@@ -363,7 +403,21 @@ export const StreamingPage: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <StreamingNodeList nodes={filteredNodes} />
+            viewMode === "grid" ? (
+              <StreamingNodeList
+                nodes={filteredNodes}
+                onRetest={handleRetestNode}
+                testingMap={testingMap}
+              />
+            ) : (
+              <StreamingNodeTable
+                nodes={filteredNodes}
+                services={STREAMING_SERVICE_ORDER}
+                onRetest={handleRetestNode}
+                testingMap={testingMap}
+                onNodeClick={handleNavigateNode}
+              />
+            )
           )}
         </div>
         </main>

@@ -90,6 +90,21 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
   unknown: "未测试",
 };
 
+// 解锁类型显示
+export const UNLOCK_TYPE_LABELS: Record<UnlockType, string> = {
+  native: "原生",
+  dns: "DNS",
+  idc: "机房",
+  unknown: "未知",
+};
+
+export const UNLOCK_TYPE_COLORS: Record<UnlockType, string> = {
+  native: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  dns: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  idc: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  unknown: "bg-gray-100 text-gray-600 dark:bg-gray-800/60 dark:text-gray-300",
+};
+
 // 流媒体平台统计
 export interface StreamingPlatformStats {
   service: StreamingService;
