@@ -1331,6 +1331,7 @@ ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=0
 
 [Install]
 WantedBy=multi-user.target
@@ -1916,6 +1917,7 @@ ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=0
 
 [Install]
 WantedBy=multi-user.target
@@ -2112,6 +2114,7 @@ ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=0
 
 [Install]
 WantedBy=multi-user.target
