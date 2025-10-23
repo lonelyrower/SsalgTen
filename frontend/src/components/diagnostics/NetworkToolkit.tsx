@@ -220,7 +220,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
       ) : activeTab === "history" ? (
         <div className="space-y-6">
           {/* 诊断记录控制面板 */}
-          <GlassCard variant="default">
+          <GlassCard variant="default" hover={false}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
                 <History className="h-4 w-4" />
@@ -346,7 +346,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
       ) : activeTab === "logs" ? (
         <div className="space-y-6">
           {/* 运行日志 */}
-          <GlassCard variant="default">
+          <GlassCard variant="default" hover={false}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
                 <FileText className="h-4 w-4" />
