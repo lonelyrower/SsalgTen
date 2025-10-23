@@ -123,42 +123,52 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
   return (
     <GlassCard variant="info">
-      {/* 标题 - 统一样式 */}
-      <div className="flex items-center justify-between pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30 mb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-            <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+      <div className="space-y-4">
+        {/* 标题 - 统一样式 */}
+        <div className="flex items-center justify-between pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+              <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                连接性自检
+              </h3>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                测试节点到您的连通性和延迟
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-              连接性自检
-            </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              检查节点与访客之间的连通性
-            </p>
+          <button
+            onClick={performCheck}
+            disabled={checking}
+            className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-lg transition-colors"
+            title="重新检查"
+            aria-label="重新检查连接性"
+          >
+            <RefreshCw
+              className={`h-4 w-4 text-cyan-600 dark:text-cyan-400 ${checking ? "animate-spin" : ""}`}
+            />
+          </button>
+        </div>
+
+        {/* 说明 */}
+        <div className="p-3 bg-cyan-50/50 dark:bg-cyan-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            <strong>说明：</strong>系统将自动获取您的IP地址，并测试节点到您的Ping延迟和丢包率
+          </p>
+        </div>
+
+        {/* 错误提示 */}
+        {error && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
-        </div>
-        <button
-          onClick={performCheck}
-          disabled={checking}
-          className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-lg transition-colors"
-          title="重新检查"
-          aria-label="重新检查连接性"
-        >
-          <RefreshCw
-            className={`h-4 w-4 text-cyan-600 dark:text-cyan-400 ${checking ? "animate-spin" : ""}`}
-          />
-        </button>
-      </div>
+        )}
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
-          {error}
-        </div>
-      )}
-
-      {result && (
-        <div className="space-y-3">
+        {/* 结果显示 */}
+        {result && (
+          <div className="space-y-3">
           {/* 节点状态 */}
           <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
             <div className="flex items-center gap-3">
@@ -255,8 +265,9 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
             最后检查: {result.lastChecked.toLocaleTimeString("zh-CN")}
           </div>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </GlassCard>
   );
 };
