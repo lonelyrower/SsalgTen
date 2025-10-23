@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { apiService } from "@/services/api";
-import { Play, Clock, Target, BarChart3, Globe, Zap, User } from "lucide-react";
+import { Play, Clock, Target, BarChart3, Globe, Zap } from "lucide-react";
 
 interface LatencyResult {
   target: string;
@@ -46,22 +46,6 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
     "standard",
   );
   const [error, setError] = useState<string | null>(null);
-  const [visitorIP, setVisitorIP] = useState<string | null>(null);
-
-  // 获取访客IP
-  useEffect(() => {
-    const fetchVisitorIP = async () => {
-      try {
-        const response = await apiService.getVisitorInfo();
-        if (response.success && response.data) {
-          setVisitorIP(response.data.ip);
-        }
-      } catch (err) {
-        console.error("Failed to fetch visitor IP:", err);
-      }
-    };
-    fetchVisitorIP();
-  }, []);
 
   const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
@@ -179,25 +163,6 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 访客IP信息 */}
-      {visitorIP && (
-        <Card className="bg-gradient-to-r from-cyan-50/50 via-blue-50/50 to-purple-50/50 dark:from-cyan-900/20 dark:via-blue-900/20 dark:to-purple-900/20 border-cyan-200 dark:border-cyan-700">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                <User className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">您的IP地址</p>
-                <p className="text-lg font-mono font-semibold text-gray-900 dark:text-white">
-                  {visitorIP}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* 测试控制面板 */}
       <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>

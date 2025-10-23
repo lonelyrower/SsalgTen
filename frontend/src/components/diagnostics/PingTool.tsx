@@ -4,10 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { apiService } from "@/services/api";
-import { Wifi, Play, Copy, Check } from "lucide-react";
+import { Wifi, Play, Copy, Check, Activity } from "lucide-react";
 
 interface PingToolProps {
   nodeId: string;
+}
+
+interface PingResultData {
+  host?: string;
+  alive?: boolean;
+  time?: number;
+  min?: number;
+  max?: number;
+  avg?: number;
+  packetLoss?: number;
+  duration?: number;
+  executedAt?: string;
+  output?: string;
 }
 
 const QUICK_TARGETS = [
@@ -21,7 +34,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
   const [target, setTarget] = useState("");
   const [count, setCount] = useState(4);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<PingResultData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -39,9 +52,8 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
       const response = await apiService.runPing(nodeId, target.trim(), count);
 
       if (response.success && response.data) {
-        // 格式化结果
-        const data = response.data as { output?: string };
-        setResult(data.output || JSON.stringify(data, null, 2));
+        const data = response.data as PingResultData;
+        setResult(data);
       } else {
         setError(response.error || "Ping 测试失败");
       }
@@ -55,10 +67,37 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
   const copyResult = () => {
     if (result) {
-      navigator.clipboard.writeText(result);
+      const raw =
+        result.output ||
+        JSON.stringify(
+          {
+            host: result.host,
+            avg: result.avg,
+            min: result.min,
+            max: result.max,
+            packetLoss: result.packetLoss,
+          },
+          null,
+          2,
+        );
+      navigator.clipboard.writeText(raw);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const formatLatency = (value?: number | null) => {
+    if (typeof value !== "number" || Number.isNaN(value) || value < 0) {
+      return "N/A";
+    }
+    return `${value.toFixed(2)} ms`;
+  };
+
+  const formatLoss = (value?: number | null) => {
+    if (typeof value !== "number" || Number.isNaN(value) || value < 0) {
+      return "N/A";
+    }
+    return `${value.toFixed(1)}%`;
   };
 
   return (
@@ -162,10 +201,10 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
         {/* 结果显示 */}
         {result && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Badge variant="success" className="text-xs">
-                测试完成
+              <Badge variant={result.alive ? "success" : "destructive"} className="text-xs">
+                {result.alive ? "主机在线" : "主机不可达"}
               </Badge>
               <button
                 onClick={copyResult}
@@ -179,16 +218,69 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
                 ) : (
                   <>
                     <Copy className="w-3 h-3" />
-                    复制结果
+                    复制原始结果
                   </>
                 )}
               </button>
             </div>
-            <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30 max-h-96 overflow-y-auto">
-              <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
-                {result}
-              </pre>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
+                <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
+                  <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  平均延迟
+                </div>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {formatLatency(result.avg ?? result.time)}
+                </p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
+                <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
+                  <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  丢包率
+                </div>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {formatLoss(result.packetLoss)}
+                </p>
+              </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
+              <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30">
+                <p>最小延迟</p>
+                <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                  {formatLatency(result.min)}
+                </p>
+              </div>
+              <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30">
+                <p>最大延迟</p>
+                <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                  {formatLatency(result.max)}
+                </p>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+              {result.host && <p>目标主机：{result.host}</p>}
+              {typeof result.duration === "number" && (
+                <p>诊断耗时：{(result.duration / 1000).toFixed(2)} 秒</p>
+              )}
+              {result.executedAt && <p>执行节点：{result.executedAt}</p>}
+            </div>
+
+            {/* 原始结果 */}
+            {result.output && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs text-green-600 dark:text-green-400 hover:underline">
+                  查看原始输出
+                </summary>
+                <div className="mt-2 p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30 max-h-60 overflow-y-auto">
+                  <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                    {result.output}
+                  </pre>
+                </div>
+              </details>
+            )}
           </div>
         )}
       </div>

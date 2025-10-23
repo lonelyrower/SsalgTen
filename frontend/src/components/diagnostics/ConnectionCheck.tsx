@@ -20,7 +20,15 @@ interface CheckResult {
   nodeOnline: boolean;
   visitorIP: string | null;
   latency: number | null;
+  packetLoss: number | null;
   lastChecked: Date;
+}
+
+interface DiagnosticPingData {
+  avg?: number;
+  time?: number;
+  packetLoss?: number;
+  output?: string;
 }
 
 export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
@@ -46,21 +54,32 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
       // 快速Ping测试（1次）- 测试节点到访问者的连通性
       let latency: number | null = null;
+      let packetLoss: number | null = null;
 
       if (visitorIP && node.status === "online") {
         try {
-          const pingStart = Date.now();
           const pingResponse = await apiService.runPing(node.id, visitorIP, 1);
-          const pingEnd = Date.now();
 
-          if (pingResponse.success) {
-            // 使用实际的ping响应时间
-            latency = pingEnd - pingStart;
+          if (pingResponse.success && pingResponse.data) {
+            const data = pingResponse.data as DiagnosticPingData;
+            const resolvedLatency =
+              typeof data.avg === "number"
+                ? data.avg
+                : typeof data.time === "number"
+                  ? data.time
+                  : null;
+            latency =
+              resolvedLatency !== null && !Number.isNaN(resolvedLatency)
+                ? Number(resolvedLatency.toFixed(2))
+                : null;
+            packetLoss =
+              typeof data.packetLoss === "number" && data.packetLoss >= 0
+                ? data.packetLoss
+                : null;
           } else if (pingResponse.error) {
             checkError = pingResponse.error;
           }
         } catch (pingErr) {
-          // Ping失败，latency保持为null
           checkError =
             pingErr instanceof Error
               ? pingErr.message
@@ -72,6 +91,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
         nodeOnline: node.status === "online",
         visitorIP,
         latency,
+        packetLoss,
         lastChecked: new Date(),
       });
 
@@ -177,7 +197,9 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {result.latency !== null ? (
                     <>
-                      <span className="text-2xl">{result.latency}</span>
+                      <span className="text-2xl">
+                        {result.latency.toFixed(2)}
+                      </span>
                       <span className="text-sm ml-1">ms</span>
                     </>
                   ) : (
@@ -207,6 +229,18 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
               </Badge>
             )}
           </div>
+
+          {/* 丢包 */}
+          {result.packetLoss !== null && (
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                丢包率
+              </div>
+              <div className="font-semibold text-gray-900 dark:text-white">
+                {result.packetLoss.toFixed(1)}%
+              </div>
+            </div>
+          )}
 
           {/* 最后检查时间 */}
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center">

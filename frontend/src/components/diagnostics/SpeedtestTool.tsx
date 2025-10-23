@@ -10,33 +10,145 @@ interface SpeedtestToolProps {
   nodeId: string;
 }
 
-interface SpeedtestResult {
-  download?: { bandwidth?: number };
-  upload?: { bandwidth?: number };
-  ping?: { latency?: number; jitter?: number };
-  server?: {
-    name?: string;
-    location?: string;
-    country?: string;
-    host?: string;
-  };
+interface RawSpeedtestData {
+  download?: unknown;
+  upload?: unknown;
+  ping?: unknown;
+  location?: string;
+  server?: unknown;
+  timestamp?: string;
+  duration?: number;
+  executedAt?: string;
 }
+
+interface NormalizedSpeedtestResult {
+  downloadMbps: number | null;
+  uploadMbps: number | null;
+  pingMs: number | null;
+  jitterMs: number | null;
+  serverName?: string;
+  serverLocation?: string;
+  serverCountry?: string;
+  serverHost?: string;
+  executedAt?: string;
+  duration?: number;
+  timestamp?: string;
+}
+
+const normalizeBandwidth = (value: unknown): number | null => {
+  if (typeof value === "number") {
+    return value >= 0 ? Number(value.toFixed(2)) : null;
+  }
+  if (value && typeof value === "object") {
+    const obj = value as { bandwidth?: number; bytes?: number };
+    if (typeof obj.bandwidth === "number") {
+      return Number((obj.bandwidth / 1_000_000).toFixed(2));
+    }
+    if (typeof obj.bytes === "number") {
+      return Number(((obj.bytes * 8) / 1_000_000).toFixed(2));
+    }
+  }
+  return null;
+};
+
+const normalizeLatency = (value: unknown): { latency: number | null; jitter: number | null } => {
+  if (typeof value === "number") {
+    return { latency: value >= 0 ? Number(value.toFixed(2)) : null, jitter: null };
+  }
+  if (value && typeof value === "object") {
+    const obj = value as { latency?: number; jitter?: number };
+    return {
+      latency:
+        typeof obj.latency === "number" && obj.latency >= 0
+          ? Number(obj.latency.toFixed(2))
+          : null,
+      jitter:
+        typeof obj.jitter === "number" && obj.jitter >= 0
+          ? Number(obj.jitter.toFixed(2))
+          : null,
+    };
+  }
+  return { latency: null, jitter: null };
+};
+
+const normalizeServer = (
+  rawServer: unknown,
+  fallbackLocation?: string,
+): Pick<
+  NormalizedSpeedtestResult,
+  "serverName" | "serverLocation" | "serverCountry" | "serverHost"
+> => {
+  if (!rawServer) {
+    return {
+      serverName: undefined,
+      serverLocation: fallbackLocation,
+      serverCountry: undefined,
+      serverHost: undefined,
+    };
+  }
+  if (typeof rawServer === "string") {
+    return {
+      serverName: rawServer,
+      serverLocation: fallbackLocation,
+      serverCountry: undefined,
+      serverHost: undefined,
+    };
+  }
+  if (typeof rawServer === "object") {
+    const server = rawServer as {
+      name?: string;
+      location?: string;
+      country?: string;
+      host?: string;
+    };
+    return {
+      serverName: server.name,
+      serverLocation: server.location ?? fallbackLocation,
+      serverCountry: server.country,
+      serverHost: server.host,
+    };
+  }
+  return {
+    serverName: undefined,
+    serverLocation: fallbackLocation,
+    serverCountry: undefined,
+    serverHost: undefined,
+  };
+};
 
 export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<SpeedtestResult | null>(null);
+  const [result, setResult] = useState<NormalizedSpeedtestResult | null>(null);
+  const [rawResult, setRawResult] = useState<RawSpeedtestData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const runSpeedtest = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
+    setRawResult(null);
 
     try {
       const response = await apiService.runSpeedtest(nodeId);
 
       if (response.success && response.data) {
-        setResult(response.data);
+        const data = response.data as RawSpeedtestData;
+        const downloadMbps = normalizeBandwidth(data.download);
+        const uploadMbps = normalizeBandwidth(data.upload);
+        const { latency, jitter } = normalizeLatency(data.ping);
+        const serverMeta = normalizeServer(data.server, data.location);
+
+        setResult({
+          downloadMbps,
+          uploadMbps,
+          pingMs: latency,
+          jitterMs: jitter,
+          executedAt: data.executedAt,
+          duration: data.duration,
+          timestamp: data.timestamp,
+          ...serverMeta,
+        });
+        setRawResult(data);
       } else {
         setError(response.error || "Speedtest 测试失败");
       }
@@ -48,11 +160,11 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
     }
   };
 
-  const formatSpeed = (bps?: number) => {
-    if (!bps) return "N/A";
-    const mbps = bps / 1000000;
-    return mbps.toFixed(2);
-  };
+  const renderMbps = (value: number | null) =>
+    value !== null ? value.toFixed(2) : "N/A";
+
+  const renderLatency = (value: number | null) =>
+    value !== null ? `${value.toFixed(2)} ms` : "N/A";
 
   return (
     <GlassCard variant="warning">
@@ -75,7 +187,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
         {/* 说明 */}
         <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            <strong>提示：</strong>速度测试将使用 Speedtest.net 服务器，测试通常需要 30-90 秒
+            <strong>提示：</strong>速度测试会连接 Speedtest.net 或备用服务器，过程可能需要 30-90 秒。
           </p>
         </div>
 
@@ -112,6 +224,11 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
               <Badge variant="success" className="text-xs">
                 测试完成
               </Badge>
+              {result.timestamp && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {new Date(result.timestamp).toLocaleString()}
+                </span>
+              )}
             </div>
 
             {/* 速度指标 */}
@@ -124,7 +241,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatSpeed(result.download?.bandwidth)}
+                  {renderMbps(result.downloadMbps)}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
               </div>
@@ -137,7 +254,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatSpeed(result.upload?.bandwidth)}
+                  {renderMbps(result.uploadMbps)}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
               </div>
@@ -150,7 +267,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                   延迟 (Ping)
                 </p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {result.ping?.latency?.toFixed(2) || "N/A"} ms
+                  {renderLatency(result.pingMs)}
                 </p>
               </div>
 
@@ -159,13 +276,16 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                   抖动 (Jitter)
                 </p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {result.ping?.jitter?.toFixed(2) || "N/A"} ms
+                  {renderLatency(result.jitterMs)}
                 </p>
               </div>
             </div>
 
             {/* 服务器信息 */}
-            {result.server && (
+            {(result.serverName ||
+              result.serverLocation ||
+              result.serverCountry ||
+              result.serverHost) && (
               <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Radio className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
@@ -174,23 +294,36 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                   </span>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                  <p>
-                    <strong>名称:</strong> {result.server.name || "N/A"}
-                  </p>
-                  <p>
-                    <strong>位置:</strong> {result.server.location || "N/A"}
-                  </p>
-                  <p>
-                    <strong>国家:</strong> {result.server.country || "N/A"}
-                  </p>
-                  {result.server.host && (
+                  {result.serverName && (
                     <p>
-                      <strong>主机:</strong> {result.server.host}
+                      <strong>名称:</strong> {result.serverName}
+                    </p>
+                  )}
+                  {result.serverLocation && (
+                    <p>
+                      <strong>位置:</strong> {result.serverLocation}
+                    </p>
+                  )}
+                  {result.serverCountry && (
+                    <p>
+                      <strong>国家:</strong> {result.serverCountry}
+                    </p>
+                  )}
+                  {result.serverHost && (
+                    <p>
+                      <strong>主机:</strong> {result.serverHost}
                     </p>
                   )}
                 </div>
               </div>
             )}
+
+            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+              {result.executedAt && <p>执行节点：{result.executedAt}</p>}
+              {typeof result.duration === "number" && (
+                <p>测试耗时：{(result.duration / 1000).toFixed(2)} 秒</p>
+              )}
+            </div>
 
             {/* 原始结果 */}
             <details className="mt-4">
@@ -198,8 +331,8 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                 查看完整结果
               </summary>
               <div className="mt-2 p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
-                <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100 max-h-60 overflow-y-auto">
-                  {JSON.stringify(result, null, 2)}
+                <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                  {JSON.stringify(rawResult ?? result, null, 2)}
                 </pre>
               </div>
             </details>
