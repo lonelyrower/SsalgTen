@@ -7,11 +7,8 @@ import React, {
   lazy,
 } from "react";
 import { useInView } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { useRealTime } from "@/hooks/useRealTime";
-import { useConnectivityDiagnostics } from "@/hooks/useConnectivityDiagnostics";
-import { ConnectivityDiagnostics } from "@/components/nodes/ConnectivityDiagnostics";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { NodeCard } from "@/components/nodes/NodeCard";
@@ -47,7 +44,6 @@ const Globe3D = lazy(() =>
 );
 
 export const NodesPageNew: React.FC = () => {
-  const { hasRole } = useAuth();
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showServerDetails, setShowServerDetails] = useState(false);
@@ -60,7 +56,6 @@ export const NodesPageNew: React.FC = () => {
   );
 
   const { nodes, connected, refreshData } = useRealTime();
-  const diagnostics = useConnectivityDiagnostics(connected);
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
@@ -169,17 +164,13 @@ export const NodesPageNew: React.FC = () => {
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-6 w-full">
-            <ConnectivityDiagnostics
-              checking={diagnostics.checking}
-              apiReachable={diagnostics.apiReachable}
-              socketConnected={diagnostics.socketConnected}
-              authOk={diagnostics.authOk}
-              nodesCount={diagnostics.nodesCount}
-              lastCheckedAt={diagnostics.lastCheckedAt}
-              issues={diagnostics.issues}
-              onRefresh={diagnostics.refresh}
-              isAdmin={hasRole("ADMIN")}
-            />
+            <Button
+              onClick={() => setShowDiagnostics(false)}
+              variant="outline"
+              className="mb-4"
+            >
+              ← 返回节点列表
+            </Button>
             <Suspense
               fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
             >

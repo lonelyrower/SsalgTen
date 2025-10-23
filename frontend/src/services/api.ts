@@ -704,9 +704,12 @@ class ApiService {
     target: string,
     count?: number,
   ): Promise<ApiResponse<unknown>> {
-    const query = count ? `?count=${count}` : "";
+    const params = new URLSearchParams({ target });
+    if (typeof count === "number") {
+      params.set("count", String(count));
+    }
     return this.request(
-      `/diagnostics/${nodeId}/ping?target=${encodeURIComponent(target)}${query}`,
+      `/diagnostics/${nodeId}/ping?${params.toString()}`,
       {},
       true,
     );
@@ -717,9 +720,12 @@ class ApiService {
     target: string,
     maxHops?: number,
   ): Promise<ApiResponse<unknown>> {
-    const query = maxHops ? `?maxHops=${maxHops}` : "";
+    const params = new URLSearchParams({ target });
+    if (typeof maxHops === "number") {
+      params.set("maxHops", String(maxHops));
+    }
     return this.request(
-      `/diagnostics/${nodeId}/traceroute?target=${encodeURIComponent(target)}${query}`,
+      `/diagnostics/${nodeId}/traceroute?${params.toString()}`,
       {},
       true,
     );
@@ -730,9 +736,12 @@ class ApiService {
     target: string,
     count?: number,
   ): Promise<ApiResponse<unknown>> {
-    const query = count ? `?count=${count}` : "";
+    const params = new URLSearchParams({ target });
+    if (typeof count === "number") {
+      params.set("count", String(count));
+    }
     return this.request(
-      `/diagnostics/${nodeId}/mtr?target=${encodeURIComponent(target)}${query}`,
+      `/diagnostics/${nodeId}/mtr?${params.toString()}`,
       {},
       true,
     );

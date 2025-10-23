@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GlassCard } from "@/components/admin/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -28,63 +28,21 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
   const [result, setResult] = useState<CheckResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const performCheck = async () => {
-      setChecking(true);
-      setError(null);
-
-      try {
-        // 获取访客IP
-        const visitorResponse = await apiService.getVisitorInfo();
-        const visitorIP = visitorResponse.success && visitorResponse.data
-          ? visitorResponse.data.ip
-          : null;
-
-        // 快速Ping测试（1次）- 测试节点到访问者的连通性
-        let latency: number | null = null;
-
-        if (visitorIP && node.status === "online") {
-          try {
-            const pingStart = Date.now();
-            const pingResponse = await apiService.runPing(node.id, visitorIP, 1);
-            const pingEnd = Date.now();
-
-            if (pingResponse.success) {
-              // 使用实际的ping响应时间
-              latency = pingEnd - pingStart;
-            }
-          } catch {
-            // Ping失败，latency保持为null
-          }
-        }
-
-        setResult({
-          nodeOnline: node.status === "online",
-          visitorIP,
-          latency,
-          lastChecked: new Date(),
-        });
-      } catch (err) {
-        console.error("Connection check failed:", err);
-        setError("连接性检查失败");
-      } finally {
-        setChecking(false);
-      }
-    };
-
-    performCheck();
-  }, [node.id, node.status]);
-
-  const performCheck = async () => {
+  const performCheck = useCallback(async () => {
     setChecking(true);
     setError(null);
 
     try {
       // 获取访客IP
       const visitorResponse = await apiService.getVisitorInfo();
-      const visitorIP = visitorResponse.success && visitorResponse.data
-        ? visitorResponse.data.ip
-        : null;
+      let visitorIP: string | null = null;
+      let checkError: string | null = null;
+
+      if (visitorResponse.success && visitorResponse.data) {
+        visitorIP = visitorResponse.data.ip;
+      } else if (visitorResponse.error) {
+        checkError = visitorResponse.error;
+      }
 
       // 快速Ping测试（1次）- 测试节点到访问者的连通性
       let latency: number | null = null;
@@ -98,9 +56,15 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           if (pingResponse.success) {
             // 使用实际的ping响应时间
             latency = pingEnd - pingStart;
+          } else if (pingResponse.error) {
+            checkError = pingResponse.error;
           }
-        } catch {
+        } catch (pingErr) {
           // Ping失败，latency保持为null
+          checkError =
+            pingErr instanceof Error
+              ? pingErr.message
+              : "Ping 测试失败，无法获取延迟";
         }
       }
 
@@ -110,13 +74,22 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
         latency,
         lastChecked: new Date(),
       });
+
+      if (checkError) {
+        setError(checkError);
+      }
     } catch (err) {
       console.error("Connection check failed:", err);
       setError("连接性检查失败");
+      setResult(null);
     } finally {
       setChecking(false);
     }
-  };
+  }, [node.id, node.status]);
+
+  useEffect(() => {
+    performCheck();
+  }, [performCheck]);
 
   if (checking && !result) {
     return (
