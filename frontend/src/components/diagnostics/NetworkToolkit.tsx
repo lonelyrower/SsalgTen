@@ -382,7 +382,6 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                     key={event.id}
                     variant={getEventVariant(event.type)}
                     hover={false}
-                    className="p-4"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1">

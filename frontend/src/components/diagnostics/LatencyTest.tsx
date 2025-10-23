@@ -320,32 +320,54 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
               详细延迟结果
             </div>
             <div className="grid gap-3">
-              {testResult.results.map((result, index) => (
-                <div
-                  key={`${result.target}-${index}`}
-                  className="flex flex-col items-start justify-between gap-3 rounded-xl border border-slate-200/70 bg-white/80 px-4 py-3 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40 md:flex-row md:items-center"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{getStatusIcon(result.status)}</span>
-                    <div>
-                      <div className="font-medium text-slate-900 dark:text-white">{result.target}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {getStatusDescription(result.status)}
+              {testResult.results.map((result, index) => {
+                // 根据状态选择 GlassCard variant
+                const getCardVariant = (status: LatencyResult["status"]): "success" | "info" | "warning" | "danger" | "default" => {
+                  switch (status) {
+                    case "excellent":
+                      return "success";
+                    case "good":
+                      return "info";
+                    case "poor":
+                      return "warning";
+                    case "failed":
+                      return "danger";
+                    default:
+                      return "default";
+                  }
+                };
+
+                return (
+                  <GlassCard
+                    key={`${result.target}-${index}`}
+                    variant={getCardVariant(result.status)}
+                    hover={false}
+                    className="!p-4"
+                  >
+                    <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{getStatusIcon(result.status)}</span>
+                        <div>
+                          <div className="font-medium text-slate-900 dark:text-white">{result.target}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {getStatusDescription(result.status)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Badge className={getStatusColor(result.status)}>
+                          {formatLatency(result.latency)}
+                        </Badge>
+                        {result.error && (
+                          <span className="max-w-64 text-xs text-red-500 dark:text-red-300">
+                            {result.error}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge className={getStatusColor(result.status)}>
-                      {formatLatency(result.latency)}
-                    </Badge>
-                    {result.error && (
-                      <span className="max-w-64 text-xs text-red-500 dark:text-red-300">
-                        {result.error}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                  </GlassCard>
+                );
+              })}
             </div>
           </GlassCard>
 

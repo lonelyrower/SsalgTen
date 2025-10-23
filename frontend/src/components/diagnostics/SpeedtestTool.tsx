@@ -191,65 +191,77 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
           </p>
         </div>
 
-        {/* 结果预览框架 - 未测试时显示 */}
-        {!result && !loading && (
-          <div className="space-y-3">
-            {/* 速度指标框架 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50 opacity-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingDown className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    下载速度
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-400 dark:text-gray-500">
-                  --
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
-              </div>
+        {/* 结果显示区域 - 始终显示框架 */}
+        <div className="space-y-3">
+          {/* 测试完成标记 */}
+          {result && (
+            <div className="flex items-center justify-between">
+              <Badge variant="success" className="text-xs">
+                测试完成
+              </Badge>
+              {result.timestamp && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {new Date(result.timestamp).toLocaleString()}
+                </span>
+              )}
+            </div>
+          )}
 
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50 opacity-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    上传速度
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-400 dark:text-gray-500">
-                  --
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
+          {/* 速度指标 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50 transition-opacity ${!result ? 'opacity-50' : ''}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingDown className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  下载速度
+                </span>
               </div>
+              <p className={`text-2xl font-bold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                {result ? renderMbps(result.downloadMbps) : '--'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
             </div>
 
-            {/* 延迟和抖动框架 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30 opacity-50">
-                <div className="flex items-center gap-2 mb-1">
-                  <Radio className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    Ping 延迟
-                  </span>
-                </div>
-                <p className="text-lg font-semibold text-gray-400 dark:text-gray-500">
-                  --
-                </p>
+            <div className={`p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50 transition-opacity ${!result ? 'opacity-50' : ''}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  上传速度
+                </span>
               </div>
-              <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30 opacity-50">
-                <div className="flex items-center gap-2 mb-1">
-                  <Gauge className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    抖动
-                  </span>
-                </div>
-                <p className="text-lg font-semibold text-gray-400 dark:text-gray-500">
-                  --
-                </p>
-              </div>
+              <p className={`text-2xl font-bold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                {result ? renderMbps(result.uploadMbps) : '--'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
             </div>
           </div>
-        )}
+
+          {/* 延迟和抖动 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30 transition-opacity ${!result ? 'opacity-50' : ''}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <Radio className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  Ping 延迟
+                </span>
+              </div>
+              <p className={`text-lg font-semibold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                {result ? renderLatency(result.pingMs) : '--'}
+              </p>
+            </div>
+            <div className={`p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30 transition-opacity ${!result ? 'opacity-50' : ''}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <Gauge className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  抖动
+                </span>
+              </div>
+              <p className={`text-lg font-semibold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                {result ? renderLatency(result.jitterMs) : '--'}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* 执行按钮 */}
         <Button
@@ -277,70 +289,9 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
           </div>
         )}
 
-        {/* 结果显示 */}
+        {/* 服务器信息和其他详情 */}
         {result && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Badge variant="success" className="text-xs">
-                测试完成
-              </Badge>
-              {result.timestamp && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {new Date(result.timestamp).toLocaleString()}
-                </span>
-              )}
-            </div>
-
-            {/* 速度指标 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingDown className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    下载速度
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {renderMbps(result.downloadMbps)}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
-              </div>
-
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    上传速度
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {renderMbps(result.uploadMbps)}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
-              </div>
-            </div>
-
-            {/* 延迟和抖动 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  延迟 (Ping)
-                </p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {renderLatency(result.pingMs)}
-                </p>
-              </div>
-
-              <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  抖动 (Jitter)
-                </p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {renderLatency(result.jitterMs)}
-                </p>
-              </div>
-            </div>
-
+          <div className="space-y-3">
             {/* 服务器信息 */}
             {(result.serverName ||
               result.serverLocation ||
