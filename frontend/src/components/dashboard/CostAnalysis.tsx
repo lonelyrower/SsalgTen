@@ -1,5 +1,4 @@
 import React, { memo } from "react";
-import { Card } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import type { NodeData } from "@/services/api";
 
