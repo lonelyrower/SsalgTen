@@ -698,6 +698,52 @@ class ApiService {
     }
   }
 
+  // 通过后端代理的诊断工具 API
+  async runPing(
+    nodeId: string,
+    target: string,
+    count?: number,
+  ): Promise<ApiResponse<unknown>> {
+    const query = count ? `?count=${count}` : "";
+    return this.request(
+      `/diagnostics/${nodeId}/ping?target=${encodeURIComponent(target)}${query}`,
+    );
+  }
+
+  async runTraceroute(
+    nodeId: string,
+    target: string,
+    maxHops?: number,
+  ): Promise<ApiResponse<unknown>> {
+    const query = maxHops ? `?maxHops=${maxHops}` : "";
+    return this.request(
+      `/diagnostics/${nodeId}/traceroute?target=${encodeURIComponent(target)}${query}`,
+    );
+  }
+
+  async runMTR(
+    nodeId: string,
+    target: string,
+    count?: number,
+  ): Promise<ApiResponse<unknown>> {
+    const query = count ? `?count=${count}` : "";
+    return this.request(
+      `/diagnostics/${nodeId}/mtr?target=${encodeURIComponent(target)}${query}`,
+    );
+  }
+
+  async runSpeedtest(nodeId: string): Promise<ApiResponse<unknown>> {
+    return this.request(`/diagnostics/${nodeId}/speedtest`);
+  }
+
+  async runLatencyTest(
+    nodeId: string,
+    testType?: "standard" | "comprehensive",
+  ): Promise<ApiResponse<unknown>> {
+    const query = testType ? `?testType=${testType}` : "";
+    return this.request(`/diagnostics/${nodeId}/latency-test${query}`);
+  }
+
   // 认证相关 API
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     // Primary path via API_BASE_URL (e.g. /api/auth/login)

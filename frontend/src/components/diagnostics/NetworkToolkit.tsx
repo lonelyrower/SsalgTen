@@ -9,14 +9,19 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   Activity,
   X,
-  Globe,
   History,
   RefreshCw,
   CheckCircle,
   XCircle,
   Clock,
-  Target
+  Target,
+  Wrench,
 } from "lucide-react";
+import { ConnectionCheck } from "@/components/diagnostics/ConnectionCheck";
+import { PingTool } from "@/components/diagnostics/PingTool";
+import { TracerouteTool } from "@/components/diagnostics/TracerouteTool";
+import { MTRTool } from "@/components/diagnostics/MTRTool";
+import { SpeedtestTool } from "@/components/diagnostics/SpeedtestTool";
 import { LatencyTest } from "@/components/diagnostics/LatencyTest";
 
 interface NetworkToolkitProps {
@@ -101,7 +106,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({
   };
 
   const tabs = [
-    { id: "tools" as TabType, label: "诊断工具", icon: Activity },
+    { id: "tools" as TabType, label: "诊断工具", icon: Wrench },
     { id: "history" as TabType, label: "诊断历史", icon: History },
   ];
 
@@ -137,24 +142,26 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({
 
       {/* 标签页内容 */}
       {activeTab === "tools" ? (
-        <div className="space-y-4">
-          <GlassCard variant="info">
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              <p className="mb-2">提供常用网络诊断能力：</p>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>客户端延迟测试：测试您到节点的网络延迟</li>
-                <li>更多工具正在开发中...</li>
-              </ul>
-            </div>
-          </GlassCard>
+        <div className="space-y-6">
+          {/* 连接性自检 */}
+          <ConnectionCheck node={selectedNode} />
 
-          <GlassCard variant="default">
-            <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
-              <Globe className="w-4 h-4 text-primary" />
-              客户端延迟测试
+          {/* 四大诊断工具 - 2x2网格 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PingTool nodeId={selectedNode.id} />
+            <TracerouteTool nodeId={selectedNode.id} />
+            <MTRTool nodeId={selectedNode.id} />
+            <SpeedtestTool nodeId={selectedNode.id} />
+          </div>
+
+          {/* 延迟测试 - 独立区域 */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              延迟测试 - 节点到全球站点
             </h3>
-            <LatencyTest onTestComplete={() => {}} />
-          </GlassCard>
+            <LatencyTest nodeId={selectedNode.id} onTestComplete={() => {}} />
+          </div>
         </div>
       ) : (
         <div className="space-y-6">

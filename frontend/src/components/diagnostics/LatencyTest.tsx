@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { Play, Clock, Target, BarChart3, Globe, Zap } from "lucide-react";
+import { apiService } from "@/services/api";
+import { Play, Clock, Target, BarChart3, Globe, Zap, User } from "lucide-react";
 
 interface LatencyResult {
   target: string;
@@ -35,6 +36,7 @@ interface LatencyTestProps {
 }
 
 export const LatencyTest: React.FC<LatencyTestProps> = ({
+  nodeId,
   agentEndpoint,
   onTestComplete,
 }) => {
@@ -44,6 +46,22 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
     "standard",
   );
   const [error, setError] = useState<string | null>(null);
+  const [visitorIP, setVisitorIP] = useState<string | null>(null);
+
+  // 获取访客IP
+  useEffect(() => {
+    const fetchVisitorIP = async () => {
+      try {
+        const response = await apiService.getVisitorInfo();
+        if (response.success && response.data) {
+          setVisitorIP(response.data.ip);
+        }
+      } catch (err) {
+        console.error("Failed to fetch visitor IP:", err);
+      }
+    };
+    fetchVisitorIP();
+  }, []);
 
   const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
@@ -91,8 +109,32 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
   };
 
   const runLatencyTest = async () => {
+    // 优先使用新的API（通过后端代理）
+    if (nodeId) {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiService.runLatencyTest(nodeId, testType);
+
+        if (response.success && response.data) {
+          setTestResult(response.data as LatencyTestResult);
+          onTestComplete?.(response.data as LatencyTestResult);
+        } else {
+          throw new Error(response.error || "延迟测试失败");
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "未知错误";
+        setError(`延迟测试失败: ${errorMessage}`);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // 降级到直接调用Agent端点
     if (!agentEndpoint) {
-      setError("缺少Agent端点配置");
+      setError("缺少节点配置");
       return;
     }
 
@@ -137,12 +179,31 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* 访客IP信息 */}
+      {visitorIP && (
+        <Card className="bg-gradient-to-r from-cyan-50/50 via-blue-50/50 to-purple-50/50 dark:from-cyan-900/20 dark:via-blue-900/20 dark:to-purple-900/20 border-cyan-200 dark:border-cyan-700">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                <User className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">您的IP地址</p>
+                <p className="text-lg font-mono font-semibold text-gray-900 dark:text-white">
+                  {visitorIP}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 测试控制面板 */}
       <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Globe className="w-5 h-5 text-primary" />
-            网络延迟测试
+            网络延迟测试 - 节点到全球站点
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -172,7 +233,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 
             <Button
               onClick={runLatencyTest}
-              disabled={isLoading || !agentEndpoint}
+              disabled={isLoading || (!nodeId && !agentEndpoint)}
             >
               {isLoading ? (
                 <>

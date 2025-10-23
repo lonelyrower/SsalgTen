@@ -1,0 +1,205 @@
+import React, { useState, useEffect } from "react";
+import { GlassCard } from "@/components/admin/GlassCard";
+import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { apiService } from "@/services/api";
+import type { NodeData } from "@/services/api";
+import {
+  CheckCircle,
+  XCircle,
+  Globe,
+  Zap,
+  RefreshCw,
+} from "lucide-react";
+
+interface ConnectionCheckProps {
+  node: NodeData;
+}
+
+interface CheckResult {
+  nodeOnline: boolean;
+  visitorIP: string | null;
+  latency: number | null;
+  lastChecked: Date;
+}
+
+export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
+  const [checking, setChecking] = useState(true);
+  const [result, setResult] = useState<CheckResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const performCheck = async () => {
+    setChecking(true);
+    setError(null);
+
+    try {
+      // 获取访客IP
+      const visitorResponse = await apiService.getVisitorInfo();
+      const visitorIP = visitorResponse.success && visitorResponse.data
+        ? visitorResponse.data.ip
+        : null;
+
+      // 快速Ping测试（1次）- 测试节点到访问者的连通性
+      let latency: number | null = null;
+
+      if (visitorIP && node.status === "online") {
+        try {
+          const pingStart = Date.now();
+          const pingResponse = await apiService.runPing(node.id, visitorIP, 1);
+          const pingEnd = Date.now();
+
+          if (pingResponse.success) {
+            // 使用实际的ping响应时间
+            latency = pingEnd - pingStart;
+          }
+        } catch {
+          // Ping失败，latency保持为null
+        }
+      }
+
+      setResult({
+        nodeOnline: node.status === "online",
+        visitorIP,
+        latency,
+        lastChecked: new Date(),
+      });
+    } catch (err) {
+      console.error("Connection check failed:", err);
+      setError("连接性检查失败");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    performCheck();
+  }, [node.id, node.status]);
+
+  if (checking && !result) {
+    return (
+      <GlassCard variant="info">
+        <div className="flex items-center justify-center py-8">
+          <LoadingSpinner text="正在检查连接性..." />
+        </div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard variant="info">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+            <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+          </div>
+          <span>连接性自检</span>
+        </h3>
+        <button
+          onClick={performCheck}
+          disabled={checking}
+          className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-lg transition-colors"
+          title="重新检查"
+        >
+          <RefreshCw
+            className={`h-4 w-4 text-cyan-600 dark:text-cyan-400 ${checking ? "animate-spin" : ""}`}
+          />
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-3">
+          {/* 节点状态 */}
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+            <div className="flex items-center gap-3">
+              {result.nodeOnline ? (
+                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              ) : (
+                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              )}
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">节点状态</p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {result.nodeOnline ? "在线" : "离线"}
+                </p>
+              </div>
+            </div>
+            <Badge
+              variant={result.nodeOnline ? "success" : "destructive"}
+              className="text-xs"
+            >
+              {result.nodeOnline ? "可用" : "不可用"}
+            </Badge>
+          </div>
+
+          {/* 访客IP */}
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+            <div className="flex items-center gap-3">
+              <Globe className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">您的IP地址</p>
+                <p className="font-mono font-semibold text-gray-900 dark:text-white">
+                  {result.visitorIP || "无法获取"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 基本延迟 */}
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+            <div className="flex items-center gap-3">
+              <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  节点 → 您的延迟
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {result.latency !== null ? (
+                    <>
+                      <span className="text-2xl">{result.latency}</span>
+                      <span className="text-sm ml-1">ms</span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {result.nodeOnline ? "测试中..." : "节点离线"}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            {result.latency !== null && (
+              <Badge
+                variant={
+                  result.latency < 50
+                    ? "success"
+                    : result.latency < 150
+                      ? "default"
+                      : "destructive"
+                }
+                className="text-xs"
+              >
+                {result.latency < 50
+                  ? "优秀"
+                  : result.latency < 150
+                    ? "良好"
+                    : "较差"}
+              </Badge>
+            )}
+          </div>
+
+          {/* 最后检查时间 */}
+          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            最后检查: {result.lastChecked.toLocaleTimeString("zh-CN")}
+          </div>
+        </div>
+      )}
+    </GlassCard>
+  );
+};
+
+export default ConnectionCheck;
