@@ -193,7 +193,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 
   return (
     <div className="space-y-6">
-      <GlassCard variant="info" className="space-y-5">
+      <GlassCard variant="info" className="space-y-5 text-left">
         {/* 标题 - 统一靠左对齐 */}
         <div className="flex items-center gap-2 pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
           <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
@@ -314,8 +314,8 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
             </div>
           </GlassCard>
 
-          <GlassCard variant="default" hover={false} className="space-y-4">
-            <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+          <GlassCard variant="default" hover={false} className="space-y-4 pt-2">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
               <Zap className="h-5 w-5 text-purple-500" />
               详细延迟结果
             </div>
