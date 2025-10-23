@@ -1,9 +1,9 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import os from 'os';
 import { promisify } from 'util';
 import { logger } from '../utils/logger';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export interface LatencyTestTarget {
   name: string;
@@ -108,12 +108,12 @@ export class LatencyTestService {
       
       // 使用ping命令测试延迟（发送3个包取平均值）
       const isWindows = os.platform() === 'win32';
-      const pingCommand = isWindows
-        ? `ping -n 3 ${target.url}`
-        : `ping -c 3 -W 5 ${target.url}`;
+      const pingArgs = isWindows
+        ? ['-n', '3', target.url]
+        : ['-c', '3', '-W', '5', target.url];
 
-      const { stdout, stderr } = await execAsync(pingCommand, {
-        timeout: 15000 // 15秒超时
+      const { stdout, stderr } = await execFileAsync('ping', pingArgs, {
+        timeout: 15000, // 15秒超时
       });
 
       if (stderr) {
@@ -142,14 +142,29 @@ export class LatencyTestService {
       };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.warn(`Failed to test latency to ${target.name}: ${errorMessage}`);
+      const execError = error as NodeJS.ErrnoException & {
+        stdout?: string | Buffer;
+        stderr?: string | Buffer;
+      };
+      const stderr = typeof execError?.stderr === 'string'
+        ? execError.stderr.trim()
+        : execError?.stderr?.toString().trim();
+      const stdout = typeof execError?.stdout === 'string'
+        ? execError.stdout.trim()
+        : execError?.stdout?.toString().trim();
+
+      const detail =
+        stderr?.split('\n').map(line => line.trim()).filter(Boolean)[0] ||
+        stdout?.split('\n').map(line => line.trim()).filter(Boolean)[0] ||
+        (error instanceof Error ? error.message : 'Unknown error');
+
+      logger.warn(`Failed to test latency to ${target.name}: ${detail}`);
       
       return {
         target: target.name,
         latency: null,
         status: 'failed',
-        error: errorMessage
+        error: detail
       };
     }
   }

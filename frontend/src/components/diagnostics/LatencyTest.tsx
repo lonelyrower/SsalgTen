@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/admin/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { apiService } from "@/services/api";
-import { Play, Clock, Target, BarChart3, Globe, Zap } from "lucide-react";
+import { Play, Clock, Target, BarChart3, Zap } from "lucide-react";
 
 interface LatencyResult {
   target: string;
@@ -42,23 +42,21 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [testResult, setTestResult] = useState<LatencyTestResult | null>(null);
-  const [testType, setTestType] = useState<"standard" | "comprehensive">(
-    "standard",
-  );
+  const [testType, setTestType] = useState<"standard" | "comprehensive">("standard");
   const [error, setError] = useState<string | null>(null);
 
   const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
       case "excellent":
-        return "bg-green-500/20 text-green-300 border-green-500/30";
+        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
       case "good":
-        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+        return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
       case "poor":
-        return "bg-orange-500/20 text-orange-300 border-orange-500/30";
+        return "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
       case "failed":
-        return "bg-red-500/20 text-red-300 border-red-500/30";
+        return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300";
       default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
+        return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300";
     }
   };
 
@@ -86,14 +84,16 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       case "poor":
         return "较差 - 仅适合基本使用";
       case "failed":
-        return "失败 - 无法连接";
+        return "失败 - 目标不响应或 ICMP 被阻止";
       default:
         return "未知";
     }
   };
 
   const runLatencyTest = async () => {
-    // 优先使用新的API（通过后端代理）
+    if (isLoading) return;
+
+    // 优先使用代理 API
     if (nodeId) {
       setIsLoading(true);
       setError(null);
@@ -116,7 +116,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       return;
     }
 
-    // 降级到直接调用Agent端点
+    // 降级到 agentEndpoint
     if (!agentEndpoint) {
       setError("缺少节点配置");
       return;
@@ -163,187 +163,161 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 测试控制面板 */}
-      <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Globe className="w-5 h-5 text-primary" />
-            网络延迟测试 - 节点到全球站点
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex gap-2">
-              <Button
-                variant={testType === "standard" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTestType("standard")}
-                disabled={isLoading}
-                className="text-xs"
-              >
-                <Target className="w-4 h-4 mr-1" />
-                标准测试 (8站点)
-              </Button>
-              <Button
-                variant={testType === "comprehensive" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTestType("comprehensive")}
-                disabled={isLoading}
-                className="text-xs"
-              >
-                <BarChart3 className="w-4 h-4 mr-1" />
-                完整测试 (20站点)
-              </Button>
-            </div>
+      <GlassCard variant="info" className="space-y-5">
+        <div className="space-y-1">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+            <Zap className="h-5 w-5 text-cyan-500" />
+            延迟测试 - 节点到全球站点
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            选择测试范围后即可开始，系统会依次 Ping 全球热门站点并统计响应情况。
+          </p>
+        </div>
 
-            <Button
-              onClick={runLatencyTest}
-              disabled={isLoading || (!nodeId && !agentEndpoint)}
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner className="w-4 h-4 mr-2" />
-                  测试中...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  开始测试
-                </>
-              )}
-            </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant={testType === "standard" ? "info" : "outline"}
+            size="sm"
+            onClick={() => setTestType("standard")}
+            disabled={isLoading}
+            className="gap-1"
+          >
+            <Target className="h-4 w-4" />
+            标准测试 (8站点)
+          </Button>
+          <Button
+            variant={testType === "comprehensive" ? "info" : "outline"}
+            size="sm"
+            onClick={() => setTestType("comprehensive")}
+            disabled={isLoading}
+            className="gap-1"
+          >
+            <BarChart3 className="h-4 w-4" />
+            完整测试 (20站点)
+          </Button>
+          <Button
+            onClick={runLatencyTest}
+            disabled={isLoading || (!nodeId && !agentEndpoint)}
+            size="sm"
+            className="gap-2"
+          >
+            {isLoading ? (
+              <>
+                <LoadingSpinner className="h-4 w-4" />
+                测试中...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                开始测试
+              </>
+            )}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="rounded-xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
+            {error}
           </div>
+        )}
+      </GlassCard>
 
-          {error && (
-            <div className="text-red-400 text-sm bg-red-900/20 p-3 rounded border border-red-500/30">
-              {error}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 测试结果 */}
       {testResult && (
         <div className="space-y-4">
-          {/* 结果概览 */}
-          <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Clock className="w-5 h-5 text-green-400" />
-                测试结果概览
-                <Badge variant="outline" className="ml-2">
-                  {testResult.testType === "standard" ? "标准测试" : "完整测试"}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
-                  <div className="text-2xl font-bold text-white">
-                    {testResult.summary.successful}/{testResult.summary.total}
-                  </div>
-                  <div className="text-sm text-gray-400">成功率</div>
+          <GlassCard variant="default" className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2 text-slate-900 dark:text-white">
+              <Clock className="h-5 w-5 text-emerald-500" />
+              测试结果概览
+              <Badge variant="outline" className="rounded-full px-3 py-1 text-xs">
+                {testResult.testType === "standard" ? "标准测试" : "完整测试"}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+                <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  {testResult.summary.successful}/{testResult.summary.total}
                 </div>
-
-                <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
-                  <div className="text-2xl font-bold text-primary">
-                    {testResult.summary.averageLatency.toFixed(1)}ms
-                  </div>
-                  <div className="text-sm text-gray-400">平均延迟</div>
-                </div>
-
-                <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
-                  <div className="text-2xl font-bold text-green-400">
-                    {testResult.summary.excellentCount}
-                  </div>
-                  <div className="text-sm text-gray-400">优秀连接</div>
-                </div>
-
-                <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {(testResult.duration / 1000).toFixed(1)}s
-                  </div>
-                  <div className="text-sm text-gray-400">测试耗时</div>
-                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">成功站点</div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+                <div className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300">
+                  {testResult.summary.averageLatency.toFixed(1)}ms
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">平均延迟</div>
+              </div>
+              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+                <div className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
+                  {testResult.summary.excellentCount}
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">优秀连接</div>
+              </div>
+              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+                <div className="text-2xl font-semibold text-amber-600 dark:text-amber-300">
+                  {(testResult.duration / 1000).toFixed(1)}s
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">测试耗时</div>
+              </div>
+            </div>
+          </GlassCard>
 
-          {/* 详细结果 */}
-          <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Zap className="w-5 h-5 text-purple-400" />
-                详细延迟结果
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                {testResult.results.map((result, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-800/30 rounded border border-gray-600"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">
-                        {getStatusIcon(result.status)}
-                      </span>
-                      <div>
-                        <div className="font-medium text-white">
-                          {result.target}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {getStatusDescription(result.status)}
-                        </div>
+          <GlassCard variant="default" className="space-y-4">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+              <Zap className="h-5 w-5 text-purple-500" />
+              详细延迟结果
+            </div>
+            <div className="grid gap-3">
+              {testResult.results.map((result, index) => (
+                <div
+                  key={`${result.target}-${index}`}
+                  className="flex flex-col items-start justify-between gap-3 rounded-xl border border-slate-200/70 bg-white/80 px-4 py-3 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40 md:flex-row md:items-center"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{getStatusIcon(result.status)}</span>
+                    <div>
+                      <div className="font-medium text-slate-900 dark:text-white">{result.target}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {getStatusDescription(result.status)}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <Badge className={getStatusColor(result.status)}>
-                        {formatLatency(result.latency)}
-                      </Badge>
-                      {result.error && (
-                        <div className="text-xs text-red-400 max-w-40 truncate">
-                          {result.error}
-                        </div>
-                      )}
-                    </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge className={getStatusColor(result.status)}>
+                      {formatLatency(result.latency)}
+                    </Badge>
+                    {result.error && (
+                      <span className="max-w-64 text-xs text-red-500 dark:text-red-300">
+                        {result.error}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
 
-          {/* 延迟等级说明 */}
-          <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white text-sm">延迟等级说明</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 text-sm">
+          <GlassCard variant="default">
+            <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+              <div className="font-medium text-slate-900 dark:text-white">延迟等级说明</div>
+              <div className="grid gap-2 md:grid-cols-2">
                 <div className="flex items-center gap-2">
                   <span>🟢</span>
-                  <span className="text-green-400">优秀 (&lt; 50ms)</span>
-                  <span className="text-gray-400">- 适合游戏和视频通话</span>
+                  <span>优秀 (&lt; 50ms) - 适合游戏和实时通讯</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>🟡</span>
-                  <span className="text-yellow-400">良好 (50-150ms)</span>
-                  <span className="text-gray-400">- 适合网页浏览和视频</span>
+                  <span>良好 (50-150ms) - 适合网页浏览和视频播放</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>🔴</span>
-                  <span className="text-orange-400">较差 (&gt; 150ms)</span>
-                  <span className="text-gray-400">- 仅适合基本使用</span>
+                  <span>较差 (&gt; 150ms) - 仅适合基本访问</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>⚫</span>
-                  <span className="text-red-400">失败</span>
-                  <span className="text-gray-400">- 无法连接</span>
+                  <span>失败 - 目标不响应或被防火墙阻断</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </GlassCard>
         </div>
       )}
     </div>

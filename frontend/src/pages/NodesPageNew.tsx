@@ -174,10 +174,7 @@ export const NodesPageNew: React.FC = () => {
             <Suspense
               fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
             >
-              <NetworkToolkit
-                selectedNode={selectedNode}
-                onClose={() => setShowDiagnostics(false)}
-              />
+              <NetworkToolkit selectedNode={selectedNode} />
             </Suspense>
           </main>
         </div>

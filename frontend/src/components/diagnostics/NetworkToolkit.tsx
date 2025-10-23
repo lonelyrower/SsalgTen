@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   Activity,
-  X,
   History,
   RefreshCw,
   CheckCircle,
@@ -26,15 +25,11 @@ import { LatencyTest } from "@/components/diagnostics/LatencyTest";
 
 interface NetworkToolkitProps {
   selectedNode: NodeData;
-  onClose: () => void;
 }
 
 type TabType = "tools" | "history";
 
-export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({
-  selectedNode,
-  onClose,
-}) => {
+export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) => {
   const [activeTab, setActiveTab] = useState<TabType>("tools");
   const [diagnosticRecords, setDiagnosticRecords] = useState<DiagnosticRecord[]>([]);
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
@@ -120,17 +115,6 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 标题和关闭按钮 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">网络诊断工具</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{selectedNode.name}</p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={onClose} aria-label="关闭">
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
-
       {/* 标签页导航 */}
       <div className="flex justify-center">
         <AdminTabs
