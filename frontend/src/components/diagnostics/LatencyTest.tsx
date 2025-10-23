@@ -314,7 +314,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
             </div>
           </GlassCard>
 
-          <GlassCard variant="default" className="space-y-4">
+          <GlassCard variant="default" hover={false} className="space-y-4">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white">
               <Zap className="h-5 w-5 text-purple-500" />
               详细延迟结果
