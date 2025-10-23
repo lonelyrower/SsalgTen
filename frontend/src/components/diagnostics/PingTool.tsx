@@ -40,7 +40,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
       if (response.success && response.data) {
         // 格式化结果
-        const data = response.data as any;
+        const data = response.data as { output?: string };
         setResult(data.output || JSON.stringify(data, null, 2));
       } else {
         setError(response.error || "Ping 测试失败");

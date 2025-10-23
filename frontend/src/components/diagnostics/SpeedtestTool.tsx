@@ -10,9 +10,21 @@ interface SpeedtestToolProps {
   nodeId: string;
 }
 
+interface SpeedtestResult {
+  download?: { bandwidth?: number };
+  upload?: { bandwidth?: number };
+  ping?: { latency?: number; jitter?: number };
+  server?: {
+    name?: string;
+    location?: string;
+    country?: string;
+    host?: string;
+  };
+}
+
 export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<SpeedtestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const runSpeedtest = async () => {

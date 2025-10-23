@@ -39,7 +39,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
       const response = await apiService.runMTR(nodeId, target.trim(), count);
 
       if (response.success && response.data) {
-        const data = response.data as any;
+        const data = response.data as { output?: string };
         setResult(data.output || JSON.stringify(data, null, 2));
       } else {
         setError(response.error || "MTR 测试失败");

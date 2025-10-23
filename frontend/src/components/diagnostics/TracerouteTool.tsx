@@ -43,7 +43,7 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
       );
 
       if (response.success && response.data) {
-        const data = response.data as any;
+        const data = response.data as { output?: string };
         setResult(data.output || JSON.stringify(data, null, 2));
       } else {
         setError(response.error || "Traceroute 测试失败");
