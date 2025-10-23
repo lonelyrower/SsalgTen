@@ -159,6 +159,20 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
     return "text-blue-600 dark:text-blue-400";
   };
 
+  const getEventVariant = (type: string): "default" | "success" | "danger" | "warning" => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("error") || lowerType.includes("fail")) {
+      return "danger";
+    }
+    if (lowerType.includes("warning") || lowerType.includes("warn")) {
+      return "warning";
+    }
+    if (lowerType.includes("success") || lowerType.includes("complete")) {
+      return "success";
+    }
+    return "default";
+  };
+
   if (!selectedNode) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -362,41 +376,70 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                 <p>暂无运行日志</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
                 {events.map((event) => (
-                  <div
+                  <GlassCard
                     key={event.id}
-                    className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                    variant={getEventVariant(event.type)}
+                    hover={false}
+                    className="p-4"
                   >
-                    <div className={`mt-0.5 ${getTypeColor(event.type)}`}>
-                      {getTypeIcon(event.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">
-                          {event.type}
-                        </Badge>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(event.timestamp).toLocaleString("zh-CN")}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className={`mt-0.5 ${getTypeColor(event.type)}`}>
+                          {getTypeIcon(event.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge
+                              className={
+                                event.type.toLowerCase().includes("error") || event.type.toLowerCase().includes("fail")
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                  : event.type.toLowerCase().includes("warning")
+                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                  : event.type.toLowerCase().includes("success")
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                              }
+                            >
+                              {event.type}
+                            </Badge>
+                          </div>
+
+                          {event.message && (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                              {event.message}
+                            </p>
+                          )}
+
+                          {event.details && Object.keys(event.details).length > 0 && (
+                            <details className="mt-2">
+                              <summary className="cursor-pointer text-xs text-primary hover:underline">
+                                查看详细信息
+                              </summary>
+                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 rounded-lg">
+                                <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                                  {JSON.stringify(event.details, null, 2)}
+                                </pre>
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-right">
+                          {new Date(event.timestamp).toLocaleString("zh-CN", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
                       </div>
-                      {event.message && (
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                          {event.message}
-                        </p>
-                      )}
-                      {event.details && Object.keys(event.details).length > 0 && (
-                        <details className="mt-2">
-                          <summary className="cursor-pointer text-xs text-primary hover:underline">
-                            查看详情
-                          </summary>
-                          <pre className="mt-2 p-2 bg-black/5 dark:bg-black/20 rounded text-xs overflow-x-auto">
-                            {JSON.stringify(event.details, null, 2)}
-                          </pre>
-                        </details>
-                      )}
                     </div>
-                  </div>
+                  </GlassCard>
                 ))}
               </div>
             )}

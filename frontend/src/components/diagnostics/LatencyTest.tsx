@@ -35,6 +35,34 @@ interface LatencyTestProps {
   onTestComplete?: (result: LatencyTestResult) => void;
 }
 
+// 测试站点列表
+const STANDARD_TARGETS = [
+  "Google (全球)",
+  "Cloudflare (全球)",
+  "Amazon AWS (全球)",
+  "Microsoft Azure (全球)",
+  "GitHub (全球)",
+  "Baidu (中国)",
+  "Alibaba Cloud (中国)",
+  "Tencent Cloud (中国)",
+];
+
+const COMPREHENSIVE_TARGETS = [
+  ...STANDARD_TARGETS,
+  "Netflix (流媒体)",
+  "YouTube (流媒体)",
+  "Twitter (社交)",
+  "Facebook (社交)",
+  "LinkedIn (社交)",
+  "DigitalOcean (云服务)",
+  "Vultr (云服务)",
+  "Linode (云服务)",
+  "Oracle Cloud (云服务)",
+  "Heroku (平台)",
+  "Vercel (平台)",
+  "Netlify (平台)",
+];
+
 export const LatencyTest: React.FC<LatencyTestProps> = ({
   nodeId,
   agentEndpoint,
@@ -44,6 +72,8 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
   const [testResult, setTestResult] = useState<LatencyTestResult | null>(null);
   const [testType, setTestType] = useState<"standard" | "comprehensive">("standard");
   const [error, setError] = useState<string | null>(null);
+
+  const currentTargets = testType === "standard" ? STANDARD_TARGETS : COMPREHENSIVE_TARGETS;
 
   const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
@@ -218,6 +248,25 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
               </>
             )}
           </Button>
+        </div>
+
+        {/* 测试站点预览 */}
+        <div className="p-4 bg-cyan-50/30 dark:bg-cyan-900/10 rounded-lg border border-cyan-200/40 dark:border-cyan-700/40">
+          <div className="flex items-center gap-2 mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+            <Target className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
+            将测试以下站点：
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {currentTargets.map((target, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-1.5 px-2 py-1 bg-white/60 dark:bg-gray-800/40 rounded text-xs text-gray-600 dark:text-gray-400"
+              >
+                <span className="w-1 h-1 rounded-full bg-cyan-500" />
+                {target}
+              </div>
+            ))}
+          </div>
         </div>
 
         {error && (

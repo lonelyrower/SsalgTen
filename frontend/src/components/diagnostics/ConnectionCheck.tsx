@@ -152,13 +152,6 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           </button>
         </div>
 
-        {/* 说明 */}
-        <div className="p-3 bg-cyan-50/50 dark:bg-cyan-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            <strong>说明：</strong>系统将自动获取您的IP地址，并测试节点到您的Ping延迟和丢包率
-          </p>
-        </div>
-
         {/* 错误提示 */}
         {error && (
           <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
