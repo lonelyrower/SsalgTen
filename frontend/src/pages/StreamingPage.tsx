@@ -1,26 +1,31 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { StreamingOverviewStats } from "@/components/streaming/StreamingOverviewStats";
-import { StreamingStatusLegend } from "@/components/streaming/StreamingStatusLegend";
-import { StreamingPlatformMatrix } from "@/components/streaming/StreamingPlatformMatrix";
+import { StreamingPlatformCards } from "@/components/streaming/StreamingPlatformCards";
 import { StreamingNodeList } from "@/components/streaming/StreamingNodeList";
 import { StreamingNodeTable } from "@/components/streaming/StreamingNodeTable";
-import { StreamingFilters } from "@/components/streaming/StreamingFilters";
 import type {
   StreamingOverview,
   NodeStreamingSummary,
   StreamingFilters as FilterType,
+  StreamingStatus,
 } from "@/types/streaming";
 import { STREAMING_SERVICE_ORDER } from "@/types/streaming";
 import { apiService } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Grid, List, Film } from "lucide-react";
+import { Download, RefreshCw, Grid, List, Film, Filter, Search, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNotification } from "@/hooks/useNotification";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ViewMode = "grid" | "list";
 
@@ -258,26 +263,84 @@ export const StreamingPage: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto">
         <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
-        {/* 页面标题 */}
-        <PageHeader
-          title="流媒体解锁"
-          description={`监控节点流媒体服务解锁状态 - 共 ${overview.totalNodes} 个节点`}
-          icon={Film}
-          actions={
-            <>
+        {/* 操作和筛选栏 */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* 左侧：搜索和筛选 */}
+            <div className="flex items-center gap-3 flex-1 max-w-2xl">
+              {/* 搜索框 */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="搜索节点名称..."
+                  value={filters.keyword || ""}
+                  onChange={(e) =>
+                    setFilters((prev) => ({ ...prev, keyword: e.target.value }))
+                  }
+                  className="w-full pl-10 pr-10 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+                />
+                {filters.keyword && (
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, keyword: "" }))
+                    }
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* 国家筛选 */}
+              <Select
+                value={filters.country || "all"}
+                onValueChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    country: value === "all" ? undefined : value,
+                  }))
+                }
+              >
+                <SelectTrigger className="w-[140px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+                  <SelectValue placeholder="选择国家" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部国家</SelectItem>
+                  {availableCountries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* 状态筛选 */}
+              <Select
+                value={filters.status || "all"}
+                onValueChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: value === "all" ? undefined : (value as StreamingStatus),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-[140px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+                  <SelectValue placeholder="状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="yes">完全解锁</SelectItem>
+                  <SelectItem value="no">区域限制</SelectItem>
+                  <SelectItem value="failed">检测失败</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 右侧：操作按钮 */}
+            <div className="flex items-center gap-3">
               {/* 视图切换 */}
-              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded ${
-                    viewMode === "grid"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
-                  title="网格视图"
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
+              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1 shadow-sm">
                 <button
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded ${
@@ -285,29 +348,42 @@ export const StreamingPage: React.FC = () => {
                       ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
-                  title="列表视图"
+                  title="表格视图"
                 >
                   <List className="h-4 w-4" />
                 </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded ${
+                    viewMode === "grid"
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                  title="卡片视图"
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
               </div>
+
+              {/* 手动检测 */}
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
                 onClick={handleTriggerAll}
                 disabled={bulkTriggering || filteredNodes.length === 0}
+                className="gap-2"
               >
                 <Film
                   className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`}
                 />
                 <span className="hidden sm:inline">
-                  {bulkTriggering ? "检测中..." : "手动检测"}
+                  {bulkTriggering ? "检测中..." : "批量检测"}
                 </span>
               </Button>
 
               {/* 导出 */}
               <div className="relative group">
-                <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm text-sm">
                   <Download className="h-4 w-4" />
                   <span className="hidden sm:inline">导出</span>
                 </button>
@@ -337,7 +413,7 @@ export const StreamingPage: React.FC = () => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
               >
                 <RefreshCw
                   className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
@@ -346,42 +422,99 @@ export const StreamingPage: React.FC = () => {
                   {refreshing ? "刷新中..." : "刷新"}
                 </span>
               </button>
-            </>
-          }
-        />
+            </div>
+          </div>
+
+          {/* 当前筛选条件提示 */}
+          {(filters.platform || filters.country || filters.status || filters.keyword) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-gray-600 dark:text-gray-400">当前筛选:</span>
+              {filters.platform && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
+                  平台: {filters.platform}
+                  <button
+                    onClick={() => setFilters((prev) => ({ ...prev, platform: undefined }))}
+                    className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filters.country && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm">
+                  国家: {filters.country}
+                  <button
+                    onClick={() => setFilters((prev) => ({ ...prev, country: undefined }))}
+                    className="hover:bg-green-200 dark:hover:bg-green-800 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filters.status && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm">
+                  状态: {filters.status}
+                  <button
+                    onClick={() => setFilters((prev) => ({ ...prev, status: undefined }))}
+                    className="hover:bg-purple-200 dark:hover:bg-purple-800 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filters.keyword && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm">
+                  关键字: {filters.keyword}
+                  <button
+                    onClick={() => setFilters((prev) => ({ ...prev, keyword: undefined }))}
+                    className="hover:bg-amber-200 dark:hover:bg-amber-800 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              <button
+                onClick={() => setFilters({ showExpired: true })}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                清除全部
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* 总览统计 */}
         <StreamingOverviewStats overview={overview} />
 
-        {/* 状态说明 & 平台统计矩阵 */}
-        <div className="space-y-4">
-          <StreamingStatusLegend />
-          <StreamingPlatformMatrix
+        {/* 平台卡片 */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            平台统计（点击筛选）
+          </h3>
+          <StreamingPlatformCards
             stats={[...overview.platformStats].sort(
               (a, b) =>
                 STREAMING_SERVICE_ORDER.indexOf(a.service) -
                 STREAMING_SERVICE_ORDER.indexOf(b.service),
             )}
             onSelect={(service) =>
-              setFilters((prev) => ({ ...prev, platform: service }))
+              setFilters((prev) => ({
+                ...prev,
+                platform: prev.platform === service ? undefined : service,
+              }))
             }
+            selectedService={filters.platform}
           />
         </div>
-
-        {/* 筛选器 */}
-        <StreamingFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          availableCountries={availableCountries}
-        />
 
         {/* 节点列表 */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              节点列表
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              节点解锁详情
               <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-                (共 {filteredNodes.length} 个节点)
+                ({filteredNodes.length} 个节点)
               </span>
             </h2>
           </div>

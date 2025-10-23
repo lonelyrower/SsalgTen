@@ -1888,6 +1888,46 @@ EOF
     # 4. 重启服务
     log_info "重启 Agent 服务..."
 
+    # 确保 systemd 服务文件使用最新模板
+    if [ -f /etc/systemd/system/ssalgten-agent.service ]; then
+        if grep -q "Type=oneshot" /etc/systemd/system/ssalgten-agent.service \
+            || grep -q "RemainAfterExit" /etc/systemd/system/ssalgten-agent.service \
+            || grep -Eq 'ExecStart=.*/docker compose up[[:space:]].*-d' /etc/systemd/system/ssalgten-agent.service \
+            || ! grep -q "Type=simple" /etc/systemd/system/ssalgten-agent.service; then
+            log_warning "检测到旧版本的 systemd 配置，正在修复..."
+
+            SERVICE_USER=$(grep '^User=' /etc/systemd/system/ssalgten-agent.service | head -1 | cut -d'=' -f2)
+            SERVICE_GROUP=$(grep '^Group=' /etc/systemd/system/ssalgten-agent.service | head -1 | cut -d'=' -f2)
+            SERVICE_USER=${SERVICE_USER:-root}
+            SERVICE_GROUP=${SERVICE_GROUP:-$SERVICE_USER}
+
+            sudo tee /etc/systemd/system/ssalgten-agent.service > /dev/null <<SYSTEMD_EOF
+[Unit]
+Description=SsalgTen Agent Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=$SERVICE_USER
+Group=$SERVICE_GROUP
+WorkingDirectory=$APP_DIR
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD_EOF
+
+            sudo systemctl daemon-reload
+            log_success "systemd 配置已更新为最新模板"
+        else
+            log_success "systemd 配置已是最新版本"
+        fi
+    fi
+
     # 停止服务
     if systemctl is-active --quiet ssalgten-agent.service 2>/dev/null; then
         systemctl stop ssalgten-agent.service
@@ -2051,11 +2091,12 @@ update_heartbeat_config() {
     # 检查并修复 systemd 服务配置
     log_info "检查 systemd 服务配置..."
     if [ -f /etc/systemd/system/ssalgten-agent.service ]; then
-        # 检查是否是旧的 Type=forking 配置
-        if ! grep -q "ExecStart=/usr/bin/docker compose up" /etc/systemd/system/ssalgten-agent.service; then
+        if grep -q "Type=oneshot" /etc/systemd/system/ssalgten-agent.service \
+            || grep -q "RemainAfterExit" /etc/systemd/system/ssalgten-agent.service \
+            || grep -Eq 'ExecStart=.*/docker compose up[[:space:]].*-d' /etc/systemd/system/ssalgten-agent.service \
+            || ! grep -q "Type=simple" /etc/systemd/system/ssalgten-agent.service; then
             log_warning "检测到旧版本的 systemd 配置，正在修复..."
 
-            # 修复 systemd 配置
             sudo tee /etc/systemd/system/ssalgten-agent.service > /dev/null << 'SYSTEMD_EOF'
 [Unit]
 Description=SsalgTen Agent Service
