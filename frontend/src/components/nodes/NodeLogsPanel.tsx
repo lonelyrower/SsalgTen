@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, RefreshCw, Calendar, AlertCircle, Info, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/admin/GlassCard";
 import { apiService } from "@/services/api";
 import type { NodeData } from "@/services/api";
 
@@ -18,19 +19,6 @@ interface NodeEvent {
   timestamp: string;
 }
 
-const getTypeColor = (type: string) => {
-  const lowerType = type.toLowerCase();
-  if (lowerType.includes("error") || lowerType.includes("fail")) {
-    return "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
-  }
-  if (lowerType.includes("warning") || lowerType.includes("warn")) {
-    return "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
-  }
-  if (lowerType.includes("success") || lowerType.includes("complete")) {
-    return "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800";
-  }
-  return "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800";
-};
 
 const getTypeIcon = (type: string) => {
   const lowerType = type.toLowerCase();
@@ -132,14 +120,22 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
             </div>
           ) : (
             <div className="space-y-3">
-              {events.map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  className={`p-4 rounded-lg border ${getTypeColor(event.type)}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.02 }}
-                >
+              {events.map((event) => {
+                // 根据事件类型选择GlassCard variant
+                const getVariant = (type: string): "success" | "warning" | "danger" | "info" | "default" => {
+                  const lowerType = type.toLowerCase();
+                  if (lowerType.includes("error") || lowerType.includes("fail")) return "danger";
+                  if (lowerType.includes("warning") || lowerType.includes("warn")) return "warning";
+                  if (lowerType.includes("success") || lowerType.includes("complete")) return "success";
+                  return "info";
+                };
+
+                return (
+                  <GlassCard
+                    key={event.id}
+                    variant={getVariant(event.type)}
+                    className="p-4"
+                  >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
                       {getTypeIcon(event.type)}
@@ -176,8 +172,9 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
+                  </GlassCard>
+                );
+              })}
             </div>
           )}
         </div>
