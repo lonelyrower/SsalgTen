@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { StreamingOverviewStats } from "@/components/streaming/StreamingOverviewStats";
-import { PlatformStatsCard } from "@/components/streaming/PlatformStatsCard";
+import { StreamingStatusLegend } from "@/components/streaming/StreamingStatusLegend";
+import { StreamingPlatformMatrix } from "@/components/streaming/StreamingPlatformMatrix";
 import { StreamingNodeList } from "@/components/streaming/StreamingNodeList";
 import { StreamingNodeTable } from "@/components/streaming/StreamingNodeTable";
 import { StreamingFilters } from "@/components/streaming/StreamingFilters";
@@ -352,28 +353,16 @@ export const StreamingPage: React.FC = () => {
         {/* 总览统计 */}
         <StreamingOverviewStats overview={overview} />
 
-        {/* 平台统计 */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            平台解锁统计
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {overview.platformStats
-              .sort(
-                (a, b) =>
-                  STREAMING_SERVICE_ORDER.indexOf(a.service) -
-                  STREAMING_SERVICE_ORDER.indexOf(b.service),
-              )
-              .map((stat) => (
-                <PlatformStatsCard
-                  key={stat.service}
-                  stats={stat}
-                  onClick={() =>
-                    setFilters({ ...filters, platform: stat.service })
-                  }
-                />
-              ))}
-          </div>
+        {/* 状态说明 & 平台统计矩阵 */}
+        <div className="space-y-4">
+          <StreamingStatusLegend />
+          <StreamingPlatformMatrix
+            stats={[...overview.platformStats].sort(
+              (a, b) =>
+                STREAMING_SERVICE_ORDER.indexOf(a.service) -
+                STREAMING_SERVICE_ORDER.indexOf(b.service),
+            )}
+          />
         </div>
 
         {/* 筛选器 */}
