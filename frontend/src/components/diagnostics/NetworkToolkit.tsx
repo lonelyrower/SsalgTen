@@ -32,7 +32,7 @@ interface NodeEvent {
 }
 
 export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, heartbeatData }) => {
-  const [activeTab, setActiveTab] = useState<TabType>("tools");
+  const [activeTab, setActiveTab] = useState<TabType>("system");
   const [diagnosticRecords, setDiagnosticRecords] = useState<DiagnosticRecord[]>([]);
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
   const [diagnosticFilter, setDiagnosticFilter] = useState<
@@ -125,9 +125,9 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
   };
 
   const tabs = [
+    { id: "system" as TabType, label: "系统详情", icon: Server },
     { id: "tools" as TabType, label: "诊断工具", icon: Wrench },
     { id: "history" as TabType, label: "诊断历史", icon: History },
-    { id: "system" as TabType, label: "系统详情", icon: Server },
     { id: "logs" as TabType, label: "运行日志", icon: FileText },
   ];
 
@@ -179,7 +179,15 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
       </div>
 
       {/* 标签页内容 */}
-      {activeTab === "tools" ? (
+      {activeTab === "system" ? (
+        <div className="space-y-6">
+          {/* 系统详情 */}
+          <ServerDetailsPanel
+            node={selectedNode}
+            heartbeatData={heartbeatData}
+          />
+        </div>
+      ) : activeTab === "tools" ? (
         <div className="space-y-6">
           {/* 连接性自检 */}
           <ConnectionCheck node={selectedNode} />
@@ -320,14 +328,6 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
               </div>
             )}
           </GlassCard>
-        </div>
-      ) : activeTab === "system" ? (
-        <div className="space-y-6">
-          {/* 系统详情 */}
-          <ServerDetailsPanel
-            node={selectedNode}
-            heartbeatData={heartbeatData}
-          />
         </div>
       ) : activeTab === "logs" ? (
         <div className="space-y-6">
