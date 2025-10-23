@@ -6,27 +6,40 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { History, RefreshCw, CheckCircle, XCircle, Clock, Target, Wrench } from "lucide-react";
+import { History, RefreshCw, CheckCircle, XCircle, Clock, Target, Wrench, Server, FileText, AlertCircle, Info } from "lucide-react";
 import { ConnectionCheck } from "@/components/diagnostics/ConnectionCheck";
 import { PingTool } from "@/components/diagnostics/PingTool";
 import { TracerouteTool } from "@/components/diagnostics/TracerouteTool";
 import { MTRTool } from "@/components/diagnostics/MTRTool";
 import { SpeedtestTool } from "@/components/diagnostics/SpeedtestTool";
 import { LatencyTest } from "@/components/diagnostics/LatencyTest";
+import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
+import type { HeartbeatData } from "@/types/heartbeat";
 
 interface NetworkToolkitProps {
   selectedNode: NodeData;
+  heartbeatData?: HeartbeatData;
 }
 
-type TabType = "tools" | "history";
+type TabType = "tools" | "history" | "system" | "logs";
 
-export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) => {
+interface NodeEvent {
+  id: string;
+  type: string;
+  message?: string;
+  details?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, heartbeatData }) => {
   const [activeTab, setActiveTab] = useState<TabType>("tools");
   const [diagnosticRecords, setDiagnosticRecords] = useState<DiagnosticRecord[]>([]);
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
   const [diagnosticFilter, setDiagnosticFilter] = useState<
     "ALL" | "PING" | "TRACEROUTE" | "MTR" | "SPEEDTEST"
   >("ALL");
+  const [events, setEvents] = useState<NodeEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
 
   // 获取诊断历史记录
   const fetchDiagnosticRecords = useCallback(async () => {
@@ -50,12 +63,32 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) 
     }
   }, [selectedNode.id]);
 
+  // 获取节点事件日志
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoadingEvents(true);
+      const response = await apiService.getNodeEvents(selectedNode.id, 100);
+      if (response.success && response.data) {
+        setEvents(response.data as NodeEvent[]);
+      } else {
+        setEvents([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch node events:", error);
+      setEvents([]);
+    } finally {
+      setLoadingEvents(false);
+    }
+  }, [selectedNode.id]);
+
   // 当切换到诊断历史标签页时获取诊断记录
   useEffect(() => {
     if (activeTab === "history") {
       fetchDiagnosticRecords();
+    } else if (activeTab === "logs") {
+      fetchEvents();
     }
-  }, [activeTab, fetchDiagnosticRecords]);
+  }, [activeTab, fetchDiagnosticRecords, fetchEvents]);
 
   const filteredDiagnostics = diagnosticRecords.filter(
     (record) =>
@@ -94,7 +127,37 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) 
   const tabs = [
     { id: "tools" as TabType, label: "诊断工具", icon: Wrench },
     { id: "history" as TabType, label: "诊断历史", icon: History },
+    { id: "system" as TabType, label: "系统详情", icon: Server },
+    { id: "logs" as TabType, label: "运行日志", icon: FileText },
   ];
+
+  const getTypeIcon = (type: string) => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("error") || lowerType.includes("fail")) {
+      return <AlertCircle className="h-4 w-4" />;
+    }
+    if (lowerType.includes("warning") || lowerType.includes("warn")) {
+      return <AlertCircle className="h-4 w-4" />;
+    }
+    if (lowerType.includes("success") || lowerType.includes("complete")) {
+      return <CheckCircle className="h-4 w-4" />;
+    }
+    return <Info className="h-4 w-4" />;
+  };
+
+  const getTypeColor = (type: string) => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("error") || lowerType.includes("fail")) {
+      return "text-red-600 dark:text-red-400";
+    }
+    if (lowerType.includes("warning") || lowerType.includes("warn")) {
+      return "text-yellow-600 dark:text-yellow-400";
+    }
+    if (lowerType.includes("success") || lowerType.includes("complete")) {
+      return "text-green-600 dark:text-green-400";
+    }
+    return "text-blue-600 dark:text-blue-400";
+  };
 
   if (!selectedNode) {
     return (
@@ -132,7 +195,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) 
           {/* 延迟测试 */}
           <LatencyTest nodeId={selectedNode.id} onTestComplete={() => {}} />
         </div>
-      ) : (
+      ) : activeTab === "history" ? (
         <div className="space-y-6">
           {/* 诊断记录控制面板 */}
           <GlassCard variant="default">
@@ -258,7 +321,88 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode }) 
             )}
           </GlassCard>
         </div>
-      )}
+      ) : activeTab === "system" ? (
+        <div className="space-y-6">
+          {/* 系统详情 */}
+          <ServerDetailsPanel
+            node={selectedNode}
+            heartbeatData={heartbeatData}
+          />
+        </div>
+      ) : activeTab === "logs" ? (
+        <div className="space-y-6">
+          {/* 运行日志 */}
+          <GlassCard variant="default">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+                <FileText className="h-4 w-4" />
+                <span>节点运行日志</span>
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchEvents}
+                disabled={loadingEvents}
+                className="gap-2"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${loadingEvents ? "animate-spin" : ""}`}
+                />
+                刷新
+              </Button>
+            </div>
+
+            {loadingEvents ? (
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner text="加载日志..." />
+              </div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>暂无运行日志</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                {events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className={`mt-0.5 ${getTypeColor(event.type)}`}>
+                      {getTypeIcon(event.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">
+                          {event.type}
+                        </Badge>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(event.timestamp).toLocaleString("zh-CN")}
+                        </span>
+                      </div>
+                      {event.message && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          {event.message}
+                        </p>
+                      )}
+                      {event.details && Object.keys(event.details).length > 0 && (
+                        <details className="mt-2">
+                          <summary className="cursor-pointer text-xs text-primary hover:underline">
+                            查看详情
+                          </summary>
+                          <pre className="mt-2 p-2 bg-black/5 dark:bg-black/20 rounded text-xs overflow-x-auto">
+                            {JSON.stringify(event.details, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </GlassCard>
+        </div>
+      ) : null}
     </div>
   );
 };

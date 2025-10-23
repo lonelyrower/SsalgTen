@@ -13,8 +13,6 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { NodeCard } from "@/components/nodes/NodeCard";
 import { EnhancedNodeDetailsPanel } from "@/components/nodes/EnhancedNodeDetailsPanel";
-import { ServerDetailsPanel } from "@/components/nodes/ServerDetailsPanel";
-import { NodeLogsPanel } from "@/components/nodes/NodeLogsPanel";
 import { MultiViewToggle, type MultiViewMode } from "@/components/map/MultiViewToggle";
 import type { NodeData } from "@/services/api";
 import type { HeartbeatData } from "@/types/heartbeat";
@@ -45,9 +43,7 @@ const Globe3D = lazy(() =>
 
 export const NodesPageNew: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [showServerDetails, setShowServerDetails] = useState(false);
-  const [showLogs, setShowLogs] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<MultiViewMode>("list");
@@ -69,20 +65,12 @@ export const NodesPageNew: React.FC = () => {
 
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);
-    setShowDiagnostics(false);
-    setShowServerDetails(false);
-    setShowLogs(false);
+    setShowDetails(false);
   };
 
-  const handleRunDiagnostics = () => {
+  const handleShowDetails = () => {
     if (selectedNode) {
-      setShowDiagnostics(true);
-    }
-  };
-
-  const handleShowServerDetails = () => {
-    if (selectedNode) {
-      setShowServerDetails(true);
+      setShowDetails(true);
     }
   };
 
@@ -157,8 +145,8 @@ export const NodesPageNew: React.FC = () => {
     });
   }, [nodes, searchTerm, statusFilter]);
 
-  // 如果显示诊断界面
-  if (showDiagnostics && selectedNode) {
+  // 如果显示详情页面（包含诊断工具、系统详情、日志等）
+  if (showDetails && selectedNode) {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
         <Header />
@@ -167,7 +155,7 @@ export const NodesPageNew: React.FC = () => {
             {/* 页面标题栏 - 带返回按钮 */}
             <div className="mb-6 flex items-center gap-4">
               <Button
-                onClick={() => setShowDiagnostics(false)}
+                onClick={() => setShowDetails(false)}
                 variant="ghost"
                 size="sm"
                 className="gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
@@ -177,7 +165,7 @@ export const NodesPageNew: React.FC = () => {
               <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  网络诊断工具
+                  节点详情
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {selectedNode.name} ({selectedNode.city}, {selectedNode.country})
@@ -186,9 +174,9 @@ export const NodesPageNew: React.FC = () => {
             </div>
 
             <Suspense
-              fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
+              fallback={<LoadingSpinner text="加载详情..." size="md" />}
             >
-              <NetworkToolkit selectedNode={selectedNode} />
+              <NetworkToolkit selectedNode={selectedNode} heartbeatData={heartbeatData || undefined} />
             </Suspense>
           </main>
         </div>
@@ -196,43 +184,6 @@ export const NodesPageNew: React.FC = () => {
     );
   }
 
-  // 如果显示服务器详情面板
-  if (showServerDetails && selectedNode) {
-    return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <div className="flex-1 overflow-y-auto">
-          <main className="max-w-7xl mx-auto px-4 py-6 w-full">
-            {/* 页面标题栏 - 带返回按钮 */}
-            <div className="mb-6 flex items-center gap-4">
-              <Button
-                onClick={() => setShowServerDetails(false)}
-                variant="ghost"
-                size="sm"
-                className="gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-              >
-                ← 返回
-              </Button>
-              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  系统详情
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {selectedNode.name} ({selectedNode.city}, {selectedNode.country})
-                </p>
-              </div>
-            </div>
-
-            <ServerDetailsPanel
-              node={selectedNode}
-              heartbeatData={heartbeatData || undefined}
-            />
-          </main>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -366,19 +317,12 @@ export const NodesPageNew: React.FC = () => {
             <EnhancedNodeDetailsPanel
               node={selectedNode}
               heartbeatData={heartbeatData}
-              onRunDiagnostics={handleRunDiagnostics}
-              onShowServerDetails={handleShowServerDetails}
-              onViewLogs={() => setShowLogs(true)}
+              onShowDetails={handleShowDetails}
             />
           </div>
         </div>
         </main>
       </div>
-
-      {/* Logs Panel Modal */}
-      {showLogs && selectedNode && (
-        <NodeLogsPanel node={selectedNode} onClose={() => setShowLogs(false)} />
-      )}
     </div>
   );
 };

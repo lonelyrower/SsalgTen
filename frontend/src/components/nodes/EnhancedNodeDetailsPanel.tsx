@@ -26,9 +26,7 @@ import type { HeartbeatData } from "@/types/heartbeat";
 interface EnhancedNodeDetailsPanelProps {
   node: NodeData | null;
   heartbeatData?: HeartbeatData | null;
-  onRunDiagnostics?: () => void;
-  onViewLogs?: () => void;
-  onShowServerDetails?: () => void;
+  onShowDetails?: () => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -142,9 +140,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
 > = ({
   node,
   heartbeatData,
-  onRunDiagnostics,
-  onViewLogs,
-  onShowServerDetails,
+  onShowDetails,
 }) => {
   const [activeTab, setActiveTab] = useState<"info" | "resources">("info");
 
@@ -492,42 +488,20 @@ export const EnhancedNodeDetailsPanel: React.FC<
         )}
       </div>
 
-      {/* Action Buttons - fixed at bottom */}
-      <div className="mt-6 space-y-3 flex-shrink-0">
+      {/* Action Button - unified entry point */}
+      <div className="mt-6 flex-shrink-0">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
-            onClick={onRunDiagnostics}
-            className="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-900 dark:text-white font-semibold"
-            disabled={node.status !== "online"}
+            onClick={onShowDetails}
+            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-lg"
           >
             <Zap className="h-4 w-4 mr-2" />
-            运行网络诊断
+            查看详情
           </Button>
         </motion.div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={onShowServerDetails}
-              variant="outline"
-              className="w-full border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
-              disabled={node.status !== "online"}
-            >
-              <Terminal className="h-4 w-4 mr-2" />
-              系统详情
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={onViewLogs}
-              variant="outline"
-              className="w-full border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              查看日志
-            </Button>
-          </motion.div>
-        </div>
+        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+          包含网络诊断、系统详情、运行日志等
+        </p>
       </div>
     </motion.div>
   );
