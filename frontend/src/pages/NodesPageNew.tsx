@@ -164,13 +164,27 @@ export const NodesPageNew: React.FC = () => {
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-6 w-full">
-            <Button
-              onClick={() => setShowDiagnostics(false)}
-              variant="outline"
-              className="mb-4"
-            >
-              ← 返回节点列表
-            </Button>
+            {/* 页面标题栏 - 带返回按钮 */}
+            <div className="mb-6 flex items-center gap-4">
+              <Button
+                onClick={() => setShowDiagnostics(false)}
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                ← 返回
+              </Button>
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  网络诊断工具
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedNode.name} ({selectedNode.city}, {selectedNode.country})
+                </p>
+              </div>
+            </div>
+
             <Suspense
               fallback={<LoadingSpinner text="加载网络工具..." size="md" />}
             >
@@ -189,13 +203,27 @@ export const NodesPageNew: React.FC = () => {
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-6 w-full">
-            <Button
-              onClick={() => setShowServerDetails(false)}
-              variant="outline"
-              className="mb-4"
-            >
-              ← 返回节点列表
-            </Button>
+            {/* 页面标题栏 - 带返回按钮 */}
+            <div className="mb-6 flex items-center gap-4">
+              <Button
+                onClick={() => setShowServerDetails(false)}
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                ← 返回
+              </Button>
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  系统详情
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedNode.name} ({selectedNode.city}, {selectedNode.country})
+                </p>
+              </div>
+            </div>
+
             <ServerDetailsPanel
               node={selectedNode}
               heartbeatData={heartbeatData || undefined}

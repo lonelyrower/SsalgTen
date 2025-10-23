@@ -123,18 +123,27 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
   return (
     <GlassCard variant="info">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+      {/* 标题 - 统一样式 */}
+      <div className="flex items-center justify-between pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30 mb-4">
+        <div className="flex items-center gap-2">
           <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
             <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
           </div>
-          <span>连接性自检</span>
-        </h3>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+              连接性自检
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              检查节点与访客之间的连通性
+            </p>
+          </div>
+        </div>
         <button
           onClick={performCheck}
           disabled={checking}
           className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-lg transition-colors"
           title="重新检查"
+          aria-label="重新检查连接性"
         >
           <RefreshCw
             className={`h-4 w-4 text-cyan-600 dark:text-cyan-400 ${checking ? "animate-spin" : ""}`}

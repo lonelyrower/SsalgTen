@@ -164,14 +164,19 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
   return (
     <div className="space-y-6">
       <GlassCard variant="info" className="space-y-5">
-        <div className="flex flex-col items-center space-y-2 text-center">
-          <h3 className="flex items-center justify-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Zap className="h-5 w-5 text-cyan-500" />
-            延迟测试 - 节点到全球站点
-          </h3>
-          <p className="max-w-2xl text-sm text-slate-600 dark:text-slate-400">
-            选择测试范围后即可开始，系统会依次 Ping 全球热门站点并统计响应情况。
-          </p>
+        {/* 标题 - 统一靠左对齐 */}
+        <div className="flex items-center gap-2 pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+            <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+              延迟测试 - 节点到全球站点
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              选择测试范围后即可开始，系统会依次 Ping 全球热门站点并统计响应情况
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
