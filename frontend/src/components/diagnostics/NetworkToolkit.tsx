@@ -276,7 +276,6 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                   <GlassCard
                     key={record.id}
                     variant={record.success ? "success" : "danger"}
-                    hover={false}
                     className="p-4"
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -378,11 +377,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
             ) : (
               <div className="space-y-3">
                 {events.map((event) => (
-                  <GlassCard
-                    key={event.id}
-                    variant={getEventVariant(event.type)}
-                    hover={false}
-                  >
+                  <GlassCard key={event.id} variant={getEventVariant(event.type)}>
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1">
                         <div className={`mt-0.5 ${getTypeColor(event.type)}`}>

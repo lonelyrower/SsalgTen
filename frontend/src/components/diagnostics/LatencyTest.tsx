@@ -341,7 +341,6 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                   <GlassCard
                     key={`${result.target}-${index}`}
                     variant={getCardVariant(result.status)}
-                    hover={false}
                     className="!p-4"
                   >
                     <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">

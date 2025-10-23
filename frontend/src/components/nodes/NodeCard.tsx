@@ -128,7 +128,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {node.ipv4 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 dark:text-gray-400">IPv4:</span>
-                <span className="text-xs font-mono font-semibold text-cyan-600 dark:text-cyan-400 bg-white/50 dark:bg-gray-800/50 px-2 py-0.5 rounded">
+                <span className="text-xs font-mono font-semibold text-cyan-600 dark:text-cyan-400">
                   {node.ipv4}
                 </span>
               </div>
@@ -146,7 +146,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {node.ipv6 && node.ipv6.includes(":") && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 dark:text-gray-400">IPv6:</span>
-                <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 bg-white/50 dark:bg-gray-800/50 px-2 py-0.5 rounded truncate">
+                <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 truncate">
                   {node.ipv6}
                 </span>
               </div>

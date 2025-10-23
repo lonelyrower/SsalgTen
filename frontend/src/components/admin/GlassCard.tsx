@@ -60,15 +60,16 @@ export function GlassCard({
   };
 
   const colors = variantStyles[variant];
+  const hoverClasses = hover ? "group hover:-translate-y-0.5 hover:shadow-xl" : "";
 
   return (
     <motion.div
       className={cn(
-        "group relative rounded-2xl border-2 p-6 overflow-hidden",
+        "relative rounded-2xl border-2 p-6 overflow-hidden",
         "bg-gradient-to-br shadow-lg transition-all duration-300",
         colors.border,
         colors.bg,
-        hover && "hover:-translate-y-0.5 hover:shadow-xl",
+        hoverClasses,
         className,
       )}
       initial={{ opacity: 0, y: 20 }}
@@ -76,13 +77,15 @@ export function GlassCard({
       transition={{ duration: 0.3 }}
     >
       {/* Glow effect on hover */}
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-          "bg-gradient-to-br rounded-2xl",
-          colors.glow,
-        )}
-      />
+      {hover && (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+            "bg-gradient-to-br rounded-2xl",
+            colors.glow,
+          )}
+        />
+      )}
 
       {/* Decorative glow circle */}
       <div
