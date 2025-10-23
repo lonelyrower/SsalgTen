@@ -196,8 +196,8 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   </div>
                   {heartbeatData?.virtualization && (
                     <div>
-                      <p className="text-gray-600 dark:text-gray-400">虚拟化</p>
-                      <div className="flex items-center space-x-2">
+                      <p className="text-gray-600 dark:text-gray-400 text-center">虚拟化</p>
+                      <div className="flex items-center justify-center space-x-2">
                         <Badge variant="secondary" className="text-xs">
                           {heartbeatData.virtualization.type}
                         </Badge>
@@ -568,12 +568,12 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
               </div>
             </GlassCard>
 
-            {/* 进程和服务 - 使用 default 变体（灰色） */}
-            <GlassCard variant="default">
+            {/* 进程和服务 - 使用 danger 变体（红色） */}
+            <GlassCard variant="danger">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-700/30 rounded-lg">
-                    <Activity className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                    <Activity className="h-5 w-5 text-red-600 dark:text-red-400" />
                   </div>
                   <span>进程和服务</span>
                 </h3>
@@ -592,19 +592,19 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   <div>
                     <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">进程统计</p>
                     <div className="grid grid-cols-3 gap-3 text-sm">
-                      <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">运行中</p>
                         <p className="font-bold text-green-600 dark:text-green-400 text-lg">
                           {heartbeatData.processInfo.running}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">睡眠</p>
                         <p className="font-bold text-gray-900 dark:text-white text-lg">
                           {heartbeatData.processInfo.sleeping}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">僵尸</p>
                         <p
                           className={`font-bold text-lg ${heartbeatData.processInfo.zombie > 0 ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}
@@ -627,14 +627,14 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     if (activeServices.length === 0) return null;
 
                     return (
-                      <div className="pt-4 border-t border-slate-200/50 dark:border-slate-700/30 space-y-3">
+                      <div className="pt-4 border-t border-red-200/50 dark:border-red-700/30 space-y-3">
                         <div>
                           <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">系统服务</p>
                           <div className="grid grid-cols-3 gap-2">
                             {activeServices.map(([service]) => (
                               <div
                                 key={service}
-                                className="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/30 rounded-lg"
+                                className="flex items-center space-x-2 p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30"
                               >
                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                                 <span className="text-xs capitalize text-gray-900 dark:text-white font-medium">
@@ -650,12 +650,12 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                           const detail = svc?.xrayDetail;
                           if (!detail) return null;
                           return (
-                            <div className="pt-3 border-t border-slate-200/50 dark:border-slate-700/30">
+                            <div className="pt-3 border-t border-red-200/50 dark:border-red-700/30">
                               <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">
                                 Xray 自检
                               </p>
                               <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="p-2 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">进程</p>
                                   <Badge
                                     variant={
@@ -666,7 +666,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                     {detail.running ? "存在" : "未检测到"}
                                   </Badge>
                                 </div>
-                                <div className="p-2 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">TCP连通</p>
                                   <Badge
                                     variant={
@@ -677,14 +677,14 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                     {detail.tcpOk ? "正常" : "失败"}
                                   </Badge>
                                 </div>
-                                <div className="p-2 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">监听地址</p>
                                   <p className="font-medium font-mono text-xs text-gray-900 dark:text-white">
                                     {detail.host}:{detail.port}
                                   </p>
                                 </div>
                                 {detail.tls !== undefined && (
-                                  <div className="p-2 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                                  <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                                     <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">TLS握手</p>
                                     <Badge
                                       variant={
@@ -697,7 +697,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                   </div>
                                 )}
                                 {detail.sni && (
-                                  <div className="col-span-2 p-2 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+                                  <div className="col-span-2 p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
                                     <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">SNI</p>
                                     <p className="font-medium font-mono text-xs text-gray-900 dark:text-white break-all">
                                       {detail.sni}
