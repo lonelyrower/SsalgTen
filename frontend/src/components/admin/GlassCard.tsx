@@ -64,7 +64,7 @@ export function GlassCard({
   return (
     <motion.div
       className={cn(
-        "group relative rounded-2xl border-2 p-6",
+        "group relative rounded-2xl border-2 p-6 overflow-hidden",
         "bg-gradient-to-br shadow-lg transition-all duration-300",
         colors.border,
         colors.bg,
