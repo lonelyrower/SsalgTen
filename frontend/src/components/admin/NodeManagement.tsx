@@ -50,6 +50,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
   const [newNodeName, setNewNodeName] = useState("");
   const [exporting, setExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [editingCost, setEditingCost] = useState<string | null>(null);
+  const [costValue, setCostValue] = useState<string>("");
 
   useEffect(() => {
     loadNodes();
@@ -217,6 +219,43 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
   const openRenameModal = (nodeId: string, currentName: string) => {
     setShowRenameModal(nodeId);
     setNewNodeName(currentName);
+  };
+
+  const handleCostEdit = (nodeId: string, currentCost: number | null | undefined) => {
+    setEditingCost(nodeId);
+    setCostValue(currentCost !== null && currentCost !== undefined ? currentCost.toString() : "");
+  };
+
+  const handleCostSave = async (nodeId: string) => {
+    const cost = costValue.trim() === "" ? null : parseFloat(costValue);
+
+    if (costValue.trim() !== "" && (isNaN(cost as number) || (cost as number) < 0)) {
+      setError("请输入有效的价格（非负数字）");
+      return;
+    }
+
+    try {
+      const response = await apiService.updateNode(nodeId, { monthlyCost: cost });
+      if (response.success && response.data) {
+        setNodes(
+          nodes.map((n) =>
+            n.id === nodeId ? { ...n, monthlyCost: cost } : n
+          )
+        );
+        setEditingCost(null);
+        setCostValue("");
+        setError("");
+      } else {
+        setError(response.error || "Failed to update cost");
+      }
+    } catch {
+      setError("Failed to update cost");
+    }
+  };
+
+  const handleCostCancel = () => {
+    setEditingCost(null);
+    setCostValue("");
   };
 
   if (loading) {
@@ -571,6 +610,9 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                   最后在线
                 </th>
                 <th className="w-28 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  月度成本
+                </th>
+                <th className="w-28 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
@@ -584,8 +626,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                   <td className="w-8 px-1 py-4 text-center">
                     {getStatusIcon(node.status)}
                   </td>
-                  <td className="w-64 px-3 py-4 text-center">
-                    <div>
+                  <td className="w-64 px-3 py-4">
+                    <div className="flex flex-col items-center">
                       <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
                         {node.name}
                       </div>
@@ -636,6 +678,53 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     {node.lastSeen
                       ? new Date(node.lastSeen).toLocaleDateString("zh-CN")
                       : "未知"}
+                  </td>
+                  <td className="w-28 px-2 py-4 text-center">
+                    {editingCost === node.id ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={costValue}
+                          onChange={(e) => setCostValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleCostSave(node.id);
+                            } else if (e.key === "Escape") {
+                              handleCostCancel();
+                            }
+                          }}
+                          className="w-20 px-2 py-1 text-sm border border-blue-500 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                          placeholder="USD"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleCostSave(node.id)}
+                          className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                          title="保存"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={handleCostCancel}
+                          className="p-1 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+                          title="取消"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleCostEdit(node.id, node.monthlyCost)}
+                        className="text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        title="点击编辑"
+                      >
+                        {node.monthlyCost !== null && node.monthlyCost !== undefined
+                          ? `$${Number(node.monthlyCost).toFixed(2)}`
+                          : <span className="text-gray-400 dark:text-gray-500">点击设置</span>}
+                      </button>
+                    )}
                   </td>
                   <td className="w-28 px-2 py-4 text-center text-sm font-medium">
                     <div className="inline-flex items-center justify-center space-x-1">

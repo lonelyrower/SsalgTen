@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { GeographicDistribution } from "@/components/dashboard/GeographicDistribution";
 import { SystemMetrics } from "@/components/dashboard/SystemMetrics";
-import { ProviderDistribution } from "@/components/dashboard/ProviderDistribution";
+import { CostAnalysis } from "@/components/dashboard/CostAnalysis";
 import { TrafficRanking } from "@/components/dashboard/TrafficRanking";
 import { UptimeRanking } from "@/components/dashboard/UptimeRanking";
 import { HealthRanking } from "@/components/dashboard/HealthRanking";
@@ -98,9 +98,9 @@ export const UnifiedDashboardPage: React.FC = () => {
               <UptimeRanking nodes={nodes} />
             </div>
 
-            {/* 第3行右：服务商分布 */}
+            {/* 第3行右：成本分析 */}
             <div>
-              <ProviderDistribution nodes={nodes} />
+              <CostAnalysis nodes={nodes} />
             </div>
           </div>
         </main>

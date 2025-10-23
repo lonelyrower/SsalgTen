@@ -37,8 +37,8 @@ COPY --chown=ssalgten:nodejs . .
 # 构建应用
 RUN npm run build
 
-# 重新安装仅生产依赖以减小镜像大小
-RUN rm -rf node_modules && npm ci --only=production && npm cache clean --force
+# 清理 dev 依赖，仅保留生产依赖以减小镜像大小
+RUN npm prune --omit=dev && npm cache clean --force
 
 # 创建日志目录
 RUN mkdir -p /app/logs && chown -R ssalgten:nodejs /app/logs

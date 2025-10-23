@@ -36,7 +36,10 @@ model Node {
   // 提供商信息
   provider    String   // 服务提供商，如 "DigitalOcean"
   datacenter  String?  // 数据中心信息
-  
+
+  // 成本信息
+  monthlyCost Decimal? @db.Decimal(10, 2) // 月度成本（美元）
+
   // Agent信息
   agentId     String   @unique // Agent唯一标识
   apiKey      String   // API密钥用于认证

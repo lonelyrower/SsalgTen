@@ -67,6 +67,8 @@ export interface UpdateNodeInput {
   asnOrg?: string;
   asnRoute?: string;
   asnType?: string;
+  // 成本信息
+  monthlyCost?: number | null;
   // 占位/资产管理
   isPlaceholder?: boolean;
   // 允许在占位升级时写入真实 agentId
@@ -90,6 +92,7 @@ const BASE_NODE_SELECT = {
   asnType: true,
   provider: true,
   datacenter: true,
+  monthlyCost: true,
   agentId: true,
   apiKey: true,
   status: true,

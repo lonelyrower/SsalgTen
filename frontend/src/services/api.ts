@@ -143,6 +143,8 @@ export interface NodeData {
   asnOrg?: string;
   asnRoute?: string;
   asnType?: string;
+  // 成本信息
+  monthlyCost?: number | null; // 月度成本（美元）
   agentId: string;
   lastSeen?: string;
   createdAt: string;
