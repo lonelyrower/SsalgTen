@@ -707,6 +707,8 @@ class ApiService {
     const query = count ? `?count=${count}` : "";
     return this.request(
       `/diagnostics/${nodeId}/ping?target=${encodeURIComponent(target)}${query}`,
+      {},
+      true,
     );
   }
 
@@ -718,6 +720,8 @@ class ApiService {
     const query = maxHops ? `?maxHops=${maxHops}` : "";
     return this.request(
       `/diagnostics/${nodeId}/traceroute?target=${encodeURIComponent(target)}${query}`,
+      {},
+      true,
     );
   }
 
@@ -729,11 +733,13 @@ class ApiService {
     const query = count ? `?count=${count}` : "";
     return this.request(
       `/diagnostics/${nodeId}/mtr?target=${encodeURIComponent(target)}${query}`,
+      {},
+      true,
     );
   }
 
   async runSpeedtest(nodeId: string): Promise<ApiResponse<unknown>> {
-    return this.request(`/diagnostics/${nodeId}/speedtest`);
+    return this.request(`/diagnostics/${nodeId}/speedtest`, {}, true);
   }
 
   async runLatencyTest(
@@ -741,7 +747,7 @@ class ApiService {
     testType?: "standard" | "comprehensive",
   ): Promise<ApiResponse<unknown>> {
     const query = testType ? `?testType=${testType}` : "";
-    return this.request(`/diagnostics/${nodeId}/latency-test${query}`);
+    return this.request(`/diagnostics/${nodeId}/latency-test${query}`, {}, true);
   }
 
   // 认证相关 API
