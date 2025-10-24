@@ -609,7 +609,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="w-8 px-1 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-8 px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {/* 状态指示 */}
                 </th>
                 <th className="w-64 px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -638,7 +638,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                   key={node.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
-                  <td className="w-8 px-1 py-4 text-center">
+                  <td className="w-8 px-3 py-4 text-center">
                     {getStatusIcon(node.status)}
                   </td>
                   <td className="w-64 px-3 py-4">
