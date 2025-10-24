@@ -62,6 +62,11 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
   // 过滤掉数量为0的区间
   const activeRanges = ranges.filter((r) => r.count > 0);
 
+  // 获取成本最高的前8个节点
+  const topCostNodes = [...nodesWithCost]
+    .sort((a, b) => (b.monthlyCost || 0) - (a.monthlyCost || 0))
+    .slice(0, 8);
+
   return (
     <div className={`group relative h-full overflow-hidden rounded-2xl border-2 border-orange-200/60 dark:border-orange-700/60 bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-slate-800 dark:via-orange-950/60 dark:to-amber-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col ${className}`}>
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-orange-400/15 via-transparent to-amber-500/15" />
@@ -189,6 +194,42 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top 8 成本节点 */}
+            {topCostNodes.length > 0 && (
+              <div className="pt-3">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
+                  <span>成本排行</span>
+                  <span className="text-base">👑</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {topCostNodes.map((node, index) => {
+                    const rankEmoji = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🏅";
+                    return (
+                      <div
+                        key={node.id}
+                        className="rounded-lg border border-orange-100/70 dark:border-orange-900/40 bg-white/60 dark:bg-white/5 px-2.5 py-2 hover:bg-orange-50/80 dark:hover:bg-orange-900/20 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span className="text-sm flex-shrink-0">{rankEmoji}</span>
+                            <span
+                              className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate"
+                              title={node.name}
+                            >
+                              {node.name}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-orange-600 dark:text-orange-400 flex-shrink-0">
+                            ${(node.monthlyCost || 0).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
