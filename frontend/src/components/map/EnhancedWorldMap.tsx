@@ -32,6 +32,8 @@ import {
   MapPin,
 } from "lucide-react";
 import type { NodeData } from "@/services/api";
+import { useVisitorLocation } from "@/hooks/useVisitorLocation";
+import { MapPin as VisitorMapPin } from "lucide-react";
 
 // 扩展节点数据类型，支持微调坐标
 interface ExtendedNodeData extends NodeData {
@@ -371,9 +373,9 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
 
   const icon = new DivIcon({
     html: `
-      <div class="flex items-center justify-center ${selectedClass} ${pulseClass}" 
+      <div class="flex items-center justify-center ${selectedClass} ${pulseClass}"
            style="width: ${size}px; height: ${size}px;">
-        <div class="w-full h-full rounded-full border-2 border-white shadow-lg flex items-center justify-center" 
+        <div class="w-full h-full rounded-full border-2 border-white shadow-lg flex items-center justify-center"
              style="background-color: ${style.color};">
           <div class="rounded-full" style="width: 6px; height: 6px; background-color: #ffffff;"></div>
         </div>
@@ -382,6 +384,39 @@ const createEnhancedIcon = (status: string, isSelected: boolean = false) => {
     className: "custom-enhanced-marker",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
+  });
+
+  ICON_CACHE.set(cacheKey, icon);
+  return icon;
+};
+
+// 创建访客位置图标
+const createVisitorIcon = (isMatchingNode: boolean = false) => {
+  const cacheKey = `visitor-${isMatchingNode ? "matching" : "default"}`;
+  const cached = ICON_CACHE.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const size = 28;
+  const color = isMatchingNode ? "#8b5cf6" : "#ec4899"; // 紫色（匹配）或粉色（默认）
+
+  const icon = new DivIcon({
+    html: `
+      <div class="flex items-center justify-center animate-pulse"
+           style="width: ${size}px; height: ${size}px;">
+        <div class="w-full h-full rounded-full border-3 border-white shadow-2xl flex items-center justify-center"
+             style="background: linear-gradient(135deg, ${color}, ${color}DD);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+      </div>
+    `,
+    className: "custom-visitor-marker",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
   });
 
   ICON_CACHE.set(cacheKey, icon);
@@ -561,6 +596,9 @@ export const EnhancedWorldMap = memo(
     layout = "card",
     showControlPanels = true,
   }: EnhancedWorldMapProps) => {
+    // 获取访客位置信息
+    const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
+
     const storedProvider = useMemo(() => resolveStoredProvider(), []);
     const initialProvider = useMemo(
       () => storedProvider ?? resolvePreferredProvider(),
@@ -894,9 +932,61 @@ export const EnhancedWorldMap = memo(
       return (clusterIndex as any).getClusters(bbox, z) as any[];
     }, [clusterIndex, debouncedBounds, debouncedZoom]);
 
-    // 生成标记组件
+    // 生成标记组件（包括节点和访客位置）
     const markers = useMemo(() => {
       const els: React.ReactElement[] = [];
+
+      // 添加访客位置标记
+      if (visitorLocation && !visitorLoading) {
+        const isMatching = !!matchedNode;
+        els.push(
+          <Marker
+            key="visitor-location"
+            position={[visitorLocation.latitude, visitorLocation.longitude]}
+            icon={createVisitorIcon(isMatching)}
+          >
+            <Popup className="custom-popup" maxWidth={300}>
+              <div className="p-3">
+                <h3 className="font-bold text-base text-pink-700 dark:text-pink-400 mb-2 flex items-center">
+                  <VisitorMapPin className="h-4 w-4 mr-2" />
+                  您的位置
+                </h3>
+                <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 space-y-1">
+                  <div>
+                    位置: {visitorLocation.city}, {visitorLocation.country}
+                  </div>
+                  <div className="font-mono text-xs text-gray-500">
+                    IP: {visitorLocation.ip}
+                  </div>
+                  {visitorLocation.isp && (
+                    <div className="text-xs">
+                      ISP: {visitorLocation.isp}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-400">
+                    坐标: {visitorLocation.latitude.toFixed(4)}, {visitorLocation.longitude.toFixed(4)}
+                  </div>
+                </div>
+                {isMatching && matchedNode && (
+                  <div className="mt-3 p-2 bg-purple-50 dark:bg-purple-900/30 rounded border border-purple-200 dark:border-purple-700">
+                    <div className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-1">
+                      🎯 正在使用此节点
+                    </div>
+                    <div className="text-xs text-purple-600 dark:text-purple-400">
+                      节点名称: {matchedNode.name}
+                    </div>
+                    <div className="text-xs text-purple-600 dark:text-purple-400">
+                      {matchedNode.city}, {matchedNode.country}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      }
+
+      // 添加节点标记
       clusteredItems.forEach((feature: any) => {
         const [lng, lat] = feature.geometry.coordinates as [number, number];
         const props = feature.properties as any;
@@ -1061,7 +1151,7 @@ export const EnhancedWorldMap = memo(
         }
       });
       return els;
-    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode]);
+    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, visitorLocation, visitorLoading, matchedNode]);
 
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen

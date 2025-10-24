@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import * as Cesium from "cesium";
 import type { NodeData } from "@/services/api";
+import { useVisitorLocation } from "@/hooks/useVisitorLocation";
 import { Button } from "@/components/ui/button";
 import {
   Globe,
@@ -61,6 +62,9 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const initializingRef = useRef(false); // 防止重复初始化
+
+  // 获取访客位置信息
+  const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
 
   // 图层状态 - 3D 地球专用图层
   const [currentLayer, setCurrentLayer] = useState<
@@ -350,6 +354,79 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
     // 清除所有现有节点实体
     viewer.entities.removeAll();
 
+    // 添加访客位置标记
+    if (visitorLocation && !visitorLoading) {
+      const isMatching = !!matchedNode;
+      const visitorColor = isMatching
+        ? Cesium.Color.fromCssColorString("#8b5cf6") // 紫色（匹配节点）
+        : Cesium.Color.fromCssColorString("#ec4899"); // 粉色（普通）
+
+      const visitorEntity = viewer.entities.add({
+        id: "visitor-location",
+        name: "您的位置",
+        position: Cesium.Cartesian3.fromDegrees(
+          visitorLocation.longitude,
+          visitorLocation.latitude,
+          100000,
+        ),
+
+        point: {
+          color: visitorColor,
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: 3,
+          heightReference: Cesium.HeightReference.NONE,
+          // 添加脉动效果
+          pixelSize: new Cesium.CallbackProperty(() => {
+            return 20 + Math.sin(Date.now() / 200) * 5;
+          }, false) as any,
+        },
+
+        label: {
+          text: isMatching ? "您的位置 (正在使用节点)" : "您的位置",
+          font: '16px sans-serif',
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 3,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -25),
+          heightReference: Cesium.HeightReference.NONE,
+          showBackground: true,
+          backgroundColor: visitorColor.withAlpha(0.7),
+          backgroundPadding: new Cesium.Cartesian2(8, 4),
+        },
+      });
+
+      // 存储访客位置数据
+      (visitorEntity as any)._visitorData = {
+        ...visitorLocation,
+        isMatching,
+        matchedNode,
+      };
+
+      // 如果匹配了节点，添加连接线
+      if (isMatching && matchedNode) {
+        viewer.entities.add({
+          polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+              visitorLocation.longitude,
+              visitorLocation.latitude,
+              100000,
+              matchedNode.longitude,
+              matchedNode.latitude,
+              100000,
+            ]),
+            width: 3,
+            material: new Cesium.PolylineGlowMaterialProperty({
+              glowPower: 0.3,
+              color: Cesium.Color.fromCssColorString("#8b5cf6").withAlpha(0.8),
+            }),
+            arcType: Cesium.ArcType.GEODESIC,
+          },
+        });
+      }
+    }
+
     // 添加节点标记
     nodes.forEach((node) => {
       let color: Cesium.Color;
@@ -438,7 +515,7 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
         }
       }
     }
-  }, [nodeIds, nodes]); // 依赖nodeIds，避免不必要的更新
+  }, [nodeIds, nodes, visitorLocation, visitorLoading, matchedNode]); // 依赖nodeIds和访客位置，避免不必要的更新
 
   // 点击外部关闭图层菜单
   useEffect(() => {
