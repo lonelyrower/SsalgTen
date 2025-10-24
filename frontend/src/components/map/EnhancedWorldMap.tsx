@@ -21,8 +21,6 @@ import Supercluster from "supercluster";
 const ICON_CACHE = new Map<string, DivIcon>();
 import { Button } from "@/components/ui/button";
 import {
-  Eye,
-  EyeOff,
   Layers,
   Map as MapIcon,
   MapPin,
@@ -579,7 +577,7 @@ export const EnhancedWorldMap = memo(
     const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
 
     // 访客位置可见性管理
-    const { isVisible: isVisitorLocationVisible, toggleVisibility: toggleVisitorLocation } = useVisitorLocationVisibility();
+    const { isVisible: isVisitorLocationVisible } = useVisitorLocationVisibility();
 
     const storedProvider = useMemo(() => resolveStoredProvider(), []);
     const initialProvider = useMemo(
@@ -1137,7 +1135,7 @@ export const EnhancedWorldMap = memo(
         }
       });
       return els;
-    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible, toggleVisitorLocation]);
+    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]);
 
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen
@@ -1314,34 +1312,6 @@ export const EnhancedWorldMap = memo(
 
         {/* 地图容器：占满可用空间，移动端使用较小的最小高度 */}
         <div className={mapWrapperClasses}>
-          {/* 访客位置显示/隐藏按钮 - 左上角，在 Leaflet 缩放控件下方 */}
-          {visitorLocation && !visitorLoading && (
-            <div className="absolute top-[88px] left-[10px] z-[1000]">
-              <Button
-                variant="secondary"
-                size="icon"
-                onClick={toggleVisitorLocation}
-                title={isVisitorLocationVisible ? "隐藏我的位置" : "显示我的位置"}
-                aria-label={isVisitorLocationVisible ? "隐藏访客位置" : "显示访客位置"}
-                className={`${
-                  isVisitorLocationVisible
-                    ? "bg-pink-500 hover:bg-pink-600"
-                    : "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
-                } shadow-md border-2 ${
-                  isVisitorLocationVisible
-                    ? "border-pink-600"
-                    : "border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                {isVisitorLocationVisible ? (
-                  <EyeOff className="h-5 w-5 text-white" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-                )}
-              </Button>
-            </div>
-          )}
-
           <MapContainer
             center={[20, 0]}
             zoom={2}

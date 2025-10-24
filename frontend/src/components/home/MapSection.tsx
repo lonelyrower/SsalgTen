@@ -1,7 +1,8 @@
 import { lazy, Suspense } from "react";
 import { ViewModeToggle } from "@/components/map/ViewModeToggle";
-import { Globe } from "lucide-react";
+import { Globe, Eye, EyeOff } from "lucide-react";
 import type { NodeData, NodeStats } from "@/services/api";
+import { useVisitorLocationVisibility } from "@/hooks/useVisitorLocationVisibility";
 
 // 懒加载地图组件
 const EnhancedWorldMap = lazy(() =>
@@ -47,6 +48,8 @@ export const MapSection: React.FC<MapSectionProps> = ({
   onViewModeChange,
   onNodeClick,
 }) => {
+  const { isVisible: isVisitorLocationVisible, toggleVisibility: toggleVisitorLocation } = useVisitorLocationVisibility();
+
   const handleViewModeChange = (mode: "2d" | "3d") => {
     onViewModeChange(mode);
   };
@@ -60,7 +63,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
           <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         </div>
 
-        {/* Row 2: Node Statistics */}
+        {/* Row 2: Node Statistics & Visitor Location Toggle */}
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg dark:bg-black/40">
           <div className="flex items-center gap-1.5 text-white">
             <span className="status-indicator bg-green-400" />
@@ -73,6 +76,19 @@ export const MapSection: React.FC<MapSectionProps> = ({
             <span className="status-indicator bg-red-400" />
             <span className="font-medium">{stats?.offlineNodes ?? 0}</span>
           </div>
+          <span className="h-4 w-px bg-white/30" />
+          <button
+            onClick={toggleVisitorLocation}
+            className="flex items-center gap-1 text-white hover:text-pink-300 transition-colors"
+            title={isVisitorLocationVisible ? "隐藏我的位置" : "显示我的位置"}
+            aria-label={isVisitorLocationVisible ? "隐藏访客位置" : "显示访客位置"}
+          >
+            {isVisitorLocationVisible ? (
+              <Eye className="h-3.5 w-3.5" />
+            ) : (
+              <EyeOff className="h-3.5 w-3.5" />
+            )}
+          </button>
         </div>
       </div>
 
