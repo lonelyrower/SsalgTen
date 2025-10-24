@@ -146,6 +146,7 @@ export interface NodeData {
   // 成本信息
   monthlyCost?: number | null; // 月度成本（美元）
   agentId: string;
+  nameCustomized?: boolean;
   lastSeen?: string;
   createdAt: string;
   updatedAt: string;

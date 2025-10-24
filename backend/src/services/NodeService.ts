@@ -93,6 +93,7 @@ const BASE_NODE_SELECT = {
   provider: true,
   datacenter: true,
   monthlyCost: true,
+  nameCustomized: true,
   agentId: true,
   apiKey: true,
   status: true,
