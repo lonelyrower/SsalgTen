@@ -25,6 +25,7 @@ import {
   Server,
   Clock,
   Eye,
+  EyeOff,
   TrendingUp,
   AlertTriangle,
   Layers,
@@ -33,6 +34,7 @@ import {
 } from "lucide-react";
 import type { NodeData } from "@/services/api";
 import { useVisitorLocation } from "@/hooks/useVisitorLocation";
+import { useVisitorLocationVisibility } from "@/hooks/useVisitorLocationVisibility";
 import { MapPin as VisitorMapPin } from "lucide-react";
 
 // 扩展节点数据类型，支持微调坐标
@@ -599,6 +601,9 @@ export const EnhancedWorldMap = memo(
     // 获取访客位置信息
     const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
 
+    // 访客位置可见性管理
+    const { isVisible: isVisitorLocationVisible, toggleVisibility: toggleVisitorLocation } = useVisitorLocationVisibility();
+
     const storedProvider = useMemo(() => resolveStoredProvider(), []);
     const initialProvider = useMemo(
       () => storedProvider ?? resolvePreferredProvider(),
@@ -936,8 +941,8 @@ export const EnhancedWorldMap = memo(
     const markers = useMemo(() => {
       const els: React.ReactElement[] = [];
 
-      // 添加访客位置标记
-      if (visitorLocation && !visitorLoading) {
+      // 添加访客位置标记（仅在可见时）
+      if (visitorLocation && !visitorLoading && isVisitorLocationVisible) {
         const isMatching = !!matchedNode;
         els.push(
           <Marker
@@ -947,10 +952,23 @@ export const EnhancedWorldMap = memo(
           >
             <Popup className="custom-popup" maxWidth={300}>
               <div className="p-3">
-                <h3 className="font-bold text-base text-pink-700 dark:text-pink-400 mb-2 flex items-center">
-                  <VisitorMapPin className="h-4 w-4 mr-2" />
-                  您的位置
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-base text-pink-700 dark:text-pink-400 flex items-center">
+                    <VisitorMapPin className="h-4 w-4 mr-2" />
+                    您的位置
+                  </h3>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleVisitorLocation();
+                    }}
+                    className="p-1 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded transition-colors"
+                    title="隐藏我的位置"
+                    aria-label="隐藏我的位置"
+                  >
+                    <EyeOff className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+                  </button>
+                </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 space-y-1">
                   <div>
                     位置: {visitorLocation.city}, {visitorLocation.country}
@@ -1158,7 +1176,7 @@ export const EnhancedWorldMap = memo(
         }
       });
       return els;
-    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, visitorLocation, visitorLoading, matchedNode]);
+    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible, toggleVisitorLocation]);
 
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen
@@ -1247,6 +1265,26 @@ export const EnhancedWorldMap = memo(
                   <Eye className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
                   {showStats ? "隐藏" : "显示"}统计
                 </Button>
+                {visitorLocation && !visitorLoading && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleVisitorLocation}
+                    className="w-full justify-start text-[10px] md:text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 py-1 md:py-2"
+                  >
+                    {isVisitorLocationVisible ? (
+                      <>
+                        <EyeOff className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
+                        隐藏我的位置
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
+                        显示我的位置
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

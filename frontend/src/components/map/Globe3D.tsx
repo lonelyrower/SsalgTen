@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import * as Cesium from "cesium";
 import type { NodeData } from "@/services/api";
 import { useVisitorLocation } from "@/hooks/useVisitorLocation";
+import { useVisitorLocationVisibility } from "@/hooks/useVisitorLocationVisibility";
 import { Button } from "@/components/ui/button";
 import {
   Globe,
@@ -15,6 +16,8 @@ import {
   Map,
   Pause,
   Play,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface Globe3DProps {
@@ -65,6 +68,9 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
 
   // 获取访客位置信息
   const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
+
+  // 访客位置可见性管理
+  const { isVisible: isVisitorLocationVisible, toggleVisibility: toggleVisitorLocation } = useVisitorLocationVisibility();
 
   // 图层状态 - 3D 地球专用图层
   const [currentLayer, setCurrentLayer] = useState<
@@ -354,8 +360,8 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
     // 清除所有现有节点实体
     viewer.entities.removeAll();
 
-    // 添加访客位置标记
-    if (visitorLocation && !visitorLoading) {
+    // 添加访客位置标记（仅在可见时）
+    if (visitorLocation && !visitorLoading && isVisitorLocationVisible) {
       const isMatching = !!matchedNode;
       const visitorColor = isMatching
         ? Cesium.Color.fromCssColorString("#8b5cf6") // 紫色（匹配节点）
@@ -515,7 +521,7 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
         }
       }
     }
-  }, [nodeIds, nodes, visitorLocation, visitorLoading, matchedNode]); // 依赖nodeIds和访客位置，避免不必要的更新
+  }, [nodeIds, nodes, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]); // 依赖nodeIds和访客位置，避免不必要的更新
 
   // 点击外部关闭图层菜单
   useEffect(() => {
@@ -647,6 +653,28 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
 
       {/* 控制按钮 */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+        {/* 访客位置显示/隐藏按钮 */}
+        {visitorLocation && !visitorLoading && (
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={toggleVisitorLocation}
+            title={isVisitorLocationVisible ? "隐藏我的位置" : "显示我的位置"}
+            aria-label={isVisitorLocationVisible ? "隐藏访客位置" : "显示访客位置"}
+            className={`${
+              isVisitorLocationVisible
+                ? "bg-pink-500 hover:bg-pink-600"
+                : "bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800"
+            } shadow-lg border border-gray-200/50 dark:border-gray-600/50`}
+          >
+            {isVisitorLocationVisible ? (
+              <EyeOff className="h-4 w-4 text-white" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+            )}
+          </Button>
+        )}
+
         <Button
           variant="secondary"
           size="icon"
