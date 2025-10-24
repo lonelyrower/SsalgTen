@@ -1,17 +1,21 @@
+import { Prisma } from "@prisma/client";
+
 // Helpers for shaping safe responses
 
-// 定义公共视图的节点类型（移除敏感字段）
+// ���幫����ͼ�Ľڵ����ͣ��Ƴ������ֶΣ�
 export function sanitizeNode(
   node: Record<string, unknown>,
 ): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { apiKey: _apiKey, agentId: _agentId, ...rest } = node || {};
 
-  // Convert BigInt fields to strings for JSON serialization
+  // Convert BigInt/Decimal fields to JSON-friendly primitives
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rest)) {
     if (typeof value === "bigint") {
       result[key] = value.toString();
+    } else if (value instanceof Prisma.Decimal) {
+      result[key] = value.toNumber();
     } else {
       result[key] = value;
     }
