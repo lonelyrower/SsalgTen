@@ -955,9 +955,16 @@ export const EnhancedWorldMap = memo(
                   <div>
                     位置: {visitorLocation.city}, {visitorLocation.country}
                   </div>
-                  <div className="font-mono text-xs text-gray-500">
-                    IP: {visitorLocation.ip}
-                  </div>
+                  {visitorLocation.ipv4 && (
+                    <div className="font-mono text-xs text-blue-600 dark:text-blue-400">
+                      IPv4: {visitorLocation.ipv4}
+                    </div>
+                  )}
+                  {visitorLocation.ipv6 && (
+                    <div className="font-mono text-xs text-indigo-600 dark:text-indigo-400 break-all">
+                      IPv6: {visitorLocation.ipv6}
+                    </div>
+                  )}
                   {visitorLocation.isp && (
                     <div className="text-xs">
                       ISP: {visitorLocation.isp}

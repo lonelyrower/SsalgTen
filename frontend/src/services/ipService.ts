@@ -4,8 +4,9 @@
  */
 
 export interface IPLocationData {
-  ip: string;           // IPv4 地址
-  ipv6?: string;        // IPv6 地址（如果可用）
+  ipv4?: string;        // IPv4 地址
+  ipv6?: string;        // IPv6 地址
+  ip: string;           // 主要 IP 地址（IPv4 或 IPv6）
   latitude: number;     // 纬度
   longitude: number;    // 经度
   city: string;         // 城市
@@ -57,7 +58,7 @@ class IPService {
 
   /**
    * 获取访客的 IP 地理位置信息
-   * 使用多个 API 作为备选方案
+   * 使用多个 API 作为备选方案，并尝试同时获取 IPv4 和 IPv6
    */
   async getVisitorLocation(): Promise<IPLocationData> {
     // 检查缓存
@@ -72,13 +73,14 @@ class IPService {
       this.fetchFromIPify,
     ];
 
+    let mainData: IPLocationData | null = null;
+
     for (const api of apis) {
       try {
         const data = await api.call(this);
         if (data) {
-          this.cache = data;
-          this.cacheTime = Date.now();
-          return data;
+          mainData = data;
+          break;
         }
       } catch (error) {
         console.warn(`IP API failed, trying next:`, error);
@@ -86,7 +88,64 @@ class IPService {
       }
     }
 
-    throw new Error('All IP geolocation APIs failed');
+    if (!mainData) {
+      throw new Error('All IP geolocation APIs failed');
+    }
+
+    // 尝试同时获取另一个 IP 版本（IPv4/IPv6）
+    try {
+      const isIPv4 = mainData.ip.includes('.');
+      const otherIP = await this.fetchOtherIPVersion(isIPv4);
+
+      if (isIPv4) {
+        mainData.ipv4 = mainData.ip;
+        if (otherIP) mainData.ipv6 = otherIP;
+      } else {
+        mainData.ipv6 = mainData.ip;
+        if (otherIP) mainData.ipv4 = otherIP;
+      }
+    } catch (error) {
+      // 忽略错误，使用主 IP 即可
+      console.log('Could not fetch alternate IP version:', error);
+      const isIPv4 = mainData.ip.includes('.');
+      if (isIPv4) {
+        mainData.ipv4 = mainData.ip;
+      } else {
+        mainData.ipv6 = mainData.ip;
+      }
+    }
+
+    this.cache = mainData;
+    this.cacheTime = Date.now();
+    return mainData;
+  }
+
+  /**
+   * 尝试获取另一个 IP 版本（IPv4 或 IPv6）
+   */
+  private async fetchOtherIPVersion(currentIsIPv4: boolean): Promise<string | null> {
+    try {
+      const response = await fetch(`https://api64.ipify.org?format=json`);
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      const ip = data.ip;
+
+      // 验证返回的是我们想要的版本
+      const isIPv4 = ip.includes('.');
+      if (currentIsIPv4 && !isIPv4) {
+        // 当前是 IPv4，返回的是 IPv6
+        return ip;
+      } else if (!currentIsIPv4 && isIPv4) {
+        // 当前是 IPv6，返回的是 IPv4
+        return ip;
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 
   /**
