@@ -81,7 +81,9 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
           成本分析
         </h3>
         <div className="text-sm text-slate-500 dark:text-slate-300">
-          {nodesWithCost.length}/{nodes.filter(n => n.status === "online").length} 节点
+          {nodesWithCost.length === nodes.filter(n => n.status === "online").length
+            ? `${nodesWithCost.length} 节点`
+            : `${nodesWithCost.length}/${nodes.filter(n => n.status === "online").length} 节点`}
         </div>
       </div>
 
