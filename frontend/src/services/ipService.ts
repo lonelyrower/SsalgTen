@@ -95,22 +95,29 @@ class IPService {
     // 尝试同时获取另一个 IP 版本（IPv4/IPv6）
     try {
       const isIPv4 = mainData.ip.includes('.');
-      const otherIP = await this.fetchOtherIPVersion(isIPv4);
 
+      // 先设置主 IP
       if (isIPv4) {
         mainData.ipv4 = mainData.ip;
-        if (otherIP) mainData.ipv6 = otherIP;
       } else {
         mainData.ipv6 = mainData.ip;
-        if (otherIP) mainData.ipv4 = otherIP;
       }
-    } catch (error) {
-      // 忽略错误，使用主 IP 即可
-      console.log('Could not fetch alternate IP version:', error);
+
+      // 尝试获取另一个版本的 IP
+      const otherIP = await this.fetchOtherIPVersion(isIPv4);
+      if (otherIP) {
+        if (isIPv4) {
+          mainData.ipv6 = otherIP;
+        } else {
+          mainData.ipv4 = otherIP;
+        }
+      }
+    } catch {
+      // 如果获取失败，至少保证主 IP 已设置
       const isIPv4 = mainData.ip.includes('.');
-      if (isIPv4) {
+      if (isIPv4 && !mainData.ipv4) {
         mainData.ipv4 = mainData.ip;
-      } else {
+      } else if (!isIPv4 && !mainData.ipv6) {
         mainData.ipv6 = mainData.ip;
       }
     }

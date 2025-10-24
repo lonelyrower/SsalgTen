@@ -388,18 +388,15 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
         },
 
         label: {
-          text: isMatching ? "您的位置 (正在使用节点)" : "您的位置",
-          font: '16px sans-serif',
+          text: "您的位置",
+          font: '14px sans-serif',
           fillColor: Cesium.Color.WHITE,
           outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 3,
+          outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
           pixelOffset: new Cesium.Cartesian2(0, -25),
           heightReference: Cesium.HeightReference.NONE,
-          showBackground: true,
-          backgroundColor: visitorColor.withAlpha(0.7),
-          backgroundPadding: new Cesium.Cartesian2(8, 4),
         },
       });
 
@@ -653,28 +650,6 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
 
       {/* 控制按钮 */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
-        {/* 访客位置显示/隐藏按钮 */}
-        {visitorLocation && !visitorLoading && (
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={toggleVisitorLocation}
-            title={isVisitorLocationVisible ? "隐藏我的位置" : "显示我的位置"}
-            aria-label={isVisitorLocationVisible ? "隐藏访客位置" : "显示访客位置"}
-            className={`${
-              isVisitorLocationVisible
-                ? "bg-pink-500 hover:bg-pink-600"
-                : "bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800"
-            } shadow-lg border border-gray-200/50 dark:border-gray-600/50`}
-          >
-            {isVisitorLocationVisible ? (
-              <EyeOff className="h-4 w-4 text-white" />
-            ) : (
-              <Eye className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-            )}
-          </Button>
-        )}
-
         <Button
           variant="secondary"
           size="icon"
@@ -723,6 +698,28 @@ export function Globe3D({ nodes, onNodeClick, onReady }: Globe3DProps) {
         >
           <Home className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
+
+        {/* 访客位置显示/隐藏按钮 - 最下方 */}
+        {visitorLocation && !visitorLoading && (
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={toggleVisitorLocation}
+            title={isVisitorLocationVisible ? "隐藏我的位置" : "显示我的位置"}
+            aria-label={isVisitorLocationVisible ? "隐藏访客位置" : "显示访客位置"}
+            className={`${
+              isVisitorLocationVisible
+                ? "bg-pink-500 hover:bg-pink-600"
+                : "bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800"
+            } shadow-lg border border-gray-200/50 dark:border-gray-600/50`}
+          >
+            {isVisitorLocationVisible ? (
+              <EyeOff className="h-4 w-4 text-white" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Layer switcher */}

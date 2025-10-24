@@ -952,23 +952,10 @@ export const EnhancedWorldMap = memo(
           >
             <Popup className="custom-popup" maxWidth={300}>
               <div className="p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-base text-pink-700 dark:text-pink-400 flex items-center">
-                    <VisitorMapPin className="h-4 w-4 mr-2" />
-                    您的位置
-                  </h3>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleVisitorLocation();
-                    }}
-                    className="p-1 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded transition-colors"
-                    title="隐藏我的位置"
-                    aria-label="隐藏我的位置"
-                  >
-                    <EyeOff className="h-4 w-4 text-pink-600 dark:text-pink-400" />
-                  </button>
-                </div>
+                <h3 className="font-bold text-base text-pink-700 dark:text-pink-400 mb-2 flex items-center">
+                  <VisitorMapPin className="h-4 w-4 mr-2" />
+                  您的位置
+                </h3>
                 <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 space-y-1">
                   <div>
                     位置: {visitorLocation.city}, {visitorLocation.country}
@@ -1265,26 +1252,6 @@ export const EnhancedWorldMap = memo(
                   <Eye className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
                   {showStats ? "隐藏" : "显示"}统计
                 </Button>
-                {visitorLocation && !visitorLoading && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleVisitorLocation}
-                    className="w-full justify-start text-[10px] md:text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 py-1 md:py-2"
-                  >
-                    {isVisitorLocationVisible ? (
-                      <>
-                        <EyeOff className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
-                        隐藏我的位置
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
-                        显示我的位置
-                      </>
-                    )}
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -1452,6 +1419,34 @@ export const EnhancedWorldMap = memo(
 
         {/* 地图容器：占满可用空间，移动端使用较小的最小高度 */}
         <div className={mapWrapperClasses}>
+          {/* 访客位置显示/隐藏按钮 - 左上角，在 Leaflet 缩放控件下方 */}
+          {visitorLocation && !visitorLoading && (
+            <div className="absolute top-[88px] left-[10px] z-[1000]">
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={toggleVisitorLocation}
+                title={isVisitorLocationVisible ? "隐藏我的位置" : "显示我的位置"}
+                aria-label={isVisitorLocationVisible ? "隐藏访客位置" : "显示访客位置"}
+                className={`${
+                  isVisitorLocationVisible
+                    ? "bg-pink-500 hover:bg-pink-600"
+                    : "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+                } shadow-md border-2 ${
+                  isVisitorLocationVisible
+                    ? "border-pink-600"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+              >
+                {isVisitorLocationVisible ? (
+                  <EyeOff className="h-5 w-5 text-white" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+                )}
+              </Button>
+            </div>
+          )}
+
           <MapContainer
             center={[20, 0]}
             zoom={2}
