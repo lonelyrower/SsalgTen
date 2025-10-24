@@ -164,9 +164,6 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
             {/* 成本分布 */}
             {activeRanges.length > 0 && (
               <div className="pt-3">
-                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                  成本分布
-                </h4>
                 <div className="space-y-2.5">
                   {activeRanges.map((range, index) => (
                     <div key={index} className="space-y-1">
@@ -201,10 +198,6 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
             {/* Top 8 成本节点 */}
             {topCostNodes.length > 0 && (
               <div className="pt-3">
-                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-                  <span>成本排行</span>
-                  <span className="text-base">👑</span>
-                </h4>
                 <div className="grid grid-cols-2 gap-2">
                   {topCostNodes.map((node, index) => {
                     const rankEmoji = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🏅";
