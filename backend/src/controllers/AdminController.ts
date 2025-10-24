@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiResponse } from "../types";
@@ -19,6 +20,7 @@ export interface CreateNodeRequest {
   datacenter?: string;
   description?: string;
   tags?: string[];
+  monthlyCost?: number | null;
 }
 
 export interface UpdateNodeRequest {
@@ -35,6 +37,7 @@ export interface UpdateNodeRequest {
   description?: string;
   tags?: string[];
   status?: "ONLINE" | "OFFLINE" | "MAINTENANCE";
+  monthlyCost?: number | null;
 }
 
 export interface CreateUserRequest {
@@ -73,6 +76,7 @@ export class AdminController {
         datacenter,
         description,
         tags,
+        monthlyCost,
       }: CreateNodeRequest = req.body;
 
       if (
@@ -111,6 +115,7 @@ export class AdminController {
           ipv6: true,
           provider: true,
           datacenter: true,
+          monthlyCost: true,
           agentId: true,
           apiKey: true,
           description: true,
@@ -134,6 +139,10 @@ export class AdminController {
           apiKey,
           description,
           tags: tags ? JSON.stringify(tags) : null,
+          monthlyCost:
+            monthlyCost === undefined || monthlyCost === null
+              ? null
+              : new Prisma.Decimal(monthlyCost),
           status: "OFFLINE",
         },
       });
@@ -195,6 +204,13 @@ export class AdminController {
         tags: updateData.tags ? JSON.stringify(updateData.tags) : undefined,
       };
 
+      if (updateData.monthlyCost !== undefined) {
+        updateDataFormatted.monthlyCost =
+          updateData.monthlyCost === null
+            ? null
+            : new Prisma.Decimal(updateData.monthlyCost);
+      }
+
       // 如果名称被修改，标记为用户自定义
       if (updateData.name && updateData.name !== existingNode.name) {
         updateDataFormatted.nameCustomized = true;
@@ -215,6 +231,7 @@ export class AdminController {
           ipv6: true,
           provider: true,
           datacenter: true,
+          monthlyCost: true,
           agentId: true,
           apiKey: true,
           description: true,
