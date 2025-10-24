@@ -86,7 +86,6 @@ export const MapSection: React.FC<MapSectionProps> = ({
               onNodeClick={onNodeClick}
               selectedNode={selectedNode}
               className="h-full w-full"
-              showControlPanels={false}
               layout="fullscreen"
             />
           ) : (

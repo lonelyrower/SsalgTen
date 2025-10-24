@@ -297,7 +297,6 @@ export const NodesPageNew: React.FC = () => {
                         onNodeClick={handleNodeClick}
                         selectedNode={selectedNode}
                         showHeatmap={false}
-                        showControlPanels={false}
                         className="h-full"
                       />
                     ) : (

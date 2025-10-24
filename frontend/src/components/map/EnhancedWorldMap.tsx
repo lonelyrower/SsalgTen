@@ -21,16 +21,15 @@ import Supercluster from "supercluster";
 const ICON_CACHE = new Map<string, DivIcon>();
 import { Button } from "@/components/ui/button";
 import {
-  Activity,
-  Server,
-  Clock,
   Eye,
   EyeOff,
-  TrendingUp,
-  AlertTriangle,
   Layers,
   Map as MapIcon,
   MapPin,
+  AlertTriangle,
+  Clock,
+  Server,
+  Activity,
 } from "lucide-react";
 import type { NodeData } from "@/services/api";
 import { useVisitorLocation } from "@/hooks/useVisitorLocation";
@@ -287,8 +286,6 @@ interface EnhancedWorldMapProps {
   showHeatmap?: boolean;
   selectedNode?: NodeData | null;
   className?: string;
-  // 是否显示右上角的控制面板（节点统计与显示模式）
-  showControlPanels?: boolean;
   layout?: "card" | "fullscreen";
 }
 
@@ -464,23 +461,6 @@ const createClusterIcon = (
   });
 };
 
-// 计算节点统计信息
-const calculateNodeStats = (nodes: NodeData[]) => {
-  const total = nodes.length;
-  const online = nodes.filter(
-    (n) => n.status.toLowerCase() === "online",
-  ).length;
-  const offline = nodes.filter(
-    (n) => n.status.toLowerCase() === "offline",
-  ).length;
-  const maintenance = nodes.filter(
-    (n) => n.status.toLowerCase() === "maintenance",
-  ).length;
-  const uptime = total > 0 ? Math.round((online / total) * 100) : 0;
-
-  return { total, online, offline, maintenance, uptime };
-};
-
 // 缩放监听组件
 const ZoomHandler = ({
   onZoomChange,
@@ -584,8 +564,6 @@ interface EnhancedWorldMapProps {
   onNodeClick?: (node: NodeData) => void;
   selectedNode?: NodeData | null;
   className?: string;
-  // 是否显示右上角的控制面板（节点统计）
-  showControlPanels?: boolean;
   layout?: "card" | "fullscreen";
 }
 
@@ -596,7 +574,6 @@ export const EnhancedWorldMap = memo(
     selectedNode,
     className = "",
     layout = "card",
-    showControlPanels = true,
   }: EnhancedWorldMapProps) => {
     // 获取访客位置信息
     const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
@@ -660,7 +637,6 @@ export const EnhancedWorldMap = memo(
       return () => window.clearTimeout(timeoutId);
     }, [nodes.length, invalidateMapSize]);
 
-    const [showStats, setShowStats] = useState(true);
     const [currentZoom, setCurrentZoom] = useState(3);
     const [debouncedZoom, setDebouncedZoom] = useState(3);
     const [bounds, setBounds] = useState<any | null>(null);
@@ -872,8 +848,6 @@ export const EnhancedWorldMap = memo(
 
     // 处理坐标重叠的节点
     const processedNodes = useMemo(() => jitterCoordinates(nodes), [nodes]);
-
-    const stats = useMemo(() => calculateNodeStats(nodes), [nodes]);
 
     // 防抖缩放级别，避免频繁重算聚合
     useEffect(() => {
@@ -1178,85 +1152,6 @@ export const EnhancedWorldMap = memo(
         ref={mapContainerRef}
         className={`relative flex flex-col ${className}`}
       >
-        {/* 地图控制面板 */}
-        {showControlPanels && (
-          <div className="absolute top-2 md:top-4 left-2 md:left-auto md:right-4 z-40 space-y-2 md:space-y-3 max-w-[calc(100vw-200px)] md:max-w-none">
-            {/* 统计信息卡片 */}
-            {showStats && (
-              <div className="glass rounded-lg p-2 md:p-4 border border-white/20">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <h4 className="font-semibold text-xs md:text-sm text-gray-900 dark:text-white/90 flex items-center">
-                    <Activity className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 text-primary" />
-                    节点统计
-                  </h4>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowStats(false)}
-                    aria-label="关闭节点统计"
-                    title="关闭节点统计"
-                    className="h-5 w-5 md:h-6 md:w-6 p-0 text-gray-600 dark:text-white/60 hover:text-gray-800 dark:hover:text-white"
-                  >
-                    ×
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-2 md:gap-3 text-[10px] md:text-xs">
-                  <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
-                    <div className="status-indicator bg-green-400 mr-1 md:mr-2 scale-75 md:scale-100"></div>
-                    <span className="text-gray-900 dark:text-white/90">
-                      在线: {stats.online}
-                    </span>
-                  </div>
-                  <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
-                    <div className="status-indicator bg-red-400 mr-1 md:mr-2 scale-75 md:scale-100"></div>
-                    <span className="text-gray-900 dark:text-white/90">
-                      离线: {stats.offline}
-                    </span>
-                  </div>
-                  <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
-                    <TrendingUp className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2 text-primary" />
-                    <span className="text-gray-900 dark:text-white/90">
-                      可用率: {stats.uptime}%
-                    </span>
-                  </div>
-                  <div className="flex items-center glass rounded p-1.5 md:p-2 border border-white/10">
-                    <Server className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2 text-purple-400" />
-                    <span className="text-gray-900 dark:text-white/90">
-                      总计: {stats.total}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 实时状态指示 - 移动端隐藏 */}
-                <div className="hidden md:block mt-3 pt-3 border-t border-white/10">
-                  <div className="flex items-center justify-between text-xs text-gray-700 dark:text-white/70">
-                    <span>实时监控</span>
-                    <div className="flex items-center space-x-1">
-                      <div className="status-indicator bg-green-400"></div>
-                      <span>ACTIVE</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 快速操作 */}
-            <div className="bg-white/95 dark:bg-gray-800/95 lg:bg-white/90 lg:dark:bg-gray-800/90 rounded-lg p-2 md:p-3 border border-gray-200/50 dark:border-gray-600/50 lg:backdrop-blur-[10px] shadow-lg">
-              <div className="space-y-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowStats(!showStats)}
-                  className="w-full justify-start text-[10px] md:text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 py-1 md:py-2"
-                >
-                  <Eye className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-2" />
-                  {showStats ? "隐藏" : "显示"}统计
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Layer switcher - top right */}
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40">
           <div className="layer-menu-container relative">
