@@ -519,7 +519,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
         }
       }
     }
-  }, [nodeIds, nodes, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]); // 依赖nodeIds和访客位置，避免不必要的更新
+  }, [nodeIds, nodes, showVisitorLocation, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]); // 依赖nodeIds和访客位置，避免不必要的更新
 
   // 点击外部关闭图层菜单
   useEffect(() => {

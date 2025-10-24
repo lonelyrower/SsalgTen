@@ -37,12 +37,7 @@ export const CreateNodeSchema = z
     datacenter: z.string().optional(),
     description: z.string().optional(),
     tags: z.array(z.string()).optional(),
-    monthlyCost: z
-      .number()
-      .nonnegative()
-      .max(1_000_000)
-      .nullable()
-      .optional(),
+    monthlyCost: z.number().nonnegative().max(1_000_000).nullable().optional(),
   })
   .strict();
 
@@ -61,11 +56,6 @@ export const UpdateNodeSchema = z
     description: z.string().optional(),
     tags: z.array(z.string()).optional(),
     status: z.enum(["ONLINE", "OFFLINE", "MAINTENANCE"]).optional(),
-    monthlyCost: z
-      .number()
-      .nonnegative()
-      .max(1_000_000)
-      .nullable()
-      .optional(),
+    monthlyCost: z.number().nonnegative().max(1_000_000).nullable().optional(),
   })
   .strict();
