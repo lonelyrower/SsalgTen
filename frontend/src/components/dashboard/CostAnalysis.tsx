@@ -37,10 +37,10 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
 
   // 成本分布区间
   const ranges: CostRange[] = [
-    { label: "$0-10", min: 0, max: 10, count: 0, percentage: 0 },
-    { label: "$10-20", min: 10, max: 20, count: 0, percentage: 0 },
-    { label: "$20-50", min: 20, max: 50, count: 0, percentage: 0 },
-    { label: "$50+", min: 50, max: Infinity, count: 0, percentage: 0 },
+    { label: "$0-3", min: 0, max: 3, count: 0, percentage: 0 },
+    { label: "$3-5", min: 3, max: 5, count: 0, percentage: 0 },
+    { label: "$5-10", min: 5, max: 10, count: 0, percentage: 0 },
+    { label: "$10+", min: 10, max: Infinity, count: 0, percentage: 0 },
   ];
 
   // 统计每个区间的节点数量
