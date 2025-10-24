@@ -579,6 +579,16 @@ export const EnhancedWorldMap = memo(
     // 访客位置可见性管理
     const { isVisible: isVisitorLocationVisible } = useVisitorLocationVisibility();
 
+    // 调试日志
+    useEffect(() => {
+      console.log('[EnhancedWorldMap] Visitor Location Debug:', {
+        visitorLocation,
+        visitorLoading,
+        isVisitorLocationVisible,
+        shouldShow: visitorLocation && !visitorLoading && isVisitorLocationVisible
+      });
+    }, [visitorLocation, visitorLoading, isVisitorLocationVisible]);
+
     const storedProvider = useMemo(() => resolveStoredProvider(), []);
     const initialProvider = useMemo(
       () => storedProvider ?? resolvePreferredProvider(),
