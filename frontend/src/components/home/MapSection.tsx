@@ -103,9 +103,10 @@ export const MapSection: React.FC<MapSectionProps> = ({
               selectedNode={selectedNode}
               className="h-full w-full"
               layout="fullscreen"
+              showVisitorLocation={true}
             />
           ) : (
-            <Globe3D nodes={nodes} onNodeClick={onNodeClick} />
+            <Globe3D nodes={nodes} onNodeClick={onNodeClick} showVisitorLocation={true} />
           )}
         </Suspense>
       </div>

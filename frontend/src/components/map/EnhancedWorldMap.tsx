@@ -285,6 +285,7 @@ interface EnhancedWorldMapProps {
   selectedNode?: NodeData | null;
   className?: string;
   layout?: "card" | "fullscreen";
+  showVisitorLocation?: boolean; // 是否显示访客位置
 }
 
 // 聚合节点类型
@@ -563,6 +564,7 @@ interface EnhancedWorldMapProps {
   selectedNode?: NodeData | null;
   className?: string;
   layout?: "card" | "fullscreen";
+  showVisitorLocation?: boolean; // 是否显示访客位置
 }
 
 export const EnhancedWorldMap = memo(
@@ -572,22 +574,15 @@ export const EnhancedWorldMap = memo(
     selectedNode,
     className = "",
     layout = "card",
+    showVisitorLocation = false, // 默认不显示访客位置
   }: EnhancedWorldMapProps) => {
-    // 获取访客位置信息
-    const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(nodes);
+    // 获取访客位置信息（仅在需要时）
+    const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(
+      showVisitorLocation ? nodes : []
+    );
 
-    // 访客位置可见性管理
+    // 访客位置可见性管理（仅在需要时）
     const { isVisible: isVisitorLocationVisible } = useVisitorLocationVisibility();
-
-    // 调试日志
-    useEffect(() => {
-      console.log('[EnhancedWorldMap] Visitor Location Debug:', {
-        visitorLocation,
-        visitorLoading,
-        isVisitorLocationVisible,
-        shouldShow: visitorLocation && !visitorLoading && isVisitorLocationVisible
-      });
-    }, [visitorLocation, visitorLoading, isVisitorLocationVisible]);
 
     const storedProvider = useMemo(() => resolveStoredProvider(), []);
     const initialProvider = useMemo(
@@ -923,8 +918,8 @@ export const EnhancedWorldMap = memo(
     const markers = useMemo(() => {
       const els: React.ReactElement[] = [];
 
-      // 添加访客位置标记（仅在可见时）
-      if (visitorLocation && !visitorLoading && isVisitorLocationVisible) {
+      // 添加访客位置标记（仅在启用且可见时）
+      if (showVisitorLocation && visitorLocation && !visitorLoading && isVisitorLocationVisible) {
         const isMatching = !!matchedNode;
         els.push(
           <Marker
@@ -1145,7 +1140,7 @@ export const EnhancedWorldMap = memo(
         }
       });
       return els;
-    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]);
+    }, [clusteredItems, clusterIndex, onNodeClick, selectedNode, showVisitorLocation, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]);
 
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen

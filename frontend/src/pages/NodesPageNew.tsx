@@ -297,12 +297,14 @@ export const NodesPageNew: React.FC = () => {
                         onNodeClick={handleNodeClick}
                         selectedNode={selectedNode}
                         showHeatmap={false}
+                        showVisitorLocation={false}
                         className="h-full"
                       />
                     ) : (
                       <Globe3D
                         nodes={filteredNodes}
                         onNodeClick={handleNodeClick}
+                        showVisitorLocation={false}
                       />
                     )}
                   </Suspense>
