@@ -72,14 +72,14 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
       <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
         <thead className="bg-slate-50 dark:bg-slate-900/60">
           <tr>
-            <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-48">
               节点
             </th>
             {columns.map((col) => (
               <th
                 key={col.key}
                 scope="col"
-                className="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-28"
                 title={col.label}
               >
                 <div className="flex items-center justify-center">
@@ -87,10 +87,10 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                 </div>
               </th>
             ))}
-            <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">
               最近检测
             </th>
-            <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">
               操作
             </th>
           </tr>
@@ -129,7 +129,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   const serviceResult = getServiceResult(node.services, col.key);
                   if (!serviceResult) {
                     return (
-                      <td key={col.key} className="px-3 py-4 align-top text-xs text-slate-400">
+                      <td key={col.key} className="px-4 py-4 text-center text-xs text-slate-400">
                         —
                       </td>
                     );
@@ -141,8 +141,8 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   const showDetails = serviceResult.status === "yes" || serviceResult.status === "org" || serviceResult.status === "pending";
 
                   return (
-                    <td key={col.key} className="px-3 py-4 align-top">
-                      <div className="flex flex-col gap-1">
+                    <td key={col.key} className="px-4 py-4">
+                      <div className="flex flex-col gap-1 items-center">
                         {/* 第一行：状态 */}
                         <div className={`text-sm font-medium ${statusClass}`}>
                           {STATUS_TEXT[serviceResult.status]}
@@ -169,32 +169,34 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     </td>
                   );
                 })}
-                <td className="px-3 py-4 align-top text-sm text-slate-600 dark:text-slate-400">
-                  <div className="flex flex-col gap-1">
+                <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
+                  <div className="flex flex-col gap-1 items-center">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-slate-400" />
                       <span>{relativeTime}</span>
                     </div>
                     {isExpired && (
-                      <Badge variant="warning" className="w-fit gap-1">
+                      <Badge variant="warning" className="gap-1">
                         <AlertTriangle className="h-3 w-3" />
                         <span>数据过期</span>
                       </Badge>
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-4 align-top text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void handleRetest(node.nodeId);
-                    }}
-                    disabled={isTesting || !onRetest}
-                  >
-                    {isTesting ? "检测中..." : "检测"}
-                  </Button>
+                <td className="px-4 py-4">
+                  <div className="flex items-center justify-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleRetest(node.nodeId);
+                      }}
+                      disabled={isTesting || !onRetest}
+                    >
+                      {isTesting ? "检测中..." : "检测"}
+                    </Button>
+                  </div>
                 </td>
               </tr>
             );
