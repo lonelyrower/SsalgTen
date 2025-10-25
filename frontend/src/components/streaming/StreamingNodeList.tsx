@@ -166,7 +166,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
                   )}
 
                   {/* 第三行：解锁类型（仅解锁状态显示） */}
-                  {showDetails && (
+                  {showDetails && service.unlockType && (
                     <div>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}

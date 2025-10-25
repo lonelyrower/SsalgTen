@@ -158,7 +158,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                         )}
 
                         {/* 第三行：解锁类型（仅解锁状态显示） */}
-                        {showDetails && (
+                        {showDetails && serviceResult.unlockType && (
                           <div>
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${unlockClass}`}
