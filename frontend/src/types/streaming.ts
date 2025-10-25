@@ -22,6 +22,7 @@ export type StreamingStatus =
   | "cn" // 中国地区 (YouTube)
   | "app" // 仅APP (ChatGPT - API受限但iOS可用)
   | "web" // 仅Web (ChatGPT - iOS被VPN检测但API可用)
+  | "idc" // 数据中心 (TikTok)
   | "failed" // 检测失败
   | "unknown"; // 未知/未测试
 
@@ -82,13 +83,11 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
     { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
     { status: "org", label: "仅自制", color: "text-amber-600 dark:text-amber-400" },
     { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
-    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
   ],
   youtube: [
     { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
     { status: "cn", label: "中国", color: "text-orange-600 dark:text-orange-400" },
     { status: "noprem", label: "禁会员", color: "text-rose-600 dark:text-rose-400" },
-    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
     { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
   ],
   disney_plus: [
@@ -99,7 +98,7 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
   ],
   tiktok: [
     { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
-    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "idc", label: "数据中心", color: "text-purple-600 dark:text-purple-400" },
     { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
   ],
   amazon_prime: [
@@ -131,6 +130,7 @@ export const STATUS_COLORS: Record<StreamingStatus, string> = {
   cn: "text-orange-600 dark:text-orange-400",
   app: "text-blue-600 dark:text-blue-400",
   web: "text-cyan-600 dark:text-cyan-400",
+  idc: "text-purple-600 dark:text-purple-400",
   failed: "text-gray-600 dark:text-gray-400",
   unknown: "text-gray-600 dark:text-gray-400",
 };
@@ -145,6 +145,7 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
   cn: "中国",
   app: "仅APP",
   web: "仅Web",
+  idc: "数据中心",
   failed: "检测失败",
   unknown: "未测试",
 };
@@ -175,6 +176,7 @@ export interface StreamingPlatformStats {
   china: number; // 中国地区节点数 (cn - YouTube only)
   appOnly: number; // 仅APP节点数 (app - ChatGPT only)
   webOnly: number; // 仅Web节点数 (web - ChatGPT only)
+  idc: number; // 数据中心节点数 (idc - TikTok only)
   failed: number; // 检测失败节点数
   unknown: number; // 未测试节点数
   total: number; // 总节点数
@@ -203,6 +205,8 @@ export function getStatusCount(
       return platform.appOnly;
     case "web":
       return platform.webOnly;
+    case "idc":
+      return platform.idc;
     case "failed":
       return platform.failed;
     case "unknown":

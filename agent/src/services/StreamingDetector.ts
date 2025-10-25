@@ -30,6 +30,7 @@ export type StreamingStatus =
   | 'cn'
   | 'app'
   | 'web'
+  | 'idc'
   | 'failed'
   | 'unknown';
 
@@ -605,12 +606,12 @@ export class StreamingDetector {
           html = zlib.gunzipSync(Buffer.from(compressed.data)).toString('utf-8');
           regionMatch = html.match(/"region":"([A-Z]{2})"/i);
           if (regionMatch) {
+            // IPQuality: gzipped detection path returns IDC status
             return {
               service: 'tiktok',
-              status: 'yes',
+              status: 'idc',
               region: regionMatch[1],
-              unlockType: await this.detectUnlockType('www.tiktok.com'),
-              details: { detection: 'gzipped' },
+              details: { detection: 'gzipped_datacenter' },
               testedAt: new Date(),
             };
           }
