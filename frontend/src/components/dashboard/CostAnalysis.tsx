@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Award } from "lucide-react";
 import type { NodeData } from "@/services/api";
 
 interface CostAnalysisProps {
@@ -202,7 +202,6 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
               <div className="pt-3">
                 <div className="grid grid-cols-2 gap-2">
                   {topCostNodes.map((node, index) => {
-                    const rankEmoji = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🏅";
                     return (
                       <div
                         key={node.id}
@@ -210,7 +209,23 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
                       >
                         <div className="flex items-center justify-between gap-1.5">
                           <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            <span className="text-sm flex-shrink-0">{rankEmoji}</span>
+                            <div className="flex items-center flex-shrink-0">
+                              {index < 3 ? (
+                                <Award
+                                  className={`h-5 w-5 ${
+                                    index === 0
+                                      ? "text-yellow-500"
+                                      : index === 1
+                                        ? "text-gray-400"
+                                        : "text-orange-600"
+                                  }`}
+                                />
+                              ) : (
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-5">
+                                  #{index + 1}
+                                </span>
+                              )}
+                            </div>
                             <span
                               className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate"
                               title={node.name}

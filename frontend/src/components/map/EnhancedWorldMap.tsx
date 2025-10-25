@@ -929,42 +929,42 @@ export const EnhancedWorldMap = memo(
           >
             <Popup className="custom-popup" maxWidth={300}>
               <div className="p-3">
-                <h3 className="font-bold text-base text-pink-700 dark:text-pink-400 mb-2 flex items-center">
+                <h3 className="font-bold text-base text-pink-700 dark:text-pink-300 mb-2 flex items-center">
                   <VisitorMapPin className="h-4 w-4 mr-2" />
                   您的位置
                 </h3>
-                <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 space-y-1">
+                <div className="text-sm text-gray-700 dark:text-gray-200 mb-2 space-y-1">
                   <div>
                     位置: {visitorLocation.city}, {visitorLocation.country}
                   </div>
                   {visitorLocation.ipv4 && (
-                    <div className="font-mono text-xs text-blue-600 dark:text-blue-400">
+                    <div className="font-mono text-xs text-blue-600 dark:text-blue-300">
                       IPv4: {visitorLocation.ipv4}
                     </div>
                   )}
                   {visitorLocation.ipv6 && (
-                    <div className="font-mono text-xs text-indigo-600 dark:text-indigo-400 break-all">
+                    <div className="font-mono text-xs text-indigo-600 dark:text-indigo-300 break-all">
                       IPv6: {visitorLocation.ipv6}
                     </div>
                   )}
                   {visitorLocation.isp && (
-                    <div className="text-xs">
+                    <div className="text-xs text-gray-700 dark:text-gray-200">
                       ISP: {visitorLocation.isp}
                     </div>
                   )}
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-300">
                     坐标: {visitorLocation.latitude.toFixed(4)}, {visitorLocation.longitude.toFixed(4)}
                   </div>
                 </div>
                 {isMatching && matchedNode && (
-                  <div className="mt-3 p-2 bg-purple-50 dark:bg-purple-900/30 rounded border border-purple-200 dark:border-purple-700">
-                    <div className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-1">
+                  <div className="mt-3 p-2 bg-purple-50 dark:bg-purple-900/40 rounded border border-purple-200 dark:border-purple-600">
+                    <div className="text-sm font-semibold text-purple-700 dark:text-purple-200 mb-1">
                       🎯 正在使用此节点
                     </div>
-                    <div className="text-xs text-purple-600 dark:text-purple-400">
+                    <div className="text-xs text-purple-600 dark:text-purple-300">
                       节点名称: {matchedNode.name}
                     </div>
-                    <div className="text-xs text-purple-600 dark:text-purple-400">
+                    <div className="text-xs text-purple-600 dark:text-purple-300">
                       {matchedNode.city}, {matchedNode.country}
                     </div>
                   </div>
