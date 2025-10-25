@@ -215,7 +215,9 @@ export class StreamingController {
       const bodyApiKey = req.body.apiKey;
       const apiKey = headerApiKey || bodyApiKey;
 
-      logger.debug(`[StreamingController] Received streaming results for node: ${nodeId}`);
+      logger.debug(
+        `[StreamingController] Received streaming results for node: ${nodeId}`,
+      );
       logger.debug(`[StreamingController] Results count: ${results?.length}`);
       logger.debug(
         `[StreamingController] API Key present: ${apiKey ? "Yes (" + apiKey.substring(0, 4) + "...)" : "No"}`,
@@ -223,7 +225,9 @@ export class StreamingController {
 
       // 验证API密钥
       if (!apiKey) {
-        logger.warn(`[StreamingController] Missing API key for streaming results`);
+        logger.warn(
+          `[StreamingController] Missing API key for streaming results`,
+        );
         return res.status(401).json({
           success: false,
           error: "API key is required",
@@ -231,10 +235,13 @@ export class StreamingController {
       }
 
       const apiKeyService = await import("../services/ApiKeyService");
-      const isValidApiKey = await apiKeyService.apiKeyService.validateApiKey(apiKey);
+      const isValidApiKey =
+        await apiKeyService.apiKeyService.validateApiKey(apiKey);
 
       if (!isValidApiKey) {
-        logger.warn(`[StreamingController] Invalid API key for streaming results`);
+        logger.warn(
+          `[StreamingController] Invalid API key for streaming results`,
+        );
         return res.status(401).json({
           success: false,
           error: "Invalid API key",
@@ -242,7 +249,9 @@ export class StreamingController {
       }
 
       if (!nodeId || !results || !Array.isArray(results)) {
-        logger.warn(`[StreamingController] Invalid request body: nodeId=${nodeId}, results=${Array.isArray(results)}`);
+        logger.warn(
+          `[StreamingController] Invalid request body: nodeId=${nodeId}, results=${Array.isArray(results)}`,
+        );
         return res.status(400).json({
           success: false,
           error: "Invalid request body",
@@ -262,7 +271,9 @@ export class StreamingController {
         });
       }
 
-      logger.info(`[StreamingController] Saving ${results.length} streaming test results for node ${nodeId} (${node.name})`);
+      logger.info(
+        `[StreamingController] Saving ${results.length} streaming test results for node ${nodeId} (${node.name})`,
+      );
 
       // 批量保存检测结果
       const savedResults = await Promise.all(
@@ -301,7 +312,10 @@ export class StreamingController {
         },
       });
     } catch (error) {
-      logger.error("[StreamingController] Save streaming results error:", error);
+      logger.error(
+        "[StreamingController] Save streaming results error:",
+        error,
+      );
       return res.status(500).json({
         success: false,
         error: "Failed to save streaming results",
