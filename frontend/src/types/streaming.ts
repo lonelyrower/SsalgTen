@@ -19,6 +19,7 @@ export type StreamingStatus =
   | "org" // 仅自制内容 (Netflix)
   | "noprem" // 禁会员 (YouTube Premium)
   | "pending" // 待支持 (Disney+)
+  | "cn" // 中国地区 (YouTube)
   | "failed" // 检测失败
   | "unknown"; // 未知/未测试
 
@@ -83,6 +84,7 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
   ],
   youtube: [
     { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "cn", label: "中国", color: "text-orange-600 dark:text-orange-400" },
     { status: "noprem", label: "禁会员", color: "text-rose-600 dark:text-rose-400" },
     { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
     { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
@@ -122,6 +124,7 @@ export const STATUS_COLORS: Record<StreamingStatus, string> = {
   org: "text-yellow-600 dark:text-yellow-400",
   noprem: "text-red-600 dark:text-red-400",
   pending: "text-yellow-600 dark:text-yellow-400",
+  cn: "text-orange-600 dark:text-orange-400",
   failed: "text-gray-600 dark:text-gray-400",
   unknown: "text-gray-600 dark:text-gray-400",
 };
@@ -133,6 +136,7 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
   org: "仅自制",
   noprem: "禁会员",
   pending: "待支持",
+  cn: "中国",
   failed: "检测失败",
   unknown: "未测试",
 };
@@ -160,6 +164,7 @@ export interface StreamingPlatformStats {
   pending: number; // 待支持节点数 (pending)
   restricted: number; // 屏蔽节点数 (no)
   noPremium: number; // 禁会员节点数 (noprem)
+  china: number; // 中国地区节点数 (cn - YouTube only)
   failed: number; // 检测失败节点数
   unknown: number; // 未测试节点数
   total: number; // 总节点数
@@ -182,6 +187,8 @@ export function getStatusCount(
       return platform.restricted;
     case "noprem":
       return platform.noPremium;
+    case "cn":
+      return platform.china;
     case "failed":
       return platform.failed;
     case "unknown":

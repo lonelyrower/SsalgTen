@@ -371,7 +371,9 @@ enum StreamingStatus {
   YES       // 完全解锁
   NO        // 区域限制/封锁
   ORG       // 仅自制剧（Netflix专用）
+  NOPREM    // 禁会员（YouTube Premium专用）
   PENDING   // 待支持
+  CN        // 中国地区（YouTube专用）
   FAILED    // 检测失败
   UNKNOWN   // 未测试
 }

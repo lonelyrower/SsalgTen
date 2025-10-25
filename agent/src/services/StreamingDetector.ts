@@ -25,7 +25,9 @@ export type StreamingStatus =
   | 'yes'
   | 'no'
   | 'org'
+  | 'noprem'
   | 'pending'
+  | 'cn'
   | 'failed'
   | 'unknown';
 
@@ -527,7 +529,7 @@ export class StreamingDetector {
       if (isCn) {
         return {
           service: 'youtube',
-          status: 'no',
+          status: 'cn',
           region: 'CN',
           details: { reason: 'google_cn_redirect' },
           testedAt: new Date(),
@@ -537,9 +539,9 @@ export class StreamingDetector {
       if (notAvailable) {
         return {
           service: 'youtube',
-          status: 'no',
+          status: 'noprem',
           region,
-          details: { reason: 'not_available' },
+          details: { reason: 'premium_not_available' },
           testedAt: new Date(),
         };
       }

@@ -577,6 +577,7 @@ export class StreamingController {
             (t) => t.status === "NO",
           ).length;
           const noPremium = latestTests.filter((t) => t.status === "NOPREM").length;
+          const china = latestTests.filter((t) => t.status === "CN").length;
           const failed = latestTests.filter(
             (t) => t.status === "FAILED",
           ).length;
@@ -594,6 +595,7 @@ export class StreamingController {
             pending,
             restricted,
             noPremium,
+            china,
             failed,
             unknown,
             total,
@@ -636,6 +638,7 @@ export class StreamingController {
           pending: 0,
           restricted: 0,
           noPremium: 0,
+          china: 0,
           failed: 0,
           unknown: 0,
           total: 0,
