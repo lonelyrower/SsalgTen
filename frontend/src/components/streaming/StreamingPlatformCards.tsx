@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import type { StreamingPlatformStats } from "@/types/streaming";
+import { PLATFORM_SUPPORTED_STATUSES, getStatusCount } from "@/types/streaming";
 import { Card } from "../ui/card";
 import { StreamingIcon } from "./StreamingIcons";
 import { TrendingUp } from "lucide-react";
@@ -100,56 +101,24 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                   </div>
                 </div>
 
-                {/* 统计数据 */}
+                {/* 统计数据 - 根据不同平台显示不同状态 */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                    <span className="text-gray-600 dark:text-gray-400">解锁</span>
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                      {platform.unlocked}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                    <span className="text-gray-600 dark:text-gray-400">屏蔽</span>
-                    <span className="font-semibold text-rose-600 dark:text-rose-400">
-                      {platform.restricted}
-                    </span>
-                  </div>
-                  {platform.originalOnly > 0 && (
-                    <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                      <span className="text-gray-600 dark:text-gray-400">仅自制</span>
-                      <span className="font-semibold text-amber-600 dark:text-amber-400">
-                        {platform.originalOnly}
-                      </span>
-                    </div>
-                  )}
-                  {platform.pending > 0 && (
-                    <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                      <span className="text-gray-600 dark:text-gray-400">待支持</span>
-                      <span className="font-semibold text-amber-600 dark:text-amber-400">
-                        {platform.pending}
-                      </span>
-                    </div>
-                  )}
-                  {platform.noPremium > 0 && (
-                    <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                      <span className="text-gray-600 dark:text-gray-400">禁会员</span>
-                      <span className="font-semibold text-rose-600 dark:text-rose-400">
-                        {platform.noPremium}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                    <span className="text-gray-600 dark:text-gray-400">失败</span>
-                    <span className="font-semibold text-gray-600 dark:text-gray-400">
-                      {platform.failed}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                    <span className="text-gray-600 dark:text-gray-400">未测</span>
-                    <span className="font-semibold text-gray-600 dark:text-gray-400">
-                      {platform.unknown}
-                    </span>
-                  </div>
+                  {PLATFORM_SUPPORTED_STATUSES[platform.service].map((statusDef) => {
+                    const count = getStatusCount(platform, statusDef.status);
+                    return (
+                      <div
+                        key={statusDef.status}
+                        className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50"
+                      >
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {statusDef.label}
+                        </span>
+                        <span className={`font-semibold ${statusDef.color}`}>
+                          {count}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -70,6 +70,51 @@ export const STREAMING_SERVICE_ORDER: StreamingService[] = [
   "chatgpt",
 ];
 
+// 每个流媒体平台支持的状态类型
+export const PLATFORM_SUPPORTED_STATUSES: Record<
+  StreamingService,
+  Array<{ status: StreamingStatus; label: string; color: string }>
+> = {
+  netflix: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "org", label: "仅自制", color: "text-amber-600 dark:text-amber-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+  youtube: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "noprem", label: "禁会员", color: "text-rose-600 dark:text-rose-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+  disney_plus: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "pending", label: "待支持", color: "text-amber-600 dark:text-amber-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+  tiktok: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+  amazon_prime: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+  spotify: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+  chatgpt: [
+    { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
+    { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
+  ],
+};
+
 // 状态颜色映射
 export const STATUS_COLORS: Record<StreamingStatus, string> = {
   yes: "text-green-600 dark:text-green-400",
@@ -119,6 +164,31 @@ export interface StreamingPlatformStats {
   unknown: number; // 未测试节点数
   total: number; // 总节点数
   unlockRate: number; // 解锁率 (0-100)
+}
+
+// 辅助函数：根据状态类型获取对应的计数
+export function getStatusCount(
+  platform: StreamingPlatformStats,
+  status: StreamingStatus
+): number {
+  switch (status) {
+    case "yes":
+      return platform.unlocked;
+    case "org":
+      return platform.originalOnly;
+    case "pending":
+      return platform.pending;
+    case "no":
+      return platform.restricted;
+    case "noprem":
+      return platform.noPremium;
+    case "failed":
+      return platform.failed;
+    case "unknown":
+      return platform.unknown;
+    default:
+      return 0;
+  }
 }
 
 // 流媒体解锁总览
