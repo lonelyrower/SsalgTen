@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import type { NodeStreamingSummary } from "@/types/streaming";
 import {
   STREAMING_DATA_EXPIRY_THRESHOLD,
@@ -19,27 +18,15 @@ import { zhCN } from "date-fns/locale";
 
 interface StreamingNodeListProps {
   nodes: NodeStreamingSummary[];
-  onNodeClick?: (nodeId: string) => void;
   onRetest?: (nodeId: string) => void;
   testingMap?: Record<string, boolean>;
 }
 
 export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
   nodes,
-  onNodeClick,
   onRetest,
   testingMap = {},
 }) => {
-  const navigate = useNavigate();
-
-  const handleNodeClick = (nodeId: string) => {
-    if (onNodeClick) {
-      onNodeClick(nodeId);
-    } else {
-      navigate(`/nodes?id=${nodeId}&tab=streaming`);
-    }
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {nodes.map((node) => (
