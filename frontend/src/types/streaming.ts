@@ -82,9 +82,9 @@ export const STATUS_COLORS: Record<StreamingStatus, string> = {
 
 // 状态显示文本
 export const STATUS_TEXT: Record<StreamingStatus, string> = {
-  yes: "完全解锁",
-  no: "区域限制",
-  org: "仅自制剧",
+  yes: "解锁",
+  no: "屏蔽",
+  org: "仅自制",
   pending: "待支持",
   failed: "检测失败",
   unknown: "未测试",

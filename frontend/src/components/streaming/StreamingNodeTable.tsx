@@ -15,7 +15,7 @@ import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle, Globe } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 
@@ -88,9 +88,6 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
               </th>
             ))}
             <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              汇总
-            </th>
-            <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
               最近检测
             </th>
             <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -121,7 +118,8 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                       <div className="font-semibold truncate max-w-[200px]">
                         {node.nodeName}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
                         {node.city ? `${node.city}, ${node.country}` : node.country}
                       </p>
                     </div>
@@ -166,26 +164,6 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     </td>
                   );
                 })}
-                <td className="px-3 py-4 align-top">
-                  <div className="flex items-center gap-3 text-sm">
-                    <div>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {node.unlockedCount}
-                      </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-                        解锁
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-rose-600 dark:text-rose-400">
-                        {node.restrictedCount}
-                      </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-                        受限
-                      </span>
-                    </div>
-                  </div>
-                </td>
                 <td className="px-3 py-4 align-top text-sm text-slate-600 dark:text-slate-400">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">

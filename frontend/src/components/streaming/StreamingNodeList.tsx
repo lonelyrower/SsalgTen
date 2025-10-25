@@ -13,7 +13,7 @@ import CountryFlagSvg from "../ui/CountryFlagSvg";
 import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { Badge } from "../ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle, Globe } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 
@@ -109,7 +109,8 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
                 {node.nodeName}
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                <Globe className="h-3 w-3" />
                 {node.city ? `${node.city}, ${node.country}` : node.country}
               </p>
             </div>
