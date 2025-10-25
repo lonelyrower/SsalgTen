@@ -103,27 +103,29 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
             return (
               <tr
                 key={node.nodeId}
-                className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                className="bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
-                <td className="px-4 py-4 align-top">
-                  <button
-                    type="button"
-                    onClick={() => onNodeClick?.(node.nodeId)}
-                    className="flex items-center gap-2.5 text-left text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
-                  >
-                    {node.country && (
-                      <CountryFlagSvg country={node.country} className="w-6 h-6" />
-                    )}
-                    <div>
-                      <div className="font-semibold truncate max-w-[200px]">
-                        {node.nodeName}
+                <td className="px-4 py-4">
+                  <div className="flex items-center h-full">
+                    <button
+                      type="button"
+                      onClick={() => onNodeClick?.(node.nodeId)}
+                      className="flex items-center gap-2.5 text-left text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
+                    >
+                      {node.country && (
+                        <CountryFlagSvg country={node.country} className="w-6 h-6" />
+                      )}
+                      <div>
+                        <div className="font-semibold truncate max-w-[200px]">
+                          {node.nodeName}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          {node.city ? `${node.city}, ${node.country}` : node.country}
+                        </p>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        {node.city ? `${node.city}, ${node.country}` : node.country}
-                      </p>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 </td>
                 {columns.map((col) => {
                   const serviceResult = getServiceResult(node.services, col.key);
@@ -170,21 +172,23 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   );
                 })}
                 <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
-                  <div className="flex flex-col gap-1 items-center">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-slate-400" />
-                      <span>{relativeTime}</span>
+                  <div className="flex items-center justify-center h-full">
+                    <div className="flex flex-col gap-1 items-center">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-slate-400" />
+                        <span>{relativeTime}</span>
+                      </div>
+                      {isExpired && (
+                        <Badge variant="warning" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>数据过期</span>
+                        </Badge>
+                      )}
                     </div>
-                    {isExpired && (
-                      <Badge variant="warning" className="gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        <span>数据过期</span>
-                      </Badge>
-                    )}
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center h-full">
                     <Button
                       size="sm"
                       variant="outline"
