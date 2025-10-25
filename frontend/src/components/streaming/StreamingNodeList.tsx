@@ -9,7 +9,7 @@ import {
   UNLOCK_TYPE_COLORS,
 } from "@/types/streaming";
 import { Card } from "../ui/card";
-import { CountryFlag } from "../ui/CountryFlag";
+import CountryFlagSvg from "../ui/CountryFlagSvg";
 import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { Badge } from "../ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,15 +101,15 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
       <div className="space-y-3">
         {/* 节点信息 */}
         <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="flex-shrink-0 pt-1">
-              <CountryFlag country={node.country} size="md" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            {node.country && (
+              <CountryFlagSvg country={node.country} className="w-7 h-7" />
+            )}
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
                 {node.nodeName}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {node.city ? `${node.city}, ${node.country}` : node.country}
               </p>
             </div>

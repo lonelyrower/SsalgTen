@@ -11,7 +11,7 @@ import {
   UNLOCK_TYPE_COLORS,
   STREAMING_SERVICES,
 } from "@/types/streaming";
-import { CountryFlag } from "@/components/ui/CountryFlag";
+import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,15 +112,15 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   <button
                     type="button"
                     onClick={() => onNodeClick?.(node.nodeId)}
-                    className="flex items-start gap-3 text-left text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
+                    className="flex items-center gap-2.5 text-left text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
                   >
-                    <div className="flex-shrink-0 pt-0.5">
-                      <CountryFlag country={node.country} size="sm" />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="font-semibold truncate max-w-[200px] block">
+                    {node.country && (
+                      <CountryFlagSvg country={node.country} className="w-6 h-6" />
+                    )}
+                    <div>
+                      <div className="font-semibold truncate max-w-[200px]">
                         {node.nodeName}
-                      </span>
+                      </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {node.city ? `${node.city}, ${node.country}` : node.country}
                       </p>
