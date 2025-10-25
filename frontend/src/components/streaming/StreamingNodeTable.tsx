@@ -137,8 +137,8 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   const statusClass = STATUS_COLORS[serviceResult.status];
                   const unlockType = serviceResult.unlockType ?? "unknown";
                   const unlockClass = UNLOCK_TYPE_COLORS[unlockType];
-                  // 解锁和待支持状态显示地区和解锁类型
-                  const showDetails = serviceResult.status === "yes" || serviceResult.status === "pending";
+                  // 解锁、仅自制、待支持状态显示地区和解锁类型
+                  const showDetails = serviceResult.status === "yes" || serviceResult.status === "org" || serviceResult.status === "pending";
 
                   return (
                     <td key={col.key} className="px-3 py-4 align-top">
