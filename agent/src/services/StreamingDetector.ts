@@ -32,7 +32,7 @@ export type StreamingStatus =
 /**
  * 解锁类型
  */
-export type UnlockType = 'native' | 'dns' | 'idc' | 'unknown';
+export type UnlockType = 'native' | 'dns' | 'unknown';
 
 /**
  * 流媒体检测结果
@@ -200,10 +200,16 @@ export class StreamingDetector {
 
       const globalOk = globalResp.status === 200;
       const originalOk = originalResp.status === 200;
-      const globalError = /Not Available|Unavailable|Complete the sentence|Oh no!/i.test(htmlGlobal);
-      const originalError = /Not Available|Unavailable|Complete the sentence|Oh no!/i.test(htmlOriginal);
+      const globalHasOhNo = /Oh no!/i.test(htmlGlobal);
+      const originalHasOhNo = /Oh no!/i.test(htmlOriginal);
 
-      if (globalOk && !globalError) {
+      // 按照 IPQuality 逻辑：
+      // 1. 两个都成功且都没有 "Oh no!" -> 完全解锁
+      // 2. 至少一个包含 "Oh no!" -> 仅自制
+      // 3. 请求失败或两个都是 "Oh no!" -> 屏蔽
+
+      if (globalOk && originalOk && !globalHasOhNo && !originalHasOhNo) {
+        // 完全解锁
         return {
           service: 'netflix',
           status: 'yes',
@@ -217,7 +223,8 @@ export class StreamingDetector {
         };
       }
 
-      if (!globalOk && originalOk && !originalError) {
+      if ((globalOk || originalOk) && (globalHasOhNo || originalHasOhNo)) {
+        // 仅自制：至少一个请求成功但包含 "Oh no!"
         return {
           service: 'netflix',
           status: 'org',
@@ -226,28 +233,18 @@ export class StreamingDetector {
           details: {
             globalStatus: globalResp.status,
             originalStatus: originalResp.status,
+            globalHasOhNo,
+            originalHasOhNo,
           },
           testedAt: new Date(),
         };
       }
 
-      if (globalResp.status === 403 || globalError) {
-        return {
-          service: 'netflix',
-          status: 'no',
-          region,
-          details: {
-            globalStatus: globalResp.status,
-            originalStatus: originalResp.status,
-          },
-          testedAt: new Date(),
-        };
-      }
-
+      // 屏蔽：请求失败或两个都是错误
       return {
         service: 'netflix',
-        status: 'failed',
-        errorMsg: `Unexpected response: global=${globalResp.status}, original=${originalResp.status}`,
+        status: 'no',
+        region,
         details: {
           globalStatus: globalResp.status,
           originalStatus: originalResp.status,
@@ -608,7 +605,7 @@ export class StreamingDetector {
               service: 'tiktok',
               status: 'yes',
               region: regionMatch[1],
-              unlockType: 'idc',
+              unlockType: await this.detectUnlockType('www.tiktok.com'),
               details: { detection: 'gzipped' },
               testedAt: new Date(),
             };
@@ -805,6 +802,7 @@ export class StreamingDetector {
 
   /**
    * 解析解锁类型：对比本地 DNS 和 DoH 结果
+   * 根据 IPQuality 逻辑：只区分 native 和 dns
    */
   private async detectUnlockType(domain: string): Promise<UnlockType> {
     try {
@@ -819,15 +817,18 @@ export class StreamingDetector {
 
       const intersection = localRecords.filter((ip) => dohRecords.includes(ip));
 
-      if (intersection.length === 0) {
-        return 'dns';
-      }
-
-      if (intersection.length === dohRecords.length) {
+      // 完全匹配：原生解锁
+      if (intersection.length === dohRecords.length && intersection.length === localRecords.length) {
         return 'native';
       }
 
-      return 'idc';
+      // 不匹配或部分匹配：DNS 解锁
+      if (intersection.length === 0 || intersection.length < dohRecords.length) {
+        return 'dns';
+      }
+
+      // 默认：原生
+      return 'native';
     } catch {
       return 'unknown';
     }
