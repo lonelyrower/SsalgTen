@@ -210,7 +210,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
       {/* Header */}
       <div className="relative flex items-start gap-4 mb-6">
         <span className="text-5xl">{getStatusIcon(node.status)}</span>
-        <div className="flex-1 space-y-2">
+        <div className="flex-1">
           <div className="flex items-start gap-3">
             <h3 className="text-2xl font-black text-slate-900 dark:text-white flex-1 break-words">
               {node.name}
@@ -225,9 +225,6 @@ export const EnhancedNodeDetailsPanel: React.FC<
               {node.status.toUpperCase()}
             </Badge>
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            {node.city}, {node.country}
-          </p>
         </div>
         {onClose && (
           <Button
