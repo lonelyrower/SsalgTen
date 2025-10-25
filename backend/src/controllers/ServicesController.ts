@@ -3,6 +3,7 @@ import { Prisma, ServiceType, ServiceStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
 import { getIO } from "../sockets/ioRegistry";
+import { apiKeyService } from "../services/ApiKeyService";
 
 /**
  * Agent 上报的服务数据接口
@@ -706,10 +707,9 @@ export class ServicesController {
         });
       }
 
-      const AGENT_CONTROL_API_KEY =
-        process.env.AGENT_CONTROL_API_KEY || process.env.DEFAULT_AGENT_API_KEY;
+      const agentControlApiKey = await apiKeyService.getSystemApiKey();
 
-      if (!AGENT_CONTROL_API_KEY) {
+      if (!agentControlApiKey) {
         logger.error("Agent control API key is not configured on the server");
         return res.status(500).json({
           success: false,
@@ -731,7 +731,7 @@ export class ServicesController {
           },
           {
             headers: {
-              "x-agent-api-key": AGENT_CONTROL_API_KEY,
+              "x-agent-api-key": agentControlApiKey,
             },
             timeout: AGENT_CONTROL_TIMEOUT,
           },

@@ -118,7 +118,7 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = mem
     : "red";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       {/* 总节点数 */}
       <StatsCard
         title="总节点数"

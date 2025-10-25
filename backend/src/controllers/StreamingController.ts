@@ -14,6 +14,7 @@ import {
 } from "../sockets/socketHandlers";
 import { logger } from "../utils/logger";
 import { env } from "../config/env";
+import { apiKeyService } from "../services/ApiKeyService";
 
 /**
  * Agent上报的流媒体检测结果接口
@@ -30,7 +31,7 @@ interface StreamingResultInput {
 const AGENT_CONTROL_PROTOCOL = env.AGENT_CONTROL_PROTOCOL || "http";
 const AGENT_CONTROL_PORT = env.AGENT_CONTROL_PORT || 3002;
 const AGENT_CONTROL_TIMEOUT = env.AGENT_CONTROL_TIMEOUT || 8000;
-const AGENT_CONTROL_API_KEY =
+const FALLBACK_AGENT_CONTROL_API_KEY =
   env.AGENT_CONTROL_API_KEY || env.DEFAULT_AGENT_API_KEY;
 
 const buildAgentBaseUrl = (node: {
@@ -43,6 +44,29 @@ const buildAgentBaseUrl = (node: {
   if (node.ipv6 && node.ipv6.trim().length > 0) {
     return `${AGENT_CONTROL_PROTOCOL}://[${node.ipv6}]:${AGENT_CONTROL_PORT}`;
   }
+  return null;
+};
+
+const resolveAgentControlApiKey = async (): Promise<string | null> => {
+  try {
+    const key = await apiKeyService.getSystemApiKey();
+    if (key && key.trim().length > 0) {
+      return key;
+    }
+  } catch (error) {
+    logger.error(
+      "[StreamingController] Failed to resolve system agent API key:",
+      error,
+    );
+  }
+
+  if (FALLBACK_AGENT_CONTROL_API_KEY?.trim()) {
+    logger.warn(
+      "[StreamingController] Falling back to environment agent API key. Verify system API key configuration if issues persist.",
+    );
+    return FALLBACK_AGENT_CONTROL_API_KEY;
+  }
+
   return null;
 };
 
@@ -141,7 +165,8 @@ export class StreamingController {
         });
       }
 
-      if (!AGENT_CONTROL_API_KEY) {
+      const agentControlApiKey = await resolveAgentControlApiKey();
+      if (!agentControlApiKey) {
         logger.error("Agent control API key is not configured on the server");
         return res.status(500).json({
           success: false,
@@ -159,7 +184,7 @@ export class StreamingController {
           },
           {
             headers: {
-              "x-agent-api-key": AGENT_CONTROL_API_KEY,
+              "x-agent-api-key": agentControlApiKey,
             },
             timeout: AGENT_CONTROL_TIMEOUT,
           },
@@ -742,7 +767,8 @@ export class StreamingController {
         });
       }
 
-      if (!AGENT_CONTROL_API_KEY) {
+      const agentControlApiKey = await resolveAgentControlApiKey();
+      if (!agentControlApiKey) {
         logger.error("Agent control API key is not configured on the server");
         return res.status(500).json({
           success: false,
@@ -770,7 +796,7 @@ export class StreamingController {
             },
             {
               headers: {
-                "x-agent-api-key": AGENT_CONTROL_API_KEY,
+                "x-agent-api-key": agentControlApiKey,
               },
               timeout: AGENT_CONTROL_TIMEOUT,
             },
