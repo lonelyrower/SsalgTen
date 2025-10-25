@@ -571,12 +571,18 @@ export class StreamingController {
           });
 
           const unlocked = latestTests.filter((t) => t.status === "YES").length;
-          const originalOnly = latestTests.filter((t) => t.status === "ORG").length;
-          const pending = latestTests.filter((t) => t.status === "PENDING").length;
+          const originalOnly = latestTests.filter(
+            (t) => t.status === "ORG",
+          ).length;
+          const pending = latestTests.filter(
+            (t) => t.status === "PENDING",
+          ).length;
           const restricted = latestTests.filter(
             (t) => t.status === "NO",
           ).length;
-          const noPremium = latestTests.filter((t) => t.status === "NOPREM").length;
+          const noPremium = latestTests.filter(
+            (t) => t.status === "NOPREM",
+          ).length;
           const china = latestTests.filter((t) => t.status === "CN").length;
           const appOnly = latestTests.filter((t) => t.status === "APP").length;
           const webOnly = latestTests.filter((t) => t.status === "WEB").length;
