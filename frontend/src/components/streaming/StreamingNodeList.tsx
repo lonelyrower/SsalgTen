@@ -48,7 +48,6 @@ export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
           node={node}
           testing={!!testingMap[node.nodeId]}
           onRetest={onRetest}
-          onClick={() => handleNodeClick(node.nodeId)}
         />
       ))}
     </div>
@@ -57,14 +56,12 @@ export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
 
 interface NodeStreamingCardProps {
   node: NodeStreamingSummary;
-  onClick: () => void;
   onRetest?: (nodeId: string) => void;
   testing: boolean;
 }
 
 const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
   node,
-  onClick,
   onRetest,
   testing,
 }) => {
@@ -88,7 +85,13 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
 
   return (
     <Card
-      className="p-3 hover:shadow-lg transition-all cursor-pointer border-l-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900"
+      className={`p-3 transition-all border-l-4 ${
+        isExpired
+          ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20"
+          : node.unlockedCount > node.restrictedCount
+            ? "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20"
+            : "bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20"
+      }`}
       style={{
         borderLeftColor: isExpired
           ? "#f59e0b"
@@ -96,21 +99,20 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
             ? "#10b981"
             : "#ef4444",
       }}
-      onClick={onClick}
     >
       <div className="space-y-2.5">
-        {/* 节点信息 */}
-        <div className="flex items-center gap-2.5">
+        {/* 节点信息 - 居中对齐 */}
+        <div className="flex flex-col items-center gap-2">
           {node.country && (
-            <CountryFlagSvg country={node.country} className="w-8 h-8 flex-shrink-0" />
+            <CountryFlagSvg country={node.country} className="w-8 h-8" />
           )}
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-0.5 truncate">
+          <div className="text-center">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-0.5">
               {node.nodeName}
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
               <Globe className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{node.city ? `${node.city}, ${node.country}` : node.country}</span>
+              <span>{node.city ? `${node.city}, ${node.country}` : node.country}</span>
             </p>
           </div>
         </div>
