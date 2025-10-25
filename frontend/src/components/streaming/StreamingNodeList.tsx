@@ -88,7 +88,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
 
   return (
     <Card
-      className="p-3 hover:shadow-lg transition-all cursor-pointer border-l-4"
+      className="p-3 hover:shadow-lg transition-all cursor-pointer border-l-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900"
       style={{
         borderLeftColor: isExpired
           ? "#f59e0b"
@@ -100,42 +100,18 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
     >
       <div className="space-y-2.5">
         {/* 节点信息 */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            {node.country && (
-              <CountryFlagSvg country={node.country} className="w-7 h-7 flex-shrink-0" />
-            )}
-            <div className="min-w-0">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-0.5 truncate">
-                {node.nodeName}
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                <Globe className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">{node.city ? `${node.city}, ${node.country}` : node.country}</span>
-              </p>
-            </div>
-          </div>
-
-          {/* 快速统计 */}
-          <div className="flex items-center gap-3 text-xs flex-shrink-0">
-            <div className="flex flex-col items-center">
-              <div className="text-green-600 dark:text-green-400 font-bold text-lg">
-                {node.unlockedCount}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400 text-[10px]">解锁</div>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="text-red-600 dark:text-red-400 font-bold text-lg">
-                {node.restrictedCount}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400 text-[10px]">受限</div>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="text-gray-700 dark:text-gray-300 font-bold text-lg">
-                {node.services.length}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400 text-[10px]">总数</div>
-            </div>
+        <div className="flex items-center gap-2.5">
+          {node.country && (
+            <CountryFlagSvg country={node.country} className="w-8 h-8 flex-shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-0.5 truncate">
+              {node.nodeName}
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <Globe className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{node.city ? `${node.city}, ${node.country}` : node.country}</span>
+            </p>
           </div>
         </div>
 
@@ -149,33 +125,31 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
             return (
               <div
                 key={service.service}
-                className="flex flex-col items-center gap-0.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 px-2 py-1.5"
+                className="flex flex-col items-center justify-between gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 px-2 py-2 min-h-[88px]"
               >
                 <StreamingIcon service={service.service} size="md" />
 
                 <div className="flex flex-col gap-0.5 items-center w-full">
-                  {/* 第一行：状态 */}
+                  {/* 状态 */}
                   <div className={`text-xs font-semibold ${STATUS_COLORS[service.status]}`}>
                     {STATUS_TEXT[service.status]}
                   </div>
 
-                  {/* 第二行：地区（仅解锁状态显示） */}
-                  {showDetails && service.region && (
-                    <div className="text-[10px] text-gray-600 dark:text-gray-400">
-                      {service.region.toUpperCase()}
-                    </div>
-                  )}
+                  {/* 地区（仅解锁状态显示） */}
+                  <div className="text-[10px] text-gray-600 dark:text-gray-400 min-h-[14px]">
+                    {showDetails && service.region ? service.region.toUpperCase() : ''}
+                  </div>
 
-                  {/* 第三行：解锁类型（仅解锁状态显示） */}
-                  {showDetails && service.unlockType && (
-                    <div>
+                  {/* 解锁类型（仅解锁状态显示） */}
+                  <div className="min-h-[20px] flex items-center">
+                    {showDetails && service.unlockType && (
                       <span
                         className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
                       >
                         {UNLOCK_TYPE_LABELS[unlockType]}
                       </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );
