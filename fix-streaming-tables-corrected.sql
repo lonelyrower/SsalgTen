@@ -1,39 +1,42 @@
--- 简单版本：直接在数据库中执行此 SQL 来创建缺失的表
--- 使用方法：
---   docker exec -i ssalgten-database psql -U ssalgten -d ssalgten < fix-streaming-tables-simple.sql
+-- Corrected migration for streaming_tests and detected_services tables
+-- This version matches schema.prisma exactly
 
--- 1. 创建枚举类型 (使用与 schema.prisma 完全一致的值)
+-- CreateEnum - StreamingService (corrected)
 DO $$ BEGIN
-    CREATE TYPE "StreamingService" AS ENUM ('NETFLIX', 'YOUTUBE', 'DISNEY_PLUS', 'TIKTOK', 'AMAZON_PRIME', 'SPOTIFY', 'CHATGPT');
+ CREATE TYPE "StreamingService" AS ENUM ('NETFLIX', 'YOUTUBE', 'DISNEY_PLUS', 'TIKTOK', 'AMAZON_PRIME', 'SPOTIFY', 'CHATGPT');
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
 
+-- CreateEnum - StreamingStatus (corrected)
 DO $$ BEGIN
-    CREATE TYPE "StreamingStatus" AS ENUM ('YES', 'NO', 'ORG', 'PENDING', 'FAILED', 'UNKNOWN');
+ CREATE TYPE "StreamingStatus" AS ENUM ('YES', 'NO', 'ORG', 'PENDING', 'FAILED', 'UNKNOWN');
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
 
+-- CreateEnum - UnlockType (corrected)
 DO $$ BEGIN
-    CREATE TYPE "UnlockType" AS ENUM ('NATIVE', 'DNS', 'IDC', 'UNKNOWN');
+ CREATE TYPE "UnlockType" AS ENUM ('NATIVE', 'DNS', 'IDC', 'UNKNOWN');
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
 
+-- CreateEnum - ServiceType (corrected)
 DO $$ BEGIN
-    CREATE TYPE "ServiceType" AS ENUM ('PROXY', 'WEB', 'DATABASE', 'CONTAINER', 'OTHER');
+ CREATE TYPE "ServiceType" AS ENUM ('PROXY', 'WEB', 'DATABASE', 'CONTAINER', 'OTHER');
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
 
+-- CreateEnum - ServiceStatus (corrected)
 DO $$ BEGIN
-    CREATE TYPE "ServiceStatus" AS ENUM ('RUNNING', 'STOPPED', 'UNKNOWN');
+ CREATE TYPE "ServiceStatus" AS ENUM ('RUNNING', 'STOPPED', 'UNKNOWN');
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
 
--- 2. 创建 streaming_tests 表
+-- CreateTable - streaming_tests
 CREATE TABLE IF NOT EXISTS "streaming_tests" (
     "id" TEXT NOT NULL,
     "nodeId" TEXT NOT NULL,
@@ -49,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "streaming_tests" (
     CONSTRAINT "streaming_tests_pkey" PRIMARY KEY ("id")
 );
 
--- 3. 创建 detected_services 表
+-- CreateTable - detected_services
 CREATE TABLE IF NOT EXISTS "detected_services" (
     "id" TEXT NOT NULL,
     "nodeId" TEXT NOT NULL,
@@ -71,35 +74,49 @@ CREATE TABLE IF NOT EXISTS "detected_services" (
     CONSTRAINT "detected_services_pkey" PRIMARY KEY ("id")
 );
 
--- 4. 创建索引
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "streaming_tests_nodeId_idx" ON "streaming_tests"("nodeId");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "streaming_tests_service_idx" ON "streaming_tests"("service");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "streaming_tests_status_idx" ON "streaming_tests"("status");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "streaming_tests_testedAt_idx" ON "streaming_tests"("testedAt" DESC);
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "streaming_tests_nodeId_service_testedAt_idx" ON "streaming_tests"("nodeId", "service", "testedAt" DESC);
 
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "detected_services_nodeId_idx" ON "detected_services"("nodeId");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "detected_services_serviceType_idx" ON "detected_services"("serviceType");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "detected_services_serviceName_idx" ON "detected_services"("serviceName");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "detected_services_status_idx" ON "detected_services"("status");
+
+-- CreateIndex
 CREATE INDEX IF NOT EXISTS "detected_services_detectedAt_idx" ON "detected_services"("detectedAt" DESC);
+
+-- CreateUniqueIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "detected_services_nodeId_serviceName_port_key" ON "detected_services"("nodeId", "serviceName", "port");
 
--- 5. 添加外键约束
+-- AddForeignKey
 DO $$ BEGIN
-    ALTER TABLE "streaming_tests" ADD CONSTRAINT "streaming_tests_nodeId_fkey"
-        FOREIGN KEY ("nodeId") REFERENCES "nodes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ ALTER TABLE "streaming_tests" ADD CONSTRAINT "streaming_tests_nodeId_fkey" FOREIGN KEY ("nodeId") REFERENCES "nodes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
 
+-- AddForeignKey
 DO $$ BEGIN
-    ALTER TABLE "detected_services" ADD CONSTRAINT "detected_services_nodeId_fkey"
-        FOREIGN KEY ("nodeId") REFERENCES "nodes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ ALTER TABLE "detected_services" ADD CONSTRAINT "detected_services_nodeId_fkey" FOREIGN KEY ("nodeId") REFERENCES "nodes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 EXCEPTION
-    WHEN duplicate_object THEN null;
+ WHEN duplicate_object THEN null;
 END $$;
-
--- 完成
-\echo '✓ 表创建完成！'
-\echo '下一步：重启 Backend 和 Agent 服务'
