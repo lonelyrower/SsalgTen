@@ -16,7 +16,7 @@ export class StreamingTestService {
 
   private readonly testInterval: number; // 周期（毫秒）
 
-  constructor(testIntervalHours: number = 6) {
+  constructor(testIntervalHours: number = 24) {
     this.testInterval = testIntervalHours * 60 * 60 * 1000;
   }
 
@@ -123,9 +123,15 @@ export class StreamingTestService {
         })),
       };
 
+      logger.info(`[StreamingTestService] Reporting ${results.length} results to master...`);
+      logger.debug(`[StreamingTestService] Master URL: ${config.masterUrl}/api/streaming/results`);
+      logger.debug(`[StreamingTestService] Node ID: ${config.id}`);
+      logger.debug(`[StreamingTestService] API Key: ${config.apiKey.substring(0, 4)}...`);
+
       const response = await http.post(`${config.masterUrl}/api/streaming/results`, payload, {
         headers: {
           ...buildSignedHeaders(config.apiKey, payload),
+          'x-api-key': config.apiKey,
         },
         timeout: 15000,
       });
@@ -136,9 +142,14 @@ export class StreamingTestService {
         logger.warn(
           `[StreamingTestService] Report failed with status ${response.status}: ${response.statusText}`,
         );
+        logger.warn(`[StreamingTestService] Response data:`, response.data);
       }
     } catch (error) {
       logger.error('[StreamingTestService] Failed to report results:', error);
+      if ((error as any).response) {
+        logger.error('[StreamingTestService] Response status:', (error as any).response.status);
+        logger.error('[StreamingTestService] Response data:', (error as any).response.data);
+      }
     }
   }
 
@@ -151,4 +162,4 @@ export class StreamingTestService {
   }
 }
 
-export const streamingTestService = new StreamingTestService(6);
+export const streamingTestService = new StreamingTestService(24);

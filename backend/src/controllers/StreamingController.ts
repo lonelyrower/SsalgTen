@@ -211,13 +211,58 @@ export class StreamingController {
   static async saveStreamingResults(req: Request, res: Response) {
     try {
       const { nodeId, results } = req.body;
+      const headerApiKey = req.headers["x-api-key"] as string;
+      const bodyApiKey = req.body.apiKey;
+      const apiKey = headerApiKey || bodyApiKey;
+
+      logger.debug(`[StreamingController] Received streaming results for node: ${nodeId}`);
+      logger.debug(`[StreamingController] Results count: ${results?.length}`);
+      logger.debug(
+        `[StreamingController] API Key present: ${apiKey ? "Yes (" + apiKey.substring(0, 4) + "...)" : "No"}`,
+      );
+
+      // 验证API密钥
+      if (!apiKey) {
+        logger.warn(`[StreamingController] Missing API key for streaming results`);
+        return res.status(401).json({
+          success: false,
+          error: "API key is required",
+        });
+      }
+
+      const apiKeyService = await import("../services/ApiKeyService");
+      const isValidApiKey = await apiKeyService.apiKeyService.validateApiKey(apiKey);
+
+      if (!isValidApiKey) {
+        logger.warn(`[StreamingController] Invalid API key for streaming results`);
+        return res.status(401).json({
+          success: false,
+          error: "Invalid API key",
+        });
+      }
 
       if (!nodeId || !results || !Array.isArray(results)) {
+        logger.warn(`[StreamingController] Invalid request body: nodeId=${nodeId}, results=${Array.isArray(results)}`);
         return res.status(400).json({
           success: false,
           error: "Invalid request body",
         });
       }
+
+      // 验证节点是否存在
+      const node = await prisma.node.findUnique({
+        where: { id: nodeId },
+      });
+
+      if (!node) {
+        logger.warn(`[StreamingController] Node not found: ${nodeId}`);
+        return res.status(404).json({
+          success: false,
+          error: "Node not found",
+        });
+      }
+
+      logger.info(`[StreamingController] Saving ${results.length} streaming test results for node ${nodeId} (${node.name})`);
 
       // 批量保存检测结果
       const savedResults = await Promise.all(
@@ -245,7 +290,7 @@ export class StreamingController {
       }
 
       logger.info(
-        `Saved ${savedResults.length} streaming test results for node ${nodeId}`,
+        `[StreamingController] Successfully saved ${savedResults.length} streaming test results for node ${nodeId}`,
       );
 
       return res.json({
@@ -256,7 +301,7 @@ export class StreamingController {
         },
       });
     } catch (error) {
-      logger.error("Save streaming results error:", error);
+      logger.error("[StreamingController] Save streaming results error:", error);
       return res.status(500).json({
         success: false,
         error: "Failed to save streaming results",

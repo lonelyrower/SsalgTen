@@ -486,65 +486,98 @@ export const StreamingPage: React.FC = () => {
         {/* 总览统计 */}
         <StreamingOverviewStats overview={overview} />
 
-        {/* 平台卡片 */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            平台统计（点击筛选）
-          </h3>
-          <StreamingPlatformCards
-            stats={[...overview.platformStats].sort(
-              (a, b) =>
-                STREAMING_SERVICE_ORDER.indexOf(a.service) -
-                STREAMING_SERVICE_ORDER.indexOf(b.service),
-            )}
-            onSelect={(service) =>
-              setFilters((prev) => ({
-                ...prev,
-                platform: prev.platform === service ? undefined : service,
-              }))
-            }
-            selectedService={filters.platform}
-          />
-        </div>
-
-        {/* 节点列表 */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              节点解锁详情
-              <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-                ({filteredNodes.length} 个节点)
-              </span>
-            </h2>
-          </div>
-
-          {filteredNodes.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-gray-500 dark:text-gray-400">
-                  没有找到符合条件的节点
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            viewMode === "grid" ? (
-              <StreamingNodeList
-                nodes={filteredNodes}
-                onRetest={handleRetestNode}
-                testingMap={testingMap}
+        {/* 如果完全没有数据，显示友好提示 */}
+        {nodes.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <Film className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                暂无流媒体检测数据
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                系统还未收集到流媒体解锁数据。请确保：
+              </p>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 mb-6 text-left max-w-md mx-auto space-y-2">
+                <li>• Agent 已正常启动并连接到主服务器</li>
+                <li>• Agent 会在启动后 1 分钟内执行首次检测</li>
+                <li>• 之后每 24 小时自动执行一次检测</li>
+                <li>• 也可以点击"批量检测"按钮手动触发检测</li>
+              </ul>
+              {overview.totalNodes > 0 && (
+                <Button
+                  onClick={handleTriggerAll}
+                  disabled={bulkTriggering}
+                  className="gap-2"
+                >
+                  <Film className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`} />
+                  {bulkTriggering ? "检测中..." : "立即开始检测"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* 平台卡片 */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                平台统计（点击筛选）
+              </h3>
+              <StreamingPlatformCards
+                stats={[...overview.platformStats].sort(
+                  (a, b) =>
+                    STREAMING_SERVICE_ORDER.indexOf(a.service) -
+                    STREAMING_SERVICE_ORDER.indexOf(b.service),
+                )}
+                onSelect={(service) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    platform: prev.platform === service ? undefined : service,
+                  }))
+                }
+                selectedService={filters.platform}
               />
-            ) : (
-              <StreamingNodeTable
-                nodes={filteredNodes}
-                services={STREAMING_SERVICE_ORDER}
-                onRetest={handleRetestNode}
-                testingMap={testingMap}
-                onNodeClick={handleNavigateNode}
-              />
-            )
-          )}
-        </div>
+            </div>
+
+            {/* 节点列表 */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  节点解锁详情
+                  <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                    ({filteredNodes.length} 个节点)
+                  </span>
+                </h2>
+              </div>
+
+              {filteredNodes.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      没有找到符合条件的节点
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                viewMode === "grid" ? (
+                  <StreamingNodeList
+                    nodes={filteredNodes}
+                    onRetest={handleRetestNode}
+                    testingMap={testingMap}
+                  />
+                ) : (
+                  <StreamingNodeTable
+                    nodes={filteredNodes}
+                    services={STREAMING_SERVICE_ORDER}
+                    onRetest={handleRetestNode}
+                    testingMap={testingMap}
+                    onNodeClick={handleNavigateNode}
+                  />
+                )
+              )}
+            </div>
+          </>
+        )}
         </main>
       </div>
     </div>
