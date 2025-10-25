@@ -47,11 +47,16 @@ const buildAgentBaseUrl = (node: {
   return null;
 };
 
-const resolveAgentControlApiKey = async (): Promise<string | null> => {
+type AgentApiKeySource = "system" | "fallback" | "node";
+
+const resolveAgentControlApiKey = async (): Promise<{
+  key: string;
+  source: AgentApiKeySource;
+} | null> => {
   try {
     const key = await apiKeyService.getSystemApiKey();
     if (key && key.trim().length > 0) {
-      return key;
+      return { key: key.trim(), source: "system" };
     }
   } catch (error) {
     logger.error(
@@ -64,9 +69,33 @@ const resolveAgentControlApiKey = async (): Promise<string | null> => {
     logger.warn(
       "[StreamingController] Falling back to environment agent API key. Verify system API key configuration if issues persist.",
     );
-    return FALLBACK_AGENT_CONTROL_API_KEY;
+    return {
+      key: FALLBACK_AGENT_CONTROL_API_KEY.trim(),
+      source: "fallback",
+    };
   }
 
+  return null;
+};
+
+const resolveAgentApiKeyForNode = async (node: {
+  apiKey?: string | null;
+}): Promise<{ key: string; source: AgentApiKeySource } | null> => {
+  const resolved = await resolveAgentControlApiKey();
+  if (resolved) {
+    return resolved;
+  }
+
+  if (node.apiKey && node.apiKey.trim().length > 0) {
+    logger.warn(
+      `[StreamingController] Using node-specific API key as fallback for agent ${node.apiKey.substring(0, 6)}...`,
+    );
+    return { key: node.apiKey.trim(), source: "node" };
+  }
+
+  logger.error(
+    `[StreamingController] Unable to resolve agent API key (system, environment, and node-specific keys missing).`,
+  );
   return null;
 };
 
@@ -165,14 +194,18 @@ export class StreamingController {
         });
       }
 
-      const agentControlApiKey = await resolveAgentControlApiKey();
-      if (!agentControlApiKey) {
+      const resolvedKey = await resolveAgentApiKeyForNode(node);
+      if (!resolvedKey) {
         logger.error("Agent control API key is not configured on the server");
         return res.status(500).json({
           success: false,
           error: "Agent control API key is not configured",
         });
       }
+      const { key: agentControlApiKey, source: keySource } = resolvedKey;
+      logger.debug(
+        `[StreamingController] Using ${keySource} agent API key (len=${agentControlApiKey.length}) for node ${nodeId}`,
+      );
 
       try {
         await axios.post(
@@ -767,15 +800,6 @@ export class StreamingController {
         });
       }
 
-      const agentControlApiKey = await resolveAgentControlApiKey();
-      if (!agentControlApiKey) {
-        logger.error("Agent control API key is not configured on the server");
-        return res.status(500).json({
-          success: false,
-          error: "Agent control API key is not configured",
-        });
-      }
-
       const io = getIO();
       let successCount = 0;
       const failures: Array<{ nodeId: string; reason: string }> = [];
@@ -786,6 +810,16 @@ export class StreamingController {
           failures.push({ nodeId: node.id, reason: "missing_agent_endpoint" });
           continue;
         }
+
+        const resolvedKey = await resolveAgentApiKeyForNode(node);
+        if (!resolvedKey) {
+          failures.push({ nodeId: node.id, reason: "missing_api_key" });
+          continue;
+        }
+        const { key: agentControlApiKey, source: keySource } = resolvedKey;
+        logger.debug(
+          `[StreamingController] Using ${keySource} agent API key (len=${agentControlApiKey.length}) for node ${node.id}`,
+        );
 
         try {
           await axios.post(
