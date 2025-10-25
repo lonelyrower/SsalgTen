@@ -84,29 +84,45 @@ export class ApiKeyService {
       });
 
       if (defaultKey) {
-        // 检查现有密钥是否安全
-        if (this.isUnsafeDefaultKey(defaultKey.value)) {
-          logger.warn("检测到不安全的默认API密钥，正在重新生成...");
+        const currentValue = (defaultKey.value || "").trim();
 
-          // 生成新的安全密钥
+        if (!currentValue) {
+          logger.warn("System agent API key is empty; generating a new secure key...");
+
           const newKey = this.generateSecureApiKey();
 
           await prisma.setting.update({
             where: { key: "SYSTEM_AGENT_API_KEY" },
             data: {
               value: newKey,
-              description: `系统默认Agent API密钥 - 自动生成于 ${new Date().toISOString()}`,
+              description: `System default Agent API key - regenerated ${new Date().toISOString()}`,
             },
           });
 
-          logger.info("系统API密钥已更新为安全密钥");
+          logger.info("System agent API key regenerated because the stored value was empty");
           return newKey;
         }
 
-        logger.info("系统API密钥已存在且安全");
-        return defaultKey.value;
-      }
+        if (this.isUnsafeDefaultKey(currentValue)) {
+          logger.warn("Detected an unsafe default system agent API key; rotating to a secure value...");
 
+          const newKey = this.generateSecureApiKey();
+
+          await prisma.setting.update({
+            where: { key: "SYSTEM_AGENT_API_KEY" },
+            data: {
+              value: newKey,
+              description: `System default Agent API key - auto-rotated ${new Date().toISOString()}`,
+            },
+          });
+
+          logger.info("System agent API key rotated to a secure value");
+          return newKey;
+        }
+
+        logger.info("System agent API key already exists and is considered safe");
+        return currentValue;
+      }
       // 生成新的系统密钥
       const newKey = this.generateSecureApiKey();
 
