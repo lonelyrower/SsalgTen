@@ -110,7 +110,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     <button
                       type="button"
                       onClick={() => onNodeClick?.(node.nodeId)}
-                      className="flex items-center gap-2.5 text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
+                      className="flex items-center gap-2.5 text-slate-900 dark:text-slate-100"
                     >
                       {node.country && (
                         <CountryFlagSvg country={node.country} className="w-6 h-6" />

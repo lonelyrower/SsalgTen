@@ -29,12 +29,13 @@ export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {nodes.map((node) => (
+      {nodes.map((node, index) => (
         <NodeStreamingCard
           key={node.nodeId}
           node={node}
           testing={!!testingMap[node.nodeId]}
           onRetest={onRetest}
+          colorIndex={index % 4}
         />
       ))}
     </div>
@@ -45,12 +46,14 @@ interface NodeStreamingCardProps {
   node: NodeStreamingSummary;
   onRetest?: (nodeId: string) => void;
   testing: boolean;
+  colorIndex: number;
 }
 
 const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
   node,
   onRetest,
   testing,
+  colorIndex,
 }) => {
   const isExpired = useMemo(() => {
     if (!node.lastScanned) return true;
@@ -70,36 +73,45 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
     }
   }, [node.lastScanned]);
 
+  // 定义4种交替的颜色方案（类似监控中心）
+  const colorSchemes = [
+    {
+      gradient: "bg-gradient-to-br from-blue-50/80 via-cyan-50/50 to-blue-100/60 dark:from-blue-950/30 dark:via-cyan-950/20 dark:to-blue-900/30",
+      border: "border-l-4 border-blue-400 dark:border-blue-500",
+    },
+    {
+      gradient: "bg-gradient-to-br from-purple-50/80 via-violet-50/50 to-purple-100/60 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/30",
+      border: "border-l-4 border-purple-400 dark:border-purple-500",
+    },
+    {
+      gradient: "bg-gradient-to-br from-emerald-50/80 via-teal-50/50 to-emerald-100/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-emerald-900/30",
+      border: "border-l-4 border-emerald-400 dark:border-emerald-500",
+    },
+    {
+      gradient: "bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-orange-100/60 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-orange-900/30",
+      border: "border-l-4 border-orange-400 dark:border-orange-500",
+    },
+  ];
+
+  const colorScheme = colorSchemes[colorIndex];
+
   return (
     <Card
-      className={`p-3 transition-all border-l-4 ${
-        isExpired
-          ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20"
-          : node.unlockedCount > node.restrictedCount
-            ? "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20"
-            : "bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20"
-      }`}
-      style={{
-        borderLeftColor: isExpired
-          ? "#f59e0b"
-          : node.unlockedCount > node.restrictedCount
-            ? "#10b981"
-            : "#ef4444",
-      }}
+      className={`p-3 transition-all shadow-md hover:shadow-lg ${colorScheme.gradient} ${colorScheme.border}`}
     >
       <div className="space-y-2.5">
-        {/* 节点信息 - 居中对齐 */}
-        <div className="flex flex-col items-center gap-2">
+        {/* 节点信息 - 水平布局 */}
+        <div className="flex items-center gap-2.5">
           {node.country && (
-            <CountryFlagSvg country={node.country} className="w-8 h-8" />
+            <CountryFlagSvg country={node.country} className="w-7 h-7 flex-shrink-0" />
           )}
-          <div className="text-center">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-0.5">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
               {node.nodeName}
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
               <Globe className="h-3 w-3 flex-shrink-0" />
-              <span>{node.city ? `${node.city}, ${node.country}` : node.country}</span>
+              <span className="truncate">{node.city ? `${node.city}, ${node.country}` : node.country}</span>
             </p>
           </div>
         </div>
