@@ -110,8 +110,11 @@ export interface StreamingPlatformStats {
   service: StreamingService;
   name: string;
   icon: string;
-  unlocked: number; // 解锁节点数
-  restricted: number; // 受限节点数
+  unlocked: number; // 解锁节点数 (yes)
+  originalOnly: number; // 仅自制节点数 (org)
+  pending: number; // 待支持节点数 (pending)
+  restricted: number; // 屏蔽节点数 (no)
+  noPremium: number; // 禁会员节点数 (noprem)
   failed: number; // 检测失败节点数
   unknown: number; // 未测试节点数
   total: number; // 总节点数

@@ -109,11 +109,35 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     </span>
                   </div>
                   <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
-                    <span className="text-gray-600 dark:text-gray-400">受限</span>
+                    <span className="text-gray-600 dark:text-gray-400">屏蔽</span>
                     <span className="font-semibold text-rose-600 dark:text-rose-400">
                       {platform.restricted}
                     </span>
                   </div>
+                  {platform.originalOnly > 0 && (
+                    <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
+                      <span className="text-gray-600 dark:text-gray-400">仅自制</span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        {platform.originalOnly}
+                      </span>
+                    </div>
+                  )}
+                  {platform.pending > 0 && (
+                    <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
+                      <span className="text-gray-600 dark:text-gray-400">待支持</span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        {platform.pending}
+                      </span>
+                    </div>
+                  )}
+                  {platform.noPremium > 0 && (
+                    <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
+                      <span className="text-gray-600 dark:text-gray-400">禁会员</span>
+                      <span className="font-semibold text-rose-600 dark:text-rose-400">
+                        {platform.noPremium}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50">
                     <span className="text-gray-600 dark:text-gray-400">失败</span>
                     <span className="font-semibold text-gray-600 dark:text-gray-400">
