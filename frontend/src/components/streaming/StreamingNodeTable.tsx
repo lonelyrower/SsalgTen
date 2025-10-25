@@ -72,7 +72,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
       <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
         <thead className="bg-slate-50 dark:bg-slate-900/60">
           <tr>
-            <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-48">
+            <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-48">
               节点
             </th>
             {columns.map((col) => (
@@ -106,11 +106,11 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                 className="bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <td className="px-4 py-4">
-                  <div className="flex items-center h-full">
+                  <div className="flex items-center justify-center h-full">
                     <button
                       type="button"
                       onClick={() => onNodeClick?.(node.nodeId)}
-                      className="flex items-center gap-2.5 text-left text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
+                      className="flex items-center gap-2.5 text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
                     >
                       {node.country && (
                         <CountryFlagSvg country={node.country} className="w-6 h-6" />
