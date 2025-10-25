@@ -137,29 +137,34 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   const statusClass = STATUS_COLORS[serviceResult.status];
                   const unlockType = serviceResult.unlockType ?? "unknown";
                   const unlockClass = UNLOCK_TYPE_COLORS[unlockType];
+                  // 只有解锁状态才显示地区和解锁类型
+                  const showDetails = serviceResult.status === "yes";
 
                   return (
                     <td key={col.key} className="px-3 py-4 align-top">
-                      <div className="flex flex-col gap-1.5">
-                        <div className={`flex items-center gap-2 text-sm font-medium ${statusClass}`}>
-                          <span>{STATUS_TEXT[serviceResult.status]}</span>
+                      <div className="flex flex-col gap-1">
+                        {/* 第一行：状态 */}
+                        <div className={`text-sm font-medium ${statusClass}`}>
+                          {STATUS_TEXT[serviceResult.status]}
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                          {serviceResult.region ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300">
-                              {serviceResult.region.toUpperCase()}
+
+                        {/* 第二行：地区（仅解锁状态显示） */}
+                        {showDetails && serviceResult.region && (
+                          <div className="text-xs text-slate-600 dark:text-slate-400">
+                            {serviceResult.region.toUpperCase()}
+                          </div>
+                        )}
+
+                        {/* 第三行：解锁类型（仅解锁状态显示） */}
+                        {showDetails && (
+                          <div>
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${unlockClass}`}
+                            >
+                              {unlockTypeLabel(serviceResult.unlockType)}
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/60 text-slate-400">
-                              未知区域
-                            </span>
-                          )}
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${unlockClass}`}
-                          >
-                            {unlockTypeLabel(serviceResult.unlockType)}
-                          </span>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </td>
                   );

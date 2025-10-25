@@ -141,6 +141,9 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
         <div className="grid gap-2 sm:grid-cols-2">
           {node.services.map((service) => {
             const unlockType = service.unlockType ?? "unknown";
+            // 只有解锁状态才显示地区和解锁类型
+            const showDetails = service.status === "yes";
+
             return (
               <div
                 key={service.service}
@@ -150,25 +153,28 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
                   <StreamingIcon service={service.service} size="md" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
+                  {/* 第一行：状态 */}
                   <div className={`text-sm font-semibold ${STATUS_COLORS[service.status]}`}>
                     {STATUS_TEXT[service.status]}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800/60">
-                      {service.region ? service.region.toUpperCase() : "未知区域"}
-                    </span>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
-                    >
-                      {UNLOCK_TYPE_LABELS[unlockType]}
-                    </span>
-                    {service.lastTested && (
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatRelativeTime(service.lastTested)}
+
+                  {/* 第二行：地区（仅解锁状态显示） */}
+                  {showDetails && service.region && (
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      {service.region.toUpperCase()}
+                    </div>
+                  )}
+
+                  {/* 第三行：解锁类型（仅解锁状态显示） */}
+                  {showDetails && (
+                    <div>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
+                      >
+                        {UNLOCK_TYPE_LABELS[unlockType]}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -207,16 +213,4 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
       </div>
     </Card>
   );
-};
-
-const formatRelativeTime = (iso?: string) => {
-  if (!iso) return "从未检测";
-  try {
-    return formatDistanceToNow(new Date(iso), {
-      addSuffix: true,
-      locale: zhCN,
-    });
-  } catch {
-    return "未知";
-  }
 };

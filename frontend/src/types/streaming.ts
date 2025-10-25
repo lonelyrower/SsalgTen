@@ -15,17 +15,17 @@ export type StreamingService =
 // 解锁状态
 export type StreamingStatus =
   | "yes" // 完全解锁
-  | "no" // 封锁
-  | "org" // 仅自制剧 (Netflix Only)
-  | "pending" // 待支持
+  | "no" // 屏蔽
+  | "org" // 仅自制内容 (Netflix)
+  | "noprem" // 禁会员 (YouTube Premium)
+  | "pending" // 待支持 (Disney+)
   | "failed" // 检测失败
   | "unknown"; // 未知/未测试
 
-// 解锁类型
+// 解锁类型（仅在解锁状态时显示）
 export type UnlockType =
   | "native" // 原生IP
   | "dns" // DNS解锁
-  | "idc" // 机房IP
   | "unknown"; // 未知
 
 // 单个流媒体服务的检测结果
@@ -75,6 +75,7 @@ export const STATUS_COLORS: Record<StreamingStatus, string> = {
   yes: "text-green-600 dark:text-green-400",
   no: "text-red-600 dark:text-red-400",
   org: "text-yellow-600 dark:text-yellow-400",
+  noprem: "text-red-600 dark:text-red-400",
   pending: "text-yellow-600 dark:text-yellow-400",
   failed: "text-gray-600 dark:text-gray-400",
   unknown: "text-gray-600 dark:text-gray-400",
@@ -85,23 +86,22 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
   yes: "解锁",
   no: "屏蔽",
   org: "仅自制",
+  noprem: "禁会员",
   pending: "待支持",
   failed: "检测失败",
   unknown: "未测试",
 };
 
-// 解锁类型显示
+// 解锁类型显示（仅在解锁状态时显示）
 export const UNLOCK_TYPE_LABELS: Record<UnlockType, string> = {
   native: "原生",
   dns: "DNS",
-  idc: "机房",
   unknown: "未知",
 };
 
 export const UNLOCK_TYPE_COLORS: Record<UnlockType, string> = {
   native: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   dns: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-  idc: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   unknown: "bg-gray-100 text-gray-600 dark:bg-gray-800/60 dark:text-gray-300",
 };
 
