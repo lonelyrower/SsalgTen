@@ -173,7 +173,9 @@ export class StreamingController {
   static async triggerStreamingTest(req: Request, res: Response) {
     try {
       const { nodeId } = req.params;
-      const { services } = req.body;
+      const { services } = (req.body ?? {}) as {
+        services?: string | string[];
+      };
 
       const node = await prisma.node.findUnique({
         where: { id: nodeId },
