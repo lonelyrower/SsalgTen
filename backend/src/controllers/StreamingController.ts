@@ -319,9 +319,20 @@ export class StreamingController {
       }
 
       // 验证节点是否存在
-      const node = await prisma.node.findUnique({
+      let node = await prisma.node.findUnique({
         where: { id: nodeId },
       });
+
+      if (!node) {
+        node = await prisma.node.findUnique({
+          where: { agentId: nodeId },
+        });
+        if (node) {
+          logger.warn(
+            `[StreamingController] Node ID ${nodeId} not found, resolved via agentId ${node.agentId}`,
+          );
+        }
+      }
 
       if (!node) {
         logger.warn(`[StreamingController] Node not found: ${nodeId}`);
@@ -331,8 +342,10 @@ export class StreamingController {
         });
       }
 
+      const resolvedNodeId = node.id;
+
       logger.info(
-        `[StreamingController] Saving ${results.length} streaming test results for node ${nodeId} (${node.name})`,
+        `[StreamingController] Saving ${results.length} streaming test results for node ${resolvedNodeId} (${node.name})`,
       );
 
       // 批量保存检测结果
@@ -340,7 +353,7 @@ export class StreamingController {
         results.map(async (result: StreamingResultInput) => {
           return await prisma.streamingTest.create({
             data: {
-              nodeId,
+              nodeId: resolvedNodeId,
               service: result.service.toUpperCase() as StreamingService,
               status: result.status.toUpperCase() as StreamingStatus,
               region: result.region,
@@ -357,11 +370,11 @@ export class StreamingController {
       // 广播检测结果给前端
       const io = getIO();
       if (io) {
-        broadcastStreamingTestResult(io, nodeId, savedResults);
+        broadcastStreamingTestResult(io, resolvedNodeId, savedResults);
       }
 
       logger.info(
-        `[StreamingController] Successfully saved ${savedResults.length} streaming test results for node ${nodeId}`,
+        `[StreamingController] Successfully saved ${savedResults.length} streaming test results for node ${resolvedNodeId}`,
       );
 
       return res.json({
