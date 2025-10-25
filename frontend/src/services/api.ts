@@ -364,9 +364,9 @@ export interface StreamingServiceResult {
     | "chatgpt";
   name: string;
   icon: string;
-  status: "yes" | "no" | "org" | "pending" | "failed" | "unknown";
+  status: "yes" | "no" | "org" | "noprem" | "pending" | "failed" | "unknown";
   region?: string;
-  unlockType?: "native" | "dns" | "idc" | "unknown";
+  unlockType?: "native" | "dns" | "unknown";
   lastTested?: string;
 }
 

@@ -10,6 +10,8 @@ const statusOrder: Array<keyof typeof STATUS_TEXT> = [
   "yes",
   "no",
   "org",
+  "noprem",
+  "pending",
   "failed",
   "unknown",
 ];
@@ -17,7 +19,6 @@ const statusOrder: Array<keyof typeof STATUS_TEXT> = [
 const unlockTypeOrder: Array<keyof typeof UNLOCK_TYPE_LABELS> = [
   "native",
   "dns",
-  "idc",
   "unknown",
 ];
 
@@ -62,7 +63,7 @@ export const StreamingStatusLegend: React.FC = () => {
           颜色含义提示
         </h3>
         <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-          绿色代表完全解锁，黄色表示地区受限或仅解锁自制内容，红色表示封锁或检测失败。解锁方式区分为原生 IP、DNS 解锁以及机房 IP，便于快速识别节点能力。
+          绿色代表完全解锁，黄色表示仅解锁自制内容或待支持，红色表示封锁、禁会员或检测失败。解锁方式区分为原生 IP 和 DNS 解锁，便于快速识别节点能力。
         </p>
       </div>
     </div>

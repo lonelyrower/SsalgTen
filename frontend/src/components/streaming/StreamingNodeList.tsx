@@ -141,8 +141,8 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
         <div className="grid gap-2 sm:grid-cols-2">
           {node.services.map((service) => {
             const unlockType = service.unlockType ?? "unknown";
-            // 只有解锁状态才显示地区和解锁类型
-            const showDetails = service.status === "yes";
+            // 解锁和待支持状态显示地区和解锁类型
+            const showDetails = service.status === "yes" || service.status === "pending";
 
             return (
               <div

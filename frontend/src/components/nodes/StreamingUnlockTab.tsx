@@ -146,11 +146,6 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
         text: "DNS 解锁",
         color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
       },
-      idc: {
-        text: "IDC 机房",
-        color:
-          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      },
     };
 
     const badge = badges[unlockType as keyof typeof badges];
