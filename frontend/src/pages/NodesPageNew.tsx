@@ -224,7 +224,7 @@ export const NodesPageNew: React.FC = () => {
       </div>
 
       <div ref={containerRef} className="relative flex-1 overflow-y-auto">
-        <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
+        <main className="max-w-7xl mx-auto px-4 py-8 w-full flex flex-col gap-6 min-h-full">
         {/* Search and Filters - Enhanced Design */}
         <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-lg p-4">
           {/* Subtle glow effect */}
@@ -277,10 +277,10 @@ export const NodesPageNew: React.FC = () => {
         </div>
 
         {/* Main Content: Multi-View + Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start flex-1">
           {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[600px] sm:h-[700px] lg:h-[800px] flex flex-col">
+          <div className="lg:col-span-2 h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full lg:h-[800px]">
               {viewMode === "list" ? (
                 /* List View */
                 <div className="space-y-4 flex-1 overflow-y-auto pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
