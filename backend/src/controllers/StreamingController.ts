@@ -578,6 +578,8 @@ export class StreamingController {
           ).length;
           const noPremium = latestTests.filter((t) => t.status === "NOPREM").length;
           const china = latestTests.filter((t) => t.status === "CN").length;
+          const appOnly = latestTests.filter((t) => t.status === "APP").length;
+          const webOnly = latestTests.filter((t) => t.status === "WEB").length;
           const failed = latestTests.filter(
             (t) => t.status === "FAILED",
           ).length;
@@ -596,6 +598,8 @@ export class StreamingController {
             restricted,
             noPremium,
             china,
+            appOnly,
+            webOnly,
             failed,
             unknown,
             total,
@@ -639,6 +643,8 @@ export class StreamingController {
           restricted: 0,
           noPremium: 0,
           china: 0,
+          appOnly: 0,
+          webOnly: 0,
           failed: 0,
           unknown: 0,
           total: 0,

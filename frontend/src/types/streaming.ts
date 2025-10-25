@@ -20,6 +20,8 @@ export type StreamingStatus =
   | "noprem" // 禁会员 (YouTube Premium)
   | "pending" // 待支持 (Disney+)
   | "cn" // 中国地区 (YouTube)
+  | "app" // 仅APP (ChatGPT - API受限但iOS可用)
+  | "web" // 仅Web (ChatGPT - iOS被VPN检测但API可用)
   | "failed" // 检测失败
   | "unknown"; // 未知/未测试
 
@@ -112,6 +114,8 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
   ],
   chatgpt: [
     { status: "yes", label: "解锁", color: "text-emerald-600 dark:text-emerald-400" },
+    { status: "app", label: "仅APP", color: "text-blue-600 dark:text-blue-400" },
+    { status: "web", label: "仅Web", color: "text-cyan-600 dark:text-cyan-400" },
     { status: "no", label: "屏蔽", color: "text-rose-600 dark:text-rose-400" },
     { status: "failed", label: "失败", color: "text-gray-600 dark:text-gray-400" },
   ],
@@ -125,6 +129,8 @@ export const STATUS_COLORS: Record<StreamingStatus, string> = {
   noprem: "text-red-600 dark:text-red-400",
   pending: "text-yellow-600 dark:text-yellow-400",
   cn: "text-orange-600 dark:text-orange-400",
+  app: "text-blue-600 dark:text-blue-400",
+  web: "text-cyan-600 dark:text-cyan-400",
   failed: "text-gray-600 dark:text-gray-400",
   unknown: "text-gray-600 dark:text-gray-400",
 };
@@ -137,6 +143,8 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
   noprem: "禁会员",
   pending: "待支持",
   cn: "中国",
+  app: "仅APP",
+  web: "仅Web",
   failed: "检测失败",
   unknown: "未测试",
 };
@@ -165,6 +173,8 @@ export interface StreamingPlatformStats {
   restricted: number; // 屏蔽节点数 (no)
   noPremium: number; // 禁会员节点数 (noprem)
   china: number; // 中国地区节点数 (cn - YouTube only)
+  appOnly: number; // 仅APP节点数 (app - ChatGPT only)
+  webOnly: number; // 仅Web节点数 (web - ChatGPT only)
   failed: number; // 检测失败节点数
   unknown: number; // 未测试节点数
   total: number; // 总节点数
@@ -189,6 +199,10 @@ export function getStatusCount(
       return platform.noPremium;
     case "cn":
       return platform.china;
+    case "app":
+      return platform.appOnly;
+    case "web":
+      return platform.webOnly;
     case "failed":
       return platform.failed;
     case "unknown":

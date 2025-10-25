@@ -28,6 +28,8 @@ export type StreamingStatus =
   | 'noprem'
   | 'pending'
   | 'cn'
+  | 'app'
+  | 'web'
   | 'failed'
   | 'unknown';
 
@@ -752,13 +754,41 @@ export class StreamingDetector {
       const iosHtml = typeof iosResp.data === 'string' ? iosResp.data : '';
       const iosBlocked = /not available in your country/i.test(iosHtml) || /VPN/i.test(iosHtml);
 
-      if (complianceBlocked || iosBlocked) {
+      // 根据 IPQuality 标准判断状态
+      if (complianceBlocked && iosBlocked) {
+        // 两者都被屏蔽
         return {
           service: 'chatgpt',
           status: 'no',
           details: {
             complianceStatus: complianceResp.status,
-            iosBlocked,
+            iosBlocked: true,
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      if (complianceBlocked && !iosBlocked) {
+        // API 受限但 iOS 可用 -> 仅APP
+        return {
+          service: 'chatgpt',
+          status: 'app',
+          details: {
+            complianceStatus: complianceResp.status,
+            iosAvailable: true,
+          },
+          testedAt: new Date(),
+        };
+      }
+
+      if (!complianceBlocked && iosBlocked) {
+        // iOS 被 VPN 检测但 API 可用 -> 仅Web
+        return {
+          service: 'chatgpt',
+          status: 'web',
+          details: {
+            apiAvailable: true,
+            iosBlocked: true,
           },
           testedAt: new Date(),
         };

@@ -374,6 +374,8 @@ enum StreamingStatus {
   NOPREM    // 禁会员（YouTube Premium专用）
   PENDING   // 待支持
   CN        // 中国地区（YouTube专用）
+  APP       // 仅APP（ChatGPT专用 - API受限但iOS可用）
+  WEB       // 仅Web（ChatGPT专用 - iOS被VPN检测但API可用）
   FAILED    // 检测失败
   UNKNOWN   // 未测试
 }
