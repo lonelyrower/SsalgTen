@@ -87,7 +87,9 @@ export class ApiKeyService {
         const currentValue = (defaultKey.value || "").trim();
 
         if (!currentValue) {
-          logger.warn("System agent API key is empty; generating a new secure key...");
+          logger.warn(
+            "System agent API key is empty; generating a new secure key...",
+          );
 
           const newKey = this.generateSecureApiKey();
 
@@ -99,12 +101,16 @@ export class ApiKeyService {
             },
           });
 
-          logger.info("System agent API key regenerated because the stored value was empty");
+          logger.info(
+            "System agent API key regenerated because the stored value was empty",
+          );
           return newKey;
         }
 
         if (this.isUnsafeDefaultKey(currentValue)) {
-          logger.warn("Detected an unsafe default system agent API key; rotating to a secure value...");
+          logger.warn(
+            "Detected an unsafe default system agent API key; rotating to a secure value...",
+          );
 
           const newKey = this.generateSecureApiKey();
 
@@ -120,7 +126,9 @@ export class ApiKeyService {
           return newKey;
         }
 
-        logger.info("System agent API key already exists and is considered safe");
+        logger.info(
+          "System agent API key already exists and is considered safe",
+        );
         return currentValue;
       }
       // 生成新的系统密钥
