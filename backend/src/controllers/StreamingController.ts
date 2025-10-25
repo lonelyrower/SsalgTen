@@ -571,9 +571,12 @@ export class StreamingController {
           });
 
           const unlocked = latestTests.filter((t) => t.status === "YES").length;
+          const originalOnly = latestTests.filter((t) => t.status === "ORG").length;
+          const pending = latestTests.filter((t) => t.status === "PENDING").length;
           const restricted = latestTests.filter(
             (t) => t.status === "NO",
           ).length;
+          const noPremium = latestTests.filter((t) => t.status === "NOPREM").length;
           const failed = latestTests.filter(
             (t) => t.status === "FAILED",
           ).length;
@@ -587,7 +590,10 @@ export class StreamingController {
             name: getServiceName(service),
             icon: getServiceIcon(service),
             unlocked,
+            originalOnly,
+            pending,
             restricted,
+            noPremium,
             failed,
             unknown,
             total,
@@ -626,7 +632,10 @@ export class StreamingController {
           name: getServiceName(service),
           icon: getServiceIcon(service),
           unlocked: 0,
+          originalOnly: 0,
+          pending: 0,
           restricted: 0,
+          noPremium: 0,
           failed: 0,
           unknown: 0,
           total: 0,

@@ -15,7 +15,7 @@ import type {
 import { STREAMING_SERVICE_ORDER } from "@/types/streaming";
 import { apiService } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Grid, List, Film, Filter, Search, X } from "lucide-react";
+import { RefreshCw, Grid, List, Film, Filter, Search, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNotification } from "@/hooks/useNotification";
 
@@ -198,27 +198,6 @@ export const StreamingPage: React.FC = () => {
     },
     [navigate],
   );
-  const handleExport = async (format: "json" | "csv" | "markdown") => {
-    try {
-      const result = await apiService.exportStreamingData(format, filters);
-      if (result.success && result.data) {
-        const url = URL.createObjectURL(result.data);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = result.fileName || `streaming-export.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showSuccess("导出成功");
-      } else {
-        throw new Error(result.error || "导出失败");
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "导出失败";
-      showError(message);
-    }
-  };
 
   if (loading) {
     return (
@@ -260,115 +239,67 @@ export const StreamingPage: React.FC = () => {
           {/* Subtle glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 rounded-2xl pointer-events-none" />
 
-          <div className="relative flex flex-col gap-4">
-            {/* First row: Search and main filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search input with enhanced styling */}
-              <div className="flex-1 relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="搜索节点名称..."
-                  value={filters.keyword || ""}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, keyword: e.target.value }))
-                  }
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                />
-              </div>
-
-              {/* Action buttons group */}
-              <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                {/* Refresh button */}
-                <Button
-                  onClick={handleRefresh}
-                  variant="outline"
-                  size="sm"
-                  disabled={refreshing}
-                  className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
-                >
-                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                  <span className="hidden sm:inline">{refreshing ? "刷新中..." : "刷新"}</span>
-                </Button>
-
-                {/* Status filter */}
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
-                  <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  <select
-                    value={filters.status || "all"}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        status: e.target.value === "all" ? undefined : (e.target.value as StreamingStatus),
-                      }))
-                    }
-                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
-                    aria-label="筛选状态"
-                  >
-                    <option value="all">全部状态</option>
-                    <option value="yes">解锁</option>
-                    <option value="no">屏蔽</option>
-                    <option value="failed">失败</option>
-                  </select>
-                </div>
-
-                {/* Country filter */}
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
-                  <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  <select
-                    value={filters.country || "all"}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        country: e.target.value === "all" ? undefined : e.target.value,
-                      }))
-                    }
-                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
-                    aria-label="筛选国家"
-                  >
-                    <option value="all">全部国家</option>
-                    {availableCountries.map((country) => (
-                      <option key={country} value={country}>
-                        {country}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* View mode toggle */}
-                <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl p-1">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === "list"
-                        ? "bg-cyan-500 text-white"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    }`}
-                    title="表格视图"
-                    aria-label="切换到表格视图"
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("grid")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === "grid"
-                        ? "bg-cyan-500 text-white"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    }`}
-                    title="卡片视图"
-                    aria-label="切换到卡片视图"
-                  >
-                    <Grid className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+          <div className="relative flex flex-col sm:flex-row gap-4">
+            {/* Search input with enhanced styling */}
+            <div className="flex-1 relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="搜索节点名称..."
+                value={filters.keyword || ""}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, keyword: e.target.value }))
+                }
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              />
             </div>
 
-            {/* Second row: Additional action buttons */}
-            <div className="flex items-center gap-3 flex-wrap">
+            {/* Action buttons group */}
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+              {/* Status filter */}
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
+                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <select
+                  value={filters.status || "all"}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      status: e.target.value === "all" ? undefined : (e.target.value as StreamingStatus),
+                    }))
+                  }
+                  className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                  aria-label="筛选状态"
+                >
+                  <option value="all">全部状态</option>
+                  <option value="yes">解锁</option>
+                  <option value="no">屏蔽</option>
+                  <option value="failed">失败</option>
+                </select>
+              </div>
+
+              {/* Country filter */}
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
+                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <select
+                  value={filters.country || "all"}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      country: e.target.value === "all" ? undefined : e.target.value,
+                    }))
+                  }
+                  className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                  aria-label="筛选国家"
+                >
+                  <option value="all">全部国家</option>
+                  {availableCountries.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Batch test button */}
               <Button
                 variant="outline"
@@ -378,35 +309,49 @@ export const StreamingPage: React.FC = () => {
                 className="gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
               >
                 <Film className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`} />
-                <span>{bulkTriggering ? "检测中..." : "批量检测"}</span>
+                <span className="hidden sm:inline">{bulkTriggering ? "检测中..." : "批量检测"}</span>
               </Button>
 
-              {/* Export button */}
-              <div className="relative group">
-                <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 text-sm font-medium">
-                  <Download className="h-4 w-4" />
-                  <span>导出</span>
+              {/* Refresh button */}
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                size="sm"
+                disabled={refreshing}
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">{refreshing ? "刷新中..." : "刷新"}</span>
+              </Button>
+
+              {/* View mode toggle */}
+              <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === "list"
+                      ? "bg-cyan-500 text-white"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                  title="表格视图"
+                  aria-label="切换到表格视图"
+                >
+                  <List className="h-4 w-4" />
                 </button>
-                <div className="absolute left-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                  <button
-                    onClick={() => handleExport("json")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-xl"
-                  >
-                    JSON
-                  </button>
-                  <button
-                    onClick={() => handleExport("csv")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    CSV
-                  </button>
-                  <button
-                    onClick={() => handleExport("markdown")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-xl"
-                  >
-                    Markdown
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-cyan-500 text-white"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                  title="卡片视图"
+                  aria-label="切换到卡片视图"
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
