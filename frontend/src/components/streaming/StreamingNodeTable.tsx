@@ -15,7 +15,7 @@ import { CountryFlag } from "@/components/ui/CountryFlag";
 import { StreamingIcon } from "@/components/streaming/StreamingIcons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import { Clock, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 
@@ -79,11 +79,11 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
               <th
                 key={col.key}
                 scope="col"
-                className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                className="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                title={col.label}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-center">
                   <StreamingIcon service={col.key} size="sm" />
-                  <span>{col.label}</span>
                 </div>
               </th>
             ))}
@@ -114,14 +114,13 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     onClick={() => onNodeClick?.(node.nodeId)}
                     className="flex items-start gap-3 text-left text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400"
                   >
-                    <CountryFlag country={node.country} size="sm" />
+                    <div className="flex-shrink-0 pt-0.5">
+                      <CountryFlag country={node.country} size="sm" />
+                    </div>
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold truncate max-w-[200px]">
-                          {node.nodeName}
-                        </span>
-                        <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-                      </div>
+                      <span className="font-semibold truncate max-w-[200px] block">
+                        {node.nodeName}
+                      </span>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {node.city ? `${node.city}, ${node.country}` : node.country}
                       </p>
@@ -145,7 +144,6 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     <td key={col.key} className="px-3 py-4 align-top">
                       <div className="flex flex-col gap-1.5">
                         <div className={`flex items-center gap-2 text-sm font-medium ${statusClass}`}>
-                          <StreamingIcon service={serviceResult.service} size="sm" />
                           <span>{STATUS_TEXT[serviceResult.status]}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
