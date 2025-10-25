@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { NodeCard } from "@/components/nodes/NodeCard";
 import { EnhancedNodeDetailsPanel } from "@/components/nodes/EnhancedNodeDetailsPanel";
 import { MultiViewToggle, type MultiViewMode } from "@/components/map/MultiViewToggle";
+import { useMobile } from "@/hooks/useMobile";
 import type { NodeData } from "@/services/api";
 import type { HeartbeatData } from "@/types/heartbeat";
 import { apiService } from "@/services/api";
@@ -50,8 +51,10 @@ export const NodesPageNew: React.FC = () => {
   const [heartbeatData, setHeartbeatData] = useState<HeartbeatData | null>(
     null,
   );
+  const [isMobileDetailsOpen, setIsMobileDetailsOpen] = useState(false);
 
   const { nodes, connected, refreshData } = useRealTime();
+  const { isMobile } = useMobile();
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
@@ -66,10 +69,16 @@ export const NodesPageNew: React.FC = () => {
   const handleNodeClick = (node: NodeData) => {
     setSelectedNode(node);
     setShowDetails(false);
+    if (isMobile) {
+      setIsMobileDetailsOpen(true);
+    }
   };
 
   const handleShowDetails = () => {
     if (selectedNode) {
+      if (isMobile) {
+        setIsMobileDetailsOpen(false);
+      }
       setShowDetails(true);
     }
   };
@@ -144,6 +153,22 @@ export const NodesPageNew: React.FC = () => {
       return matchesSearch && matchesStatus;
     });
   }, [nodes, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    if (!isMobile && isMobileDetailsOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsMobileDetailsOpen(false);
+    }
+  }, [isMobile, isMobileDetailsOpen]);
+
+  useEffect(() => {
+    if (!isMobileDetailsOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isMobileDetailsOpen]);
 
   // 如果显示详情页面（包含诊断工具、系统详情、日志等）
   if (showDetails && selectedNode) {
@@ -314,7 +339,7 @@ export const NodesPageNew: React.FC = () => {
           </div>
 
           {/* Right Panel - Details */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <EnhancedNodeDetailsPanel
               node={selectedNode}
               heartbeatData={heartbeatData}
@@ -324,6 +349,24 @@ export const NodesPageNew: React.FC = () => {
         </div>
         </main>
       </div>
+      {isMobile && selectedNode && isMobileDetailsOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-sm">
+          <div
+            className="absolute inset-0"
+            onClick={() => setIsMobileDetailsOpen(false)}
+            aria-label="关闭节点详情"
+          />
+          <div className="relative z-10">
+            <EnhancedNodeDetailsPanel
+              node={selectedNode}
+              heartbeatData={heartbeatData}
+              onShowDetails={handleShowDetails}
+              layout="modal"
+              onClose={() => setIsMobileDetailsOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

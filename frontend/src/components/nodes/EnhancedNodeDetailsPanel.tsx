@@ -16,6 +16,7 @@ import {
   BarChart3,
   Hash,
   ArrowUpDown,
+  X,
 } from "lucide-react";
 import CountryFlagSvg from "@/components/ui/CountryFlagSvg";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ interface EnhancedNodeDetailsPanelProps {
   node: NodeData | null;
   heartbeatData?: HeartbeatData | null;
   onShowDetails?: () => void;
+  layout?: "sidebar" | "modal";
+  onClose?: () => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -141,13 +144,20 @@ export const EnhancedNodeDetailsPanel: React.FC<
   node,
   heartbeatData,
   onShowDetails,
+  layout = "sidebar",
+  onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<"info" | "resources">("info");
+  const isModalLayout = layout === "modal";
 
   if (!node) {
     return (
       <motion.div
-        className="group sticky top-24 relative lg:h-[800px] overflow-hidden rounded-2xl border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8 flex flex-col"
+        className={`group relative ${
+          isModalLayout
+            ? "max-h-[60vh] w-full rounded-2xl p-6"
+            : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
+        } overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 flex flex-col`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -185,7 +195,11 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
   return (
     <motion.div
-      className={`group sticky top-24 relative lg:h-[800px] overflow-y-auto overflow-x-hidden rounded-2xl border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-8 flex flex-col`}
+      className={`group relative w-full overflow-y-auto overflow-x-hidden border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 flex flex-col ${
+        isModalLayout
+          ? "max-h-[85vh] rounded-t-3xl p-6"
+          : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
+      }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -194,20 +208,38 @@ export const EnhancedNodeDetailsPanel: React.FC<
       <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${themeColors.glow}`} />
       <div className={`absolute -top-12 -right-16 h-32 w-32 rounded-full ${themeColors.glowCircle} blur-3xl`} />
       {/* Header */}
-      <div className="relative flex items-center gap-4 mb-6">
+      <div className="relative flex items-start gap-4 mb-6">
         <span className="text-5xl">{getStatusIcon(node.status)}</span>
-        <div className="flex-1">
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white">{node.name}</h3>
+        <div className="flex-1 space-y-2">
+          <div className="flex items-start gap-3">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white flex-1 break-words">
+              {node.name}
+            </h3>
+            <Badge
+              variant={node.status === "online" ? "success" : "destructive"}
+              className={node.status === "online"
+                ? "bg-green-500/20 text-green-700 dark:text-green-200 border border-green-500/30"
+                : "bg-red-500/20 text-red-700 dark:text-red-200 border border-red-500/30"
+              }
+            >
+              {node.status.toUpperCase()}
+            </Badge>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {node.city}, {node.country}
+          </p>
         </div>
-        <Badge
-          variant={node.status === "online" ? "success" : "destructive"}
-          className={node.status === "online"
-            ? "bg-green-500/20 text-green-700 dark:text-green-200 border border-green-500/30"
-            : "bg-red-500/20 text-red-700 dark:text-red-200 border border-red-500/30"
-          }
-        >
-          {node.status.toUpperCase()}
-        </Badge>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            aria-label="关闭"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
