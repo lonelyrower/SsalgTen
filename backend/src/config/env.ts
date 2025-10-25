@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 // Environment Variables Configuration
 // This file provides unified configuration with defaults and validation
 
