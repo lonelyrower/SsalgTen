@@ -41,7 +41,7 @@ export const StreamingNodeList: React.FC<StreamingNodeListProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {nodes.map((node) => (
         <NodeStreamingCard
           key={node.nodeId}
@@ -100,45 +100,36 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
     >
       <div className="space-y-3">
         {/* 节点信息 */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {node.country && (
-              <CountryFlagSvg country={node.country} className="w-7 h-7" />
+              <CountryFlagSvg country={node.country} className="w-7 h-7 flex-shrink-0" />
             )}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-0.5 truncate">
                 {node.nodeName}
               </h3>
               <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                <Globe className="h-3 w-3" />
-                {node.city ? `${node.city}, ${node.country}` : node.country}
+                <Globe className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{node.city ? `${node.city}, ${node.country}` : node.country}</span>
               </p>
             </div>
           </div>
 
-          {/* 快速统计 */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-green-600 dark:text-green-400 font-bold">
-                {node.unlockedCount}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400 text-xs">
-                解锁
-              </div>
+          {/* 快速统计 - 只显示数字 */}
+          <div className="flex items-center gap-2 text-sm flex-shrink-0">
+            <div className="text-green-600 dark:text-green-400 font-bold text-base">
+              {node.unlockedCount}
             </div>
-            <div className="text-center">
-              <div className="text-red-600 dark:text-red-400 font-bold">
-                {node.restrictedCount}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400 text-xs">
-                受限
-              </div>
+            <div className="text-gray-400 dark:text-gray-500">/</div>
+            <div className="text-red-600 dark:text-red-400 font-bold text-base">
+              {node.restrictedCount}
             </div>
           </div>
         </div>
 
         {/* 流媒体服务状态 */}
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-3 gap-2">
           {node.services.map((service) => {
             const unlockType = service.unlockType ?? "unknown";
             // 解锁、仅自制、待支持状态显示地区和解锁类型
@@ -147,14 +138,13 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
             return (
               <div
                 key={service.service}
-                className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 px-3 py-2"
+                className="flex flex-col items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 px-2 py-2"
               >
-                <div className="mt-0.5">
-                  <StreamingIcon service={service.service} size="md" />
-                </div>
-                <div className="flex-1 min-w-0 space-y-1">
+                <StreamingIcon service={service.service} size="md" />
+
+                <div className="flex flex-col gap-1 items-center w-full">
                   {/* 第一行：状态 */}
-                  <div className={`text-sm font-semibold ${STATUS_COLORS[service.status]}`}>
+                  <div className={`text-xs font-semibold ${STATUS_COLORS[service.status]}`}>
                     {STATUS_TEXT[service.status]}
                   </div>
 
@@ -169,7 +159,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
                   {showDetails && service.unlockType && (
                     <div>
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
                       >
                         {UNLOCK_TYPE_LABELS[unlockType]}
                       </span>

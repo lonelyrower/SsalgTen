@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { StreamingOverviewStats } from "@/components/streaming/StreamingOverviewStats";
 import { StreamingPlatformCards } from "@/components/streaming/StreamingPlatformCards";
 import { StreamingNodeList } from "@/components/streaming/StreamingNodeList";
 import { StreamingNodeTable } from "@/components/streaming/StreamingNodeTable";
@@ -19,13 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, Grid, List, Film, Filter, Search, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNotification } from "@/hooks/useNotification";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 type ViewMode = "grid" | "list";
 
@@ -263,14 +255,17 @@ export const StreamingPage: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto">
         <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
-        {/* 操作和筛选栏 */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            {/* 左侧：搜索和筛选 */}
-            <div className="flex items-center gap-3 flex-1 max-w-2xl">
-              {/* 搜索框 */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        {/* Search and Filters - Enhanced Design */}
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-lg p-4">
+          {/* Subtle glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 rounded-2xl pointer-events-none" />
+
+          <div className="relative flex flex-col gap-4">
+            {/* First row: Search and main filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search input with enhanced styling */}
+              <div className="flex-1 relative group">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
                 <input
                   type="text"
                   placeholder="搜索节点名称..."
@@ -278,119 +273,124 @@ export const StreamingPage: React.FC = () => {
                   onChange={(e) =>
                     setFilters((prev) => ({ ...prev, keyword: e.target.value }))
                   }
-                  className="w-full pl-10 pr-10 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 />
-                {filters.keyword && (
-                  <button
-                    onClick={() =>
-                      setFilters((prev) => ({ ...prev, keyword: "" }))
-                    }
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
 
-              {/* 国家筛选 */}
-              <Select
-                value={filters.country || "all"}
-                onValueChange={(value) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    country: value === "all" ? undefined : value,
-                  }))
-                }
-              >
-                <SelectTrigger className="w-[140px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-                  <SelectValue placeholder="选择国家" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部国家</SelectItem>
-                  {availableCountries.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Action buttons group */}
+              <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                {/* Refresh button */}
+                <Button
+                  onClick={handleRefresh}
+                  variant="outline"
+                  size="sm"
+                  disabled={refreshing}
+                  className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">{refreshing ? "刷新中..." : "刷新"}</span>
+                </Button>
 
-              {/* 状态筛选 */}
-              <Select
-                value={filters.status || "all"}
-                onValueChange={(value) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    status: value === "all" ? undefined : (value as StreamingStatus),
-                  }))
-                }
-              >
-                <SelectTrigger className="w-[140px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-                  <SelectValue placeholder="状态" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
-                  <SelectItem value="yes">完全解锁</SelectItem>
-                  <SelectItem value="no">区域限制</SelectItem>
-                  <SelectItem value="failed">检测失败</SelectItem>
-                </SelectContent>
-              </Select>
+                {/* Status filter */}
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
+                  <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <select
+                    value={filters.status || "all"}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        status: e.target.value === "all" ? undefined : (e.target.value as StreamingStatus),
+                      }))
+                    }
+                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                    aria-label="筛选状态"
+                  >
+                    <option value="all">全部状态</option>
+                    <option value="yes">解锁</option>
+                    <option value="no">屏蔽</option>
+                    <option value="failed">失败</option>
+                  </select>
+                </div>
+
+                {/* Country filter */}
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
+                  <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <select
+                    value={filters.country || "all"}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        country: e.target.value === "all" ? undefined : e.target.value,
+                      }))
+                    }
+                    className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                    aria-label="筛选国家"
+                  >
+                    <option value="all">全部国家</option>
+                    {availableCountries.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* View mode toggle */}
+                <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-lg transition-colors ${
+                      viewMode === "list"
+                        ? "bg-cyan-500 text-white"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    }`}
+                    title="表格视图"
+                    aria-label="切换到表格视图"
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-lg transition-colors ${
+                      viewMode === "grid"
+                        ? "bg-cyan-500 text-white"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    }`}
+                    title="卡片视图"
+                    aria-label="切换到卡片视图"
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* 右侧：操作按钮 */}
-            <div className="flex items-center gap-3">
-              {/* 视图切换 */}
-              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1 shadow-sm">
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded ${
-                    viewMode === "list"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
-                  title="表格视图"
-                >
-                  <List className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded ${
-                    viewMode === "grid"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
-                  title="卡片视图"
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* 手动检测 */}
+            {/* Second row: Additional action buttons */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Batch test button */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleTriggerAll}
                 disabled={bulkTriggering || filteredNodes.length === 0}
-                className="gap-2"
+                className="gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
               >
-                <Film
-                  className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`}
-                />
-                <span className="hidden sm:inline">
-                  {bulkTriggering ? "检测中..." : "批量检测"}
-                </span>
+                <Film className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`} />
+                <span>{bulkTriggering ? "检测中..." : "批量检测"}</span>
               </Button>
 
-              {/* 导出 */}
+              {/* Export button */}
               <div className="relative group">
-                <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm text-sm">
+                <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 text-sm font-medium">
                   <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">导出</span>
+                  <span>导出</span>
                 </button>
-                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                <div className="absolute left-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                   <button
                     onClick={() => handleExport("json")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-xl"
                   >
                     JSON
                   </button>
@@ -402,28 +402,18 @@ export const StreamingPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleExport("markdown")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
+                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-xl"
                   >
                     Markdown
                   </button>
                 </div>
               </div>
-
-              {/* 刷新 */}
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                />
-                <span className="hidden sm:inline">
-                  {refreshing ? "刷新中..." : "刷新"}
-                </span>
-              </button>
             </div>
           </div>
+        </div>
+
+        {/* Active filters display */}
+        <div className="space-y-4">
 
           {/* 当前筛选条件提示 */}
           {(filters.platform || filters.country || filters.status || filters.keyword) && (
@@ -482,9 +472,6 @@ export const StreamingPage: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* 总览统计 */}
-        <StreamingOverviewStats overview={overview} />
 
         {/* 如果完全没有数据，显示友好提示 */}
         {nodes.length === 0 ? (
