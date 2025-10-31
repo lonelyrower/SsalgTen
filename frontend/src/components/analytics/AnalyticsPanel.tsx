@@ -1,0 +1,303 @@
+import { memo, useEffect, useMemo, useState } from "react";
+import { NetworkMetricsChart } from "@/components/charts/NetworkMetricsChart";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { apiService, type NodeStats } from "@/services/api";
+import {
+  TrendingUp,
+  Globe,
+  Server,
+  Clock,
+  RefreshCw,
+  Download,
+  Filter,
+} from "lucide-react";
+
+interface AnalyticsPanelProps {
+  className?: string;
+}
+
+export const AnalyticsPanel = memo(
+  ({ className = "" }: AnalyticsPanelProps) => {
+    const [timeRange, setTimeRange] = useState<"1h" | "24h" | "7d" | "30d">(
+      "24h",
+    );
+    const [refreshing, setRefreshing] = useState(false);
+    const [stats, setStats] = useState<NodeStats | null>(null);
+
+    // 刷新数据
+    const handleRefresh = async () => {
+      setRefreshing(true);
+      await fetchStats();
+      setRefreshing(false);
+    };
+
+    const fetchStats = async () => {
+      try {
+        const res = await apiService.getStats();
+        if (res.success && res.data) {
+          setStats(res.data);
+        } else {
+          setStats(null);
+        }
+      } catch (e) {
+        console.error("获取统计失败:", e);
+        setStats(null);
+      }
+    };
+
+    useEffect(() => {
+      fetchStats();
+    }, []);
+
+    // 关键指标数据（无模拟数据，占位等待真实数据接入）
+    const keyMetrics: Array<{
+      label: string;
+      value?: string;
+      change?: number;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      icon: any;
+      color: string;
+      description?: string;
+    }> = [];
+
+    const getChangeColor = (change: number) => {
+      if (change > 0) return "text-green-600";
+      if (change < 0) return "text-red-600";
+      return "text-gray-600";
+    };
+
+    const getChangeIcon = (change: number) => {
+      return change >= 0 ? (
+        <TrendingUp className="h-3 w-3" />
+      ) : (
+        <TrendingUp className="h-3 w-3 rotate-180" />
+      );
+    };
+
+    // 基于统计数据构建饼图（节点状态分布）
+    const nodeStatusPieData = useMemo(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!stats) return [] as any[];
+      return [
+        { name: "在线", value: stats.onlineNodes, color: "#22c55e" },
+        { name: "离线", value: stats.offlineNodes, color: "#ef4444" },
+      ];
+    }, [stats]);
+
+    return (
+      <div className={`space-y-6 ${className}`}>
+        {/* 控制面板 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              数据分析面板
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              实时网络监控数据分析和趋势预测
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            {/* 时间范围选择 */}
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+              {(["1h", "24h", "7d", "30d"] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    timeRange === range
+                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
+
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              筛选
+            </Button>
+
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              导出
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+              />
+              刷新
+            </Button>
+          </div>
+        </div>
+
+        {/* 关键指标卡片 */}
+        {keyMetrics.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {keyMetrics.map((metric, index) => {
+              const IconComponent = metric.icon;
+              return (
+                <GlassCard key={index} className="p-6" animated>
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`p-3 rounded-xl bg-${metric.color}-50 dark:bg-${metric.color}-900/20`}
+                    >
+                      <IconComponent
+                        className={`h-6 w-6 text-${metric.color}-600`}
+                      />
+                    </div>
+                    {typeof metric.change === "number" && (
+                      <div
+                        className={`flex items-center space-x-1 text-sm ${getChangeColor(metric.change)}`}
+                      >
+                        {getChangeIcon(metric.change)}
+                        <span className="font-medium">
+                          {Math.abs(metric.change)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {metric.value ?? "—"}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {metric.label}
+                    </p>
+                    {metric.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                        {metric.description}
+                      </p>
+                    )}
+                  </div>
+                </GlassCard>
+              );
+            })}
+          </div>
+        ) : (
+          <GlassCard className="p-6">
+            <div className="text-center text-gray-600 dark:text-gray-400">
+              暂无关键指标数据
+            </div>
+          </GlassCard>
+        )}
+
+        {/* 主要图表区域 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 延迟趋势图 */}
+          <div className="lg:col-span-2">
+            <NetworkMetricsChart
+              type="area"
+              title="网络延迟趋势"
+              metric="latency"
+              timeRange={timeRange}
+              height={320}
+            />
+          </div>
+
+          {/* 节点状态分布 */}
+          <div>
+            <NetworkMetricsChart
+              type="pie"
+              title="节点状态分布"
+              metric="status"
+              data={nodeStatusPieData}
+              height={320}
+            />
+          </div>
+        </div>
+
+        {/* 次要图表区域 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 吞吐量图表 */}
+          <NetworkMetricsChart
+            type="line"
+            title="网络吞吐量"
+            metric="throughput"
+            timeRange={timeRange}
+            height={280}
+          />
+
+          {/* 地理分布图表 */}
+          <NetworkMetricsChart
+            type="bar"
+            title="地理分布"
+            metric="nodes"
+            height={280}
+          />
+        </div>
+
+        {/* 详细性能指标 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <NetworkMetricsChart
+            type="line"
+            title="CPU 使用率"
+            metric="cpu_usage"
+            timeRange={timeRange}
+            height={240}
+          />
+
+          <NetworkMetricsChart
+            type="line"
+            title="内存使用率"
+            metric="memory_usage"
+            timeRange={timeRange}
+            height={240}
+          />
+
+          <NetworkMetricsChart
+            type="area"
+            title="系统可用性"
+            metric="uptime"
+            timeRange={timeRange}
+            height={240}
+          />
+        </div>
+
+        {/* 实时状态栏 */}
+        <GlassCard className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  实时监控已启用
+                </span>
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-500">
+                最后更新: {new Date().toLocaleTimeString()}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4 text-sm">
+              <Badge variant="outline" className="flex items-center space-x-1">
+                <Server className="h-3 w-3" />
+                <span>在线节点 {stats ? stats.onlineNodes : "—"}</span>
+              </Badge>
+              <Badge variant="outline" className="flex items-center space-x-1">
+                <Globe className="h-3 w-3" />
+                <span>国家数 {stats ? stats.totalCountries : "—"}</span>
+              </Badge>
+              <Badge variant="outline" className="flex items-center space-x-1">
+                <Clock className="h-3 w-3" />
+                <span>可用性 —</span>
+              </Badge>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+    );
+  },
+);
+
+AnalyticsPanel.displayName = "AnalyticsPanel";

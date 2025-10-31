@@ -1,0 +1,432 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 节点模型 - 代表每个VPS节点
+model Node {
+  id          String   @id @default(cuid())
+  name        String   // 节点名称，如 "Tokyo Node"
+  hostname    String?  // 主机名
+  
+  // 地理信息
+  country     String   // 国家
+  city        String   // 城市
+  latitude    Float    // 纬度
+  longitude   Float    // 经度
+  
+  // 网络信息
+  ipv4        String?  // IPv4地址
+  ipv6        String?  // IPv6地址
+  
+  // ASN信息
+  asnNumber   String?  // ASN号码，如 "AS13335"
+  asnName     String?  // ASN名称，如 "Cloudflare, Inc."
+  asnOrg      String?  // ASN组织
+  asnRoute    String?  // ASN路由
+  asnType     String?  // ASN类型
+  
+  // 提供商信息
+  provider    String   // 服务提供商，如 "DigitalOcean"
+  datacenter  String?  // 数据中心信息
+
+  // 成本信息
+  monthlyCost Decimal? @db.Decimal(10, 2) // 月度成本（美元）
+
+  // Agent信息
+  agentId     String   @unique // Agent唯一标识
+  apiKey      String   // API密钥用于认证
+  // 资产占位/库存标记（为未安装Agent的VPS创建占位记录）
+  isPlaceholder Boolean @default(false)
+  // 纪念/冻结占位：不允许被自动“收编”升级为正式节点
+  neverAdopt   Boolean  @default(false)
+  
+  // 状态信息
+  status      NodeStatus @default(OFFLINE)
+  lastSeen    DateTime?  // 最后在线时间
+  
+  // 元数据
+  tags        String?    // 标签，JSON字符串
+  description String?    // 描述/备注
+  nameCustomized Boolean @default(false) // 标记节点名称是否被用户手动修改过
+  
+  // 系统信息
+  osType      String?    // 操作系统类型
+  osVersion   String?    // 操作系统版本
+  
+  // 时间戳
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // 关系
+  diagnosticRecords DiagnosticRecord[]
+  heartbeatLogs     HeartbeatLog[]
+  eventLogs         EventLog[]
+  streamingTests    StreamingTest[]
+  detectedServices  DetectedService[]
+  trafficStats      TrafficStats?
+
+  @@map("nodes")
+  @@index([isPlaceholder])
+  @@index([ipv4])
+  @@index([ipv6])
+  @@index([isPlaceholder, neverAdopt])
+  @@index([agentId])
+  @@index([status])
+  @@index([lastSeen(sort: Desc)])
+  @@index([status, lastSeen(sort: Desc)])
+}
+
+// 网络诊断记录
+model DiagnosticRecord {
+  id        String      @id @default(cuid())
+  nodeId    String      // 执行诊断的节点ID
+  node      Node        @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  
+  // 诊断类型和目标
+  type      DiagnosticType  // ping, traceroute, mtr, speedtest
+  target    String?         // 诊断目标，speedtest可能为空
+  
+  // 诊断结果
+  success   Boolean         // 是否成功
+  result    String          // JSON格式的结果数据
+  error     String?         // 错误信息
+  
+  // 性能指标
+  duration  Int?            // 耗时（毫秒）
+  
+  // 时间戳
+  timestamp DateTime        @default(now())
+  
+  @@map("diagnostic_records")
+}
+
+// 心跳日志
+model HeartbeatLog {
+  id        String   @id @default(cuid())
+  nodeId    String   // 节点ID
+  node      Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  
+  // 心跳数据
+  status    String   // healthy, degraded, unhealthy
+  uptime    Float?   // 运行时间（秒）
+  
+  // 基础系统指标（保持兼容性）
+  cpuUsage  Float?   // CPU使用率
+  memoryUsage Float? // 内存使用率
+  diskUsage Float?   // 磁盘使用率
+  
+  // 详细系统信息（JSON格式）
+  cpuInfo     Json?    // 详细CPU信息：型号、核数、频率、温度等
+  memoryInfo  Json?    // 详细内存信息：类型、速度、可用内存等
+  diskInfo    Json?    // 详细磁盘信息：类型、型号、健康状态、温度等
+  networkInfo Json?    // 网络流量统计：接收/发送字节数、包数、速度等
+  processInfo Json?    // 进程信息：总数、运行数、睡眠数等
+  
+  // 系统环境信息
+  virtualization Json? // 虚拟化信息：类型、提供商等
+  services    Json?    // 系统服务状态：docker、nginx等
+  loadAverage Json?    // 负载平均值数组
+  
+  // 网络连接状态（保持兼容性）
+  connectivity Json?  // 网络连接测试结果
+  
+  // 时间戳
+  timestamp DateTime @default(now())
+  
+  @@map("heartbeat_logs")
+  @@index([nodeId])
+  @@index([timestamp])
+}
+
+// 事件日志（节点IP变更、状态变更等）
+model EventLog {
+  id        String   @id @default(cuid())
+  nodeId    String
+  node      Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  type      String   // 事件类型：IP_CHANGED、STATUS_CHANGED 等
+  message   String?
+  details   Json?
+  timestamp DateTime @default(now())
+
+  @@map("event_logs")
+  @@index([nodeId, timestamp])
+}
+
+// 管理员用户
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String   // bcrypt哈希
+  
+  // 用户信息
+  name      String?
+  avatar    String?
+  
+  // 权限
+  role      UserRole @default(ADMIN)
+  active    Boolean  @default(true)
+  
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+  
+  // 关系
+  refreshTokens RefreshToken[]
+  
+  @@map("users")
+}
+
+// 系统配置
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique  // 配置键
+  value     String   // 配置值（JSON字符串）
+  
+  // 元数据
+  category  String?  // 配置分类
+  description String? // 描述
+  
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("settings")
+}
+
+// 刷新令牌（用于无感续期与强制注销）
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  revoked    Boolean  @default(false)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ip         String?
+  userAgent  String?
+
+  @@map("refresh_tokens")
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// 访问者信息记录
+model VisitorLog {
+  id          String   @id @default(cuid())
+  
+  // 基础信息
+  ip          String   // 访问者IP
+  userAgent   String   // 用户代理
+  
+  // 地理位置信息
+  city        String?  // 城市
+  region      String?  // 地区/省份
+  country     String?  // 国家
+  latitude    Float?   // 纬度
+  longitude   Float?   // 经度
+  timezone    String?  // 时区
+  
+  // ASN信息
+  asnNumber   String?  // ASN号码
+  asnName     String?  // ASN名称
+  asnOrg      String?  // ASN组织
+  
+  // 运营商信息
+  company     String?  // 运营商名称
+  
+  // 访问信息
+  endpoint    String?  // 访问的端点
+  method      String?  // HTTP方法
+  referer     String?  // 来源
+  
+  // 诊断相关
+  nodeId      String?  // 关联的节点ID（如果是通过节点访问）
+  
+  // 时间戳
+  createdAt   DateTime @default(now())
+  
+  @@map("visitor_logs")
+  @@index([ip])
+  @@index([createdAt])
+}
+
+// 枚举类型
+enum NodeStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum DiagnosticType {
+  PING
+  TRACEROUTE
+  MTR
+  SPEEDTEST
+  LATENCY_TEST
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+// 流媒体解锁测试记录
+model StreamingTest {
+  id          String   @id @default(cuid())
+  nodeId      String
+  node        Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  // 流媒体服务
+  service     StreamingService  // netflix, youtube, disney_plus, etc.
+
+  // 测试结果
+  status      StreamingStatus   // yes, no, org, pending, failed
+  region      String?           // 解锁区域，如 "US", "JP"
+  unlockType  UnlockType?       // native, dns, idc
+
+  // 详细信息
+  details     Json?             // 额外的检测详情
+  errorMsg    String?           // 错误信息
+
+  // 时间戳
+  testedAt    DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+
+  @@map("streaming_tests")
+  @@index([nodeId])
+  @@index([service])
+  @@index([status])
+  @@index([testedAt(sort: Desc)])
+  @@index([nodeId, service, testedAt(sort: Desc)])
+}
+
+// 检测到的服务（Xray、Nginx等）
+model DetectedService {
+  id          String   @id @default(cuid())
+  nodeId      String
+  node        Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  // 服务信息
+  serviceType ServiceType       // proxy, web, database, container, other
+  serviceName String            // Xray, Nginx, MySQL, Docker等
+  version     String?           // 版本号
+  status      ServiceStatus     // running, stopped, unknown
+
+  // 网络信息
+  port        Int?              // 监听端口
+  protocol    String?           // 协议类型，如 vmess, vless, trojan, http
+
+  // 配置信息
+  configPath  String?           // 配置文件路径
+  configHash  String?           // 配置文件哈希（用于检测变更）
+
+  // 网站信息（针对Web服务）
+  domains     Json?             // 域名列表
+  sslEnabled  Boolean?          // 是否启用SSL
+
+  // 容器信息（针对Docker）
+  containerInfo Json?           // 容器详细信息
+
+  // 元数据
+  details     Json?             // 额外的服务详情
+
+  // 时间戳
+  detectedAt  DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("detected_services")
+  @@index([nodeId])
+  @@index([serviceType])
+  @@index([serviceName])
+  @@index([status])
+  @@index([detectedAt(sort: Desc)])
+  @@unique([nodeId, serviceName, port])
+}
+
+// 流媒体服务枚举
+enum StreamingService {
+  NETFLIX
+  YOUTUBE
+  DISNEY_PLUS
+  TIKTOK
+  AMAZON_PRIME
+  SPOTIFY
+  CHATGPT
+}
+
+// 流媒体解锁状态
+enum StreamingStatus {
+  YES       // 完全解锁
+  NO        // 区域限制/封锁
+  ORG       // 仅自制剧（Netflix专用）
+  NOPREM    // 禁会员（YouTube Premium专用）
+  PENDING   // 待支持
+  CN        // 中国地区（YouTube专用）
+  APP       // 仅APP（ChatGPT专用 - API受限但iOS可用）
+  WEB       // 仅Web（ChatGPT专用 - iOS被VPN检测但API可用）
+  IDC       // 数据中心（TikTok专用）
+  FAILED    // 检测失败
+  UNKNOWN   // 未测试
+}
+
+// 解锁类型
+enum UnlockType {
+  NATIVE    // 原生IP
+  DNS       // DNS解锁
+  IDC       // 机房IP
+  UNKNOWN   // 未知
+}
+
+// 服务类型
+enum ServiceType {
+  PROXY      // 代理服务（Xray, V2Ray等）
+  WEB        // Web服务（Nginx, Apache等）
+  DATABASE   // 数据库（MySQL, PostgreSQL等）
+  CONTAINER  // 容器（Docker等）
+  OTHER      // 其他
+}
+
+// 服务状态
+enum ServiceStatus {
+  RUNNING
+  STOPPED
+  UNKNOWN
+}
+
+// 流量统计表 - 持久化节点流量数据
+model TrafficStats {
+  id     String @id @default(cuid())
+  nodeId String @unique
+  node   Node   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  // 累计流量（字节）- 永久保存，不会因重启丢失
+  totalUpload   BigInt @default(0)   // 总上传流量
+  totalDownload BigInt @default(0)   // 总下载流量
+
+  // 当前周期流量（可按需重置）
+  periodUpload   BigInt   @default(0)   // 本周期上传
+  periodDownload BigInt   @default(0)   // 本周期下载
+  periodStart    DateTime @default(now()) // 周期开始时间
+
+  // 上次网络接口数据（用于计算增量）
+  lastRxBytes BigInt? // 上次接收字节数
+  lastTxBytes BigInt? // 上次发送字节数
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("traffic_stats")
+}

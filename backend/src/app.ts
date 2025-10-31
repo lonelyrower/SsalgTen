@@ -1,0 +1,157 @@
+import express, { Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import { corsMiddleware } from "./middleware/cors";
+import { visitorTrackingMiddleware } from "./middleware/visitorTracking";
+import { logger } from "./utils/logger";
+import router from "./routes";
+import { ApiResponse } from "./types";
+import { APP_VERSION } from "./utils/version";
+
+// 加载环境变量
+dotenv.config();
+
+const app = express();
+
+// 当服务位于反向代理或容器网络后面时，信任代理以正确解析 IP（配合 express-rate-limit）
+// 建议设置为精确的跳数或受信网段，避免 express-rate-limit 警告/异常
+// TRUST_PROXY 可设置为：数字（跳数），或逗号分隔的受信代理列表
+(() => {
+  const tp = (process.env.TRUST_PROXY || "1").trim();
+  if (/^\d+$/.test(tp)) {
+    app.set("trust proxy", parseInt(tp, 10));
+  } else if (tp.toLowerCase() === "false") {
+    app.set("trust proxy", false);
+  } else if (tp.toLowerCase() === "true") {
+    // 为避免 express-rate-limit 的安全告警，不使用 true（信任所有代理）
+    app.set("trust proxy", 1);
+  } else {
+    // 自定义受信代理列表（如 'loopback, linklocal, uniquelocal' 或具体IP段）
+    app.set("trust proxy", tp);
+  }
+})();
+
+// 安全中间件
+const isDevelopment = process.env.NODE_ENV === "development";
+
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        // 开发环境需要 'unsafe-eval' 以支持 Vite HMR (Hot Module Replacement)
+        // 生产环境移除以提高安全性
+        scriptSrc: isDevelopment ? ["'self'", "'unsafe-eval'"] : ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        // 开发环境允许连接到 Vite 开发服务器的 WebSocket
+        connectSrc: isDevelopment
+          ? ["'self'", "ws:", "wss:", "http:", "https:"]
+          : ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        upgradeInsecureRequests: isDevelopment ? [] : [""],
+      },
+    },
+    // 强化安全响应头
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    frameguard: {
+      action: "deny",
+    },
+    noSniff: true,
+    xssFilter: true,
+    referrerPolicy: {
+      policy: "strict-origin-when-cross-origin",
+    },
+  }),
+);
+
+// CORS 配置
+app.use(corsMiddleware);
+
+// 日志中间件
+if (process.env.ENABLE_MORGAN === "true") {
+  app.use(morgan("combined"));
+}
+
+// 解析中间件
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cookieParser());
+
+// 访问记录中间件 - 自动记录所有访问
+app.use(visitorTrackingMiddleware);
+
+// API 根路径信息
+app.get("/", (req: Request, res: Response) => {
+  const response: ApiResponse = {
+    success: true,
+    message: "Welcome to SsalgTen API",
+    data: {
+      name: "SsalgTen API Server",
+      version: APP_VERSION,
+      description: "Multi-node network diagnostic aggregation system",
+      documentation: "/api/info",
+      health: "/api/health",
+    },
+  };
+  res.json(response);
+});
+
+// API 路由
+app.use("/api", router);
+
+// 404 处理
+// NOTE: Express v5 path-to-regexp disallows bare '*' routes; use catch-all handler without path.
+app.use((req: Request, res: Response) => {
+  const response: ApiResponse = {
+    success: false,
+    error: "API endpoint not found",
+    data: {
+      path: req.originalUrl,
+      method: req.method,
+      availableEndpoints: [
+        "GET /",
+        "GET /api/health",
+        "GET /api/info",
+        "GET /api/nodes",
+        "GET /api/visitor/info",
+        "POST /api/agents/register",
+        "POST /api/agents/:agentId/heartbeat",
+        "GET /api/diagnostics",
+      ],
+    },
+  };
+  res.status(404).json(response);
+});
+
+// 全局错误处理
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
+  logger.error("Unhandled error:", error);
+
+  const err = error as Error;
+  const response: ApiResponse = {
+    success: false,
+    error: "Internal server error",
+    ...(process.env.NODE_ENV === "development" && {
+      data: {
+        details: err?.message || "Unknown error",
+        stack: err?.stack,
+      },
+    }),
+  };
+
+  res.status(500).json(response);
+});
+
+export default app;

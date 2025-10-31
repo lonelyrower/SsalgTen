@@ -1,0 +1,53 @@
+{
+  "name": "ssalgten",
+  "version": "0.1.0",
+  "description": "Multi-node network diagnostic aggregation system for global network monitoring",
+  "keywords": [
+    "network",
+    "diagnostic",
+    "network-monitoring",
+    "vps",
+    "monitoring"
+  ],
+  "homepage": "https://github.com/lonelyrower/SsalgTen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lonelyrower/SsalgTen.git"
+  },
+  "license": "MIT",
+  "author": "Your Name",
+  "scripts": {
+    "dev": "npm run dev:db && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:db": "docker compose -f docker-compose.dev.yml up -d",
+    "dev:db:stop": "docker compose -f docker-compose.dev.yml down",
+    "dev:setup": "npm run dev:db && sleep 10 && cd backend && npx prisma migrate dev && npx prisma db seed",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "start": "cd backend && npm start",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../agent && npm install",
+    "clean": "rimraf frontend/dist backend/dist agent/dist",
+    "check:encoding": "node scripts/check-encoding.mjs",
+    "lint": "npm run check:encoding && npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "type-check": "npm run type-check:frontend && npm run type-check:backend",
+    "type-check:frontend": "cd frontend && npm run type-check",
+  "type-check:backend": "cd backend && npm run type-check",
+  "smoke:test": "node scripts/smoke-test.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "rimraf": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "socket.io-client": "^4.8.1"
+  }
+}

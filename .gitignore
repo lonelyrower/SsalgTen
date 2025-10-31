@@ -1,0 +1,155 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+.grunt
+lib-cov
+coverage
+.nyc_output
+.cache
+
+# Build outputs
+dist/
+build/
+*.tgz
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production
+.env.production.local
+
+# Service-specific environment files
+backend/.env
+frontend/.env
+agent/.env
+
+# Claude Code local settings
+.claude/
+
+# Build logs and temporary files
+*.tsbuild*.log
+*.vitebuild*.log
+*.build.log
+
+# Logs
+logs
+*.log
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# SQLite databases
+*.sqlite
+*.db
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Docker
+.dockerignore
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+desktop.ini
+
+# Development and debugging files (local only)
+**/debug-*.js
+**/test-*.js
+**/test-*.sh
+**/diagnose-*.js
+**/diagnose-*.sh
+**/demo-*.md
+**/troubleshoot-*.md
+
+# Development logs and temporary documentation (local only)
+DEVELOPMENT_LOG_*.md
+WORK_LOG_*.md
+CHANGELOG_*.md
+TEST_RESULTS*.md
+UPDATE_SUMMARY_*.md
+ROLLBACK_PLAN*.md
+
+# Temporary fix and feature documentation (keep only in local)
+FIX_*.md
+BUGFIX_*.md
+AGENT_*.md
+CONFIG_*.md
+DEPLOYMENT_*.md
+ERROR_*.md
+FIXES_*.md
+INTEGRATION_*.md
+OPTIMIZATION_*.md
+SECURITY_*.md
+SYSTEM_*.md
+MAP_*.md
+GLOBE3D_*.md
+UI_*.md
+ULTIMATE_*.md
+UNIFIED_*.md
+SERVICE_*.md
+SCRIPT_*.md
+INSTALL_*.md
+UPGRADE_*.md
+ANSWER_*.md
+COMPLETE_*.md
+MISSING_*.md
+GIT_COMMIT_*.md
+GITHUB_*.md
+IMAGE_*.md
+PASSWORD_*.md
+PORT_*.md
+SAVE_*.md
+SETTINGS_*.md
+UNINSTALL_*.md
+VPS_*.md
+FORCE_*.md
+CLEAN_*.md
+DOCKER_*.md
+
+# Local utility scripts
+get-*-key.js
+init-dev.md
+manual-install-commands.sh
+database-migration.sql
+preset-params-demo.md
+
+# Local test and check scripts
+check-*.js
+create-test-*.js
+fix-*.js

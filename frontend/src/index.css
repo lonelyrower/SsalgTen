@@ -1,0 +1,675 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+/* Dark mode variant - Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
+
+@theme {
+  /* Container configuration */
+  --breakpoint-2xl: 1400px;
+
+  /* Border radius - Tailwind v4 CSS variables */
+  --radius: 0.75rem;
+}
+
+@layer base {
+  :root {
+    /* 现代化主题色彩 - 纯蓝科技风 */
+    --background: 240 10% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217 91% 55%;           /* 深蓝科技色 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 189 94% 43%;         /* 青色强调 */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 200 98% 48%;            /* 科技青蓝 */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 55%;
+    --radius: 0.75rem;                /* 更大的圆角 */
+
+    /* 增强图表色彩 - 蓝色系 */
+    --chart-1: 217 91% 55%;           /* 深蓝 */
+    --chart-2: 189 94% 43%;           /* 青色 */
+    --chart-3: 200 98% 48%;           /* 科技青蓝 */
+    --chart-4: 38 92% 50%;            /* 橙色 */
+    --chart-5: 142 76% 36%;           /* 绿色 */
+    
+    /* 简化背景渐变变量 - 纯蓝科技风 */
+    --bg-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    --bg-pattern: radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    
+    /* 状态色彩增强 */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+    --error: 348 83% 47%;
+    --error-foreground: 210 40% 98%;
+  }
+
+  .dark {
+    /* 深色模式 - 纯蓝科技感 */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 65%;           /* 深色模式下更亮的深蓝 */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 189 94% 53%;         /* 更亮的青色 */
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 200 98% 58%;            /* 更亮的科技青蓝 */
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217 91% 65%;
+
+    /* 深色模式图表色彩 - 蓝色系 */
+    --chart-1: 217 91% 65%;
+    --chart-2: 189 94% 53%;
+    --chart-3: 200 98% 58%;
+    --chart-4: 38 92% 60%;
+    --chart-5: 142 76% 46%;
+    
+    /* 深色模式背景 - 纯蓝科技风 */
+    --bg-pattern: radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    
+    /* 深色模式状态色 */
+    --success: 142 76% 46%;
+    --warning: 38 92% 60%;
+    --error: 348 83% 57%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    /* 防止横向滚动 */
+    overflow-x: hidden;
+    /* 确保 html 撑满视口 */
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg-pattern), hsl(240 10% 98%);
+    background-attachment: fixed;
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* 防止横向滚动 */
+    overflow-x: hidden;
+    /* 确保 body 撑满 */
+    min-height: 100%;
+    margin: 0;
+    min-width: 320px; /* 最小宽度确保在极小屏幕上可用 */
+  }
+
+  .dark body {
+    background: var(--bg-pattern), hsl(222.2 84% 4.9%);
+    background-attachment: fixed;
+  }
+
+  /* 确保 #root 撑满并覆盖 body 背景 */
+  #root {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 移动端基础优化 */
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px; /* 防止 iOS 放大输入框 */
+    }
+
+    body {
+      /* 移动端背景固定可能导致性能问题 */
+      background-attachment: scroll;
+    }
+
+    .dark body {
+      background-attachment: scroll;
+    }
+  }
+}
+
+/* 现代化工具类 */
+@layer components {
+  /* 毛玻璃效果 - 性能优化版 */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    
+    /* 桌面设备：使用轻量模糊 */
+    @media (min-width: 1024px) {
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+    
+    /* 移动设备：禁用模糊，增加不透明度 */
+    @media (max-width: 1023px) {
+      background: hsl(var(--background) / 0.85);
+    }
+  }
+  
+  /* 科技感卡片 - 性能优化版 */
+  .tech-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    /* 桌面设备：轻量模糊 + 半透明 */
+    @media (min-width: 1024px) {
+      background-color: rgba(255, 255, 255, 0.85);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+    
+    /* 移动设备：不透明背景，无模糊 */
+    @media (max-width: 1023px) {
+      background-color: rgba(255, 255, 255, 0.95);
+    }
+  }
+
+  .dark .tech-card {
+    border-color: rgba(55, 65, 81, 0.2);
+    
+    @media (min-width: 1024px) {
+      background-color: rgba(17, 24, 39, 0.85);
+    }
+    
+    @media (max-width: 1023px) {
+      background-color: rgba(17, 24, 39, 0.95);
+    }
+  }
+  
+  /* 渐变按钮 - 纯蓝科技风 */
+  .gradient-btn {
+    background: linear-gradient(to right, rgb(6 182 212), rgb(59 130 246), rgb(37 99 235));
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: perspective(1000px) rotateX(0deg);
+  }
+
+  .gradient-btn:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: perspective(1000px) rotateX(-2deg) scale(1.05);
+    background: linear-gradient(135deg, hsl(189 94% 53%) 0%, hsl(217 91% 65%) 50%, hsl(189 94% 53%) 100%);
+  }
+  
+  /* 状态指示器 */
+  .status-indicator {
+    position: relative;
+    display: inline-flex;
+    height: 0.75rem;
+    width: 0.75rem;
+    border-radius: 9999px;
+  }
+
+  .status-indicator::before {
+    content: '';
+    position: absolute;
+    display: inline-flex;
+    height: 100%;
+    width: 100%;
+    border-radius: 9999px;
+    opacity: 0.75;
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+    background: inherit;
+  }
+
+  /* 语义化状态徽章 */
+  .status-badge-online {
+    background: hsl(var(--success) / 0.2);
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.3);
+  }
+
+  .dark .status-badge-online {
+    background: hsl(var(--success) / 0.2);
+    color: hsl(var(--success-foreground));
+    border: 1px solid hsl(var(--success) / 0.3);
+  }
+
+  .status-badge-offline {
+    background: hsl(var(--error) / 0.2);
+    color: hsl(var(--error));
+    border: 1px solid hsl(var(--error) / 0.3);
+  }
+
+  .dark .status-badge-offline {
+    background: hsl(var(--error) / 0.2);
+    color: hsl(var(--error-foreground));
+    border: 1px solid hsl(var(--error) / 0.3);
+  }
+
+  .status-badge-warning {
+    background: hsl(var(--warning) / 0.2);
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.3);
+  }
+
+  .dark .status-badge-warning {
+    background: hsl(var(--warning) / 0.2);
+    color: hsl(var(--warning-foreground));
+    border: 1px solid hsl(var(--warning) / 0.3);
+  }
+
+  /* 性能优化：轻量模糊工具类 */
+  .glass-lite {
+    background: hsl(var(--background) / 0.9);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  /* 仅桌面设备启用模糊 */
+  @media (min-width: 1024px) {
+    .glass-lite {
+      background: hsl(var(--background) / 0.75);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  /* 尊重用户的动画偏好设置 */
+  @media (prefers-reduced-motion: reduce) {
+    .glass,
+    .glass-lite,
+    .tech-card {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background: hsl(var(--background) / 0.95);
+    }
+  }
+
+  /* 统一的深色模式卡片样式 - 全局修复 */
+  .dark .bg-white {
+    background-color: rgb(31 41 55) !important; /* gray-800 */
+  }
+
+  .dark .text-gray-900 {
+    color: rgb(243 244 246) !important; /* gray-100 */
+  }
+
+  .dark .text-gray-800 {
+    color: rgb(229 231 235) !important; /* gray-200 */
+  }
+
+  .dark .text-gray-700 {
+    color: rgb(209 213 219) !important; /* gray-300 */
+  }
+
+  .dark .text-gray-600 {
+    color: rgb(156 163 175) !important; /* gray-400 */
+  }
+
+  @keyframes ping {
+    75%, 100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  
+  /* 数据流动动画 */
+  .data-flow {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .data-flow::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(217 91% 60%), transparent);
+    animation: dataFlow 2s linear infinite;
+  }
+  
+  @keyframes dataFlow {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+  
+  /* 脉冲效果 */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes pulseGlow {
+    from {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+    to {
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+    }
+  }
+  
+  /* 3D卡片悬浮效果 */
+  .card-3d {
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  .card-3d:hover {
+    transform: perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px);
+  }
+  
+  /* 渐变文字 - 纯蓝科技风 */
+  .gradient-text {
+    background: linear-gradient(to right, rgb(6 182 212), rgb(59 130 246), rgb(6 182 212));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  
+  /* 网络连接线动画 */
+  .connection-line {
+    stroke-dasharray: 5,5;
+    animation: dash 1s linear infinite;
+  }
+  
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -10;
+    }
+  }
+  
+  /* 悬浮提升效果 */
+  .hover-lift {
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* 科技感文字闪烁 */
+  .tech-blink {
+    animation: techBlink 2s ease-in-out infinite;
+  }
+  
+  @keyframes techBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  
+  /* 径向渐变工具类 */
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+  
+  /* 数据条纹动画 */
+  .data-stripe {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.1) 2px,
+      rgba(255, 255, 255, 0.1) 4px
+    );
+    animation: stripe 1s linear infinite;
+  }
+  
+  @keyframes stripe {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 8px 0;
+    }
+  }
+  
+  /* 呼吸灯效果 */
+  .breathing {
+    animation: breathing 3s ease-in-out infinite;
+  }
+
+  @keyframes breathing {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.8;
+    }
+  }
+
+  /* 移动端优化类 */
+  .mobile-safe {
+    /* 防止内容溢出 */
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .mobile-container {
+    /* 移动端容器，考虑安全区域 */
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .mobile-touch-target {
+    /* 移动端推荐的最小触摸区域 */
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .mobile-scroll {
+    /* 移动端平滑滚动 */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .mobile-text-readable {
+    /* 移动端可读性优化 */
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* 防止 iOS Safari 的输入框缩放 */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  /* 移动端表格优化 */
+  .mobile-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  /* 移动端卡片布局 */
+  .mobile-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-card-stack {
+      gap: 0.75rem;
+    }
+  }
+
+  /* 移动端网格自适应 */
+  .mobile-grid-auto {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-grid-auto {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+}
+
+/* Leaflet 地图样式现代化 */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* 移动端优化 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* 正确的光标样式 - 强制覆盖 Leaflet 默认 */
+  cursor: grab !important;
+}
+
+.leaflet-container:active {
+  cursor: grabbing !important;
+}
+
+/* 覆盖 Leaflet 所有可能的光标类 */
+.leaflet-grab {
+  cursor: grab !important;
+}
+
+.leaflet-grab:active,
+.leaflet-grabbing {
+  cursor: grabbing !important;
+}
+
+/* Leaflet 标记点应该是可点击的指针 */
+.leaflet-marker-icon,
+.leaflet-popup-close-button,
+.leaflet-interactive {
+  cursor: pointer !important;
+}
+
+/* 地图拖动时的光标 */
+.leaflet-dragging .leaflet-container,
+.leaflet-dragging {
+  cursor: grabbing !important;
+}
+
+/* Cesium 3D 地球光标样式 */
+.cesium-viewer,
+.cesium-viewer-cesiumWidgetContainer {
+  cursor: grab !important;
+}
+
+.cesium-viewer:active {
+  cursor: grabbing !important;
+}
+
+/* Cesium 可点击元素 */
+.cesium-viewer .cesium-button,
+.cesium-infoBox-close {
+  cursor: pointer !important;
+}
+
+.fullscreen-map .leaflet-container {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .leaflet-container {
+    border-radius: 12px;
+    /* 移动端减少阴影以提升性能 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+/* 移动端地图控制优化 */
+@media (max-width: 640px) {
+  .leaflet-control-zoom {
+    /* 移动端放大缩放控件 */
+    transform: scale(1.2);
+  }
+
+  .leaflet-control-zoom a {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 30px !important;
+    font-size: 20px !important;
+  }
+
+  .leaflet-popup-content-wrapper {
+    /* 移动端弹窗优化 */
+    border-radius: 12px;
+    padding: 8px;
+  }
+
+  .leaflet-popup-content {
+    margin: 8px 12px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
+/* 自定义标记优化 */
+.custom-enhanced-marker,
+.custom-cluster-marker {
+  /* 确保在移动端触摸友好 */
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* 移动端标记大小调整 */
+@media (max-width: 640px) {
+  .custom-enhanced-marker {
+    transform: scale(1.1);
+  }
+
+  .custom-cluster-marker {
+    transform: scale(1.2);
+  }
+}
+
+

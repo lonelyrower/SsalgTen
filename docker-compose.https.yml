@@ -1,0 +1,175 @@
+# SsalgTen HTTPS Docker Compose 配置
+# 使用 Caddy 作为反向代理，自动管理 SSL 证书
+# 
+# 使用方法:
+# 1. 复制 .env.example 为 .env 并配置域名
+# 2. 运行: docker-compose -f docker-compose.https.yml up -d
+#
+# 环境变量要求:
+# - DOMAIN: 你的域名 (必须)
+# - EMAIL: 证书申请邮箱 (可选，用于 Let's Encrypt)
+
+version: '3.8'
+
+services:
+  # Caddy 反向代理 + 自动 HTTPS
+  caddy:
+    image: caddy:2.7-alpine
+    container_name: ssalgten-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:?请在 .env 文件中设置 DOMAIN 变量}
+      - EMAIL=${EMAIL:-admin@${DOMAIN}}
+    volumes:
+      - ./configs/Caddyfile.https:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - ssalgten-https
+    depends_on:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2019/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL 数据库
+  database:
+    image: postgres:15-alpine
+    container_name: ssalgten-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ssalgten}
+      POSTGRES_USER: ${POSTGRES_USER:-ssalgten}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env 文件中设置 POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ssalgten-https
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ssalgten}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: ssalgten-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?请在 .env 文件中设置 REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - ssalgten-https
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ssalgten-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      
+      # 数据库配置
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ssalgten}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB:-ssalgten}
+      
+      # Redis 配置
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      
+      # 域名和 HTTPS 配置
+      DOMAIN: ${DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      CORS_ORIGIN: https://${DOMAIN}
+      
+      # API 配置
+      API_KEY: ${API_KEY:?请在 .env 文件中设置 API_KEY}
+      JWT_SECRET: ${JWT_SECRET:?请在 .env 文件中设置 JWT_SECRET}
+      
+      # 服务端口（内部）
+      PORT: 3001
+      
+      # 安全配置
+      HELMET_ENABLED: "true"
+      RATE_LIMIT_ENABLED: "true"
+      
+      # 监控配置
+      METRICS_ENABLED: "true"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - ssalgten-https
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # 构建时环境变量
+        VITE_API_URL: /api
+        VITE_API_BASE_URL: /api
+        VITE_DOMAIN: ${DOMAIN}
+    container_name: ssalgten-frontend
+    restart: unless-stopped
+    environment:
+      # 运行时环境变量
+      NGINX_HOST: ${DOMAIN}
+      NGINX_PORT: 80
+    networks:
+      - ssalgten-https
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# 网络配置
+networks:
+  ssalgten-https:
+    name: ssalgten-https
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 数据卷
+volumes:
+  postgres_data:
+    name: ssalgten-postgres-data
+    driver: local
+  redis_data:
+    name: ssalgten-redis-data
+    driver: local
+  caddy_data:
+    name: ssalgten-caddy-data
+    driver: local
+  caddy_config:
+    name: ssalgten-caddy-config
+    driver: local

@@ -1,0 +1,142 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # 允许其他组件继续构建，即使某个失败
+      matrix:
+        component: [backend, frontend, updater, agent]
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare image namespace
+        run: |
+          IMAGE_NAMESPACE=${GITHUB_REPOSITORY,,}
+          echo "IMAGE_NAMESPACE=$IMAGE_NAMESPACE" >> $GITHUB_ENV
+          echo "🏷️ Image namespace: $IMAGE_NAMESPACE"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.component }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Check Dockerfile exists
+        run: |
+          if [ ! -f "./Dockerfile.${{ matrix.component }}" ]; then
+            echo "❌ Dockerfile.${{ matrix.component }} not found"
+            exit 1
+          fi
+          echo "✅ Found Dockerfile.${{ matrix.component }}"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.${{ matrix.component }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64 # 暂时禁用 ARM64 以避免 QEMU 崩溃
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+  # 可选：构建完成后的健康检查
+  health-check:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test images availability
+        run: |
+          # 基本的smoke test - 验证Docker工具可用
+          docker --version
+          command -v docker-compose >/dev/null && docker-compose --version || echo "docker-compose not available"
+
+          # 验证主要镜像可以拉取
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          BACKEND_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}/backend:latest"
+          FRONTEND_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}/frontend:latest"
+
+          echo "🔍 Testing image availability..."
+          echo "Backend: $BACKEND_IMAGE"
+          echo "Frontend: $FRONTEND_IMAGE"
+
+          # 尝试拉取镜像
+          docker pull $BACKEND_IMAGE || echo "⚠️ Backend image not available"
+          docker pull $FRONTEND_IMAGE || echo "⚠️ Frontend image not available"
+
+          echo "✅ Health check completed!"
+
+  # 可选：发布Release时创建多架构manifest
+  create-manifest:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    strategy:
+      matrix:
+        component: [backend, frontend, updater, agent]
+
+    steps:
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifest
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_BASE="${{ env.REGISTRY }}/${REPO_LOWER}/${{ matrix.component }}"
+
+          echo "🏷️ Creating manifest for $IMAGE_BASE:$TAG"
+
+          docker manifest create ${IMAGE_BASE}:${TAG} \
+            ${IMAGE_BASE}:${TAG}
+
+          docker manifest push ${IMAGE_BASE}:${TAG}
+
+          echo "✅ Manifest created and pushed for ${{ matrix.component }}"

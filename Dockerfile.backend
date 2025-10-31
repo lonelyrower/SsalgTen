@@ -1,0 +1,78 @@
+# Multi-stage build for SsalgTen Backend
+FROM node:24-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY backend/package*.json ./
+COPY backend/prisma ./prisma/
+
+# Install dependencies (including dev dependencies for build)
+# 使用锁文件安装（含 dev 依赖）以确保构建一致
+RUN npm ci
+
+# Generate Prisma client before build (ensures @prisma/client types exist)
+RUN npx prisma generate
+
+# Copy source code
+COPY backend/src ./src/
+COPY backend/tsconfig.json ./
+
+# Build the application
+RUN npm run build
+
+# Prisma client already generated above
+
+# Production stage
+FROM node:24-alpine AS production
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S -u 1001 ssalgten
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files and install production dependencies
+COPY backend/package*.json ./
+# 使用锁文件安装生产依赖
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=ssalgten:nodejs /app/dist ./dist
+COPY --from=builder --chown=ssalgten:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=ssalgten:nodejs /app/prisma ./prisma
+
+# Ensure node_modules has correct permissions
+RUN chown -R ssalgten:nodejs /app/node_modules
+
+# Copy environment file template
+COPY backend/.env.docker ./.env
+
+# Copy startup script for running migrations & seeding before app start
+COPY backend/docker-start.sh /app/docker-start.sh
+RUN chmod +x /app/docker-start.sh && chown ssalgten:nodejs /app/docker-start.sh
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs
+RUN mkdir -p /app/data && chown ssalgten:nodejs /app/data
+
+# Switch to app user
+USER ssalgten
+
+# Health check (extended start-period to allow migrations & seed to finish)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=45s --retries=5 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3001) + '/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Expose port
+EXPOSE 3001
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start script (runs migrations, seed, then launches server)
+CMD ["/app/docker-start.sh"]

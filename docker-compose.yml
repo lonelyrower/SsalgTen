@@ -1,0 +1,279 @@
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:16-alpine
+    container_name: ssalgten-database
+    restart: unless-stopped
+    command: postgres -c max_connections=200 -c shared_buffers=256MB
+    environment:
+      POSTGRES_DB: ssalgten
+      POSTGRES_USER: ssalgten
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ssalgten_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      # Restrict DB exposure to localhost to prevent internet access/scans
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ssalgten -d ssalgten"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Redis Cache (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: ssalgten-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-ssalgten_redis}
+    volumes:
+      - redis_data:/data
+    ports:
+      # Restrict Redis exposure to localhost to prevent external attacks/scans
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ssalgten-backend
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      
+      # Database Configuration
+      # Optimized for ~400 agents: larger connection pool and timeout
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=100&pool_timeout=60
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      
+      # API Security
+      API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      
+      # Agent Configuration
+      DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
+      AGENT_HEARTBEAT_INTERVAL: ${AGENT_HEARTBEAT_INTERVAL:-300000}
+      AGENT_TIMEOUT: ${AGENT_TIMEOUT:-10000}
+      AGENT_REQUIRE_SIGNATURE: ${AGENT_REQUIRE_SIGNATURE:-false}
+
+      # Data Retention Settings
+      CLEANUP_INTERVAL_HOURS: ${CLEANUP_INTERVAL_HOURS:-1}
+      HEARTBEAT_RETENTION_DAYS: ${HEARTBEAT_RETENTION_DAYS:-1}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ENABLE_MORGAN: ${ENABLE_MORGAN:-true}
+
+      # Admin emergency fallback login (optional, remove after use)
+      # Set these only temporarily to regain access, then delete and restart backend
+      ADMIN_FALLBACK_USERNAME: ${ADMIN_FALLBACK_USERNAME:-}
+      ADMIN_FALLBACK_PASSWORD: ${ADMIN_FALLBACK_PASSWORD:-}
+      
+      # External Services
+      SPEEDTEST_SERVER_ID: ${SPEEDTEST_SERVER_ID:-auto}
+      DEFAULT_PING_COUNT: ${DEFAULT_PING_COUNT:-4}
+      DEFAULT_TRACEROUTE_MAX_HOPS: ${DEFAULT_TRACEROUTE_MAX_HOPS:-30}
+      
+      # System Update Configuration
+      UPDATER_URL: http://updater:8765/update
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      REPO_OWNER: ${REPO_OWNER:-lonelyrower}
+      REPO_NAME: ${REPO_NAME:-SsalgTen}
+      REPO_BRANCH: ${REPO_BRANCH:-main}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      # Diagnostics Proxy (enable backend proxy endpoints for diagnostics tools)
+      DIAGNOSTICS_PROXY_ENABLED: ${DIAGNOSTICS_PROXY_ENABLED:-true}
+      
+      # Redis (optional)
+      REDIS_URL: redis://:${REDIS_PASSWORD:-ssalgten_redis}@redis:6379
+      
+      # Backend performance tuning (optimized for 400+ agents)
+      BROADCAST_MIN_INTERVAL_MS: ${BROADCAST_MIN_INTERVAL_MS:-2000}
+      NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS: ${NODE_DETAIL_BROADCAST_MIN_INTERVAL_MS:-3000}
+      AGENT_KEY_CACHE_TTL_SECONDS: ${AGENT_KEY_CACHE_TTL_SECONDS:-300}
+      API_KEY_USAGE_MIN_INTERVAL_MS: ${API_KEY_USAGE_MIN_INTERVAL_MS:-60000}
+    volumes:
+      - backend_logs:/app/logs
+      - backend_data:/app/data
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Frontend Web Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ssalgten-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Frontend Environment Variables (injected at runtime)
+      # 默认使用相对路径 /api，避免在生产环境中暴露 localhost:3001
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      VITE_APP_NAME: ${VITE_APP_NAME:-SsalgTen Network Monitor}
+      VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.0}
+      VITE_ENABLE_DEBUG: ${VITE_ENABLE_DEBUG:-false}
+      VITE_MAP_PROVIDER: ${VITE_MAP_PROVIDER:-openstreetmap}
+      VITE_MAP_API_KEY: ${VITE_MAP_API_KEY:-}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agent Service (Example - New York)
+  agent-nyc:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: ssalgten-agent-nyc
+    profiles:
+      - agent
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      
+      # Agent Configuration
+      AGENT_ID: ${AGENT_NYC_ID:-agent-nyc-docker}
+      MASTER_URL: http://backend:3001
+      AGENT_API_KEY: ${AGENT_NYC_API_KEY:-change-this-api-key}
+      
+      # Node Information
+      NODE_NAME: ${AGENT_NYC_NAME:-New York Node (Docker)}
+      NODE_COUNTRY: ${AGENT_NYC_COUNTRY:-United States}
+      NODE_CITY: ${AGENT_NYC_CITY:-New York}
+      NODE_PROVIDER: ${AGENT_NYC_PROVIDER:-Docker Container}
+      NODE_LATITUDE: ${AGENT_NYC_LATITUDE:-40.7128}
+      NODE_LONGITUDE: ${AGENT_NYC_LONGITUDE:--74.0060}
+      
+      # Network Configuration
+      PING_COUNT: ${PING_COUNT:-4}
+      TRACEROUTE_MAX_HOPS: ${TRACEROUTE_MAX_HOPS:-30}
+      MTR_COUNT: ${MTR_COUNT:-10}
+      SPEEDTEST_SERVER_ID: ${SPEEDTEST_SERVER_ID:-auto}
+
+      # System Configuration
+      HEARTBEAT_INTERVAL: ${HEARTBEAT_INTERVAL:-300000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      MAX_CONCURRENT_TESTS: ${MAX_CONCURRENT_TESTS:-5}
+    volumes:
+      - agent_nyc_logs:/app/logs
+    # 默认不对外发布宿主端口，避免与本机 Agent 冲突；如需对外暴露，请通过 override 文件增加 ports
+    expose:
+      - "3002"
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # System Updater Service (for production deployments)
+  updater:
+    build:
+      context: .
+      dockerfile: Dockerfile.updater
+    container_name: ssalgten-updater
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      PORT: 8765
+      WORKSPACE: /workspace
+      UPDATE_SCRIPT: /workspace/scripts/update-production.sh
+      UPDATE_LOG_DIR: /workspace/.update/logs
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      
+      # Pass through environment variables for update script
+      FRONTEND_PORT: ${FRONTEND_PORT:-80}
+      BACKEND_PORT: ${BACKEND_PORT:-3001}
+      DB_PORT: ${DB_PORT:-5432}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      
+      # Repository configuration
+      REPO_OWNER: ${REPO_OWNER:-lonelyrower}
+      REPO_NAME: ${REPO_NAME:-SsalgTen}
+      REPO_BRANCH: ${REPO_BRANCH:-main}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    volumes:
+      # Mount project source code
+      - .:/workspace
+      # Mount Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount update logs
+      - updater_logs:/workspace/.update/logs
+    ports:
+      # 生产环境建议注释此行，仅允许内网访问
+      # - "8765:8765"
+      - "127.0.0.1:8765:8765"  # 仅本地访问
+    networks:
+      - ssalgten-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ssalgten-network:
+    driver: bridge
+    name: ssalgten-network
+
+volumes:
+  postgres_data:
+    name: ssalgten-postgres-data
+  redis_data:
+    name: ssalgten-redis-data
+  backend_logs:
+    name: ssalgten-backend-logs
+  backend_data:
+    name: ssalgten-backend-data
+  agent_nyc_logs:
+    name: ssalgten-agent-nyc-logs
+  updater_logs:
+    name: ssalgten-updater-logs

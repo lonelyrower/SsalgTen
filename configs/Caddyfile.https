@@ -1,0 +1,181 @@
+# SsalgTen Caddy HTTPS 配置
+# 自动 HTTPS 证书管理和反向代理
+
+# 全局配置
+{
+    # 邮箱用于 Let's Encrypt 证书申请
+    email {env.EMAIL}
+    
+    # 启用管理 API
+    admin :2019
+    
+    # 日志配置
+    log {
+        output file /data/caddy.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+        level INFO
+    }
+    
+    # 安全配置
+    servers {
+        trusted_proxies static private_ranges
+    }
+}
+
+# 主域名配置
+{env.DOMAIN} {
+    # 启用压缩
+    encode zstd gzip
+    
+    # 安全头部
+    header {
+        # HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        
+        # 防止点击劫持
+        X-Frame-Options "DENY"
+        
+        # 防止 MIME 类型嗅探
+        X-Content-Type-Options "nosniff"
+        
+        # XSS 保护
+        X-XSS-Protection "1; mode=block"
+        
+        # Referrer 策略
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # 内容安全策略
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: ws:; frame-ancestors 'none';"
+        
+        # 权限策略
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+        
+        # 隐藏服务器信息
+        -Server
+    }
+    
+    # API 接口代理
+    handle_path /api/* {
+        reverse_proxy backend:3001 {
+            # 健康检查
+            health_uri /api/health
+            health_interval 30s
+            health_timeout 5s
+            
+            # 负载均衡（单实例）
+            lb_policy round_robin
+            
+            # 请求头透传
+            header_up Host {upstream_hostport}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Port {server_port}
+            
+            # 超时配置
+            dial_timeout 10s
+            read_timeout 30s
+            write_timeout 30s
+        }
+    }
+    
+    # Socket.IO WebSocket 代理
+    handle_path /socket.io/* {
+        reverse_proxy backend:3001 {
+            # WebSocket 支持
+            transport http {
+                dial_timeout 10s
+                read_timeout 0
+                write_timeout 0
+            }
+            
+            # 请求头透传
+            header_up Host {upstream_hostport}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up Connection {>Connection}
+            header_up Upgrade {>Upgrade}
+            
+            # 禁用缓冲以支持实时通信
+            flush_interval -1
+        }
+    }
+    
+    # 健康检查端点（直接代理）
+    handle /health {
+        reverse_proxy backend:3001 {
+            health_uri /api/health
+        }
+    }
+    
+    # 前端静态资源
+    handle {
+        reverse_proxy frontend:80 {
+            # 健康检查
+            health_uri /
+            health_interval 30s
+            health_timeout 5s
+            
+            # 请求头透传
+            header_up Host {upstream_hostport}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            
+            # 静态资源缓存控制
+            @static {
+                path *.js *.css *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot *.webp *.avif
+            }
+            handle @static {
+                header Cache-Control "public, max-age=31536000, immutable"
+                header Vary "Accept-Encoding"
+                reverse_proxy frontend:80
+            }
+        }
+    }
+    
+    # 访问日志
+    log {
+        output file /data/access.log {
+            roll_size 50MB
+            roll_keep 10
+        }
+        format json {
+            time_format "2006-01-02T15:04:05Z07:00"
+            request >request
+            status >status
+            duration >duration
+            size >size
+            user_agent >user_agent
+            remote_ip >remote_ip
+        }
+    }
+}
+
+# HTTP 重定向到 HTTPS
+http://{env.DOMAIN} {
+    # Let's Encrypt ACME 挑战
+    handle /.well-known/acme-challenge/* {
+        respond "ACME challenge handled by Caddy"
+    }
+    
+    # 其他请求重定向到 HTTPS
+    redir https://{host}{uri} permanent
+}
+
+# www 子域名重定向（可选）
+www.{env.DOMAIN} {
+    redir https://{env.DOMAIN}{uri} permanent
+}
+
+# 管理员面板（可选，仅在开发环境启用）
+# admin.{env.DOMAIN} {
+#     basicauth {
+#         admin $2a$14$...  # 使用 caddy hash-password 生成
+#     }
+#     reverse_proxy backend:3001
+# }
