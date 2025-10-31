@@ -61,6 +61,15 @@ export class XrayConfigParser {
               domains.push(...hosts);
             }
           }
+          const xhttpHost = streamSettings.xhttpSettings?.host ?? streamSettings.splithttpSettings?.host;
+          if (xhttpHost) {
+            const hostList = Array.isArray(xhttpHost) ? xhttpHost : [xhttpHost];
+            for (const item of hostList) {
+              if (typeof item === 'string' && item.trim().length > 0) {
+                domains.push(item.trim());
+              }
+            }
+          }
           if (streamSettings.grpcSettings?.serviceName) {
             // gRPC 通常也需要域名，可能在其他地方配置
           }
@@ -174,6 +183,18 @@ export class XrayConfigParser {
         vmessConfig.host = Array.isArray(streamSettings.httpSettings.host)
           ? streamSettings.httpSettings.host.join(',')
           : streamSettings.httpSettings.host || '';
+      }
+
+      if ((network === 'xhttp' || network === 'splithttp') && (streamSettings.xhttpSettings || streamSettings.splithttpSettings)) {
+        const xhttpSettings = streamSettings.xhttpSettings ?? streamSettings.splithttpSettings;
+        if (xhttpSettings) {
+          if (typeof xhttpSettings.path === 'string' && xhttpSettings.path.trim()) {
+            vmessConfig.path = xhttpSettings.path;
+          }
+          if (typeof xhttpSettings.host === 'string' && xhttpSettings.host.trim()) {
+            vmessConfig.host = xhttpSettings.host;
+          }
+        }
       }
 
       // gRPC 配置
@@ -340,6 +361,15 @@ export class XrayConfigParser {
         pushParam('host', httpSettings.host);
       }
 
+      if (
+        (network === 'xhttp' || network === 'splithttp') &&
+        (streamSettings.xhttpSettings || streamSettings.splithttpSettings)
+      ) {
+        const xhttpSettings = streamSettings.xhttpSettings ?? streamSettings.splithttpSettings;
+        pushParam('path', xhttpSettings?.path);
+        pushParam('host', xhttpSettings?.host);
+      }
+
       if (network === 'grpc' && streamSettings.grpcSettings) {
         const grpcSettings = streamSettings.grpcSettings;
         pushParam('serviceName', grpcSettings.serviceName);
@@ -446,6 +476,15 @@ export class XrayConfigParser {
         const httpSettings = streamSettings.httpSettings;
         pushParam('path', httpSettings.path);
         pushParam('host', httpSettings.host);
+      }
+
+      if (
+        (network === 'xhttp' || network === 'splithttp') &&
+        (streamSettings.xhttpSettings || streamSettings.splithttpSettings)
+      ) {
+        const xhttpSettings = streamSettings.xhttpSettings ?? streamSettings.splithttpSettings;
+        pushParam('path', xhttpSettings?.path);
+        pushParam('host', xhttpSettings?.host);
       }
 
       if (network === 'tcp' && streamSettings.tcpSettings) {

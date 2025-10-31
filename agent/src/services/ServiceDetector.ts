@@ -5,6 +5,7 @@ import { constants as fsConstants } from 'fs';
 import type { Dirent } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { URLSearchParams } from 'url';
 import { logger } from '../utils/logger';
 import type { DetectedService, ServiceType, ServiceStatus } from '../types';
 import { XrayConfigParser } from './parsers/XrayConfigParser';
@@ -115,7 +116,12 @@ export class ServiceDetector {
       if (stats.isDirectory()) {
         const entries = await fs.readdir(configPath, { withFileTypes: true });
         const jsonFiles = entries
-          .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+          .filter(
+            (entry) =>
+              entry.isFile() &&
+              entry.name.endsWith('.json') &&
+              !entry.name.includes('-link')
+          )
           .map((entry) => entry.name)
           .sort();
 
@@ -947,6 +953,8 @@ export class ServiceDetector {
         '/etc/xray/conf',
         '/usr/local/etc/xray/conf',
       ],
+      'Hysteria': ['/etc/hysteria/config.yaml', '/etc/hysteria/config.yml'],
+      'Hysteria2': ['/etc/hysteria/config.yaml', '/etc/hysteria/config.yml'],
       'V2Ray': ['/etc/v2ray/config.json', '/usr/local/etc/v2ray/config.json'],
       'Nginx': ['/etc/nginx/nginx.conf'],
       'Apache': ['/etc/apache2/apache2.conf', '/etc/httpd/conf/httpd.conf'],
@@ -1067,6 +1075,8 @@ export class ServiceDetector {
         } else {
           logger.warn(`[ServiceDetector] ${serviceName} config parsing returned null`);
         }
+      } else if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+        await this.populateHysteriaInfo(serviceName, configPath, service);
       }
       // Nginx 配置解析
       else if (serviceName === 'Nginx') {
@@ -1104,6 +1114,242 @@ export class ServiceDetector {
     } catch (error) {
       logger.error(`[ServiceDetector] Failed to parse ${serviceName} config:`, error);
     }
+  }
+
+  private async populateHysteriaInfo(
+    serviceName: string,
+    configPath: string,
+    service: DetectedService
+  ): Promise<void> {
+    try {
+      const shareLinkSet = new Set<string>();
+      const existingLinks = Array.isArray(service.details?.shareLinks)
+        ? service.details!.shareLinks
+        : [];
+      existingLinks.forEach((link) => {
+        if (typeof link === 'string' && link.trim()) {
+          shareLinkSet.add(link.trim());
+        }
+      });
+
+      const linkFiles = ['/root/hy/url.txt', '/root/hy/url-nohop.txt'];
+      const availableLinkFiles: string[] = [];
+      for (const filePath of linkFiles) {
+        const lines = await this.readLinesIfExists(filePath);
+        if (lines.length > 0) {
+          availableLinkFiles.push(filePath);
+          lines
+            .map((line) => line.trim())
+            .filter((line) => line.includes('://'))
+            .forEach((line) => shareLinkSet.add(line));
+        }
+      }
+
+      let clientConfig: any;
+      try {
+        const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
+        clientConfig = JSON.parse(clientJson);
+      } catch (error) {
+        logger.debug('[ServiceDetector] Unable to read hysteria client config JSON:', error);
+      }
+
+      const hysteriaDetails: Record<string, unknown> = {
+        configPath,
+        shareLinkFiles: availableLinkFiles,
+      };
+
+      const domainSet = new Set<string>(service.domains || []);
+
+      if (clientConfig && typeof clientConfig === 'object') {
+        const clientInfo: Record<string, unknown> = {};
+        if (typeof clientConfig.server === 'string') {
+          const serverValue = clientConfig.server.trim();
+          if (serverValue) {
+            clientInfo.server = serverValue;
+            const primaryEndpoint = serverValue.split(',')[0]?.trim();
+            const endpointInfo = this.parseHysteriaEndpoint(primaryEndpoint);
+            if (endpointInfo.host) {
+              clientInfo.endpointHost = endpointInfo.host;
+            }
+            if (endpointInfo.port && !service.port) {
+              service.port = endpointInfo.port;
+            }
+          }
+        }
+        if (clientConfig.tls && typeof clientConfig.tls === 'object') {
+          clientInfo.tls = clientConfig.tls;
+          const sni = this.firstNonEmptyValue(clientConfig.tls.sni, clientConfig.tls.server_name);
+          if (sni) {
+            domainSet.add(sni);
+          }
+        }
+        if (clientConfig.quic && typeof clientConfig.quic === 'object') {
+          clientInfo.quic = clientConfig.quic;
+        }
+
+        hysteriaDetails.client = clientInfo;
+
+        if (shareLinkSet.size === 0) {
+          const fallbackLink = this.buildHysteriaShareLink(serviceName, clientConfig);
+          if (fallbackLink) {
+            shareLinkSet.add(fallbackLink);
+          }
+        }
+      }
+
+      try {
+        const configContent = await fs.readFile(configPath, 'utf-8');
+        const listenMatch = configContent.match(/^\s*listen:\s*("?)([^\s"#]+)\1/m);
+        if (listenMatch) {
+          const listenValue = listenMatch[2].trim();
+          hysteriaDetails.listen = listenValue;
+          const endpointForListen = this.parseHysteriaEndpoint(
+            listenValue.startsWith(':') ? `127.0.0.1${listenValue}` : listenValue
+          );
+          if (endpointForListen.port && !service.port) {
+            service.port = endpointForListen.port;
+          }
+        }
+
+        const proxyMatch = configContent.match(/^\s*url:\s*(https?:\/\/[^\s]+)/m);
+        if (proxyMatch) {
+          hysteriaDetails.masquerade = proxyMatch[1].trim();
+        }
+      } catch (error) {
+        logger.debug('[ServiceDetector] Unable to read hysteria server config:', error);
+      }
+
+      const shareLinks = Array.from(shareLinkSet);
+      const protocolLabel = serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria';
+      service.protocol = protocolLabel;
+
+      if (domainSet.size > 0) {
+        service.domains = Array.from(domainSet);
+      }
+
+      service.details = {
+        ...service.details,
+        ...(shareLinks.length > 0 ? { shareLinks } : {}),
+        hysteria: hysteriaDetails,
+      };
+    } catch (error) {
+      logger.warn('[ServiceDetector] Failed to process hysteria config:', error);
+    }
+  }
+
+  private async readLinesIfExists(filePath: string): Promise<string[]> {
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
+      return content
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  private parseHysteriaEndpoint(endpoint?: string): { host?: string; port?: number } {
+    if (!endpoint) {
+      return {};
+    }
+
+    const trimmed = endpoint.trim();
+    if (!trimmed) {
+      return {};
+    }
+
+    let working = trimmed;
+    const commaIndex = working.indexOf(',');
+    if (commaIndex !== -1) {
+      working = working.slice(0, commaIndex);
+    }
+
+    let host: string | undefined;
+    let port: number | undefined;
+
+    if (working.startsWith('[')) {
+      const closing = working.indexOf(']');
+      if (closing !== -1) {
+        host = working.slice(1, closing);
+        const rest = working.slice(closing + 1);
+        const portMatch = rest.match(/:(\d+)/);
+        if (portMatch) {
+          const parsed = parseInt(portMatch[1], 10);
+          if (!Number.isNaN(parsed)) {
+            port = parsed;
+          }
+        }
+      } else {
+        host = working;
+      }
+    } else {
+      const colonIndex = working.lastIndexOf(':');
+      if (colonIndex !== -1) {
+        const portCandidate = working.slice(colonIndex + 1);
+        const parsed = parseInt(portCandidate, 10);
+        if (!Number.isNaN(parsed)) {
+          port = parsed;
+          host = working.slice(0, colonIndex);
+        } else {
+          host = working;
+        }
+      } else {
+        host = working;
+      }
+    }
+
+    return {
+      host: host?.trim() || undefined,
+      port,
+    };
+  }
+
+  private buildHysteriaShareLink(serviceName: string, clientConfig: any): string | undefined {
+    if (!clientConfig || typeof clientConfig !== 'object') {
+      return undefined;
+    }
+
+    const server = typeof clientConfig.server === 'string' ? clientConfig.server.trim() : '';
+    const auth = clientConfig.auth ? String(clientConfig.auth).trim() : '';
+
+    if (!server || !auth) {
+      return undefined;
+    }
+
+    const scheme = serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria';
+    const params = new URLSearchParams();
+
+    if (clientConfig.tls && typeof clientConfig.tls === 'object') {
+      if ('insecure' in clientConfig.tls) {
+        params.set('insecure', clientConfig.tls.insecure ? '1' : '0');
+      } else {
+        params.set('insecure', '1');
+      }
+
+      const sni = this.firstNonEmptyValue(clientConfig.tls.sni, clientConfig.tls.server_name);
+      if (sni) {
+        params.set('sni', sni);
+      }
+    } else {
+      params.set('insecure', '1');
+    }
+
+    const query = params.toString();
+    const label = encodeURIComponent(`SsalgTen-${serviceName}`);
+    return `${scheme}://${encodeURIComponent(auth)}@${server}${query ? `?${query}` : ''}#${label}`;
+  }
+
+  private firstNonEmptyValue(...values: unknown[]): string | undefined {
+    for (const value of values) {
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed) {
+          return trimmed;
+        }
+      }
+    }
+    return undefined;
   }
 
   /**
