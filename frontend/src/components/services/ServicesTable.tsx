@@ -34,6 +34,34 @@ const extractProtocolFromLink = (link: string): string | undefined => {
   return match ? match[1] : undefined;
 };
 
+const normalizeProtocolLabel = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const lower = value.toLowerCase();
+  const alias: Record<string, string> = {
+    shadowsocks: "SS",
+    ss: "SS",
+    shadowsocksr: "SSR",
+    ssr: "SSR",
+    vmess: "VMESS",
+    vless: "VLESS",
+    trojan: "TROJAN",
+    hysteria: "HYSTERIA",
+    hysteria2: "HYSTERIA2",
+    hy: "HYSTERIA",
+    hy2: "HYSTERIA2",
+    socks: "SOCKS",
+    socks5: "SOCKS",
+    http: "HTTP",
+    https: "HTTPS",
+  };
+
+  if (alias[lower]) {
+    return alias[lower];
+  }
+
+  return lower.toUpperCase();
+};
+
 type ServiceCategory = 'proxy' | 'web' | 'other';
 
 export const ServicesTable: React.FC<ServicesTableProps> = ({
@@ -259,13 +287,21 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
   });
 
   const displayedShareLinks = processedShareLinks;
-  const protocolLines =
-    displayedShareLinks.length > 0
-      ? displayedShareLinks.map((link, index) => {
-          const rawProtocol = protocols[index] ?? extractProtocolFromLink(link);
-          return rawProtocol ? rawProtocol.toUpperCase() : undefined;
-        })
-      : protocols.map((value) => value.toUpperCase());
+  let protocolLines = displayedShareLinks
+    .map((link, index) => {
+      const protocolFromLink = normalizeProtocolLabel(extractProtocolFromLink(link));
+      if (protocolFromLink) {
+        return protocolFromLink;
+      }
+      return normalizeProtocolLabel(protocols[index]);
+    })
+    .filter((item): item is string => Boolean(item));
+
+  if (protocolLines.length === 0) {
+    protocolLines = protocols
+      .map((value) => normalizeProtocolLabel(value))
+      .filter((item): item is string => Boolean(item));
+  }
 
   const handleCopyLink = async (link: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -334,14 +370,17 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
 
       {/* 分享链接 */}
       <td className="px-6 py-4">
-        <div className="max-w-md space-y-1 mx-auto">
+        <div className="max-w-md space-y-1 mx-auto text-center">
           {processedShareLinks.length > 0 ? (
             displayedShareLinks.map((link, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 group"
+                className="flex items-center justify-center gap-2 group"
               >
-                <code className="flex-1 text-xs text-gray-600 dark:text-gray-400 font-mono truncate max-w-xs" title={link}>
+                <code
+                  className="block text-xs text-gray-600 dark:text-gray-400 font-mono truncate max-w-xs text-center"
+                  title={link}
+                >
                   {link}
                 </code>
                 <button

@@ -1131,6 +1131,11 @@ export class ServiceDetector {
           shareLinkSet.add(link.trim());
         }
       });
+      const primaryDomain = Array.isArray(service.domains) ? service.domains[0] : undefined;
+      const nodeIp =
+        typeof (service.details as Record<string, unknown> | undefined)?.nodeIp === 'string'
+          ? ((service.details as Record<string, unknown>).nodeIp as string)
+          : undefined;
 
       const linkFiles = ['/root/hy/url.txt', '/root/hy/url-nohop.txt'];
       const availableLinkFiles: string[] = [];
@@ -1146,6 +1151,15 @@ export class ServiceDetector {
       }
 
       let clientConfig: any;
+      let clientAuth: string | undefined;
+      let clientServerFirst: string | undefined;
+      let clientInsecure: boolean | undefined;
+      let clientSni: string | undefined;
+      let clientEndpointHost: string | undefined;
+      let serverPassword: string | undefined;
+      let listenHost: string | undefined;
+      let listenPort: number | undefined;
+      let masqueradeHost: string | undefined;
       try {
         const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
         clientConfig = JSON.parse(clientJson);
@@ -1159,6 +1173,9 @@ export class ServiceDetector {
       };
 
       const domainSet = new Set<string>(service.domains || []);
+      if (primaryDomain) {
+        domainSet.add(primaryDomain);
+      }
 
       if (clientConfig && typeof clientConfig === 'object') {
         const clientInfo: Record<string, unknown> = {};
@@ -1168,8 +1185,10 @@ export class ServiceDetector {
             clientInfo.server = serverValue;
             const primaryEndpoint = serverValue.split(',')[0]?.trim();
             const endpointInfo = this.parseHysteriaEndpoint(primaryEndpoint);
+            clientServerFirst = primaryEndpoint;
             if (endpointInfo.host) {
               clientInfo.endpointHost = endpointInfo.host;
+              clientEndpointHost = endpointInfo.host;
             }
             if (endpointInfo.port && !service.port) {
               service.port = endpointInfo.port;
@@ -1178,14 +1197,20 @@ export class ServiceDetector {
         }
         if (clientConfig.tls && typeof clientConfig.tls === 'object') {
           clientInfo.tls = clientConfig.tls;
+          clientInsecure =
+            typeof clientConfig.tls.insecure === 'boolean'
+              ? clientConfig.tls.insecure
+              : undefined;
           const sni = this.firstNonEmptyValue(clientConfig.tls.sni, clientConfig.tls.server_name);
           if (sni) {
             domainSet.add(sni);
+            clientSni = sni;
           }
         }
         if (clientConfig.quic && typeof clientConfig.quic === 'object') {
           clientInfo.quic = clientConfig.quic;
         }
+        clientAuth = this.firstNonEmptyValue(clientConfig.auth);
 
         hysteriaDetails.client = clientInfo;
 
@@ -1203,21 +1228,92 @@ export class ServiceDetector {
         if (listenMatch) {
           const listenValue = listenMatch[2].trim();
           hysteriaDetails.listen = listenValue;
-          const endpointForListen = this.parseHysteriaEndpoint(
+          const listenEndpoint = this.parseHysteriaEndpoint(
             listenValue.startsWith(':') ? `127.0.0.1${listenValue}` : listenValue
           );
-          if (endpointForListen.port && !service.port) {
-            service.port = endpointForListen.port;
+          if (listenEndpoint.port) {
+            listenPort = listenEndpoint.port;
+            if (!service.port) {
+              service.port = listenEndpoint.port;
+            }
+          }
+          if (listenEndpoint.host) {
+            listenHost = listenEndpoint.host;
+            hysteriaDetails.listenHost = listenEndpoint.host;
           }
         }
 
         const proxyMatch = configContent.match(/^\s*url:\s*(https?:\/\/[^\s]+)/m);
         if (proxyMatch) {
           hysteriaDetails.masquerade = proxyMatch[1].trim();
+          try {
+            const parsedMasqueradeHost = new URL(proxyMatch[1].trim()).hostname;
+            if (parsedMasqueradeHost) {
+              masqueradeHost = parsedMasqueradeHost.trim();
+              if (masqueradeHost) {
+                domainSet.add(masqueradeHost);
+              }
+            }
+          } catch {
+            // ignore parsing errors
+          }
+        }
+
+        const passwordMatch = configContent.match(/^\s*password\s*:\s*['"]?([^\s'"]+)['"]?/m);
+        if (passwordMatch) {
+          const password = passwordMatch[1].trim();
+          if (password) {
+            hysteriaDetails.password = password;
+            serverPassword = password;
+          }
+        }
+
+        const domainLineMatch = configContent.match(/^\s*sni\s*:\s*['"]?([^\s'"]+)['"]?/m);
+        if (domainLineMatch) {
+          const sni = domainLineMatch[1].trim();
+          if (sni) {
+            domainSet.add(sni);
+          }
         }
       } catch (error) {
         logger.debug('[ServiceDetector] Unable to read hysteria server config:', error);
       }
+
+      if (shareLinkSet.size === 0) {
+        const domainList = Array.from(domainSet);
+        const fallbackHost = this.firstNonEmptyValue(
+          clientSni,
+          clientEndpointHost,
+          domainList[0],
+          masqueradeHost,
+          listenHost,
+          nodeIp
+        );
+        const fallbackPort =
+          service.port ||
+          (clientServerFirst ? this.parseHysteriaEndpoint(clientServerFirst).port : undefined) ||
+          listenPort;
+        const fallbackPassword = this.firstNonEmptyValue(clientAuth, serverPassword);
+
+        const fallbackLink = this.buildHysteriaShareLink(serviceName, clientConfig, {
+          host: fallbackHost,
+          port: fallbackPort,
+          password: fallbackPassword,
+          insecure: clientInsecure,
+          sni: this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost),
+        });
+
+        if (fallbackLink) {
+          shareLinkSet.add(fallbackLink);
+        }
+      }
+
+      hysteriaDetails.server = {
+        host: listenHost,
+        port: listenPort,
+        password: serverPassword,
+        masqueradeHost,
+      };
 
       const shareLinks = Array.from(shareLinkSet);
       const protocolLabel = serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria';
@@ -1305,39 +1401,65 @@ export class ServiceDetector {
     };
   }
 
-  private buildHysteriaShareLink(serviceName: string, clientConfig: any): string | undefined {
-    if (!clientConfig || typeof clientConfig !== 'object') {
-      return undefined;
+  private buildHysteriaShareLink(
+    serviceName: string,
+    clientConfig: any,
+    fallback?: {
+      host?: string;
+      port?: number;
+      password?: string;
+      insecure?: boolean;
+      sni?: string;
     }
-
-    const server = typeof clientConfig.server === 'string' ? clientConfig.server.trim() : '';
-    const auth = clientConfig.auth ? String(clientConfig.auth).trim() : '';
-
-    if (!server || !auth) {
-      return undefined;
-    }
-
+  ): string | undefined {
     const scheme = serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria';
+
+    const serverRaw =
+      typeof clientConfig?.server === 'string' && clientConfig.server.trim().length > 0
+        ? clientConfig.server.trim()
+        : undefined;
+    const primaryServer = serverRaw?.split(',')[0]?.trim();
+    const endpoint = this.parseHysteriaEndpoint(primaryServer);
+
+    const host =
+      fallback?.host ||
+      endpoint.host ||
+      this.firstNonEmptyValue(fallback?.sni) ||
+      undefined;
+    const port = fallback?.port || endpoint.port;
+    const password = this.firstNonEmptyValue(clientConfig?.auth, fallback?.password);
+
+    if (!host || !port || !password) {
+      return undefined;
+    }
+
+    const hostForUrl =
+      host.includes(':') && !host.startsWith('[') && !host.endsWith(']')
+        ? `[${host}]`
+        : host;
+
     const params = new URLSearchParams();
+    const insecure =
+      typeof clientConfig?.tls?.insecure === 'boolean'
+        ? clientConfig.tls.insecure
+        : typeof fallback?.insecure === 'boolean'
+          ? fallback.insecure
+          : true;
 
-    if (clientConfig.tls && typeof clientConfig.tls === 'object') {
-      if ('insecure' in clientConfig.tls) {
-        params.set('insecure', clientConfig.tls.insecure ? '1' : '0');
-      } else {
-        params.set('insecure', '1');
-      }
+    params.set('insecure', insecure ? '1' : '0');
 
-      const sni = this.firstNonEmptyValue(clientConfig.tls.sni, clientConfig.tls.server_name);
-      if (sni) {
-        params.set('sni', sni);
-      }
-    } else {
-      params.set('insecure', '1');
+    const sni = this.firstNonEmptyValue(
+      clientConfig?.tls?.sni,
+      clientConfig?.tls?.server_name,
+      fallback?.sni
+    );
+    if (sni) {
+      params.set('sni', sni);
     }
 
     const query = params.toString();
     const label = encodeURIComponent(`SsalgTen-${serviceName}`);
-    return `${scheme}://${encodeURIComponent(auth)}@${server}${query ? `?${query}` : ''}#${label}`;
+    return `${scheme}://${encodeURIComponent(password)}@${hostForUrl}:${port}${query ? `?${query}` : ''}#${label}`;
   }
 
   private firstNonEmptyValue(...values: unknown[]): string | undefined {
