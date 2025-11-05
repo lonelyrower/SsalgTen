@@ -1,6 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { logger } from './utils/logger';
 import { config, serverConfig, serviceDetectionConfig } from './config';
 import { getSystemInfo } from './utils/system';
@@ -9,8 +11,58 @@ import { registrationService } from './services/RegistrationService';
 import { streamingTestService } from './services/StreamingTestService';
 import { serviceDetectionService } from './services/ServiceDetectionService';
 
+const execAsync = promisify(exec);
+
 // 加载环境变量
 dotenv.config();
+
+/**
+ * 检查 Docker 访问权限
+ * 如果 Docker 可用但无权限，提供解决方案
+ */
+async function checkDockerAccess(): Promise<void> {
+  try {
+    await execAsync('docker --version');
+    // Docker 已安装，尝试执行 docker ps
+    try {
+      await execAsync('docker ps');
+      logger.info('✅ Docker access verified - container detection enabled');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes('permission denied') || errorMessage.includes('EACCES')) {
+        logger.warn('═'.repeat(80));
+        logger.warn('⚠️  DOCKER PERMISSION ISSUE DETECTED');
+        logger.warn('═'.repeat(80));
+        logger.warn('Docker is installed but the agent cannot access the Docker socket.');
+        logger.warn('This will prevent container detection and NPM domain extraction.');
+        logger.warn('');
+        logger.warn('🔧 SOLUTIONS:');
+        logger.warn('');
+        logger.warn('Option 1 (Docker Container - Recommended):');
+        logger.warn('  Add Docker socket volume mount when running the agent container:');
+        logger.warn('  docker run -v /var/run/docker.sock:/var/run/docker.sock ...');
+        logger.warn('');
+        logger.warn('  Or in docker-compose.yml:');
+        logger.warn('  volumes:');
+        logger.warn('    - /var/run/docker.sock:/var/run/docker.sock:ro');
+        logger.warn('');
+        logger.warn('Option 2 (Host Installation):');
+        logger.warn('  Add the agent user to the docker group:');
+        logger.warn('  sudo usermod -aG docker $(whoami)');
+        logger.warn('  Then logout and login again, or restart the agent service.');
+        logger.warn('');
+        logger.warn('═'.repeat(80));
+      } else {
+        logger.warn(`⚠️  Docker installed but not accessible: ${errorMessage}`);
+        logger.warn('Container detection will be disabled.');
+      }
+    }
+  } catch {
+    // Docker 未安装，这是正常情况
+    logger.info('ℹ️  Docker not installed - container detection disabled');
+  }
+}
 
 const app = express();
 
@@ -254,14 +306,17 @@ const server = app.listen(serverConfig.port, async () => {
   logger.info(`🌐 Server: http://localhost:${serverConfig.port}`);
   logger.info(`🔗 Master: ${config.masterUrl}`);
   logger.info(`⚡ Environment: ${serverConfig.nodeEnv}`);
-  
+
+  // 检查 Docker 访问权限
+  await checkDockerAccess();
+
   // 延迟注册以确保服务器完全启动
   setTimeout(async () => {
     logger.info('🔄 Attempting to register with master server...');
-    
+
     try {
       const result = await registrationService.retryRegistration(3, 5000);
-      
+
       if (result.success) {
         logger.info(`✅ Registration successful! Node: ${result.nodeName} (${result.location})`);
 

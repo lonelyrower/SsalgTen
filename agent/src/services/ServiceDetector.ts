@@ -410,7 +410,18 @@ export class ServiceDetector {
       }
     } catch (error) {
       // Docker 未安装或不可用，跳过
-      logger.debug('[ServiceDetector] Docker not available or no containers running');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // 检查是否是权限错误
+      if (errorMessage.includes('permission denied') || errorMessage.includes('EACCES')) {
+        logger.warn('[ServiceDetector] ⚠️  Docker permission denied - Agent user does not have access to Docker socket');
+        logger.warn('[ServiceDetector] To fix this, run: sudo usermod -aG docker <agent-user> && sudo systemctl restart ssalgten-agent');
+        logger.warn('[ServiceDetector] Container detection (including NPM domain extraction) will be skipped');
+      } else if (errorMessage.includes('not found') || errorMessage.includes('command not found')) {
+        logger.info('[ServiceDetector] Docker not installed, skipping container detection');
+      } else {
+        logger.debug(`[ServiceDetector] Docker not available: ${errorMessage}`);
+      }
     }
 
     return services;
