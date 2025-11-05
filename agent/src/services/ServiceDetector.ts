@@ -46,6 +46,8 @@ export class ServiceDetector {
   };
 
   private nodeIp?: string;
+  private primaryIpCache?: string;
+  private hysteriaVersionCache?: 'hysteria' | 'hysteria2';
 
   /**
    * 检测所有服务
@@ -254,6 +256,8 @@ export class ServiceDetector {
             continue;
           }
         }
+
+        logger.debug(`[ServiceDetector] Matched process for ${pattern.name}: ${matchedProcess}`);
 
         const configHints = this.extractConfigHints(pattern.name, matchedProcess);
         if (configHints.length === 0 && pattern.name === 'Xray') {
@@ -1519,6 +1523,13 @@ export class ServiceDetector {
         domainSet.add(primaryDomain);
       }
 
+      if (!preferHysteria2) {
+        const binaryVersion = await this.detectHysteriaBinaryVersion();
+        if (binaryVersion === 'hysteria2') {
+          preferHysteria2 = true;
+        }
+      }
+
       const effectiveServiceName =
         preferHysteria2 || (service.serviceName && service.serviceName.includes('2'))
           ? 'Hysteria2'
@@ -1644,7 +1655,9 @@ export class ServiceDetector {
       addHostCandidate(clientEndpointHost);
       domainList.forEach((domain) => addHostCandidate(domain));
       addHostCandidate(listenHost);
-      addHostCandidate(nodeIp);
+      const primaryIpCandidate =
+        (!this.isReservedHost(this.nodeIp) && this.nodeIp) || (await this.resolvePrimaryIp());
+      addHostCandidate(primaryIpCandidate);
 
       const addShareLinkForHost = (host?: string) => {
         if (!host || !fallbackPort || !fallbackPassword || this.isReservedHost(host)) {
@@ -1679,7 +1692,9 @@ export class ServiceDetector {
 
       if (shareLinkSet.size === 0) {
         if (hostCandidates.size === 0) {
-          addShareLinkForHost(nodeIp || clientEndpointHost || listenHost);
+          addShareLinkForHost(
+            primaryIpCandidate || clientEndpointHost || listenHost || nodeIp
+          );
         } else {
           for (const host of hostCandidates) {
             addShareLinkForHost(host);
@@ -1704,8 +1719,8 @@ export class ServiceDetector {
         if (primaryHostCandidate) {
           ensureHostPresent(primaryHostCandidate);
         }
-        if (nodeIp && !this.isReservedHost(nodeIp)) {
-          ensureHostPresent(nodeIp);
+        if (primaryIpCandidate) {
+          ensureHostPresent(primaryIpCandidate);
         }
       }
 
@@ -1974,6 +1989,62 @@ export class ServiceDetector {
       labelParts.push(normalizedHost);
     }
     return labelParts.join('-');
+  }
+
+  private async resolvePrimaryIp(): Promise<string | undefined> {
+    if (this.nodeIp && !this.isReservedHost(this.nodeIp)) {
+      return this.nodeIp;
+    }
+    if (this.primaryIpCache && !this.isReservedHost(this.primaryIpCache)) {
+      return this.primaryIpCache;
+    }
+
+    const commands = [
+      "ip route get 1 2>/dev/null | awk '{print $7}' | head -n1",
+      "hostname -I 2>/dev/null | awk '{print $1}'",
+    ];
+
+    for (const command of commands) {
+      try {
+        const { stdout } = await execAsync(command);
+        const candidate = stdout.trim().split(/\s+/)[0];
+        if (candidate && !this.isReservedHost(candidate)) {
+          this.primaryIpCache = candidate;
+          return candidate;
+        }
+      } catch {}
+    }
+
+    return undefined;
+  }
+
+  private async detectHysteriaBinaryVersion(): Promise<'hysteria' | 'hysteria2' | undefined> {
+    if (this.hysteriaVersionCache) {
+      return this.hysteriaVersionCache;
+    }
+
+    const commands = [
+      'hysteria version 2>/dev/null',
+      '/usr/local/bin/hysteria version 2>/dev/null',
+      'hysteria2 version 2>/dev/null',
+    ];
+
+    for (const command of commands) {
+      try {
+        const { stdout } = await execAsync(command);
+        const normalized = stdout.trim().toLowerCase();
+        if (normalized.includes('hysteria 2') || normalized.includes('hysteria2')) {
+          this.hysteriaVersionCache = 'hysteria2';
+          return 'hysteria2';
+        }
+        if (normalized.includes('hysteria')) {
+          this.hysteriaVersionCache = 'hysteria';
+          return 'hysteria';
+        }
+      } catch {}
+    }
+
+    return undefined;
   }
 
   private firstNonEmptyValue(...values: unknown[]): string | undefined {
