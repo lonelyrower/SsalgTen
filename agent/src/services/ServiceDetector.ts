@@ -1576,6 +1576,17 @@ export class ServiceDetector {
 
       try {
         const configContent = await fs.readFile(configPath, 'utf-8');
+        if (!preferHysteria2) {
+          const lowerContent = configContent.toLowerCase();
+          if (
+            lowerContent.includes('masquerade:') ||
+            lowerContent.includes('transport:') ||
+            lowerContent.includes('fastopen') ||
+            lowerContent.includes('hysteria2')
+          ) {
+            preferHysteria2 = true;
+          }
+        }
         const listenMatch = configContent.match(/^\s*listen:\s*("?)([^\s"#]+)\1/m);
         if (listenMatch) {
           const listenValue = listenMatch[2].trim();
@@ -1656,7 +1667,9 @@ export class ServiceDetector {
       domainList.forEach((domain) => addHostCandidate(domain));
       addHostCandidate(listenHost);
       const primaryIpCandidate =
-        (!this.isReservedHost(this.nodeIp) && this.nodeIp) || (await this.resolvePrimaryIp());
+        (!this.isReservedHost(this.nodeIp) && this.nodeIp) ||
+        (await this.resolvePrimaryIp()) ||
+        (await this.resolveExternalIp());
       addHostCandidate(primaryIpCandidate);
 
       const addShareLinkForHost = (host?: string) => {
@@ -1980,17 +1993,6 @@ export class ServiceDetector {
     return `${base}#${label}`;
   }
 
-  private buildHysteriaLabel(serviceName: string, host?: string): string {
-    const normalizedHost = host
-      ? host.replace(/^\[|]$/g, '').replace(/[^a-zA-Z0-9.-]/g, '-')
-      : 'endpoint';
-    const labelParts = [`SsalgTen`, serviceName];
-    if (normalizedHost) {
-      labelParts.push(normalizedHost);
-    }
-    return labelParts.join('-');
-  }
-
   private async resolvePrimaryIp(): Promise<string | undefined> {
     if (this.nodeIp && !this.isReservedHost(this.nodeIp)) {
       return this.nodeIp;
@@ -2002,6 +2004,27 @@ export class ServiceDetector {
     const commands = [
       "ip route get 1 2>/dev/null | awk '{print $7}' | head -n1",
       "hostname -I 2>/dev/null | awk '{print $1}'",
+    ];
+
+    for (const command of commands) {
+      try {
+        const { stdout } = await execAsync(command);
+        const candidate = stdout.trim().split(/\s+/)[0];
+        if (candidate && !this.isReservedHost(candidate)) {
+          this.primaryIpCache = candidate;
+          return candidate;
+        }
+      } catch {}
+    }
+
+    return undefined;
+  }
+
+  private async resolveExternalIp(): Promise<string | undefined> {
+    const commands = [
+      'curl -s --max-time 3 https://ipinfo.io/ip',
+      'curl -s --max-time 3 https://api.ipify.org',
+      'curl -s --max-time 3 https://ifconfig.me',
     ];
 
     for (const command of commands) {
@@ -2033,7 +2056,11 @@ export class ServiceDetector {
       try {
         const { stdout } = await execAsync(command);
         const normalized = stdout.trim().toLowerCase();
-        if (normalized.includes('hysteria 2') || normalized.includes('hysteria2')) {
+        if (
+          normalized.includes('hysteria 2') ||
+          normalized.includes('hysteria2') ||
+          normalized.includes('hy2')
+        ) {
           this.hysteriaVersionCache = 'hysteria2';
           return 'hysteria2';
         }
@@ -2045,6 +2072,17 @@ export class ServiceDetector {
     }
 
     return undefined;
+  }
+
+  private buildHysteriaLabel(serviceName: string, host?: string): string {
+    const normalizedHost = host
+      ? host.replace(/^\[|]$/g, '').replace(/[^a-zA-Z0-9.-]/g, '-')
+      : 'endpoint';
+    const labelParts = [`SsalgTen`, serviceName];
+    if (normalizedHost) {
+      labelParts.push(normalizedHost);
+    }
+    return labelParts.join('-');
   }
 
   private firstNonEmptyValue(...values: unknown[]): string | undefined {
