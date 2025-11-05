@@ -317,7 +317,13 @@ export class ServiceDetector {
         const imageLower = image.toLowerCase();
         logger.debug(`[ServiceDetector] Container: name=${name}, image=${image}`);
 
-        if (imageLower.includes('nginxproxymanager') || imageLower.includes('nginx-proxy-manager')) {
+        // 检查是否为 NPM 容器（支持多种命名方式）
+        const isNpm = imageLower.includes('nginxproxymanager') ||
+                      imageLower.includes('nginx-proxy-manager') ||
+                      imageLower.includes('jc21/nginx-proxy-manager') ||
+                      name.toLowerCase().includes('npm');
+
+        if (isNpm) {
           logger.info(`[ServiceDetector] Found NPM container: ${name} (${image})`);
           npmContainerId = id;
           npmProxyHosts = await this.getNpmProxyHosts(id);
@@ -627,8 +633,11 @@ export class ServiceDetector {
       } catch {}
     }
 
-    // Nginx Proxy Manager
-    if (imageLower.includes('nginxproxymanager') || imageLower.includes('nginx-proxy-manager')) {
+    // Nginx Proxy Manager (支持多种命名方式)
+    if (imageLower.includes('nginxproxymanager') ||
+        imageLower.includes('nginx-proxy-manager') ||
+        imageLower.includes('jc21/nginx-proxy-manager') ||
+        nameLower.includes('npm-app')) {
       return {
         name: 'Nginx Proxy Manager',
         type: 'WEB',
