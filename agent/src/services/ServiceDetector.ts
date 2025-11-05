@@ -311,11 +311,14 @@ export class ServiceDetector {
 
       // 先检测是否有 NPM 容器，并获取其代理配置
       let npmContainerId: string | undefined;
+      logger.debug(`[ServiceDetector] Checking ${containers.length} containers for NPM`);
       for (const containerLine of containers) {
         const [id, name, image] = containerLine.split('|');
         const imageLower = image.toLowerCase();
+        logger.debug(`[ServiceDetector] Container: name=${name}, image=${image}`);
 
         if (imageLower.includes('nginxproxymanager') || imageLower.includes('nginx-proxy-manager')) {
+          logger.info(`[ServiceDetector] Found NPM container: ${name} (${image})`);
           npmContainerId = id;
           npmProxyHosts = await this.getNpmProxyHosts(id);
           logger.info(`[ServiceDetector] Found ${npmProxyHosts.length} proxy hosts from NPM database`);
