@@ -1617,20 +1617,31 @@ export class ServiceDetector {
         listenPort;
       const fallbackPassword = this.firstNonEmptyValue(clientAuth, serverPassword);
       const fallbackSni = this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost);
-      const preferredHost = this.firstNonEmptyValue(
-        clientEndpointHost,
-        clientSni,
-        domainList[0],
-        masqueradeHost,
-        listenHost
-      );
+
+      const normalizedMasquerade = masqueradeHost?.toLowerCase();
+      const normalizedSni = fallbackSni?.toLowerCase();
+
       const hostCandidates = new Set<string>();
-      if (preferredHost) {
-        hostCandidates.add(preferredHost);
-      }
-      if (nodeIp) {
-        hostCandidates.add(nodeIp);
-      }
+      const addHostCandidate = (host?: string) => {
+        const trimmed = host?.trim();
+        if (!trimmed) return;
+        const lower = trimmed.toLowerCase();
+        if (lower === normalizedMasquerade || lower === normalizedSni) return;
+        if (
+          trimmed === '0.0.0.0' ||
+          trimmed === '::' ||
+          trimmed.startsWith('127.') ||
+          trimmed.startsWith('localhost')
+        ) {
+          return;
+        }
+        hostCandidates.add(trimmed);
+      };
+
+      addHostCandidate(clientEndpointHost);
+      domainList.forEach((domain) => addHostCandidate(domain));
+      addHostCandidate(listenHost);
+      addHostCandidate(nodeIp);
 
       const addShareLinkForHost = (host?: string) => {
         if (!host || !fallbackPort || !fallbackPassword) {
@@ -1649,20 +1660,30 @@ export class ServiceDetector {
       };
 
       if (shareLinkSet.size === 0) {
-        for (const host of hostCandidates) {
-          addShareLinkForHost(host);
+        if (hostCandidates.size === 0) {
+          addShareLinkForHost(nodeIp || clientEndpointHost || listenHost);
+        } else {
+          for (const host of hostCandidates) {
+            addShareLinkForHost(host);
+          }
         }
         if (shareLinkSet.size === 0) {
           logger.warn(
             `[ServiceDetector] Unable to build hysteria share link automatically (missing host/port/password)`
           );
         }
-      } else if (nodeIp) {
-        // 确保至少存在一个使用节点 IP 的分享链接
-        const hasIpLink = Array.from(shareLinkSet).some((link) => this.shareLinkContainsHost(link, nodeIp));
-        if (!hasIpLink) {
-          addShareLinkForHost(nodeIp);
-        }
+      } else {
+        const ensureHostPresent = (host?: string) => {
+          if (!host) return;
+          const exists = Array.from(shareLinkSet).some((link) =>
+            this.shareLinkContainsHost(link, host)
+          );
+          if (!exists) {
+            addShareLinkForHost(host);
+          }
+        };
+        ensureHostPresent(clientEndpointHost || listenHost);
+        ensureHostPresent(nodeIp);
       }
 
       hysteriaDetails.server = {
