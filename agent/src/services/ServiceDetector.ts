@@ -1424,6 +1424,11 @@ export class ServiceDetector {
           service.details = {
             ...service.details,
             sslCertificates: configInfo.sslCertificates,
+            nginx: {
+              ports: configInfo.ports,
+              protocols: configInfo.protocols,
+              sslEnabled: configInfo.sslEnabled,
+            },
           };
 
           // 添加域名信息
@@ -1432,13 +1437,13 @@ export class ServiceDetector {
           }
 
           // 添加端口信息
-          if (configInfo.ports.length > 0 && !service.port) {
+          if ((!service.port || service.port <= 0) && configInfo.ports.length > 0) {
             service.port = configInfo.ports[0];
           }
 
           // 添加协议信息
-          if (configInfo.protocols.length > 0) {
-            service.protocol = configInfo.protocols.join(',');
+          if (!service.protocol && configInfo.protocols.length > 0) {
+            service.protocol = configInfo.protocols[0];
           }
 
           // SSL 启用状态
