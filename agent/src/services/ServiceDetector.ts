@@ -1616,10 +1616,10 @@ export class ServiceDetector {
         (clientServerFirst ? this.parseHysteriaEndpoint(clientServerFirst).port : undefined) ||
         listenPort;
       const fallbackPassword = this.firstNonEmptyValue(clientAuth, serverPassword);
-      const fallbackSni = this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost);
+      let fallbackSni = this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost);
 
       const normalizedMasquerade = masqueradeHost?.toLowerCase();
-      const normalizedSni = fallbackSni?.toLowerCase();
+      let normalizedSni = fallbackSni?.toLowerCase();
 
       const hostCandidates = new Set<string>();
       const addHostCandidate = (host?: string) => {
@@ -1627,14 +1627,7 @@ export class ServiceDetector {
         if (!trimmed) return;
         const lower = trimmed.toLowerCase();
         if (lower === normalizedMasquerade || lower === normalizedSni) return;
-        if (
-          trimmed === '0.0.0.0' ||
-          trimmed === '::' ||
-          trimmed.startsWith('127.') ||
-          trimmed.startsWith('localhost')
-        ) {
-          return;
-        }
+        if (this.isReservedHost(trimmed)) return;
         hostCandidates.add(trimmed);
       };
 
@@ -1644,7 +1637,7 @@ export class ServiceDetector {
       addHostCandidate(nodeIp);
 
       const addShareLinkForHost = (host?: string) => {
-        if (!host || !fallbackPort || !fallbackPassword) {
+        if (!host || !fallbackPort || !fallbackPassword || this.isReservedHost(host)) {
           return;
         }
         const link = this.buildHysteriaShareLink(serviceName, clientConfig, {
@@ -1658,6 +1651,20 @@ export class ServiceDetector {
           shareLinkSet.add(link);
         }
       };
+
+      const existingShareLinks = Array.from(shareLinkSet);
+      if (existingShareLinks.length > 0) {
+        for (const link of existingShareLinks) {
+          const parsed = this.parseHysteriaShareLink(link);
+        if (parsed.host) {
+          addHostCandidate(parsed.host);
+        }
+        if (!fallbackSni && parsed.sni) {
+          fallbackSni = parsed.sni;
+          normalizedSni = fallbackSni?.toLowerCase();
+        }
+      }
+      }
 
       if (shareLinkSet.size === 0) {
         if (hostCandidates.size === 0) {
@@ -1674,7 +1681,7 @@ export class ServiceDetector {
         }
       } else {
         const ensureHostPresent = (host?: string) => {
-          if (!host) return;
+          if (!host || this.isReservedHost(host)) return;
           const exists = Array.from(shareLinkSet).some((link) =>
             this.shareLinkContainsHost(link, host)
           );
@@ -1682,8 +1689,13 @@ export class ServiceDetector {
             addShareLinkForHost(host);
           }
         };
-        ensureHostPresent(clientEndpointHost || listenHost);
-        ensureHostPresent(nodeIp);
+        const primaryHostCandidate = clientEndpointHost || listenHost;
+        if (primaryHostCandidate) {
+          ensureHostPresent(primaryHostCandidate);
+        }
+        if (nodeIp && !this.isReservedHost(nodeIp)) {
+          ensureHostPresent(nodeIp);
+        }
       }
 
       hysteriaDetails.server = {
@@ -1693,7 +1705,9 @@ export class ServiceDetector {
         masqueradeHost,
       };
 
-      const shareLinks = Array.from(shareLinkSet);
+      const shareLinks = Array.from(shareLinkSet).map((link) =>
+        this.updateHysteriaLinkLabel(link, serviceName)
+      );
       const hasHy2Link = shareLinks.some((link) => link.startsWith('hysteria2://'));
       const protocolLabel =
         serviceName.toLowerCase().includes('2') || hasHy2Link ? 'hysteria2' : 'hysteria';
@@ -1841,7 +1855,7 @@ export class ServiceDetector {
     }
 
     const query = params.toString();
-    const label = encodeURIComponent(`SsalgTen-${serviceName}`);
+    const label = encodeURIComponent(this.buildHysteriaLabel(serviceName, host));
     return `${scheme}://${encodeURIComponent(password)}@${hostForUrl}:${port}${query ? `?${query}` : ''}#${label}`;
   }
 
@@ -1872,6 +1886,71 @@ export class ServiceDetector {
     }
 
     return false;
+  }
+
+  private isReservedHost(host?: string): boolean {
+    if (!host) return true;
+    const trimmed = host.trim().toLowerCase();
+    if (!trimmed) return true;
+    if (
+      trimmed === 'localhost' ||
+      trimmed === '0.0.0.0' ||
+      trimmed === '::' ||
+      trimmed === '[::]'
+    ) {
+      return true;
+    }
+    if (trimmed.startsWith('127.') || trimmed.startsWith('[::1]') || trimmed.startsWith('::1')) {
+      return true;
+    }
+    return false;
+  }
+
+  private parseHysteriaShareLink(
+    link: string
+  ): { host?: string; port?: number; sni?: string } {
+    try {
+      const normalized = link.replace(/^hysteria2?/i, 'https');
+      const url = new URL(normalized);
+      const host = url.hostname || url.host;
+      const port = url.port ? parseInt(url.port, 10) : undefined;
+      const sni = url.searchParams.get('sni') || undefined;
+      return {
+        host: host ? host.replace(/^\[|]$/g, '') : undefined,
+        port: Number.isNaN(port) ? undefined : port,
+        sni: sni || undefined,
+      };
+    } catch {
+      const match = link.match(/@([^:]+|\[[^\]]+\]):(\d+)/);
+      const sniMatch = link.match(/[?&]sni=([^&#]+)/);
+      return {
+        host: match ? match[1].replace(/^\[|]$/g, '') : undefined,
+        port: match ? parseInt(match[2], 10) : undefined,
+        sni: sniMatch ? decodeURIComponent(sniMatch[1]) : undefined,
+      };
+    }
+  }
+
+  private updateHysteriaLinkLabel(link: string, serviceName: string): string {
+    const parsed = this.parseHysteriaShareLink(link);
+    if (!parsed.host) {
+      return link;
+    }
+    const label = encodeURIComponent(this.buildHysteriaLabel(serviceName, parsed.host));
+    const hashIndex = link.indexOf('#');
+    const base = hashIndex === -1 ? link : link.substring(0, hashIndex);
+    return `${base}#${label}`;
+  }
+
+  private buildHysteriaLabel(serviceName: string, host?: string): string {
+    const normalizedHost = host
+      ? host.replace(/^\[|]$/g, '').replace(/[^a-zA-Z0-9.-]/g, '-')
+      : 'endpoint';
+    const labelParts = [`SsalgTen`, serviceName];
+    if (normalizedHost) {
+      labelParts.push(normalizedHost);
+    }
+    return labelParts.join('-');
   }
 
   private firstNonEmptyValue(...values: unknown[]): string | undefined {
