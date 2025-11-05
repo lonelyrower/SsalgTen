@@ -311,11 +311,11 @@ export class ServiceDetector {
 
       // 先检测是否有 NPM 容器，并获取其代理配置
       let npmContainerId: string | undefined;
-      logger.debug(`[ServiceDetector] Checking ${containers.length} containers for NPM`);
+      logger.info(`[ServiceDetector] Checking ${containers.length} containers for NPM`);
       for (const containerLine of containers) {
         const [id, name, image] = containerLine.split('|');
         const imageLower = image.toLowerCase();
-        logger.debug(`[ServiceDetector] Container: name=${name}, image=${image}`);
+        logger.info(`[ServiceDetector] Container: name=${name}, image=${image}`);
 
         // 检查是否为 NPM 容器（支持多种命名方式）
         const nameLower = name.toLowerCase();
@@ -326,7 +326,7 @@ export class ServiceDetector {
                       nameLower.startsWith('npm-app') ||
                       nameLower.startsWith('nginxproxymanager');
 
-        logger.debug(`[ServiceDetector] Checking if ${name} is NPM: ${isNpm}`);
+        logger.info(`[ServiceDetector] Checking if ${name} is NPM: ${isNpm}`);
 
         if (isNpm) {
           logger.info(`[ServiceDetector] Found NPM container: ${name} (${image})`);
