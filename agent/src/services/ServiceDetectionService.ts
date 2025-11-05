@@ -86,7 +86,11 @@ export class ServiceDetectionService {
     try {
       logger.info('[ServiceDetectionService] Starting service detection scan...');
 
-      const services = await serviceDetector.detectAll();
+      // 获取节点信息以便传递 IP 给 ServiceDetector
+      const nodeInfo = registrationService.getNodeInfo();
+      const nodeIp = nodeInfo?.ipv4 || nodeInfo?.ipv6;
+
+      const services = await serviceDetector.detectAll(nodeIp);
       logger.info(
         `[ServiceDetectionService] Scan completed: ${services.length} services detected`
       );

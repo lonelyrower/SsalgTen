@@ -45,11 +45,14 @@ export class ServiceDetector {
     27017: { type: 'DATABASE' as ServiceType, protocol: 'mongodb' },
   };
 
+  private nodeIp?: string;
+
   /**
    * 检测所有服务
    */
-  async detectAll(): Promise<DetectedService[]> {
+  async detectAll(nodeIp?: string): Promise<DetectedService[]> {
     logger.info('[ServiceDetector] Starting service detection...');
+    this.nodeIp = nodeIp;
     const services: DetectedService[] = [];
 
     try {
@@ -185,8 +188,9 @@ export class ServiceDetector {
       // 代理服务
       { name: 'Xray', pattern: /xray/i, type: 'PROXY' as ServiceType },
       { name: 'V2Ray', pattern: /v2ray/i, type: 'PROXY' as ServiceType },
-      { name: 'Hysteria', pattern: /hysteria/i, type: 'PROXY' as ServiceType },
+      // 注意：Hysteria2 必须在 Hysteria 之前，避免被 hysteria 的正则匹配
       { name: 'Hysteria2', pattern: /hysteria2/i, type: 'PROXY' as ServiceType },
+      { name: 'Hysteria', pattern: /hysteria(?!2)/i, type: 'PROXY' as ServiceType },
       { name: 'Sing-box', pattern: /sing-box/i, type: 'PROXY' as ServiceType },
       { name: 'ShadowsocksR', pattern: /ssr-server|ssserver/i, type: 'PROXY' as ServiceType },
       { name: 'Shadowsocks', pattern: /ss-server|shadowsocks/i, type: 'PROXY' as ServiceType },
@@ -306,13 +310,27 @@ export class ServiceDetector {
       const containers = stdout.trim().split('\n').filter(Boolean);
 
       // 先检测是否有 NPM 容器，并获取其代理配置
+      let npmContainerId: string | undefined;
       for (const containerLine of containers) {
         const [id, name, image] = containerLine.split('|');
         const imageLower = image.toLowerCase();
 
         if (imageLower.includes('nginxproxymanager') || imageLower.includes('nginx-proxy-manager')) {
+          npmContainerId = id;
           npmProxyHosts = await this.getNpmProxyHosts(id);
-          logger.info(`[ServiceDetector] Found ${npmProxyHosts.length} proxy hosts from NPM`);
+          logger.info(`[ServiceDetector] Found ${npmProxyHosts.length} proxy hosts from NPM database`);
+
+          // 尝试从 NPM 的配置文件中读取域名（作为数据库查询的补充）
+          const configDomains = await this.getNpmDomainsFromConfig(id);
+          if (configDomains.length > 0) {
+            logger.info(`[ServiceDetector] Found ${configDomains.length} additional domains from NPM config files`);
+            // 合并配置文件中的域名到 npmProxyHosts
+            configDomains.forEach(domain => {
+              if (!npmProxyHosts.some(host => host.domain === domain)) {
+                npmProxyHosts.push({ domain, forwardHost: '', forwardPort: 0 });
+              }
+            });
+          }
           break;
         }
       }
@@ -354,12 +372,23 @@ export class ServiceDetector {
         }
 
         // 尝试从 NPM 配置中匹配域名（根据容器名或端口）
-        if (npmProxyHosts.length > 0 && serviceInfo.type === 'WEB') {
-          const matchedDomains = this.matchNpmDomains(name, parsedPorts, npmProxyHosts);
-          if (matchedDomains.length > 0) {
-            service.domains = [...(service.domains || []), ...matchedDomains];
-            // 去重
-            service.domains = Array.from(new Set(service.domains));
+        if (npmProxyHosts.length > 0) {
+          // 如果是 NPM 容器本身，添加所有代理的域名
+          if (id === npmContainerId) {
+            const allNpmDomains = npmProxyHosts.map(host => host.domain).filter(Boolean);
+            if (allNpmDomains.length > 0) {
+              service.domains = [...(service.domains || []), ...allNpmDomains];
+              service.domains = Array.from(new Set(service.domains));
+            }
+          }
+          // 对于其他 Web 服务，尝试匹配域名
+          else if (serviceInfo.type === 'WEB') {
+            const matchedDomains = this.matchNpmDomains(name, parsedPorts, npmProxyHosts);
+            if (matchedDomains.length > 0) {
+              service.domains = [...(service.domains || []), ...matchedDomains];
+              // 去重
+              service.domains = Array.from(new Set(service.domains));
+            }
           }
         }
 
@@ -420,6 +449,54 @@ export class ServiceDetector {
       return proxyHosts;
     } catch (error) {
       logger.debug('[ServiceDetector] Failed to query NPM database:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 从 NPM 容器的配置文件中提取域名
+   */
+  private async getNpmDomainsFromConfig(containerId: string): Promise<string[]> {
+    try {
+      // NPM 的配置文件通常在 /data/nginx/proxy_host/ 目录下
+      const { stdout } = await execAsync(
+        `docker exec ${containerId} find /data/nginx/proxy_host -name "*.conf" -type f 2>/dev/null || echo ""`
+      );
+
+      if (!stdout || !stdout.trim()) {
+        logger.debug('[ServiceDetector] No NPM config files found');
+        return [];
+      }
+
+      const configFiles = stdout.trim().split('\n').filter(Boolean);
+      const domains = new Set<string>();
+
+      for (const configFile of configFiles) {
+        try {
+          // 读取配置文件内容
+          const { stdout: content } = await execAsync(
+            `docker exec ${containerId} cat "${configFile}" 2>/dev/null || echo ""`
+          );
+
+          if (!content) continue;
+
+          // 使用正则提取 server_name 指令
+          const serverNameMatches = content.matchAll(/server_name\s+([^;]+);/g);
+          for (const match of serverNameMatches) {
+            const serverNames = match[1]
+              .trim()
+              .split(/\s+/)
+              .filter((name) => name && name !== '_' && !name.startsWith('#'));
+            serverNames.forEach(domain => domains.add(domain));
+          }
+        } catch (error) {
+          logger.debug(`[ServiceDetector] Failed to read NPM config file ${configFile}:`, error);
+        }
+      }
+
+      return Array.from(domains);
+    } catch (error) {
+      logger.debug('[ServiceDetector] Failed to read NPM config files:', error);
       return [];
     }
   }
@@ -577,6 +654,10 @@ export class ServiceDetector {
     }
     if (imageLower.includes('trojan')) {
       return { name: 'Trojan', type: 'PROXY' };
+    }
+    // 先检查 hysteria2，再检查 hysteria
+    if (imageLower.includes('hysteria2')) {
+      return { name: 'Hysteria2', type: 'PROXY' };
     }
     if (imageLower.includes('hysteria')) {
       return { name: 'Hysteria', type: 'PROXY' };
@@ -1132,10 +1213,7 @@ export class ServiceDetector {
         }
       });
       const primaryDomain = Array.isArray(service.domains) ? service.domains[0] : undefined;
-      const nodeIp =
-        typeof (service.details as Record<string, unknown> | undefined)?.nodeIp === 'string'
-          ? ((service.details as Record<string, unknown>).nodeIp as string)
-          : undefined;
+      const nodeIp = this.nodeIp;
 
       const linkFiles = ['/root/hy/url.txt', '/root/hy/url-nohop.txt'];
       const availableLinkFiles: string[] = [];

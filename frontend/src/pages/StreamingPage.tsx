@@ -338,27 +338,6 @@ export const StreamingPage: React.FC = () => {
 
             {/* Action buttons group */}
             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-              {/* Status filter */}
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
-                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <select
-                  value={filters.status || "all"}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      status: e.target.value === "all" ? undefined : (e.target.value as StreamingStatus),
-                    }))
-                  }
-                  className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
-                  aria-label="筛选状态"
-                >
-                  <option value="all">全部状态</option>
-                  <option value="yes">解锁</option>
-                  <option value="no">屏蔽</option>
-                  <option value="failed">失败</option>
-                </select>
-              </div>
-
               {/* Country filter */}
               <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
                 <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
