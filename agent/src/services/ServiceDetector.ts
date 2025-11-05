@@ -318,10 +318,15 @@ export class ServiceDetector {
         logger.debug(`[ServiceDetector] Container: name=${name}, image=${image}`);
 
         // 检查是否为 NPM 容器（支持多种命名方式）
+        const nameLower = name.toLowerCase();
         const isNpm = imageLower.includes('nginxproxymanager') ||
                       imageLower.includes('nginx-proxy-manager') ||
                       imageLower.includes('jc21/nginx-proxy-manager') ||
-                      name.toLowerCase().includes('npm');
+                      nameLower === 'npm' ||
+                      nameLower.startsWith('npm-app') ||
+                      nameLower.startsWith('nginxproxymanager');
+
+        logger.debug(`[ServiceDetector] Checking if ${name} is NPM: ${isNpm}`);
 
         if (isNpm) {
           logger.info(`[ServiceDetector] Found NPM container: ${name} (${image})`);
