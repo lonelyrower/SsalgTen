@@ -10,7 +10,6 @@ import type {
   StreamingOverview,
   NodeStreamingSummary,
   StreamingFilters as FilterType,
-  StreamingStatus,
 } from "@/types/streaming";
 import { STREAMING_DATA_EXPIRY_THRESHOLD, STREAMING_SERVICE_ORDER, STREAMING_SERVICES } from "@/types/streaming";
 import { apiService } from "@/services/api";
