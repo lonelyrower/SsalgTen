@@ -1474,6 +1474,9 @@ export class ServiceDetector {
       });
       const primaryDomain = Array.isArray(service.domains) ? service.domains[0] : undefined;
       const nodeIp = this.nodeIp;
+      let preferHysteria2 = Array.from(shareLinkSet).some((link) =>
+        link.toLowerCase().startsWith('hysteria2://')
+      );
 
       const linkFiles = ['/root/hy/url.txt', '/root/hy/url-nohop.txt'];
       const availableLinkFiles: string[] = [];
@@ -1501,6 +1504,7 @@ export class ServiceDetector {
       try {
         const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
         clientConfig = JSON.parse(clientJson);
+        preferHysteria2 = true;
       } catch (error) {
         logger.debug('[ServiceDetector] Unable to read hysteria client config JSON:', error);
       }
@@ -1514,6 +1518,12 @@ export class ServiceDetector {
       if (primaryDomain) {
         domainSet.add(primaryDomain);
       }
+
+      const effectiveServiceName =
+        preferHysteria2 || (service.serviceName && service.serviceName.includes('2'))
+          ? 'Hysteria2'
+          : service.serviceName || serviceName;
+      service.serviceName = effectiveServiceName;
 
       if (clientConfig && typeof clientConfig === 'object') {
         const clientInfo: Record<string, unknown> = {};
@@ -1640,12 +1650,13 @@ export class ServiceDetector {
         if (!host || !fallbackPort || !fallbackPassword || this.isReservedHost(host)) {
           return;
         }
-        const link = this.buildHysteriaShareLink(serviceName, clientConfig, {
+        const link = this.buildHysteriaShareLink(effectiveServiceName, clientConfig, {
           host,
           port: fallbackPort,
           password: fallbackPassword,
           insecure: clientInsecure,
           sni: fallbackSni,
+          scheme: preferHysteria2 ? 'hysteria2' : undefined,
         });
         if (link) {
           shareLinkSet.add(link);
@@ -1706,11 +1717,20 @@ export class ServiceDetector {
       };
 
       const shareLinks = Array.from(shareLinkSet).map((link) =>
-        this.updateHysteriaLinkLabel(link, serviceName)
+        this.updateHysteriaLinkLabel(link, effectiveServiceName)
       );
+      if (shareLinks.length > 0) {
+        logger.info(
+          `[ServiceDetector] Hysteria share links for ${effectiveServiceName}: ${shareLinks.join(', ')}`
+        );
+      } else {
+        logger.info(`[ServiceDetector] No Hysteria share links resolved for ${effectiveServiceName}`);
+      }
       const hasHy2Link = shareLinks.some((link) => link.startsWith('hysteria2://'));
       const protocolLabel =
-        serviceName.toLowerCase().includes('2') || hasHy2Link ? 'hysteria2' : 'hysteria';
+        preferHysteria2 || effectiveServiceName.toLowerCase().includes('2') || hasHy2Link
+          ? 'hysteria2'
+          : 'hysteria';
       service.protocol = protocolLabel;
       if (hasHy2Link && service.serviceName !== 'Hysteria2') {
         service.serviceName = 'Hysteria2';
@@ -1807,9 +1827,12 @@ export class ServiceDetector {
       password?: string;
       insecure?: boolean;
       sni?: string;
+      scheme?: 'hysteria' | 'hysteria2';
     }
   ): string | undefined {
-    const scheme = serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria';
+    const scheme =
+      fallback?.scheme ||
+      (serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria');
 
     const serverRaw =
       typeof clientConfig?.server === 'string' && clientConfig.server.trim().length > 0
