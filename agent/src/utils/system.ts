@@ -505,21 +505,22 @@ export const getServicesStatus = async () => {
         return false;
       };
 
+      // 基于进程检测（不依赖端口，避免误报）
       if (!services.docker) services.docker = await hasProc(['dockerd', 'containerd']) || await hostHasProc(['dockerd', 'containerd']);
-      if (!services.nginx) services.nginx = (await hasProc(['nginx']) || await hostHasProc(['nginx'])) || (await portListening(80)) || (await portListening(443));
-      if (!services.apache) services.apache = (await hasProc(['apache2', 'httpd']) || await hostHasProc(['apache2', 'httpd'])) || (await portListening(80)) || (await portListening(443));
-      if (!services.mysql) services.mysql = (await hasProc(['mysqld']) || await hostHasProc(['mysqld'])) || (await portListening(3306));
-      if (!services.postgresql) services.postgresql = (await hasProc(['postgres']) || await hostHasProc(['postgres'])) || (await portListening(5432));
-      if (!services.redis) services.redis = (await hasProc(['redis-server']) || await hostHasProc(['redis-server'])) || (await portListening(6379));
+      if (!services.nginx) services.nginx = await hasProc(['nginx']) || await hostHasProc(['nginx']);
+      if (!services.apache) services.apache = await hasProc(['apache2', 'httpd']) || await hostHasProc(['apache2', 'httpd']);
+      if (!services.mysql) services.mysql = await hasProc(['mysqld']) || await hostHasProc(['mysqld']);
+      if (!services.postgresql) services.postgresql = await hasProc(['postgres']) || await hostHasProc(['postgres']);
+      if (!services.redis) services.redis = await hasProc(['redis-server']) || await hostHasProc(['redis-server']);
       // 扩展服务
-      services.caddy = services.caddy || (await hasProc(['caddy']) || await hostHasProc(['caddy'])) || (await portListening(80)) || (await portListening(443));
-      services.xray = services.xray || (await hasProc(['xray']) || await hostHasProc(['xray']));
-      services.singbox = services.singbox || (await hasProc(['sing-box', 'singbox']) || await hostHasProc(['sing-box', 'singbox']));
-      services.openvpn = services.openvpn || (await hasProc(['openvpn']) || await hostHasProc(['openvpn'])) || (await portListening(1194));
-      services.wireguard = services.wireguard || (await hasProc(['wg-quick', 'wg']) || await hostHasProc(['wg-quick', 'wg'])) || (await portListening(51820));
-      services.tailscale = services.tailscale || (await hasProc(['tailscaled']) || await hostHasProc(['tailscaled']));
-      services.frps = services.frps || (await hasProc(['frps']) || await hostHasProc(['frps']));
-      services.frpc = services.frpc || (await hasProc(['frpc']) || await hostHasProc(['frpc']));
+      if (!services.caddy) services.caddy = await hasProc(['caddy']) || await hostHasProc(['caddy']);
+      if (!services.xray) services.xray = await hasProc(['xray']) || await hostHasProc(['xray']);
+      if (!services.singbox) services.singbox = await hasProc(['sing-box', 'singbox']) || await hostHasProc(['sing-box', 'singbox']);
+      if (!services.openvpn) services.openvpn = await hasProc(['openvpn']) || await hostHasProc(['openvpn']);
+      if (!services.wireguard) services.wireguard = await hasProc(['wg-quick', 'wg']) || await hostHasProc(['wg-quick', 'wg']);
+      if (!services.tailscale) services.tailscale = await hasProc(['tailscaled']) || await hostHasProc(['tailscaled']);
+      if (!services.frps) services.frps = await hasProc(['frps']) || await hostHasProc(['frps']);
+      if (!services.frpc) services.frpc = await hasProc(['frpc']) || await hostHasProc(['frpc']);
     } else if (os.platform() === 'win32') {
       // Windows服务检查
       try {

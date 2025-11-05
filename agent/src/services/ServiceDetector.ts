@@ -337,13 +337,30 @@ export class ServiceDetector {
           // 尝试从 NPM 的配置文件中读取域名（作为数据库查询的补充）
           const configDomains = await this.getNpmDomainsFromConfig(id);
           if (configDomains.length > 0) {
-            logger.info(`[ServiceDetector] Found ${configDomains.length} additional domains from NPM config files`);
+            logger.info(
+              `[ServiceDetector] Found ${configDomains.length} additional domains from NPM config files`
+            );
             // 合并配置文件中的域名到 npmProxyHosts
-            configDomains.forEach(domain => {
-              if (!npmProxyHosts.some(host => host.domain === domain)) {
-                npmProxyHosts.push({ domain, forwardHost: '', forwardPort: 0 });
+            for (const configDomain of configDomains) {
+              const existing = npmProxyHosts.find((host) => host.domain === configDomain.domain);
+              if (existing) {
+                if (!existing.forwardHost && configDomain.forwardHost) {
+                  existing.forwardHost = configDomain.forwardHost;
+                }
+                if (
+                  (!existing.forwardPort || existing.forwardPort === 0) &&
+                  typeof configDomain.forwardPort === 'number'
+                ) {
+                  existing.forwardPort = configDomain.forwardPort;
+                }
+              } else {
+                npmProxyHosts.push({
+                  domain: configDomain.domain,
+                  forwardHost: configDomain.forwardHost || '',
+                  forwardPort: configDomain.forwardPort ?? 0,
+                });
               }
-            });
+            }
           }
           break;
         }
@@ -471,7 +488,15 @@ export class ServiceDetector {
   /**
    * 从 NPM 容器的配置文件中提取域名
    */
-  private async getNpmDomainsFromConfig(containerId: string): Promise<string[]> {
+  private async getNpmDomainsFromConfig(
+    containerId: string
+  ): Promise<
+    Array<{
+      domain: string;
+      forwardHost?: string;
+      forwardPort?: number;
+    }>
+  > {
     try {
       // NPM 的配置文件通常在 /data/nginx/proxy_host/ 目录下
       logger.debug(`[ServiceDetector] Looking for NPM config files in container ${containerId}`);
@@ -486,7 +511,13 @@ export class ServiceDetector {
 
       const configFiles = stdout.trim().split('\n').filter(Boolean);
       logger.debug(`[ServiceDetector] Found ${configFiles.length} NPM config files`);
-      const domains = new Set<string>();
+      const domainMap = new Map<
+        string,
+        {
+          forwardHost?: string;
+          forwardPort?: number;
+        }
+      >();
 
       for (const configFile of configFiles) {
         try {
@@ -505,6 +536,7 @@ export class ServiceDetector {
           // 使用正则提取 server_name 指令
           const serverNameMatches = content.matchAll(/server_name\s+([^;]+);/g);
           let matchCount = 0;
+          const fileDomains: string[] = [];
           for (const match of serverNameMatches) {
             matchCount++;
             const serverNames = match[1]
@@ -512,20 +544,60 @@ export class ServiceDetector {
               .split(/\s+/)
               .filter((name) => name && name !== '_' && !name.startsWith('#'));
             logger.debug(`[ServiceDetector] Found server_name in ${configFile}: ${serverNames.join(', ')}`);
-            serverNames.forEach(domain => domains.add(domain));
+            serverNames.forEach((domain) => {
+              fileDomains.push(domain);
+              if (!domainMap.has(domain)) {
+                domainMap.set(domain, {});
+              }
+            });
           }
 
           if (matchCount === 0) {
             logger.debug(`[ServiceDetector] No server_name found in ${configFile}`);
+          }
+
+          if (fileDomains.length === 0) {
+            continue;
+          }
+
+          // 尝试解析上游主机与端口信息
+          const forwardHost = this.extractNpmForwardHost(content);
+          const forwardPort = this.extractNpmForwardPort(content);
+
+          if (forwardHost || forwardPort) {
+            fileDomains.forEach((domain) => {
+              const existing = domainMap.get(domain) || {};
+              if (forwardHost && !existing.forwardHost) {
+                existing.forwardHost = forwardHost;
+              }
+              if (typeof forwardPort === 'number' && forwardPort > 0 && !existing.forwardPort) {
+                existing.forwardPort = forwardPort;
+              }
+              domainMap.set(domain, existing);
+            });
           }
         } catch (error) {
           logger.warn(`[ServiceDetector] Failed to read NPM config file ${configFile}:`, error);
         }
       }
 
-      const domainArray = Array.from(domains);
-      logger.info(`[ServiceDetector] Extracted ${domainArray.length} unique domains from NPM config files: ${domainArray.join(', ')}`);
-      return domainArray;
+      const results = Array.from(domainMap.entries()).map(([domain, info]) => ({
+        domain,
+        forwardHost: info.forwardHost,
+        forwardPort: info.forwardPort,
+      }));
+
+      if (results.length > 0) {
+        logger.info(
+          `[ServiceDetector] Extracted ${results.length} unique domains from NPM config files: ${results
+            .map((item) => item.domain)
+            .join(', ')}`
+        );
+      } else {
+        logger.info('[ServiceDetector] No domains extracted from NPM config files');
+      }
+
+      return results;
     } catch (error) {
       logger.warn('[ServiceDetector] Failed to read NPM config files:', error);
       return [];
@@ -540,22 +612,77 @@ export class ServiceDetector {
     ports: number[],
     npmProxyHosts: Array<{ domain: string; forwardHost: string; forwardPort: number }>
   ): string[] {
-    const domains: string[] = [];
+    const domains = new Set<string>();
+    const normalizedContainer = containerName.toLowerCase();
 
     for (const proxyHost of npmProxyHosts) {
+      const trimmedHost = proxyHost.forwardHost?.trim();
+      const hasHost = Boolean(trimmedHost && trimmedHost !== '-' && !trimmedHost.startsWith('$'));
+      const hasPort = Number.isFinite(proxyHost.forwardPort) && proxyHost.forwardPort > 0;
+
       // 匹配容器名（忽略大小写）
-      if (proxyHost.forwardHost.toLowerCase().includes(containerName.toLowerCase()) ||
-          containerName.toLowerCase().includes(proxyHost.forwardHost.toLowerCase())) {
-        domains.push(proxyHost.domain);
+      if (hasHost) {
+        const normalizedHost = trimmedHost!.toLowerCase();
+        if (
+          normalizedHost === normalizedContainer ||
+          normalizedContainer.includes(normalizedHost) ||
+          normalizedHost.includes(normalizedContainer)
+        ) {
+          domains.add(proxyHost.domain);
+          continue;
+        }
       }
 
       // 匹配端口
-      if (ports.includes(proxyHost.forwardPort)) {
-        domains.push(proxyHost.domain);
+      if (hasPort && ports.includes(proxyHost.forwardPort)) {
+        domains.add(proxyHost.domain);
       }
     }
 
-    return Array.from(new Set(domains));
+    return Array.from(domains);
+  }
+
+  /**
+   * 从 NPM 配置内容中提取上游主机
+   */
+  private extractNpmForwardHost(content: string): string | undefined {
+    const hostPatterns = [
+      /set\s+\$(?:forward_(?:host|server)|server|upstream)\s+"?([^\s";]+)"?;/i,
+      /proxy_pass\s+(?:https?:\/\/)?(\[[^\]]+\]|[^:\s;]+)(?::\d+)?;/i,
+    ];
+
+    for (const pattern of hostPatterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        const candidate = match[1].trim().replace(/^"|"$/g, '');
+        if (candidate && candidate !== '_' && !candidate.startsWith('$')) {
+          return candidate;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * 从 NPM 配置内容中提取上游端口
+   */
+  private extractNpmForwardPort(content: string): number | undefined {
+    const portPatterns = [
+      /set\s+\$(?:forward_)?port\s+"?(\d+)"?;/i,
+      /proxy_pass\s+(?:https?:\/\/)?(?:\[[^\]]+\]|[^:\s;]+):(\d+);/i,
+    ];
+
+    for (const pattern of portPatterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        const port = parseInt(match[1], 10);
+        if (!Number.isNaN(port) && port > 0) {
+          return port;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   /**
