@@ -1702,16 +1702,15 @@ export class ServiceDetector {
       if (existingShareLinks.length > 0) {
         for (const link of existingShareLinks) {
           const parsed = this.parseHysteriaShareLink(link);
-        if (parsed.host) {
-          addHostCandidate(parsed.host);
-        }
-        if (parsed.sni) {
-          fallbackSni = parsed.sni;
-          normalizedSni = fallbackSni.toLowerCase();
+          if (parsed.host) {
+            addHostCandidate(parsed.host);
+          }
+          if (parsed.sni) {
+            fallbackSni = parsed.sni;
+            normalizedSni = fallbackSni.toLowerCase();
+          }
         }
       }
-      }
-
       if (shareLinkSet.size === 0) {
         if (hostCandidates.size === 0) {
           addShareLinkForHost(
