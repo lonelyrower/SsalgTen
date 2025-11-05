@@ -1523,18 +1523,14 @@ export class ServiceDetector {
         domainSet.add(primaryDomain);
       }
 
+      let effectiveServiceName = service.serviceName || serviceName;
+
       if (!preferHysteria2) {
         const binaryVersion = await this.detectHysteriaBinaryVersion();
         if (binaryVersion === 'hysteria2') {
           preferHysteria2 = true;
         }
       }
-
-      const effectiveServiceName =
-        preferHysteria2 || (service.serviceName && service.serviceName.includes('2'))
-          ? 'Hysteria2'
-          : service.serviceName || serviceName;
-      service.serviceName = effectiveServiceName;
 
       if (clientConfig && typeof clientConfig === 'object') {
         const clientInfo: Record<string, unknown> = {};
@@ -1652,6 +1648,19 @@ export class ServiceDetector {
 
       const normalizedMasquerade = masqueradeHost?.toLowerCase();
       let normalizedSni = fallbackSni?.toLowerCase();
+
+      if (preferHysteria2) {
+        effectiveServiceName = 'Hysteria2';
+      } else if (
+        effectiveServiceName &&
+        effectiveServiceName.toLowerCase().includes('2')
+      ) {
+        effectiveServiceName = 'Hysteria2';
+        preferHysteria2 = true;
+      } else {
+        effectiveServiceName = 'Hysteria';
+      }
+      service.serviceName = effectiveServiceName;
 
       const hostCandidates = new Set<string>();
       const addHostCandidate = (host?: string) => {
@@ -1943,17 +1952,42 @@ export class ServiceDetector {
     if (!host) return true;
     const trimmed = host.trim().toLowerCase();
     if (!trimmed) return true;
+
+    const normalized = trimmed.replace(/^\[|]$/g, '');
+
     if (
-      trimmed === 'localhost' ||
-      trimmed === '0.0.0.0' ||
-      trimmed === '::' ||
-      trimmed === '[::]'
+      normalized === 'localhost' ||
+      normalized === '0.0.0.0' ||
+      normalized === '::' ||
+      normalized === ''
     ) {
       return true;
     }
-    if (trimmed.startsWith('127.') || trimmed.startsWith('[::1]') || trimmed.startsWith('::1')) {
+
+    if (
+      normalized.startsWith('127.') ||
+      normalized.startsWith('169.254.') ||
+      normalized.startsWith('100.64.') ||
+      /^10\./.test(normalized) ||
+      /^192\.168\./.test(normalized) ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(normalized)
+    ) {
       return true;
     }
+
+    if (
+      normalized.startsWith('::1') ||
+      normalized.startsWith('[::1') ||
+      normalized.startsWith('fc') ||
+      normalized.startsWith('fd') ||
+      normalized.startsWith('fe80') ||
+      normalized.startsWith('::ffff:10.') ||
+      normalized.startsWith('::ffff:192.168.') ||
+      /^::ffff:172\.(1[6-9]|2[0-9]|3[0-1])\./.test(normalized)
+    ) {
+      return true;
+    }
+
     return false;
   }
 
@@ -2025,6 +2059,11 @@ export class ServiceDetector {
       'curl -s --max-time 3 https://ipinfo.io/ip',
       'curl -s --max-time 3 https://api.ipify.org',
       'curl -s --max-time 3 https://ifconfig.me',
+      'curl -s --max-time 3 http://whatismyip.akamai.com',
+      'wget -qO- https://ipinfo.io/ip',
+      'wget -qO- https://api.ipify.org',
+      'dig +short myip.opendns.com @resolver1.opendns.com',
+      "nslookup myip.opendns.com resolver1.opendns.com 2>/dev/null | awk '/^Address: /{print $2}' | tail -n1",
     ];
 
     for (const command of commands) {
@@ -2147,3 +2186,4 @@ export class ServiceDetector {
 }
 
 export const serviceDetector = new ServiceDetector();
+
