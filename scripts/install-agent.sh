@@ -3337,6 +3337,16 @@ ensure_agent_user() {
         log_info "创建用户 $AGENT_USER"
         run_root useradd -m -s /bin/bash "$AGENT_USER"
     fi
+
+    # 确保 Agent 用户具备 Docker 访问权限（如果系统存在 docker 组）
+    if run_root getent group docker >/dev/null 2>&1; then
+        if ! id -nG "$AGENT_USER" | tr ' ' '\n' | grep -qx "docker"; then
+            log_info "将用户 $AGENT_USER 加入 docker 组以启用容器检测"
+            run_root usermod -aG docker "$AGENT_USER"
+        fi
+    else
+        log_warning "未检测到 docker 组，稍后安装 Docker 后请手动执行: sudo usermod -aG docker $AGENT_USER"
+    fi
 }
 
 sync_agent_source_native() {

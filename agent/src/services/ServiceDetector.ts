@@ -56,16 +56,32 @@ export class ServiceDetector {
     const services: DetectedService[] = [];
 
     try {
+      const occupiedPorts = new Set<number>();
+
       // 1. 检测进程服务
       const processServices = await this.detectProcessServices();
+      for (const svc of processServices) {
+        if (typeof svc.port === 'number' && svc.port > 0) {
+          occupiedPorts.add(svc.port);
+        }
+        // 某些解析器会把全部端口放在 details.allPorts 中
+        const allPorts = Array.isArray(svc.details?.allPorts)
+          ? (svc.details!.allPorts as number[])
+          : [];
+        allPorts.forEach((port) => {
+          if (typeof port === 'number' && port > 0) {
+            occupiedPorts.add(port);
+          }
+        });
+      }
       services.push(...processServices);
 
       // 2. 检测 Docker 容器
-      const dockerServices = await this.detectDockerContainers();
+      const dockerServices = await this.detectDockerContainers(occupiedPorts);
       services.push(...dockerServices);
 
-      // 3. 检测监听端口
-      const portServices = await this.detectListeningPorts();
+      // 3. 检测监听端口（跳过已识别的端口，避免生成重复的 Web Service 条目）
+      const portServices = await this.detectListeningPorts(occupiedPorts);
       services.push(...portServices);
 
       // 去重：优先保留更详细的信息
@@ -294,7 +310,7 @@ export class ServiceDetector {
   /**
    * 检测 Docker 容器
    */
-  private async detectDockerContainers(): Promise<DetectedService[]> {
+  private async detectDockerContainers(occupiedPorts: Set<number>): Promise<DetectedService[]> {
     const services: DetectedService[] = [];
     let npmProxyHosts: Array<{ domain: string; forwardHost: string; forwardPort: number }> = [];
 
@@ -374,10 +390,15 @@ export class ServiceDetector {
 
         // 解析所有端口映射
         const parsedPorts = this.parseDockerPorts(ports);
-        const primaryPort = parsedPorts[0];
+        parsedPorts.forEach((port) => {
+          if (typeof port === 'number' && port > 0) {
+            occupiedPorts.add(port);
+          }
+        });
 
         // 根据镜像名、容器名和标签识别服务类型
         const serviceInfo = this.identifyContainerService(image, name, containerDetails);
+        const primaryPort = this.selectPrimaryPort(serviceInfo.name, parsedPorts, serviceInfo.type);
 
         const service: DetectedService = {
           serviceName: serviceInfo.name || name || image.split(':')[0],
@@ -729,6 +750,41 @@ export class ServiceDetector {
     }
 
     return Array.from(ports);
+  }
+
+  private selectPrimaryPort(
+    serviceName: string | undefined,
+    ports: number[],
+    serviceType: ServiceType
+  ): number | undefined {
+    if (!ports || ports.length === 0) {
+      return undefined;
+    }
+
+    const normalizedName = (serviceName || '').toLowerCase();
+
+    if (normalizedName === 'nginx proxy manager') {
+      if (ports.includes(81)) {
+        return 81;
+      }
+      if (ports.includes(443)) {
+        return 443;
+      }
+      if (ports.includes(80)) {
+        return 80;
+      }
+    }
+
+    if (serviceType === 'WEB') {
+      if (ports.includes(443)) {
+        return 443;
+      }
+      if (ports.includes(80)) {
+        return 80;
+      }
+    }
+
+    return ports[0];
   }
 
   /**
@@ -1090,7 +1146,7 @@ export class ServiceDetector {
   /**
    * 检测监听端口
    */
-  private async detectListeningPorts(): Promise<DetectedService[]> {
+  private async detectListeningPorts(occupiedPorts: Set<number>): Promise<DetectedService[]> {
     const services: DetectedService[] = [];
 
     try {
@@ -1111,6 +1167,15 @@ export class ServiceDetector {
         const match = line.match(portRegex);
         if (match) {
           const port = parseInt(match[1], 10);
+          if (!Number.isFinite(port) || port <= 0) {
+            continue;
+          }
+          if (occupiedPorts.has(port)) {
+            logger.debug(
+              `[ServiceDetector] Skipping port ${port} from ss/netstat results because it is already associated with a detected service`
+            );
+            continue;
+          }
           const portInfo = this.commonPorts[port as keyof typeof this.commonPorts];
 
           if (portInfo) {
@@ -1134,6 +1199,7 @@ export class ServiceDetector {
               port,
               protocol: portInfo.protocol,
             });
+            occupiedPorts.add(port);
           }
         }
       }
