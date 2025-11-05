@@ -386,23 +386,12 @@ export class ServiceDetector {
         }
 
         // 尝试从 NPM 配置中匹配域名（根据容器名或端口）
-        if (npmProxyHosts.length > 0) {
-          // 如果是 NPM 容器本身，添加所有代理的域名
-          if (id === npmContainerId) {
-            const allNpmDomains = npmProxyHosts.map(host => host.domain).filter(Boolean);
-            if (allNpmDomains.length > 0) {
-              service.domains = [...(service.domains || []), ...allNpmDomains];
-              service.domains = Array.from(new Set(service.domains));
-            }
-          }
-          // 对于其他 Web 服务，尝试匹配域名
-          else if (serviceInfo.type === 'WEB') {
-            const matchedDomains = this.matchNpmDomains(name, parsedPorts, npmProxyHosts);
-            if (matchedDomains.length > 0) {
-              service.domains = [...(service.domains || []), ...matchedDomains];
-              // 去重
-              service.domains = Array.from(new Set(service.domains));
-            }
+        if (npmProxyHosts.length > 0 && serviceInfo.type === 'WEB') {
+          const matchedDomains = this.matchNpmDomains(name, parsedPorts, npmProxyHosts);
+          if (matchedDomains.length > 0) {
+            service.domains = [...(service.domains || []), ...matchedDomains];
+            // 去重
+            service.domains = Array.from(new Set(service.domains));
           }
         }
 
