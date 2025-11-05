@@ -459,16 +459,18 @@ export class ServiceDetector {
   private async getNpmDomainsFromConfig(containerId: string): Promise<string[]> {
     try {
       // NPM 的配置文件通常在 /data/nginx/proxy_host/ 目录下
+      logger.debug(`[ServiceDetector] Looking for NPM config files in container ${containerId}`);
       const { stdout } = await execAsync(
         `docker exec ${containerId} find /data/nginx/proxy_host -name "*.conf" -type f 2>/dev/null || echo ""`
       );
 
       if (!stdout || !stdout.trim()) {
-        logger.debug('[ServiceDetector] No NPM config files found');
+        logger.debug('[ServiceDetector] No NPM config files found in /data/nginx/proxy_host');
         return [];
       }
 
       const configFiles = stdout.trim().split('\n').filter(Boolean);
+      logger.debug(`[ServiceDetector] Found ${configFiles.length} NPM config files`);
       const domains = new Set<string>();
 
       for (const configFile of configFiles) {
@@ -478,25 +480,39 @@ export class ServiceDetector {
             `docker exec ${containerId} cat "${configFile}" 2>/dev/null || echo ""`
           );
 
-          if (!content) continue;
+          if (!content) {
+            logger.debug(`[ServiceDetector] Empty content from ${configFile}`);
+            continue;
+          }
+
+          logger.debug(`[ServiceDetector] Reading config file: ${configFile}`);
 
           // 使用正则提取 server_name 指令
           const serverNameMatches = content.matchAll(/server_name\s+([^;]+);/g);
+          let matchCount = 0;
           for (const match of serverNameMatches) {
+            matchCount++;
             const serverNames = match[1]
               .trim()
               .split(/\s+/)
               .filter((name) => name && name !== '_' && !name.startsWith('#'));
+            logger.debug(`[ServiceDetector] Found server_name in ${configFile}: ${serverNames.join(', ')}`);
             serverNames.forEach(domain => domains.add(domain));
           }
+
+          if (matchCount === 0) {
+            logger.debug(`[ServiceDetector] No server_name found in ${configFile}`);
+          }
         } catch (error) {
-          logger.debug(`[ServiceDetector] Failed to read NPM config file ${configFile}:`, error);
+          logger.warn(`[ServiceDetector] Failed to read NPM config file ${configFile}:`, error);
         }
       }
 
-      return Array.from(domains);
+      const domainArray = Array.from(domains);
+      logger.info(`[ServiceDetector] Extracted ${domainArray.length} unique domains from NPM config files: ${domainArray.join(', ')}`);
+      return domainArray;
     } catch (error) {
-      logger.debug('[ServiceDetector] Failed to read NPM config files:', error);
+      logger.warn('[ServiceDetector] Failed to read NPM config files:', error);
       return [];
     }
   }
