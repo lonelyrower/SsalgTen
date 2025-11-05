@@ -418,17 +418,18 @@ export class ServiceDetector {
 
   /**
    * 从 NPM 容器获取代理主机配置
+   * 注意：新版 NPM 容器中没有 sqlite3 命令，所以这个方法已废弃
+   * 我们改用从配置文件中读取域名
    */
   private async getNpmProxyHosts(containerId: string): Promise<Array<{ domain: string; forwardHost: string; forwardPort: number }>> {
     try {
-      // NPM 使用 proxy_host 表存储代理配置
-      // 查询所有启用的代理主机配置
+      // 尝试使用 sqlite3 命令查询数据库（某些旧版本可能有）
       const { stdout } = await execAsync(
         `docker exec ${containerId} sqlite3 -separator '|' /data/database.sqlite "SELECT domain_names, forward_host, forward_port FROM proxy_host WHERE enabled = 1;" 2>/dev/null || echo ""`
       );
 
       if (!stdout || !stdout.trim()) {
-        logger.debug('[ServiceDetector] No data from NPM database query');
+        logger.debug('[ServiceDetector] sqlite3 not available or no data from NPM database, will use config files instead');
         return [];
       }
 
@@ -462,7 +463,7 @@ export class ServiceDetector {
 
       return proxyHosts;
     } catch (error) {
-      logger.debug('[ServiceDetector] Failed to query NPM database:', error);
+      logger.debug('[ServiceDetector] Failed to query NPM database (this is expected if sqlite3 is not available):', error);
       return [];
     }
   }
