@@ -629,6 +629,9 @@ export class ServiceDetector {
           normalizedHost.includes(normalizedContainer)
         ) {
           domains.add(proxyHost.domain);
+          logger.debug(
+            `[ServiceDetector] Matched NPM domain ${proxyHost.domain} to container ${containerName} via host (${trimmedHost})`
+          );
           continue;
         }
       }
@@ -636,6 +639,9 @@ export class ServiceDetector {
       // 匹配端口
       if (hasPort && ports.includes(proxyHost.forwardPort)) {
         domains.add(proxyHost.domain);
+        logger.debug(
+          `[ServiceDetector] Matched NPM domain ${proxyHost.domain} to container ${containerName} via port ${proxyHost.forwardPort}`
+        );
       }
     }
 
@@ -689,18 +695,40 @@ export class ServiceDetector {
    * 解析 Docker 端口字符串
    */
   private parseDockerPorts(portsString: string): number[] {
-    const ports: number[] = [];
-    // 匹配格式: 0.0.0.0:port, :::port, *:port
-    const portMatches = portsString.matchAll(/[0-9.*:]+:(\d+)/g);
+    const ports = new Set<number>();
+    const segments = portsString.split(',');
 
-    for (const match of portMatches) {
-      const port = parseInt(match[1], 10);
-      if (port && !ports.includes(port)) {
-        ports.push(port);
+    for (const segment of segments) {
+      const trimmed = segment.trim();
+      if (!trimmed) continue;
+
+      // 优先匹配宿主机端口区间，例如 0.0.0.0:80-81->80-81/tcp
+      const hostMatch = trimmed.match(/:(\d+)(?:-(\d+))?(?:->|$)/);
+      if (hostMatch) {
+        const start = parseInt(hostMatch[1], 10);
+        const end = hostMatch[2] ? parseInt(hostMatch[2], 10) : start;
+        if (!Number.isNaN(start) && !Number.isNaN(end) && end >= start) {
+          for (let port = start; port <= end; port++) {
+            ports.add(port);
+          }
+          continue;
+        }
+      }
+
+      // 再匹配容器端口（无宿主绑定的情况），例如 8080/tcp
+      const containerMatch = trimmed.match(/->(\d+)(?:-(\d+))?/);
+      if (containerMatch) {
+        const start = parseInt(containerMatch[1], 10);
+        const end = containerMatch[2] ? parseInt(containerMatch[2], 10) : start;
+        if (!Number.isNaN(start) && !Number.isNaN(end) && end >= start) {
+          for (let port = start; port <= end; port++) {
+            ports.add(port);
+          }
+        }
       }
     }
 
-    return ports;
+    return Array.from(ports);
   }
 
   /**
@@ -1452,13 +1480,6 @@ export class ServiceDetector {
         clientAuth = this.firstNonEmptyValue(clientConfig.auth);
 
         hysteriaDetails.client = clientInfo;
-
-        if (shareLinkSet.size === 0) {
-          const fallbackLink = this.buildHysteriaShareLink(serviceName, clientConfig);
-          if (fallbackLink) {
-            shareLinkSet.add(fallbackLink);
-          }
-        }
       }
 
       try {
@@ -1518,32 +1539,58 @@ export class ServiceDetector {
         logger.debug('[ServiceDetector] Unable to read hysteria server config:', error);
       }
 
-      if (shareLinkSet.size === 0) {
-        const domainList = Array.from(domainSet);
-        const fallbackHost = this.firstNonEmptyValue(
-          clientSni,
-          clientEndpointHost,
-          domainList[0],
-          masqueradeHost,
-          listenHost,
-          nodeIp
-        );
-        const fallbackPort =
-          service.port ||
-          (clientServerFirst ? this.parseHysteriaEndpoint(clientServerFirst).port : undefined) ||
-          listenPort;
-        const fallbackPassword = this.firstNonEmptyValue(clientAuth, serverPassword);
+      const domainList = Array.from(domainSet);
+      const fallbackPort =
+        service.port ||
+        (clientServerFirst ? this.parseHysteriaEndpoint(clientServerFirst).port : undefined) ||
+        listenPort;
+      const fallbackPassword = this.firstNonEmptyValue(clientAuth, serverPassword);
+      const fallbackSni = this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost);
+      const preferredHost = this.firstNonEmptyValue(
+        clientEndpointHost,
+        clientSni,
+        domainList[0],
+        masqueradeHost,
+        listenHost
+      );
+      const hostCandidates = new Set<string>();
+      if (preferredHost) {
+        hostCandidates.add(preferredHost);
+      }
+      if (nodeIp) {
+        hostCandidates.add(nodeIp);
+      }
 
-        const fallbackLink = this.buildHysteriaShareLink(serviceName, clientConfig, {
-          host: fallbackHost,
+      const addShareLinkForHost = (host?: string) => {
+        if (!host || !fallbackPort || !fallbackPassword) {
+          return;
+        }
+        const link = this.buildHysteriaShareLink(serviceName, clientConfig, {
+          host,
           port: fallbackPort,
           password: fallbackPassword,
           insecure: clientInsecure,
-          sni: this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost),
+          sni: fallbackSni,
         });
+        if (link) {
+          shareLinkSet.add(link);
+        }
+      };
 
-        if (fallbackLink) {
-          shareLinkSet.add(fallbackLink);
+      if (shareLinkSet.size === 0) {
+        for (const host of hostCandidates) {
+          addShareLinkForHost(host);
+        }
+        if (shareLinkSet.size === 0) {
+          logger.warn(
+            `[ServiceDetector] Unable to build hysteria share link automatically (missing host/port/password)`
+          );
+        }
+      } else if (nodeIp) {
+        // 确保至少存在一个使用节点 IP 的分享链接
+        const hasIpLink = Array.from(shareLinkSet).some((link) => this.shareLinkContainsHost(link, nodeIp));
+        if (!hasIpLink) {
+          addShareLinkForHost(nodeIp);
         }
       }
 
@@ -1555,8 +1602,13 @@ export class ServiceDetector {
       };
 
       const shareLinks = Array.from(shareLinkSet);
-      const protocolLabel = serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria';
+      const hasHy2Link = shareLinks.some((link) => link.startsWith('hysteria2://'));
+      const protocolLabel =
+        serviceName.toLowerCase().includes('2') || hasHy2Link ? 'hysteria2' : 'hysteria';
       service.protocol = protocolLabel;
+      if (hasHy2Link && service.serviceName !== 'Hysteria2') {
+        service.serviceName = 'Hysteria2';
+      }
 
       if (domainSet.size > 0) {
         service.domains = Array.from(domainSet);
@@ -1699,6 +1751,35 @@ export class ServiceDetector {
     const query = params.toString();
     const label = encodeURIComponent(`SsalgTen-${serviceName}`);
     return `${scheme}://${encodeURIComponent(password)}@${hostForUrl}:${port}${query ? `?${query}` : ''}#${label}`;
+  }
+
+  private shareLinkContainsHost(link: string, host: string): boolean {
+    if (!link || !host) {
+      return false;
+    }
+
+    const normalizedHost = host.replace(/^\[|]$/g, '');
+    try {
+      const normalizedLink = link.replace(/^hysteria2?/i, 'https');
+      const parsed = new URL(normalizedLink);
+      const linkHost = parsed.hostname.replace(/^\[|]$/g, '');
+      if (linkHost === normalizedHost) {
+        return true;
+      }
+      // 对比 IPv6 无法解析成 hostname 的情况
+      if (!linkHost && parsed.host) {
+        return parsed.host.replace(/^\[|]$/g, '') === normalizedHost;
+      }
+    } catch {
+      // 尝试手动解析
+      const manualMatch = link.match(/@([^:]+|\[[^\]]+\]):\d+/);
+      if (manualMatch) {
+        const linkHost = manualMatch[1].replace(/^\[|]$/g, '');
+        return linkHost === normalizedHost;
+      }
+    }
+
+    return false;
   }
 
   private firstNonEmptyValue(...values: unknown[]): string | undefined {
