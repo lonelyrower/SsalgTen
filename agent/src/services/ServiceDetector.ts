@@ -1705,9 +1705,9 @@ export class ServiceDetector {
         if (parsed.host) {
           addHostCandidate(parsed.host);
         }
-        if (!fallbackSni && parsed.sni) {
+        if (parsed.sni) {
           fallbackSni = parsed.sni;
-          normalizedSni = fallbackSni?.toLowerCase();
+          normalizedSni = fallbackSni.toLowerCase();
         }
       }
       }
