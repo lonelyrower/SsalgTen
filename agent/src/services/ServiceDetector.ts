@@ -1482,19 +1482,70 @@ export class ServiceDetector {
         link.toLowerCase().startsWith('hysteria2://')
       );
 
+      // 优先读取安装脚本生成的正确链接文件
       const linkFiles = ['/root/hy/url.txt', '/root/hy/url-nohop.txt'];
       const availableLinkFiles: string[] = [];
+      let hasCompleteLinks = false;
+
       for (const filePath of linkFiles) {
         const lines = await this.readLinesIfExists(filePath);
         if (lines.length > 0) {
           availableLinkFiles.push(filePath);
-          lines
+          const validLinks = lines
             .map((line) => line.trim())
-            .filter((line) => line.includes('://'))
-            .forEach((line) => shareLinkSet.add(line));
+            .filter((line) => line.includes('://'));
+
+          validLinks.forEach((line) => {
+            shareLinkSet.add(line);
+            // 如果链接包含完整的参数（sni、insecure等），认为是完整链接
+            if (line.includes('sni=') && line.includes('#')) {
+              hasCompleteLinks = true;
+            }
+          });
         }
       }
 
+      // 如果已经有完整的链接，直接使用，不再生成新链接
+      if (hasCompleteLinks) {
+        logger.info('[ServiceDetector] Found complete Hysteria share links from url files, using them directly');
+
+        // 从已有链接中提取基本信息用于显示
+        const firstLink = Array.from(shareLinkSet)[0];
+        if (firstLink) {
+          const parsed = this.parseHysteriaShareLink(firstLink);
+          if (parsed.port && !service.port) {
+            service.port = parsed.port;
+          }
+          if (parsed.sni) {
+            service.domains = service.domains || [];
+            if (!service.domains.includes(parsed.sni)) {
+              service.domains.push(parsed.sni);
+            }
+          }
+        }
+
+        const protocolLabel = shareLinkSet.size > 0 &&
+          Array.from(shareLinkSet).some((link) => link.startsWith('hysteria2://'))
+          ? 'hysteria2'
+          : 'hysteria';
+
+        service.protocol = protocolLabel;
+        service.serviceName = protocolLabel === 'hysteria2' ? 'Hysteria2' : 'Hysteria';
+
+        service.details = {
+          ...service.details,
+          shareLinks: Array.from(shareLinkSet),
+          hysteria: {
+            configPath,
+            shareLinkFiles: availableLinkFiles,
+          },
+        };
+
+        logger.info(`[ServiceDetector] Using ${shareLinkSet.size} complete Hysteria share links from files`);
+        return;
+      }
+
+      // 如果没有完整链接，尝试从配置文件构建
       let clientConfig: any;
       let clientAuth: string | undefined;
       let clientServerFirst: string | undefined;
@@ -1505,10 +1556,22 @@ export class ServiceDetector {
       let listenHost: string | undefined;
       let listenPort: number | undefined;
       let masqueradeHost: string | undefined;
+
+      // 读取客户端配置文件获取正确的 SNI
       try {
         const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
         clientConfig = JSON.parse(clientJson);
         preferHysteria2 = true;
+
+        // 从客户端配置提取正确的 SNI（这才是真实的 TLS SNI）
+        if (clientConfig.tls && typeof clientConfig.tls === 'object') {
+          clientSni = this.firstNonEmptyValue(
+            clientConfig.tls.sni,
+            clientConfig.tls.server_name
+          );
+        }
+
+        logger.debug(`[ServiceDetector] Extracted SNI from client config: ${clientSni}`);
       } catch (error) {
         logger.debug('[ServiceDetector] Unable to read hysteria client config JSON:', error);
       }
@@ -1556,10 +1619,9 @@ export class ServiceDetector {
             typeof clientConfig.tls.insecure === 'boolean'
               ? clientConfig.tls.insecure
               : undefined;
-          const sni = this.firstNonEmptyValue(clientConfig.tls.sni, clientConfig.tls.server_name);
-          if (sni) {
-            domainSet.add(sni);
-            clientSni = sni;
+          // SNI 已经在上面提取过了，这里只添加到域名集合
+          if (clientSni) {
+            domainSet.add(clientSni);
           }
         }
         if (clientConfig.quic && typeof clientConfig.quic === 'object') {
@@ -1602,16 +1664,17 @@ export class ServiceDetector {
           }
         }
 
+        // 提取 masquerade（伪装网站），注意：这不是 SNI！
         const proxyMatch = configContent.match(/^\s*url:\s*(https?:\/\/[^\s]+)/m);
         if (proxyMatch) {
-          hysteriaDetails.masquerade = proxyMatch[1].trim();
+          const masqueradeUrl = proxyMatch[1].trim();
+          hysteriaDetails.masquerade = masqueradeUrl;
           try {
-            const parsedMasqueradeHost = new URL(proxyMatch[1].trim()).hostname;
+            const parsedMasqueradeHost = new URL(masqueradeUrl).hostname;
             if (parsedMasqueradeHost) {
               masqueradeHost = parsedMasqueradeHost.trim();
-              if (masqueradeHost) {
-                domainSet.add(masqueradeHost);
-              }
+              // 注意：masquerade 只用于 HTTP 伪装，不应该用作 SNI
+              logger.debug(`[ServiceDetector] Found masquerade host: ${masqueradeHost} (this is NOT SNI)`);
             }
           } catch {
             // ignore parsing errors
@@ -1627,10 +1690,16 @@ export class ServiceDetector {
           }
         }
 
+        // 注意：服务器配置中的 sni 字段很少使用，真实 SNI 应该从客户端配置读取
         const domainLineMatch = configContent.match(/^\s*sni\s*:\s*['"]?([^\s'"]+)['"]?/m);
         if (domainLineMatch) {
           const sni = domainLineMatch[1].trim();
           if (sni) {
+            logger.debug(`[ServiceDetector] Found SNI in server config: ${sni}`);
+            // 如果客户端配置没有 SNI，才使用服务器配置的 SNI
+            if (!clientSni) {
+              clientSni = sni;
+            }
             domainSet.add(sni);
           }
         }
@@ -1644,7 +1713,23 @@ export class ServiceDetector {
         (clientServerFirst ? this.parseHysteriaEndpoint(clientServerFirst).port : undefined) ||
         listenPort;
       const fallbackPassword = this.firstNonEmptyValue(clientAuth, serverPassword);
-      let fallbackSni = this.firstNonEmptyValue(clientSni, domainList[0], masqueradeHost);
+
+      // SNI 优先级：客户端配置的 SNI > 已有链接中的 SNI > 域名列表第一个
+      // 注意：masquerade 不应该用作 SNI！
+      let fallbackSni = clientSni;
+      if (!fallbackSni && shareLinkSet.size > 0) {
+        // 尝试从已有链接中提取 SNI
+        const firstLink = Array.from(shareLinkSet)[0];
+        const parsed = this.parseHysteriaShareLink(firstLink);
+        if (parsed.sni) {
+          fallbackSni = parsed.sni;
+        }
+      }
+      if (!fallbackSni && domainList.length > 0) {
+        fallbackSni = domainList[0];
+      }
+
+      logger.debug(`[ServiceDetector] Final SNI selected: ${fallbackSni}`);
 
       const normalizedMasquerade = masqueradeHost?.toLowerCase();
       let normalizedSni = fallbackSni?.toLowerCase();
@@ -1752,9 +1837,8 @@ export class ServiceDetector {
         masqueradeHost,
       };
 
-      const shareLinks = Array.from(shareLinkSet).map((link) =>
-        this.updateHysteriaLinkLabel(link, effectiveServiceName)
-      );
+      // 不再强制修改标签，保留原有链接的标签（如 Misaka-Hysteria2）
+      const shareLinks = Array.from(shareLinkSet);
       if (shareLinks.length > 0) {
         logger.info(
           `[ServiceDetector] Hysteria share links for ${effectiveServiceName}: ${shareLinks.join(', ')}`
@@ -1915,7 +1999,8 @@ export class ServiceDetector {
 
     const query = params.toString();
     const label = encodeURIComponent(this.buildHysteriaLabel(serviceName, host));
-    return `${scheme}://${encodeURIComponent(password)}@${hostForUrl}:${port}${query ? `?${query}` : ''}#${label}`;
+    // 注意：添加 / 在参数前，匹配 Misaka 脚本生成的格式
+    return `${scheme}://${encodeURIComponent(password)}@${hostForUrl}:${port}/${query ? `?${query}` : ''}#${label}`;
   }
 
   private shareLinkContainsHost(link: string, host: string): boolean {
