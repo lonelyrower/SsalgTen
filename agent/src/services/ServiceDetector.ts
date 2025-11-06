@@ -362,6 +362,15 @@ export class ServiceDetector {
             );
             continue;
           }
+
+          // 检查是否为 Docker 容器中的 Nginx 进程
+          const pid = this.extractPidFromProcessLine(matchedProcess);
+          if (pid && await this.isDockerContainerProcess(pid)) {
+            logger.debug(
+              `[ServiceDetector] Ignoring Nginx process from Docker container (PID ${pid}), will be detected via container scan`
+            );
+            continue;
+          }
         }
 
         logger.debug(`[ServiceDetector] Matched process for ${pattern.name}: ${matchedProcess}`);
@@ -2311,6 +2320,49 @@ export class ServiceDetector {
     }
 
     return false;
+  }
+
+  /**
+   * 从进程行中提取 PID
+   */
+  private extractPidFromProcessLine(line: string): string | undefined {
+    // 支持多种 ps 输出格式
+    const parts = line.trim().split(/\s+/);
+
+    // ps aux 格式: USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND
+    // ps -ef 格式: UID PID PPID C STIME TTY TIME CMD
+    // ps -eo pid,cmd 格式: PID CMD
+
+    // 尝试第二列（最常见）
+    if (parts.length >= 2 && /^\d+$/.test(parts[1])) {
+      return parts[1];
+    }
+
+    // 尝试第一列（ps -eo pid,cmd 格式）
+    if (parts.length >= 1 && /^\d+$/.test(parts[0])) {
+      return parts[0];
+    }
+
+    return undefined;
+  }
+
+  /**
+   * 检查进程是否运行在 Docker 容器中
+   */
+  private async isDockerContainerProcess(pid: string): Promise<boolean> {
+    try {
+      const cgroupPath = `/proc/${pid}/cgroup`;
+      const cgroupContent = await fs.readFile(cgroupPath, 'utf-8');
+
+      // 检查 cgroup 中是否包含 docker 或 containerd 相关路径
+      return cgroupContent.includes('/docker/') ||
+             cgroupContent.includes('/docker-') ||
+             cgroupContent.includes('containerd') ||
+             cgroupContent.includes('/system.slice/docker-');
+    } catch {
+      // 如果无法读取 cgroup（权限问题或进程已结束），返回 false
+      return false;
+    }
   }
 
   private parseHysteriaShareLink(
