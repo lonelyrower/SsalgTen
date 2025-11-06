@@ -1997,10 +1997,16 @@ export class ServiceDetector {
         masqueradeHost,
       };
 
-      // 更新链接标签为 SsalgTen-Hysteria2-{host} 格式
-      const shareLinks = Array.from(shareLinkSet).map((link) =>
-        this.updateHysteriaLinkLabel(link, effectiveServiceName)
-      );
+      // 确保链接包含 SNI 并更新标签为 SsalgTen-Hysteria2-{host} 格式
+      const shareLinks = Array.from(shareLinkSet).map((link) => {
+        // 先确保链接包含正确的 SNI
+        let processedLink = link;
+        if (fallbackSni) {
+          processedLink = this.ensureHysteriaLinkHasSni(link, fallbackSni);
+        }
+        // 然后更新标签
+        return this.updateHysteriaLinkLabel(processedLink, effectiveServiceName);
+      });
       if (shareLinks.length > 0) {
         logger.info(
           `[ServiceDetector] Hysteria share links for ${effectiveServiceName}: ${shareLinks.join(', ')}`
