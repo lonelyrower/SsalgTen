@@ -1409,8 +1409,16 @@ export class ServiceDetector {
         '/etc/xray/conf',
         '/usr/local/etc/xray/conf',
       ],
-      'Hysteria': ['/etc/hysteria/config.yaml', '/etc/hysteria/config.yml'],
-      'Hysteria2': ['/etc/hysteria/config.yaml', '/etc/hysteria/config.yml'],
+      'Hysteria': [
+        '/root/hy/hy-client.json',
+        '/etc/hysteria/config.yaml',
+        '/etc/hysteria/config.yml'
+      ],
+      'Hysteria2': [
+        '/root/hy/hy-client.json',
+        '/etc/hysteria/config.yaml',
+        '/etc/hysteria/config.yml'
+      ],
       'V2Ray': ['/etc/v2ray/config.json', '/usr/local/etc/v2ray/config.json'],
       'Nginx': ['/etc/nginx/nginx.conf'],
       'Apache': ['/etc/apache2/apache2.conf', '/etc/httpd/conf/httpd.conf'],
