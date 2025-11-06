@@ -173,16 +173,120 @@ export class ServiceDetector {
         service.domains = Array.from(aggregatedDomains);
       }
 
+      // 替换分享链接中的 YOUR_SERVER_IP 占位符并更新标签
+      const processedLinks = await this.processXrayShareLinks(aggregatedLinks);
+
       service.details = {
         ...service.details,
         protocols: Array.from(aggregatedProtocols),
         ports: Array.from(aggregatedPorts),
         domains: Array.from(aggregatedDomains),
-        shareLinks: aggregatedLinks,
+        shareLinks: processedLinks,
         xrayConfigs: configEntries,
       };
     } catch (error) {
       logger.error(`[ServiceDetector] Failed to parse Xray config ${configPath}:`, error);
+    }
+  }
+
+  /**
+   * 处理 Xray 分享链接：替换 IP 占位符并更新标签
+   */
+  private async processXrayShareLinks(links: string[]): Promise<string[]> {
+    if (links.length === 0) {
+      return [];
+    }
+
+    // 获取服务器 IP
+    let serverIp = this.nodeIp;
+    if (!serverIp || this.isReservedHost(serverIp)) {
+      serverIp = await this.resolvePrimaryIp();
+    }
+    if (!serverIp || this.isReservedHost(serverIp)) {
+      serverIp = await this.resolveExternalIp();
+    }
+
+    if (!serverIp) {
+      logger.warn('[ServiceDetector] Unable to resolve server IP for Xray share links');
+      return links;
+    }
+
+    logger.debug(`[ServiceDetector] Using server IP for Xray links: ${serverIp}`);
+
+    return links.map((link) => {
+      try {
+        // 替换 YOUR_SERVER_IP 占位符
+        let processedLink = link.replace(/YOUR_SERVER_IP/g, serverIp!);
+
+        // 更新标签为 SsalgTen 格式
+        processedLink = this.updateXrayLinkLabel(processedLink, serverIp!);
+
+        return processedLink;
+      } catch (error) {
+        logger.debug('[ServiceDetector] Failed to process Xray link:', error);
+        return link;
+      }
+    });
+  }
+
+  /**
+   * 更新 Xray 链接标签为 SsalgTen-{protocol}-{host} 格式
+   */
+  private updateXrayLinkLabel(link: string, serverIp: string): string {
+    try {
+      // 提取协议
+      const protocolMatch = link.match(/^(\w+):\/\//);
+      if (!protocolMatch) {
+        return link;
+      }
+
+      const protocol = protocolMatch[1];
+
+      // 提取主机（用于标签）
+      let host = serverIp;
+
+      // 对于不同协议，尝试提取更好的主机标识
+      if (protocol === 'vmess') {
+        // VMess 链接是 base64 编码的 JSON
+        const base64Part = link.substring(link.indexOf('://') + 3);
+        try {
+          const decoded = Buffer.from(base64Part, 'base64').toString('utf-8');
+          const config = JSON.parse(decoded);
+          host = config.host || config.add || host;
+        } catch {}
+      } else {
+        // VLESS, Trojan, SS 等链接格式：protocol://...@host:port?...#label
+        const hostMatch = link.match(/@([^:/?#]+)/);
+        if (hostMatch) {
+          const extractedHost = hostMatch[1];
+          // 如果提取的不是 YOUR_SERVER_IP 占位符，使用它
+          if (extractedHost && !extractedHost.includes('YOUR_SERVER_IP')) {
+            host = extractedHost;
+          }
+        }
+
+        // 也可以从 sni 参数中提取更友好的域名
+        const sniMatch = link.match(/[?&]sni=([^&# ]+)/);
+        if (sniMatch && sniMatch[1]) {
+          host = decodeURIComponent(sniMatch[1]);
+        }
+      }
+
+      // 构建新标签
+      const normalizedHost = host.replace(/^\[|]$/g, '').replace(/[^a-zA-Z0-9.-]/g, '-');
+      const protocolUpper = protocol.charAt(0).toUpperCase() + protocol.slice(1);
+      const newLabel = `SsalgTen-${protocolUpper}-${normalizedHost}`;
+
+      // 替换标签
+      const hashIndex = link.indexOf('#');
+      if (hashIndex !== -1) {
+        return link.substring(0, hashIndex) + '#' + encodeURIComponent(newLabel);
+      } else {
+        return link + '#' + encodeURIComponent(newLabel);
+      }
+    } catch (error) {
+      logger.debug('[ServiceDetector] Failed to update Xray link label:', error);
+      return link;
     }
   }
 
