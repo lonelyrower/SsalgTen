@@ -136,9 +136,10 @@ export class XrayConfigParser {
       if (clients.length === 0) return null;
 
       const client = clients[0];
+      // 支持 233boy 格式：配置可能直接在 inbound 对象中
       const streamSettings = inbound.streamSettings || {};
-      const network = streamSettings.network || 'tcp';
-      const security = streamSettings.security || 'none';
+      const network = streamSettings.network || inbound.network || 'tcp';
+      const security = streamSettings.security || inbound.security || 'none';
 
       const vmessConfig: any = {
         v: '2',
@@ -154,9 +155,9 @@ export class XrayConfigParser {
         tls: security,
       };
 
-      // TLS 配置
+      // TLS 配置（支持 233boy 格式）
       if (security === 'tls') {
-        const tlsSettings = streamSettings.tlsSettings || {};
+        const tlsSettings = streamSettings.tlsSettings || inbound.tlsSettings || {};
 
         if (tlsSettings.serverName) {
           vmessConfig.sni = tlsSettings.serverName;
@@ -171,22 +172,33 @@ export class XrayConfigParser {
         }
       }
 
-      // WebSocket 配置
-      if (network === 'ws' && streamSettings.wsSettings) {
-        vmessConfig.path = streamSettings.wsSettings.path || '/';
-        vmessConfig.host = streamSettings.wsSettings.headers?.Host || '';
+      // WebSocket 配置（支持 233boy 格式）
+      if (network === 'ws') {
+        const wsSettings = streamSettings.wsSettings || inbound.wsSettings;
+        if (wsSettings) {
+          vmessConfig.path = wsSettings.path || '/';
+          vmessConfig.host = wsSettings.headers?.Host || '';
+        }
       }
 
-      // HTTP/2 配置
-      if (network === 'h2' && streamSettings.httpSettings) {
-        vmessConfig.path = streamSettings.httpSettings.path || '/';
-        vmessConfig.host = Array.isArray(streamSettings.httpSettings.host)
-          ? streamSettings.httpSettings.host.join(',')
-          : streamSettings.httpSettings.host || '';
+      // HTTP/2 配置（支持 233boy 格式）
+      if (network === 'h2') {
+        const httpSettings = streamSettings.httpSettings || inbound.httpSettings;
+        if (httpSettings) {
+          vmessConfig.path = httpSettings.path || '/';
+          vmessConfig.host = Array.isArray(httpSettings.host)
+            ? httpSettings.host.join(',')
+            : httpSettings.host || '';
+        }
       }
 
-      if ((network === 'xhttp' || network === 'splithttp') && (streamSettings.xhttpSettings || streamSettings.splithttpSettings)) {
-        const xhttpSettings = streamSettings.xhttpSettings ?? streamSettings.splithttpSettings;
+      // XHTTP/SplitHTTP 配置（支持 233boy 格式）
+      if (network === 'xhttp' || network === 'splithttp') {
+        const xhttpSettings =
+          streamSettings.xhttpSettings ??
+          streamSettings.splithttpSettings ??
+          inbound.xhttpSettings ??
+          inbound.splithttpSettings;
         if (xhttpSettings) {
           if (typeof xhttpSettings.path === 'string' && xhttpSettings.path.trim()) {
             vmessConfig.path = xhttpSettings.path;
@@ -197,17 +209,19 @@ export class XrayConfigParser {
         }
       }
 
-      // gRPC 配置
-      if (network === 'grpc' && streamSettings.grpcSettings) {
-        vmessConfig.path = streamSettings.grpcSettings.serviceName || '';
-        vmessConfig.type = streamSettings.grpcSettings.multiMode ? 'multi' : 'gun';
+      // gRPC 配置（支持 233boy 格式）
+      if (network === 'grpc') {
+        const grpcSettings = streamSettings.grpcSettings || inbound.grpcSettings;
+        if (grpcSettings) {
+          vmessConfig.path = grpcSettings.serviceName || '';
+          vmessConfig.type = grpcSettings.multiMode ? 'multi' : 'gun';
+        }
       }
 
-      // TCP 配置
-      if (network === 'tcp' && streamSettings.tcpSettings) {
-        const tcpSettings = streamSettings.tcpSettings;
-
-        if (tcpSettings.header?.type === 'http') {
+      // TCP 配置（支持 233boy 格式）
+      if (network === 'tcp') {
+        const tcpSettings = streamSettings.tcpSettings || inbound.tcpSettings;
+        if (tcpSettings && tcpSettings.header?.type === 'http') {
           vmessConfig.type = 'http';
           const request = tcpSettings.header.request || {};
 
@@ -221,33 +235,35 @@ export class XrayConfigParser {
         }
       }
 
-      // KCP 配置
-      if (network === 'kcp' && streamSettings.kcpSettings) {
-        const kcpSettings = streamSettings.kcpSettings;
+      // KCP 配置（支持 233boy 格式）
+      if (network === 'kcp') {
+        const kcpSettings = streamSettings.kcpSettings || inbound.kcpSettings;
+        if (kcpSettings) {
+          if (kcpSettings.header?.type) {
+            vmessConfig.type = kcpSettings.header.type;
+          }
 
-        if (kcpSettings.header?.type) {
-          vmessConfig.type = kcpSettings.header.type;
-        }
-
-        if (kcpSettings.seed) {
-          vmessConfig.path = kcpSettings.seed;
+          if (kcpSettings.seed) {
+            vmessConfig.path = kcpSettings.seed;
+          }
         }
       }
 
-      // QUIC 配置
-      if (network === 'quic' && streamSettings.quicSettings) {
-        const quicSettings = streamSettings.quicSettings;
+      // QUIC 配置（支持 233boy 格式）
+      if (network === 'quic') {
+        const quicSettings = streamSettings.quicSettings || inbound.quicSettings;
+        if (quicSettings) {
+          if (quicSettings.security) {
+            vmessConfig.host = quicSettings.security;
+          }
 
-        if (quicSettings.security) {
-          vmessConfig.host = quicSettings.security;
-        }
+          if (quicSettings.key) {
+            vmessConfig.path = quicSettings.key;
+          }
 
-        if (quicSettings.key) {
-          vmessConfig.path = quicSettings.key;
-        }
-
-        if (quicSettings.header?.type) {
-          vmessConfig.type = quicSettings.header.type;
+          if (quicSettings.header?.type) {
+            vmessConfig.type = quicSettings.header.type;
+          }
         }
       }
 
@@ -270,12 +286,18 @@ export class XrayConfigParser {
       if (clients.length === 0) return null;
 
       const client = clients[0];
+
+      // 233boy 的配置格式：security/realitySettings 等字段直接在 inbound 对象中
+      // 标准格式：这些字段在 streamSettings 中
+      // 我们需要同时支持两种格式
       const streamSettings = inbound.streamSettings || {};
-      const network = streamSettings.network || 'tcp';
-      const security = streamSettings.security || 'none';
-      const tlsSettings = streamSettings.tlsSettings || {};
-      const xtlsSettings = streamSettings.xtlsSettings || {};
-      const realitySettings = streamSettings.realitySettings || {};
+      const network = streamSettings.network || inbound.network || 'tcp';
+      const security = streamSettings.security || inbound.security || 'none';
+
+      // TLS/XTLS/REALITY 设置可能在 streamSettings 或 inbound 顶层
+      const tlsSettings = streamSettings.tlsSettings || inbound.tlsSettings || {};
+      const xtlsSettings = streamSettings.xtlsSettings || inbound.xtlsSettings || {};
+      const realitySettings = streamSettings.realitySettings || inbound.realitySettings || {};
 
       const params: string[] = [];
       const addedKeys = new Set<string>();
@@ -349,38 +371,48 @@ export class XrayConfigParser {
         pushParam('alpn', realitySettings.alpn);
       }
 
-      if (network === 'ws' && streamSettings.wsSettings) {
-        const wsSettings = streamSettings.wsSettings;
-        pushParam('path', wsSettings.path);
-        pushParam('host', wsSettings.headers?.Host);
-      }
-
-      if (network === 'h2' && streamSettings.httpSettings) {
-        const httpSettings = streamSettings.httpSettings;
-        pushParam('path', httpSettings.path);
-        pushParam('host', httpSettings.host);
-      }
-
-      if (
-        (network === 'xhttp' || network === 'splithttp') &&
-        (streamSettings.xhttpSettings || streamSettings.splithttpSettings)
-      ) {
-        const xhttpSettings = streamSettings.xhttpSettings ?? streamSettings.splithttpSettings;
-        pushParam('path', xhttpSettings?.path);
-        pushParam('host', xhttpSettings?.host);
-      }
-
-      if (network === 'grpc' && streamSettings.grpcSettings) {
-        const grpcSettings = streamSettings.grpcSettings;
-        pushParam('serviceName', grpcSettings.serviceName);
-        if (typeof grpcSettings.multiMode === 'boolean') {
-          pushParam('mode', grpcSettings.multiMode ? 'multi' : 'gun');
+      // 233boy 配置格式：传输配置可能直接在 inbound 对象中
+      if (network === 'ws') {
+        const wsSettings = streamSettings.wsSettings || inbound.wsSettings;
+        if (wsSettings) {
+          pushParam('path', wsSettings.path);
+          pushParam('host', wsSettings.headers?.Host);
         }
       }
 
-      if (network === 'tcp' && streamSettings.tcpSettings) {
-        const tcpSettings = streamSettings.tcpSettings;
-        if (tcpSettings.header?.type === 'http') {
+      if (network === 'h2') {
+        const httpSettings = streamSettings.httpSettings || inbound.httpSettings;
+        if (httpSettings) {
+          pushParam('path', httpSettings.path);
+          pushParam('host', httpSettings.host);
+        }
+      }
+
+      if (network === 'xhttp' || network === 'splithttp') {
+        const xhttpSettings =
+          streamSettings.xhttpSettings ??
+          streamSettings.splithttpSettings ??
+          inbound.xhttpSettings ??
+          inbound.splithttpSettings;
+        if (xhttpSettings) {
+          pushParam('path', xhttpSettings.path);
+          pushParam('host', xhttpSettings.host);
+        }
+      }
+
+      if (network === 'grpc') {
+        const grpcSettings = streamSettings.grpcSettings || inbound.grpcSettings;
+        if (grpcSettings) {
+          pushParam('serviceName', grpcSettings.serviceName);
+          if (typeof grpcSettings.multiMode === 'boolean') {
+            pushParam('mode', grpcSettings.multiMode ? 'multi' : 'gun');
+          }
+        }
+      }
+
+      if (network === 'tcp') {
+        const tcpSettings = streamSettings.tcpSettings || inbound.tcpSettings;
+        if (tcpSettings && tcpSettings.header?.type === 'http') {
           pushParam('headerType', 'http');
           const request = tcpSettings.header.request || {};
           pushParam('path', request.path);
@@ -388,17 +420,21 @@ export class XrayConfigParser {
         }
       }
 
-      if (network === 'quic' && streamSettings.quicSettings) {
-        const quicSettings = streamSettings.quicSettings;
-        pushParam('quicSecurity', quicSettings.security);
-        pushParam('key', quicSettings.key);
-        pushParam('headerType', quicSettings.header?.type);
+      if (network === 'quic') {
+        const quicSettings = streamSettings.quicSettings || inbound.quicSettings;
+        if (quicSettings) {
+          pushParam('quicSecurity', quicSettings.security);
+          pushParam('key', quicSettings.key);
+          pushParam('headerType', quicSettings.header?.type);
+        }
       }
 
-      if (network === 'kcp' && streamSettings.kcpSettings) {
-        const kcpSettings = streamSettings.kcpSettings;
-        pushParam('seed', kcpSettings.seed);
-        pushParam('headerType', kcpSettings.header?.type);
+      if (network === 'kcp') {
+        const kcpSettings = streamSettings.kcpSettings || inbound.kcpSettings;
+        if (kcpSettings) {
+          pushParam('seed', kcpSettings.seed);
+          pushParam('headerType', kcpSettings.header?.type);
+        }
       }
 
       let link = `vless://${client.id}@YOUR_SERVER_IP:${inbound.port}`;
@@ -426,9 +462,10 @@ export class XrayConfigParser {
       const password = client.password;
       if (!password) return null;
 
+      // 支持 233boy 格式：配置可能直接在 inbound 对象中
       const streamSettings = inbound.streamSettings || {};
-      const network = streamSettings.network || 'tcp';
-      const security = streamSettings.security || 'tls';
+      const network = streamSettings.network || inbound.network || 'tcp';
+      const security = streamSettings.security || inbound.security || 'tls';
 
       const params: string[] = [];
       const addedKeys = new Set<string>();
@@ -439,7 +476,7 @@ export class XrayConfigParser {
       pushParam('security', security);
 
       if (security === 'tls') {
-        const tlsSettings = streamSettings.tlsSettings || {};
+        const tlsSettings = streamSettings.tlsSettings || inbound.tlsSettings || {};
         const sniCandidate = this.firstString(
           tlsSettings.serverName,
           tlsSettings.server,
@@ -447,49 +484,62 @@ export class XrayConfigParser {
           tlsSettings.serverNames,
           tlsSettings.domains,
           streamSettings.serverName,
+          inbound.serverName,
           streamSettings.server,
           streamSettings.sni,
           streamSettings.host,
           streamSettings.wsSettings?.headers?.Host,
           streamSettings.httpSettings?.host,
+          inbound.wsSettings?.headers?.Host,
+          inbound.httpSettings?.host,
         );
         pushParam('sni', sniCandidate);
         pushParam('fp', this.firstString(tlsSettings.fingerprint, streamSettings.fingerprint));
         pushParam('alpn', tlsSettings.alpn);
       }
 
-      if (network === 'ws' && streamSettings.wsSettings) {
-        const wsSettings = streamSettings.wsSettings;
-        pushParam('path', wsSettings.path);
-        pushParam('host', wsSettings.headers?.Host);
-      }
-
-      if (network === 'grpc' && streamSettings.grpcSettings) {
-        const grpcSettings = streamSettings.grpcSettings;
-        pushParam('serviceName', grpcSettings.serviceName);
-        if (typeof grpcSettings.multiMode === 'boolean') {
-          pushParam('mode', grpcSettings.multiMode ? 'multi' : 'gun');
+      // 支持 233boy 格式：传输配置可能直接在 inbound 对象中
+      if (network === 'ws') {
+        const wsSettings = streamSettings.wsSettings || inbound.wsSettings;
+        if (wsSettings) {
+          pushParam('path', wsSettings.path);
+          pushParam('host', wsSettings.headers?.Host);
         }
       }
 
-      if (network === 'h2' && streamSettings.httpSettings) {
-        const httpSettings = streamSettings.httpSettings;
-        pushParam('path', httpSettings.path);
-        pushParam('host', httpSettings.host);
+      if (network === 'grpc') {
+        const grpcSettings = streamSettings.grpcSettings || inbound.grpcSettings;
+        if (grpcSettings) {
+          pushParam('serviceName', grpcSettings.serviceName);
+          if (typeof grpcSettings.multiMode === 'boolean') {
+            pushParam('mode', grpcSettings.multiMode ? 'multi' : 'gun');
+          }
+        }
       }
 
-      if (
-        (network === 'xhttp' || network === 'splithttp') &&
-        (streamSettings.xhttpSettings || streamSettings.splithttpSettings)
-      ) {
-        const xhttpSettings = streamSettings.xhttpSettings ?? streamSettings.splithttpSettings;
-        pushParam('path', xhttpSettings?.path);
-        pushParam('host', xhttpSettings?.host);
+      if (network === 'h2') {
+        const httpSettings = streamSettings.httpSettings || inbound.httpSettings;
+        if (httpSettings) {
+          pushParam('path', httpSettings.path);
+          pushParam('host', httpSettings.host);
+        }
       }
 
-      if (network === 'tcp' && streamSettings.tcpSettings) {
-        const tcpSettings = streamSettings.tcpSettings;
-        if (tcpSettings.header?.type === 'http') {
+      if (network === 'xhttp' || network === 'splithttp') {
+        const xhttpSettings =
+          streamSettings.xhttpSettings ??
+          streamSettings.splithttpSettings ??
+          inbound.xhttpSettings ??
+          inbound.splithttpSettings;
+        if (xhttpSettings) {
+          pushParam('path', xhttpSettings.path);
+          pushParam('host', xhttpSettings.host);
+        }
+      }
+
+      if (network === 'tcp') {
+        const tcpSettings = streamSettings.tcpSettings || inbound.tcpSettings;
+        if (tcpSettings && tcpSettings.header?.type === 'http') {
           pushParam('headerType', 'http');
           const request = tcpSettings.header.request || {};
           pushParam('path', request.path);
