@@ -632,7 +632,8 @@ export class XrayConfigParser {
 
   /**
    * 生成 SOCKS/HTTP 代理链接
-   * 格式: socks://username:password@host:port 或 http://username:password@host:port
+   * SOCKS 格式: socks://base64(username:password)@host:port#label (233boy 格式)
+   * HTTP 格式: http://host:port#label (通常不生成，因为是本地监听)
    */
   private static generateSocksHttpLink(inbound: any): string | null {
     try {
@@ -640,25 +641,33 @@ export class XrayConfigParser {
       const port = inbound.port;
       const settings = inbound.settings || {};
 
-      // SOCKS/HTTP 可能需要认证
+      // HTTP 代理通常监听在 127.0.0.1，不生成分享链接
+      if (protocol === 'http') {
+        return null;
+      }
+
+      // SOCKS 可能需要认证
       const accounts = settings.accounts || [];
       const auth = settings.auth; // 'password' or 'noauth'
 
       let link = '';
 
       if (accounts.length > 0 && auth === 'password') {
-        // 有认证
+        // 有认证 - 使用 233boy 格式：base64 编码的用户名:密码
         const account = accounts[0];
         const username = account.user || account.username;
         const password = account.pass || account.password;
 
         if (username && password) {
-          link = `${protocol}://${encodeURIComponent(username)}:${encodeURIComponent(password)}@YOUR_SERVER_IP:${port}`;
+          const userInfo = `${username}:${password}`;
+          const base64UserInfo = Buffer.from(userInfo).toString('base64');
+          link = `${protocol}://${base64UserInfo}@YOUR_SERVER_IP:${port}`;
         } else {
-          link = `${protocol}://YOUR_SERVER_IP:${port}`;
+          // 没有完整的认证信息，不生成链接
+          return null;
         }
       } else {
-        // 无认证
+        // 无认证的 SOCKS
         link = `${protocol}://YOUR_SERVER_IP:${port}`;
       }
 
