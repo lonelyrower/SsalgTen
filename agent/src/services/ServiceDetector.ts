@@ -1434,11 +1434,21 @@ export class ServiceDetector {
       .map((candidate) => this.normalizeConfigPathCandidate(serviceName, candidate))
       .filter((candidate): candidate is string => Boolean(candidate));
 
+    if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+      logger.debug(`[ServiceDetector] Checking config paths for ${serviceName}: ${candidates.join(', ')}`);
+    }
+
     for (const candidate of candidates) {
       try {
         await fs.access(candidate, fsConstants.R_OK);
+        if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+          logger.debug(`[ServiceDetector] Successfully accessed: ${candidate}`);
+        }
         return candidate;
-      } catch {
+      } catch (error) {
+        if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+          logger.debug(`[ServiceDetector] Cannot access ${candidate}: ${error}`);
+        }
         continue;
       }
     }
