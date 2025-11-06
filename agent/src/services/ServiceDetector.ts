@@ -1410,11 +1410,13 @@ export class ServiceDetector {
         '/usr/local/etc/xray/conf',
       ],
       'Hysteria': [
+        '/etc/hysteria/hy-client.json',
         '/root/hy/hy-client.json',
         '/etc/hysteria/config.yaml',
         '/etc/hysteria/config.yml'
       ],
       'Hysteria2': [
+        '/etc/hysteria/hy-client.json',
         '/root/hy/hy-client.json',
         '/etc/hysteria/config.yaml',
         '/etc/hysteria/config.yml'
@@ -1622,7 +1624,12 @@ export class ServiceDetector {
       );
 
       // 优先读取安装脚本生成的正确链接文件
-      const linkFiles = ['/root/hy/url.txt', '/root/hy/url-nohop.txt'];
+      const linkFiles = [
+        '/etc/hysteria/url.txt',
+        '/etc/hysteria/url-nohop.txt',
+        '/root/hy/url.txt',
+        '/root/hy/url-nohop.txt'
+      ];
       const availableLinkFiles: string[] = [];
       let hasCompleteLinks = false;
 
@@ -1650,18 +1657,23 @@ export class ServiceDetector {
 
         // 读取客户端配置获取正确的 SNI
         let correctSni: string | undefined;
-        try {
-          const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
-          const clientConfig = JSON.parse(clientJson);
-          if (clientConfig.tls && typeof clientConfig.tls === 'object') {
-            correctSni = this.firstNonEmptyValue(
-              clientConfig.tls.sni,
-              clientConfig.tls.server_name
-            );
+        const clientConfigPaths = ['/etc/hysteria/hy-client.json', '/root/hy/hy-client.json'];
+        for (const clientPath of clientConfigPaths) {
+          try {
+            const clientJson = await fs.readFile(clientPath, 'utf-8');
+            const clientConfig = JSON.parse(clientJson);
+            if (clientConfig.tls && typeof clientConfig.tls === 'object') {
+              correctSni = this.firstNonEmptyValue(
+                clientConfig.tls.sni,
+                clientConfig.tls.server_name
+              );
+            }
+            logger.debug(`[ServiceDetector] Extracted SNI from client config (${clientPath}): ${correctSni}`);
+            break; // 成功读取后退出循环
+          } catch (error) {
+            logger.debug(`[ServiceDetector] Unable to read hysteria client config from ${clientPath}:`, error);
+            continue; // 尝试下一个路径
           }
-          logger.debug(`[ServiceDetector] Extracted SNI from client config: ${correctSni}`);
-        } catch (error) {
-          logger.debug('[ServiceDetector] Unable to read hysteria client config for SNI:', error);
         }
 
         // 如果没有从配置中读取到 SNI，尝试从已有链接中提取
@@ -1736,22 +1748,27 @@ export class ServiceDetector {
       let masqueradeHost: string | undefined;
 
       // 读取客户端配置文件获取正确的 SNI
-      try {
-        const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
-        clientConfig = JSON.parse(clientJson);
-        preferHysteria2 = true;
+      const clientConfigPaths2 = ['/etc/hysteria/hy-client.json', '/root/hy/hy-client.json'];
+      for (const clientPath of clientConfigPaths2) {
+        try {
+          const clientJson = await fs.readFile(clientPath, 'utf-8');
+          clientConfig = JSON.parse(clientJson);
+          preferHysteria2 = true;
 
-        // 从客户端配置提取正确的 SNI（这才是真实的 TLS SNI）
-        if (clientConfig.tls && typeof clientConfig.tls === 'object') {
-          clientSni = this.firstNonEmptyValue(
-            clientConfig.tls.sni,
-            clientConfig.tls.server_name
-          );
+          // 从客户端配置提取正确的 SNI（这才是真实的 TLS SNI）
+          if (clientConfig.tls && typeof clientConfig.tls === 'object') {
+            clientSni = this.firstNonEmptyValue(
+              clientConfig.tls.sni,
+              clientConfig.tls.server_name
+            );
+          }
+
+          logger.debug(`[ServiceDetector] Extracted SNI from client config (${clientPath}): ${clientSni}`);
+          break; // 成功读取后退出循环
+        } catch (error) {
+          logger.debug(`[ServiceDetector] Unable to read hysteria client config JSON from ${clientPath}:`, error);
+          continue; // 尝试下一个路径
         }
-
-        logger.debug(`[ServiceDetector] Extracted SNI from client config: ${clientSni}`);
-      } catch (error) {
-        logger.debug('[ServiceDetector] Unable to read hysteria client config JSON:', error);
       }
 
       const hysteriaDetails: Record<string, unknown> = {
