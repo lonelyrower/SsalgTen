@@ -47,8 +47,6 @@ export class ServiceDetector {
 
   private nodeIp?: string;
   private primaryIpCache?: string;
-  private hysteriaVersionCache?: 'hysteria' | 'hysteria2';
-
   /**
    * 检测所有服务
    */
@@ -310,8 +308,6 @@ export class ServiceDetector {
       // 代理服务
       { name: 'Xray', pattern: /xray/i, type: 'PROXY' as ServiceType },
       { name: 'V2Ray', pattern: /v2ray/i, type: 'PROXY' as ServiceType },
-      // 注意：Hysteria2 必须在 Hysteria 之前，避免被 hysteria 的正则匹配
-      { name: 'Hysteria2', pattern: /hysteria2/i, type: 'PROXY' as ServiceType },
       { name: 'Hysteria', pattern: /hysteria(?!2)/i, type: 'PROXY' as ServiceType },
       { name: 'Sing-box', pattern: /sing-box/i, type: 'PROXY' as ServiceType },
       { name: 'ShadowsocksR', pattern: /ssr-server|ssserver/i, type: 'PROXY' as ServiceType },
@@ -1020,11 +1016,7 @@ export class ServiceDetector {
     if (imageLower.includes('trojan')) {
       return { name: 'Trojan', type: 'PROXY' };
     }
-    // 先检查 hysteria2，再检查 hysteria
-    if (imageLower.includes('hysteria2')) {
-      return { name: 'Hysteria2', type: 'PROXY' };
-    }
-    if (imageLower.includes('hysteria')) {
+    if (/(^|[^a-z0-9])hysteria(?!\d)/.test(imageLower)) {
       return { name: 'Hysteria', type: 'PROXY' };
     }
     if (imageLower.includes('shadowsocks')) {
@@ -1415,12 +1407,6 @@ export class ServiceDetector {
         '/etc/hysteria/config.yaml',
         '/etc/hysteria/config.yml'
       ],
-      'Hysteria2': [
-        '/etc/hysteria/hy-client.json',
-        '/root/hy/hy-client.json',
-        '/etc/hysteria/config.yaml',
-        '/etc/hysteria/config.yml'
-      ],
       'V2Ray': ['/etc/v2ray/config.json', '/usr/local/etc/v2ray/config.json'],
       'Nginx': ['/etc/nginx/nginx.conf'],
       'Apache': ['/etc/apache2/apache2.conf', '/etc/httpd/conf/httpd.conf'],
@@ -1436,19 +1422,19 @@ export class ServiceDetector {
       .map((candidate) => this.normalizeConfigPathCandidate(serviceName, candidate))
       .filter((candidate): candidate is string => Boolean(candidate));
 
-    if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+    if (serviceName === 'Hysteria') {
       logger.debug(`[ServiceDetector] Checking config paths for ${serviceName}: ${candidates.join(', ')}`);
     }
 
     for (const candidate of candidates) {
       try {
         await fs.access(candidate, fsConstants.R_OK);
-        if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+        if (serviceName === 'Hysteria') {
           logger.debug(`[ServiceDetector] Successfully accessed: ${candidate}`);
         }
         return candidate;
       } catch (error) {
-        if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+        if (serviceName === 'Hysteria') {
           logger.debug(`[ServiceDetector] Cannot access ${candidate}: ${error}`);
         }
         continue;
@@ -1552,7 +1538,7 @@ export class ServiceDetector {
         } else {
           logger.warn(`[ServiceDetector] ${serviceName} config parsing returned null`);
         }
-      } else if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
+      } else if (serviceName === 'Hysteria') {
         await this.populateHysteriaInfo(serviceName, configPath, service);
       }
       // WireGuard 配置解析
@@ -1614,14 +1600,12 @@ export class ServiceDetector {
         : [];
       existingLinks.forEach((link) => {
         if (typeof link === 'string' && link.trim()) {
-          shareLinkSet.add(link.trim());
+          const normalizedLink = this.normalizeHysteriaShareLinkScheme(link.trim());
+          shareLinkSet.add(normalizedLink);
         }
       });
       const primaryDomain = Array.isArray(service.domains) ? service.domains[0] : undefined;
       const nodeIp = this.nodeIp;
-      let preferHysteria2 = Array.from(shareLinkSet).some((link) =>
-        link.toLowerCase().startsWith('hysteria2://')
-      );
 
       // 优先读取安装脚本生成的正确链接文件
       const linkFiles = [
@@ -1642,9 +1626,10 @@ export class ServiceDetector {
             .filter((line) => line.includes('://'));
 
           validLinks.forEach((line) => {
-            shareLinkSet.add(line);
-            // 如果链接包含完整的参数（sni、insecure等），认为是完整链接
-            if (line.includes('sni=') && line.includes('#')) {
+            const normalizedLink = this.normalizeHysteriaShareLinkScheme(line);
+            shareLinkSet.add(normalizedLink);
+            // ������Ӱ��������Ĳ�����sni��insecure�ȣ�����Ϊ����������
+            if (normalizedLink.includes('sni=') && normalizedLink.includes('#')) {
               hasCompleteLinks = true;
             }
           });
@@ -1702,23 +1687,18 @@ export class ServiceDetector {
           }
         }
 
-        const protocolLabel = shareLinkSet.size > 0 &&
-          Array.from(shareLinkSet).some((link) => link.startsWith('hysteria2://'))
-          ? 'hysteria2'
-          : 'hysteria';
-
-        service.protocol = protocolLabel;
-        const effectiveServiceName = protocolLabel === 'hysteria2' ? 'Hysteria2' : 'Hysteria';
+        service.protocol = 'hysteria';
+        const effectiveServiceName = 'Hysteria';
         service.serviceName = effectiveServiceName;
 
-        // 处理每个链接：确保包含 SNI 并更新标签
+        // ����ÿ�����ӣ�ȷ������ SNI �����±�ǩ
         const updatedShareLinks = Array.from(shareLinkSet).map((link) => {
-          // 先确保链接包含正确的 SNI
-          let processedLink = link;
+          // ��ȷ�����Ӱ�����ȷ�� SNI
+          let processedLink = this.normalizeHysteriaShareLinkScheme(link);
           if (correctSni) {
-            processedLink = this.ensureHysteriaLinkHasSni(link, correctSni);
+            processedLink = this.ensureHysteriaLinkHasSni(processedLink, correctSni);
           }
-          // 然后更新标签
+          // Ȼ����±�ǩ
           return this.updateHysteriaLinkLabel(processedLink, effectiveServiceName);
         });
 
@@ -1753,7 +1733,6 @@ export class ServiceDetector {
         try {
           const clientJson = await fs.readFile(clientPath, 'utf-8');
           clientConfig = JSON.parse(clientJson);
-          preferHysteria2 = true;
 
           // 从客户端配置提取正确的 SNI（这才是真实的 TLS SNI）
           if (clientConfig.tls && typeof clientConfig.tls === 'object') {
@@ -1781,14 +1760,7 @@ export class ServiceDetector {
         domainSet.add(primaryDomain);
       }
 
-      let effectiveServiceName = service.serviceName || serviceName;
-
-      if (!preferHysteria2) {
-        const binaryVersion = await this.detectHysteriaBinaryVersion();
-        if (binaryVersion === 'hysteria2') {
-          preferHysteria2 = true;
-        }
-      }
+      const effectiveServiceName = 'Hysteria';
 
       if (clientConfig && typeof clientConfig === 'object') {
         const clientInfo: Record<string, unknown> = {};
@@ -1829,17 +1801,6 @@ export class ServiceDetector {
 
       try {
         const configContent = await fs.readFile(configPath, 'utf-8');
-        if (!preferHysteria2) {
-          const lowerContent = configContent.toLowerCase();
-          if (
-            lowerContent.includes('masquerade:') ||
-            lowerContent.includes('transport:') ||
-            lowerContent.includes('fastopen') ||
-            lowerContent.includes('hysteria2')
-          ) {
-            preferHysteria2 = true;
-          }
-        }
         const listenMatch = configContent.match(/^\s*listen:\s*("?)([^\s"#]+)\1/m);
         if (listenMatch) {
           const listenValue = listenMatch[2].trim();
@@ -1929,17 +1890,6 @@ export class ServiceDetector {
       const normalizedMasquerade = masqueradeHost?.toLowerCase();
       let normalizedSni = fallbackSni?.toLowerCase();
 
-      if (preferHysteria2) {
-        effectiveServiceName = 'Hysteria2';
-      } else if (
-        effectiveServiceName &&
-        effectiveServiceName.toLowerCase().includes('2')
-      ) {
-        effectiveServiceName = 'Hysteria2';
-        preferHysteria2 = true;
-      } else {
-        effectiveServiceName = 'Hysteria';
-      }
       service.serviceName = effectiveServiceName;
 
       const hostCandidates = new Set<string>();
@@ -1971,7 +1921,6 @@ export class ServiceDetector {
           password: fallbackPassword,
           insecure: clientInsecure,
           sni: fallbackSni,
-          scheme: preferHysteria2 ? 'hysteria2' : undefined,
         });
         if (link) {
           shareLinkSet.add(link);
@@ -2032,12 +1981,12 @@ export class ServiceDetector {
         masqueradeHost,
       };
 
-      // 确保链接包含 SNI 并更新标签为 SsalgTen-Hysteria2-{host} 格式
+      // 确保链接包含 SNI 并更新标签为 SsalgTen-Hysteria-{host} 格式
       const shareLinks = Array.from(shareLinkSet).map((link) => {
-        // 先确保链接包含正确的 SNI
-        let processedLink = link;
+        // 确保链接使用统一的协议并包含正确的 SNI
+        let processedLink = this.normalizeHysteriaShareLinkScheme(link);
         if (fallbackSni) {
-          processedLink = this.ensureHysteriaLinkHasSni(link, fallbackSni);
+          processedLink = this.ensureHysteriaLinkHasSni(processedLink, fallbackSni);
         }
         // 然后更新标签
         return this.updateHysteriaLinkLabel(processedLink, effectiveServiceName);
@@ -2049,15 +1998,7 @@ export class ServiceDetector {
       } else {
         logger.info(`[ServiceDetector] No Hysteria share links resolved for ${effectiveServiceName}`);
       }
-      const hasHy2Link = shareLinks.some((link) => link.startsWith('hysteria2://'));
-      const protocolLabel =
-        preferHysteria2 || effectiveServiceName.toLowerCase().includes('2') || hasHy2Link
-          ? 'hysteria2'
-          : 'hysteria';
-      service.protocol = protocolLabel;
-      if (hasHy2Link && service.serviceName !== 'Hysteria2') {
-        service.serviceName = 'Hysteria2';
-      }
+      service.protocol = 'hysteria';
 
       if (domainSet.size > 0) {
         service.domains = Array.from(domainSet);
@@ -2235,12 +2176,10 @@ export class ServiceDetector {
       password?: string;
       insecure?: boolean;
       sni?: string;
-      scheme?: 'hysteria' | 'hysteria2';
+      scheme?: 'hysteria';
     }
   ): string | undefined {
-    const scheme =
-      fallback?.scheme ||
-      (serviceName.toLowerCase().includes('2') ? 'hysteria2' : 'hysteria');
+    const scheme = fallback?.scheme || 'hysteria';
 
     const serverRaw =
       typeof clientConfig?.server === 'string' && clientConfig.server.trim().length > 0
@@ -2298,7 +2237,7 @@ export class ServiceDetector {
 
     const normalizedHost = host.replace(/^\[|]$/g, '');
     try {
-      const normalizedLink = link.replace(/^hysteria2?/i, 'https');
+      const normalizedLink = link.replace(/^hysteria/i, 'https');
       const parsed = new URL(normalizedLink);
       const linkHost = parsed.hostname.replace(/^\[|]$/g, '');
       if (linkHost === normalizedHost) {
@@ -2410,7 +2349,7 @@ export class ServiceDetector {
     link: string
   ): { host?: string; port?: number; sni?: string } {
     try {
-      const normalized = link.replace(/^hysteria2?/i, 'https');
+      const normalized = link.replace(/^hysteria/i, 'https');
       const url = new URL(normalized);
       const host = url.hostname || url.host;
       const port = url.port ? parseInt(url.port, 10) : undefined;
@@ -2470,6 +2409,10 @@ export class ServiceDetector {
     }
   }
 
+  private normalizeHysteriaShareLinkScheme(link: string): string {
+    return link.replace(/^hysteria[^:]*:/i, 'hysteria:');
+  }
+
   private updateHysteriaLinkLabel(link: string, serviceName: string): string {
     const parsed = this.parseHysteriaShareLink(link);
     if (!parsed.host) {
@@ -2527,39 +2470,6 @@ export class ServiceDetector {
         if (candidate && !this.isReservedHost(candidate)) {
           this.primaryIpCache = candidate;
           return candidate;
-        }
-      } catch {}
-    }
-
-    return undefined;
-  }
-
-  private async detectHysteriaBinaryVersion(): Promise<'hysteria' | 'hysteria2' | undefined> {
-    if (this.hysteriaVersionCache) {
-      return this.hysteriaVersionCache;
-    }
-
-    const commands = [
-      'hysteria version 2>/dev/null',
-      '/usr/local/bin/hysteria version 2>/dev/null',
-      'hysteria2 version 2>/dev/null',
-    ];
-
-    for (const command of commands) {
-      try {
-        const { stdout } = await execAsync(command);
-        const normalized = stdout.trim().toLowerCase();
-        if (
-          normalized.includes('hysteria 2') ||
-          normalized.includes('hysteria2') ||
-          normalized.includes('hy2')
-        ) {
-          this.hysteriaVersionCache = 'hysteria2';
-          return 'hysteria2';
-        }
-        if (normalized.includes('hysteria')) {
-          this.hysteriaVersionCache = 'hysteria';
-          return 'hysteria';
         }
       } catch {}
     }
@@ -2640,4 +2550,3 @@ export class ServiceDetector {
 }
 
 export const serviceDetector = new ServiceDetector();
-

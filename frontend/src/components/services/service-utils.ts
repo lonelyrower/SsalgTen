@@ -12,7 +12,6 @@ const SHARE_LINK_PREFIXES = [
   "socks://",
   "hy://",
   "hysteria://",
-  "hysteria2://",
   "http://",
   "https://",
 ];
