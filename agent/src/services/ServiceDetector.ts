@@ -1609,21 +1609,48 @@ export class ServiceDetector {
         }
       }
 
-      // 如果已经有完整的链接，直接使用，但需要更新标签
+      // 如果已经有完整的链接，确保它们包含正确的 SNI 并更新标签
       if (hasCompleteLinks) {
-        logger.info('[ServiceDetector] Found complete Hysteria share links from url files, using them directly');
+        logger.info('[ServiceDetector] Found complete Hysteria share links from url files, processing them');
 
-        // 从已有链接中提取基本信息用于显示
+        // 读取客户端配置获取正确的 SNI
+        let correctSni: string | undefined;
+        try {
+          const clientJson = await fs.readFile('/root/hy/hy-client.json', 'utf-8');
+          const clientConfig = JSON.parse(clientJson);
+          if (clientConfig.tls && typeof clientConfig.tls === 'object') {
+            correctSni = this.firstNonEmptyValue(
+              clientConfig.tls.sni,
+              clientConfig.tls.server_name
+            );
+          }
+          logger.debug(`[ServiceDetector] Extracted SNI from client config: ${correctSni}`);
+        } catch (error) {
+          logger.debug('[ServiceDetector] Unable to read hysteria client config for SNI:', error);
+        }
+
+        // 如果没有从配置中读取到 SNI，尝试从已有链接中提取
+        if (!correctSni) {
+          const firstLink = Array.from(shareLinkSet)[0];
+          if (firstLink) {
+            const parsed = this.parseHysteriaShareLink(firstLink);
+            if (parsed.sni) {
+              correctSni = parsed.sni;
+            }
+          }
+        }
+
+        // 提取基本信息用于显示
         const firstLink = Array.from(shareLinkSet)[0];
         if (firstLink) {
           const parsed = this.parseHysteriaShareLink(firstLink);
           if (parsed.port && !service.port) {
             service.port = parsed.port;
           }
-          if (parsed.sni) {
+          if (correctSni) {
             service.domains = service.domains || [];
-            if (!service.domains.includes(parsed.sni)) {
-              service.domains.push(parsed.sni);
+            if (!service.domains.includes(correctSni)) {
+              service.domains.push(correctSni);
             }
           }
         }
@@ -1637,10 +1664,16 @@ export class ServiceDetector {
         const effectiveServiceName = protocolLabel === 'hysteria2' ? 'Hysteria2' : 'Hysteria';
         service.serviceName = effectiveServiceName;
 
-        // 更新链接标签为 SsalgTen-Hysteria2-{host} 格式
-        const updatedShareLinks = Array.from(shareLinkSet).map((link) =>
-          this.updateHysteriaLinkLabel(link, effectiveServiceName)
-        );
+        // 处理每个链接：确保包含 SNI 并更新标签
+        const updatedShareLinks = Array.from(shareLinkSet).map((link) => {
+          // 先确保链接包含正确的 SNI
+          let processedLink = link;
+          if (correctSni) {
+            processedLink = this.ensureHysteriaLinkHasSni(link, correctSni);
+          }
+          // 然后更新标签
+          return this.updateHysteriaLinkLabel(processedLink, effectiveServiceName);
+        });
 
         service.details = {
           ...service.details,
@@ -1651,7 +1684,7 @@ export class ServiceDetector {
           },
         };
 
-        logger.info(`[ServiceDetector] Using ${updatedShareLinks.length} complete Hysteria share links from files`);
+        logger.info(`[ServiceDetector] Processed ${updatedShareLinks.length} Hysteria share links from files`);
         return;
       }
 
@@ -2209,6 +2242,45 @@ export class ServiceDetector {
         port: match ? parseInt(match[2], 10) : undefined,
         sni: sniMatch ? decodeURIComponent(sniMatch[1]) : undefined,
       };
+    }
+  }
+
+  /**
+   * 确保 Hysteria 链接包含正确的 SNI 参数
+   */
+  private ensureHysteriaLinkHasSni(link: string, correctSni: string): string {
+    try {
+      const parsed = this.parseHysteriaShareLink(link);
+
+      // 如果链接已经有 SNI，检查是否正确
+      if (parsed.sni && parsed.sni === correctSni) {
+        return link; // SNI 已经正确，不需要修改
+      }
+
+      // 需要添加或更新 SNI
+      const hashIndex = link.indexOf('#');
+      const label = hashIndex !== -1 ? link.substring(hashIndex) : '';
+      const baseLink = hashIndex !== -1 ? link.substring(0, hashIndex) : link;
+
+      // 解析现有的 URL 参数
+      const questionIndex = baseLink.indexOf('?');
+      if (questionIndex === -1) {
+        // 没有参数，直接添加
+        return `${baseLink}?sni=${encodeURIComponent(correctSni)}${label}`;
+      }
+
+      // 有参数，需要检查是否已经有 sni 参数
+      const beforeParams = baseLink.substring(0, questionIndex + 1);
+      const paramsString = baseLink.substring(questionIndex + 1);
+
+      // 使用 URLSearchParams 处理参数
+      const params = new URLSearchParams(paramsString);
+      params.set('sni', correctSni); // 设置或更新 SNI
+
+      return `${beforeParams}${params.toString()}${label}`;
+    } catch (error) {
+      logger.debug('[ServiceDetector] Failed to ensure SNI in Hysteria link:', error);
+      return link;
     }
   }
 
