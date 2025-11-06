@@ -1505,7 +1505,7 @@ export class ServiceDetector {
         }
       }
 
-      // 如果已经有完整的链接，直接使用，不再生成新链接
+      // 如果已经有完整的链接，直接使用，但需要更新标签
       if (hasCompleteLinks) {
         logger.info('[ServiceDetector] Found complete Hysteria share links from url files, using them directly');
 
@@ -1530,18 +1530,24 @@ export class ServiceDetector {
           : 'hysteria';
 
         service.protocol = protocolLabel;
-        service.serviceName = protocolLabel === 'hysteria2' ? 'Hysteria2' : 'Hysteria';
+        const effectiveServiceName = protocolLabel === 'hysteria2' ? 'Hysteria2' : 'Hysteria';
+        service.serviceName = effectiveServiceName;
+
+        // 更新链接标签为 SsalgTen-Hysteria2-{host} 格式
+        const updatedShareLinks = Array.from(shareLinkSet).map((link) =>
+          this.updateHysteriaLinkLabel(link, effectiveServiceName)
+        );
 
         service.details = {
           ...service.details,
-          shareLinks: Array.from(shareLinkSet),
+          shareLinks: updatedShareLinks,
           hysteria: {
             configPath,
             shareLinkFiles: availableLinkFiles,
           },
         };
 
-        logger.info(`[ServiceDetector] Using ${shareLinkSet.size} complete Hysteria share links from files`);
+        logger.info(`[ServiceDetector] Using ${updatedShareLinks.length} complete Hysteria share links from files`);
         return;
       }
 
@@ -1837,8 +1843,10 @@ export class ServiceDetector {
         masqueradeHost,
       };
 
-      // 不再强制修改标签，保留原有链接的标签（如 Misaka-Hysteria2）
-      const shareLinks = Array.from(shareLinkSet);
+      // 更新链接标签为 SsalgTen-Hysteria2-{host} 格式
+      const shareLinks = Array.from(shareLinkSet).map((link) =>
+        this.updateHysteriaLinkLabel(link, effectiveServiceName)
+      );
       if (shareLinks.length > 0) {
         logger.info(
           `[ServiceDetector] Hysteria share links for ${effectiveServiceName}: ${shareLinks.join(', ')}`
