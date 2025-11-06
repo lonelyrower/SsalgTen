@@ -322,6 +322,9 @@ export class ServiceDetector {
       { name: 'Brook', pattern: /brook/i, type: 'PROXY' as ServiceType },
       { name: 'Gost', pattern: /gost/i, type: 'PROXY' as ServiceType },
 
+      // VPN 服务
+      { name: 'WireGuard', pattern: /wg-quick|wireguard/i, type: 'PROXY' as ServiceType },
+
       // Web 服务器
       { name: 'Nginx', pattern: /nginx/i, type: 'WEB' as ServiceType },
       { name: 'Apache', pattern: /apache2|httpd/i, type: 'WEB' as ServiceType },
@@ -1406,6 +1409,7 @@ export class ServiceDetector {
       'MySQL': ['/etc/mysql/my.cnf'],
       'PostgreSQL': ['/etc/postgresql/postgresql.conf'],
       'Redis': ['/etc/redis/redis.conf'],
+      'WireGuard': ['/etc/wireguard/wg0.conf', '/etc/wireguard'],
     };
 
     const paths = configPaths[serviceName] || [];
@@ -1521,6 +1525,10 @@ export class ServiceDetector {
         }
       } else if (serviceName === 'Hysteria' || serviceName === 'Hysteria2') {
         await this.populateHysteriaInfo(serviceName, configPath, service);
+      }
+      // WireGuard 配置解析
+      else if (serviceName === 'WireGuard') {
+        await this.populateWireGuardInfo(configPath, service);
       }
       // Nginx 配置解析
       else if (serviceName === 'Nginx') {
@@ -2012,6 +2020,91 @@ export class ServiceDetector {
       };
     } catch (error) {
       logger.warn('[ServiceDetector] Failed to process hysteria config:', error);
+    }
+  }
+
+  /**
+   * 解析 WireGuard 配置信息
+   */
+  private async populateWireGuardInfo(
+    configPath: string,
+    service: DetectedService
+  ): Promise<void> {
+    try {
+      logger.info(`[ServiceDetector] Parsing WireGuard config: ${configPath}`);
+
+      // WireGuard 配置可能是单个文件或目录
+      const stat = await fs.stat(configPath);
+      const configFiles: string[] = [];
+
+      if (stat.isDirectory()) {
+        // 如果是目录，查找所有 .conf 文件
+        const entries = await fs.readdir(configPath, { withFileTypes: true });
+        const confFiles = entries
+          .filter((entry) => entry.isFile() && entry.name.endsWith('.conf'))
+          .map((entry) => path.join(configPath, entry.name));
+        configFiles.push(...confFiles);
+      } else {
+        configFiles.push(configPath);
+      }
+
+      if (configFiles.length === 0) {
+        logger.warn('[ServiceDetector] No WireGuard config files found');
+        return;
+      }
+
+      // 解析服务器配置（通常是 wg0.conf）
+      const serverConfigPath = configFiles[0];
+      const serverConfig = await fs.readFile(serverConfigPath, 'utf-8');
+
+      // 提取服务器信息
+      const listenPortMatch = serverConfig.match(/^\s*ListenPort\s*=\s*(\d+)/m);
+      const serverPort = listenPortMatch ? parseInt(listenPortMatch[1], 10) : 51820;
+
+      const addressMatch = serverConfig.match(/^\s*Address\s*=\s*([^\s,]+)/m);
+      const serverAddress = addressMatch ? addressMatch[1] : undefined;
+
+      service.port = serverPort;
+      service.protocol = 'wireguard';
+
+      // 查找客户端配置文件
+      const clientConfigs: string[] = [];
+      const homeDir = '/root';
+
+      // 查找 /root 目录下的客户端配置
+      try {
+        const homeEntries = await fs.readdir(homeDir);
+        const clientFiles = homeEntries.filter(
+          (name) => name.endsWith('.conf') && (name.includes('client') || name.includes('wg'))
+        );
+        for (const fileName of clientFiles) {
+          const filePath = path.join(homeDir, fileName);
+          clientConfigs.push(filePath);
+        }
+      } catch (error) {
+        logger.debug('[ServiceDetector] Unable to read home directory for WireGuard client configs');
+      }
+
+      // 从服务器配置中提取 Peer 信息
+      const peerSections = serverConfig.split(/\[Peer\]/g).slice(1);
+      const peerCount = peerSections.length;
+
+      const wireGuardDetails: Record<string, unknown> = {
+        serverConfigPath,
+        serverPort,
+        serverAddress,
+        peerCount,
+        clientConfigFiles: clientConfigs,
+      };
+
+      service.details = {
+        ...service.details,
+        wireGuard: wireGuardDetails,
+      };
+
+      logger.info(`[ServiceDetector] WireGuard detected - Port: ${serverPort}, Peers: ${peerCount}, Client configs: ${clientConfigs.length}`);
+    } catch (error) {
+      logger.warn('[ServiceDetector] Failed to process WireGuard config:', error);
     }
   }
 
