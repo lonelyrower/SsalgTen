@@ -17,7 +17,7 @@ interface StatsCardProps {
   change?: number;
   changeLabel?: string;
   icon: React.ReactNode;
-  color: "blue" | "green" | "yellow" | "red" | "cyan" | "sky";
+  color: "primary" | "success" | "warning" | "error" | "info" | "brand";
   trend?: "up" | "down" | "stable";
 }
 
@@ -31,35 +31,35 @@ const StatsCard: React.FC<StatsCardProps> = ({
   color,
 }) => {
   const colorClasses = {
-    blue: {
-      bg: "bg-blue-50 dark:bg-blue-900/20",
-      icon: "text-blue-600 dark:text-blue-400",
-      accent: "border-blue-200 dark:border-blue-800",
+    primary: {
+      bg: "bg-[hsl(var(--primary))]/10",
+      icon: "text-[hsl(var(--primary))]",
+      accent: "border-[hsl(var(--primary))]/30",
     },
-    green: {
-      bg: "bg-green-50 dark:bg-green-900/20",
-      icon: "text-green-600 dark:text-green-400",
-      accent: "border-green-200 dark:border-green-800",
+    success: {
+      bg: "bg-[hsl(var(--success))]/10",
+      icon: "text-[hsl(var(--success))]",
+      accent: "border-[hsl(var(--success))]/30",
     },
-    yellow: {
-      bg: "bg-yellow-50 dark:bg-yellow-900/20",
-      icon: "text-yellow-600 dark:text-yellow-400",
-      accent: "border-yellow-200 dark:border-yellow-800",
+    warning: {
+      bg: "bg-[hsl(var(--warning))]/10",
+      icon: "text-[hsl(var(--warning))]",
+      accent: "border-[hsl(var(--warning))]/30",
     },
-    red: {
-      bg: "bg-red-50 dark:bg-red-900/20",
-      icon: "text-red-600 dark:text-red-400",
-      accent: "border-red-200 dark:border-red-800",
+    error: {
+      bg: "bg-[hsl(var(--error))]/10",
+      icon: "text-[hsl(var(--error))]",
+      accent: "border-[hsl(var(--error))]/30",
     },
-    cyan: {
-      bg: "bg-cyan-50 dark:bg-cyan-900/20",
-      icon: "text-cyan-600 dark:text-cyan-400",
-      accent: "border-cyan-200 dark:border-cyan-800",
+    info: {
+      bg: "bg-[hsl(var(--info))]/10",
+      icon: "text-[hsl(var(--info))]",
+      accent: "border-[hsl(var(--info))]/30",
     },
-    sky: {
-      bg: "bg-sky-50 dark:bg-sky-900/20",
-      icon: "text-sky-600 dark:text-sky-400",
-      accent: "border-sky-200 dark:border-sky-800",
+    brand: {
+      bg: "bg-[hsl(var(--brand-cyan))]/10",
+      icon: "text-[hsl(var(--brand-cyan))]",
+      accent: "border-[hsl(var(--brand-cyan))]/30",
     },
   };
 
@@ -67,7 +67,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <Card
-      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
+      className={`relative overflow-hidden surface-elevated border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
     >
       <div className="p-6">
         <div className="flex items-center">
@@ -77,14 +77,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
             <div className={`${colors.icon}`}>{icon}</div>
           </div>
           <div className="ml-4 flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
               {title}
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            <p className="text-2xl font-bold text-foreground mt-1">
               {value}
             </p>
             {subValue && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {subValue}
               </p>
             )}
@@ -92,16 +92,16 @@ const StatsCard: React.FC<StatsCardProps> = ({
         </div>
 
         {(change !== undefined || changeLabel) && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center justify-between text-sm">
               {change !== undefined && (
                 <div
                   className={`flex items-center space-x-1 ${
                     change > 0
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-[hsl(var(--success))]"
                       : change < 0
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "text-[hsl(var(--error))]"
+                        : "text-muted-foreground"
                   }`}
                 >
                   <TrendingUp
@@ -114,7 +114,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
                 </div>
               )}
               {changeLabel && (
-                <span className="text-gray-500 dark:text-gray-400 text-xs">
+                <span className="text-muted-foreground text-xs">
                   {changeLabel}
                 </span>
               )}
@@ -160,7 +160,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(
           value={totalNodes}
           subValue={`${onlineNodes} 在线 • ${offlineNodes} 离线`}
           icon={<Server className="h-6 w-6" />}
-          color="blue"
+          color="primary"
           /* 使用静态说明，避免展示不真实的环比数据 */
           change={undefined}
           changeLabel={undefined}
@@ -179,7 +179,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(
               <AlertTriangle className="h-6 w-6" />
             )
           }
-          color={uptime >= 95 ? "green" : uptime >= 90 ? "yellow" : "red"}
+          color={uptime >= 95 ? "success" : uptime >= 90 ? "warning" : "error"}
           change={undefined}
           changeLabel={undefined}
         />
@@ -189,7 +189,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(
           value={totalCountries}
           subValue={`分布在 ${totalCountries} 个国家/地区`}
           icon={<Globe className="h-6 w-6" />}
-          color="cyan"
+          color="info"
           trend="stable"
           changeLabel={undefined}
         />
@@ -199,7 +199,7 @@ export const EnhancedStats: React.FC<EnhancedStatsProps> = memo(
           value={totalProviders}
           subValue={`${totalProviders} 个不同的云服务商`}
           icon={<Wifi className="h-6 w-6" />}
-          color="sky"
+          color="brand"
           trend="up"
           changeLabel={undefined}
         />

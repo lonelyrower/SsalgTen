@@ -63,17 +63,17 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<StreamingStatus, string> = {
-  yes: "text-emerald-600 dark:text-emerald-400",
-  no: "text-rose-600 dark:text-rose-400",
-  org: "text-amber-600 dark:text-amber-400",
-  noprem: "text-rose-600 dark:text-rose-400",
-  pending: "text-amber-600 dark:text-amber-400",
-  cn: "text-rose-600 dark:text-rose-400",
-  app: "text-amber-600 dark:text-amber-400",
-  web: "text-amber-600 dark:text-amber-400",
-  idc: "text-amber-600 dark:text-amber-400",
-  failed: "text-gray-600 dark:text-gray-400",
-  unknown: "text-gray-600 dark:text-gray-400",
+  yes: "text-[hsl(var(--success))]",
+  no: "text-[hsl(var(--error))]",
+  org: "text-[hsl(var(--warning))]",
+  noprem: "text-[hsl(var(--error))]",
+  pending: "text-[hsl(var(--warning))]",
+  cn: "text-[hsl(var(--error))]",
+  app: "text-[hsl(var(--warning))]",
+  web: "text-[hsl(var(--warning))]",
+  idc: "text-[hsl(var(--warning))]",
+  failed: "text-muted-foreground",
+  unknown: "text-muted-foreground",
 };
 
 // 解锁类型标签与颜色
@@ -84,9 +84,9 @@ export const UNLOCK_TYPE_LABELS: Record<UnlockType, string> = {
 };
 
 export const UNLOCK_TYPE_COLORS: Record<UnlockType, string> = {
-  native: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  dns: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  unknown: "bg-gray-100 text-gray-600 dark:bg-gray-800/60 dark:text-gray-300",
+  native: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border border-[hsl(var(--success))]/30",
+  dns: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/30",
+  unknown: "bg-muted/50 text-muted-foreground border border-border",
 };
 
 // 流媒体服务展示配置
