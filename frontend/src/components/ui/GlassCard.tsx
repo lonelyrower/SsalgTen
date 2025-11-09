@@ -25,18 +25,18 @@ export const GlassCard = memo(
 
       // 微妙：移动优先，无模糊
       subtle:
-        "bg-white/90 dark:bg-gray-900/90 border-white/10 dark:border-white/5 lg:bg-white/70 lg:dark:bg-gray-900/70 lg:backdrop-blur-[8px]",
+        "surface-elevated border-white/10 dark:border-white/5 lg:bg-[hsl(var(--surface-elevated))]/70 lg:backdrop-blur-[8px]",
 
       // 强烈：仅桌面使用模糊，移动使用高不透明度
       strong:
-        "bg-white/95 dark:bg-gray-900/95 border-white/30 dark:border-white/20 lg:bg-white/80 lg:dark:bg-gray-900/80 lg:backdrop-blur-[12px]",
+        "bg-[hsl(var(--surface-elevated))]/95 border-white/30 dark:border-white/20 lg:bg-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
 
       // 科技：响应式模糊
       tech: "tech-card border-primary/20",
 
-      // 渐变：桌面模糊，移动纯色 - 纯蓝科技风
+      // 渐变：桌面模糊，移动纯色 - 使用品牌色系
       gradient:
-        "bg-gradient-to-br from-white/95 via-cyan-50/50 to-blue-50/85 dark:from-gray-900/95 dark:via-blue-950/30 dark:to-cyan-950/30 border-white/20 dark:border-cyan-500/10 lg:from-white/80 lg:via-cyan-50/40 lg:to-blue-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]",
+        "bg-gradient-to-br from-[hsl(var(--surface-elevated))]/95 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--brand-blue))]/10 border-white/20 dark:border-[hsl(var(--brand-cyan))]/10 lg:from-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
     };
 
     const animationClass = animated

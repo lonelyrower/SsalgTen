@@ -19,11 +19,11 @@ interface NodeCardProps {
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "online":
-      return "text-green-400 bg-green-400/20 border-green-400/50";
+      return "node-status-online";
     case "offline":
-      return "text-red-400 bg-red-400/20 border-red-400/50";
+      return "node-status-offline";
     default:
-      return "text-gray-400 bg-gray-400/20 border-gray-400/50";
+      return "node-status-unknown";
   }
 };
 
@@ -58,12 +58,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
     <motion.div
       className={`relative rounded-xl border-2 p-4 cursor-pointer transition-all duration-300 ${
         isSelected
-          ? isOnline
-            ? "border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:from-cyan-900/20 dark:to-blue-900/20"
-            : "border-purple-500 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/30 bg-gradient-to-br from-purple-50/80 to-pink-50/80 dark:from-purple-900/20 dark:to-pink-900/20"
+          ? "card-selected-gradient ring-2 ring-[hsl(var(--brand-cyan))]/30"
           : isOnline
-            ? "border-green-200 dark:border-green-900/30 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 hover:shadow-lg hover:-translate-y-0.5"
-            : "border-red-200 dark:border-red-900/30 bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-900/10 dark:to-rose-900/10 hover:shadow-lg hover:-translate-y-0.5"
+            ? "card-online-gradient hover:shadow-lg hover:-translate-y-0.5"
+            : "card-offline-gradient hover:shadow-lg hover:-translate-y-0.5"
       }`}
       initial={{ opacity: 0, x: -50 }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -82,7 +80,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
               {getStatusIcon(node.status)}
             </motion.div>
             {index < 50 && (
-              <div className="w-0.5 h-12 bg-gradient-to-b from-cyan-500 to-transparent mt-2" />
+              <div className="w-0.5 h-12 bg-gradient-to-b from-[hsl(var(--brand-cyan))] to-transparent mt-2" />
             )}
           </div>
         )}
@@ -127,8 +125,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* IPv4 */}
             {node.ipv4 && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">IPv4:</span>
-                <span className="text-xs font-mono font-semibold text-cyan-600 dark:text-cyan-400">
+                <span className="text-xs text-muted-foreground">IPv4:</span>
+                <span className="text-xs font-mono font-semibold text-[hsl(var(--brand-cyan))]">
                   {node.ipv4}
                 </span>
               </div>
@@ -136,8 +134,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
             {/* 服务商 */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">服务商:</span>
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">服务商:</span>
+              <span className="text-sm font-semibold text-foreground truncate">
                 {node.provider}
               </span>
             </div>
@@ -145,8 +143,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* IPv6 */}
             {node.ipv6 && node.ipv6.includes(":") && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">IPv6:</span>
-                <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 truncate">
+                <span className="text-xs text-muted-foreground">IPv6:</span>
+                <span className="text-xs font-mono font-semibold text-secondary truncate">
                   {node.ipv6}
                 </span>
               </div>
@@ -155,15 +153,15 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* 延迟 */}
             {latency !== null && latency !== undefined && (
               <div className="flex items-center gap-2 col-span-2">
-                <Activity className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">延迟:</span>
+                <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">延迟:</span>
                 <span
                   className={`font-bold text-sm ${
                     latency < 50
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-[hsl(var(--success))]"
                       : latency < 150
-                        ? "text-yellow-600 dark:text-yellow-400"
-                        : "text-red-600 dark:text-red-400"
+                        ? "text-[hsl(var(--warning))]"
+                        : "text-[hsl(var(--error))]"
                   }`}
                 >
                   {latency}ms
@@ -176,23 +174,23 @@ export const NodeCard: React.FC<NodeCardProps> = ({
           <div className="mt-3 space-y-2">
             {/* CPU */}
             <div>
-              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                 <div className="flex items-center gap-1.5">
                   <Cpu className="h-3 w-3" />
                   <span>CPU</span>
                 </div>
-                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                <span className="font-semibold text-foreground">
                   {cpuUsage > 0 ? `${cpuUsage.toFixed(1)}%` : '—'}
                 </span>
               </div>
-              <div className="h-1.5 bg-gray-200/70 dark:bg-gray-700/70 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${
                     cpuUsage > 80
-                      ? "bg-red-500"
+                      ? "bg-[hsl(var(--error))]"
                       : cpuUsage > 60
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
+                        ? "bg-[hsl(var(--warning))]"
+                        : "bg-[hsl(var(--success))]"
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(cpuUsage, 100)}%` }}
@@ -203,23 +201,23 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
             {/* 内存 */}
             <div>
-              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                 <div className="flex items-center gap-1.5">
                   <MemoryStick className="h-3 w-3" />
                   <span>内存</span>
                 </div>
-                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                <span className="font-semibold text-foreground">
                   {memoryUsage > 0 ? `${memoryUsage.toFixed(1)}%` : '—'}
                 </span>
               </div>
-              <div className="h-1.5 bg-gray-200/70 dark:bg-gray-700/70 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${
                     memoryUsage > 80
-                      ? "bg-red-500"
+                      ? "bg-[hsl(var(--error))]"
                       : memoryUsage > 60
-                        ? "bg-yellow-500"
-                        : "bg-purple-500"
+                        ? "bg-[hsl(var(--warning))]"
+                        : "bg-secondary"
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(memoryUsage, 100)}%` }}
