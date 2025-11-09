@@ -95,7 +95,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
   return (
     <div className="relative">
       {/* 横向滚动容器 */}
-      <div className="flex gap-4 overflow-x-auto pb-2 pl-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+      <div className="flex gap-4 overflow-x-auto pb-2 pl-1 scrollbar-thin scrollbar-thumb-muted-foreground scrollbar-track-transparent">
         {stats.map((platform) => {
           const isSelected = selectedService === platform.service;
           const platformColor = getPlatformColor(platform.service);
@@ -106,7 +106,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               key={platform.service}
               className={`
                 flex-shrink-0 w-[220px] relative overflow-hidden
-                bg-white dark:bg-gray-800 border ${colors.accent}
+                surface-elevated border ${colors.accent}
                 shadow-md hover:shadow-lg transition-all duration-300
                 ${onSelect ? "cursor-pointer" : ""}
                 ${isSelected ? colors.ring : ""}
@@ -120,7 +120,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     <StreamingIcon service={platform.service} size="lg" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                    <h4 className="font-semibold text-foreground truncate">
                       {platform.name}
                     </h4>
                   </div>
@@ -129,7 +129,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                 {/* 解锁率 */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <TrendingUp className="h-3 w-3" />
                       解锁率
                     </span>
@@ -137,7 +137,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                       {Math.round(platform.unlockRate)}%
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${colors.progressBg}`}
                       style={{ width: `${Math.round(platform.unlockRate)}%` }}
@@ -152,9 +152,9 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     return (
                       <div
                         key={statusDef.status}
-                        className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50"
+                        className="flex items-center justify-between px-2 py-1 rounded bg-muted/50"
                       >
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-muted-foreground">
                           {statusDef.label}
                         </span>
                         <span className={`font-semibold ${statusDef.color}`}>

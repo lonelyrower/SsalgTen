@@ -14,7 +14,7 @@ interface StatsCardProps {
   value: number | string;
   subValue?: string;
   icon: React.ReactNode;
-  color: "blue" | "green" | "yellow" | "red" | "cyan";
+  color: "primary" | "success" | "warning" | "error" | "info";
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
@@ -25,30 +25,30 @@ const StatsCard: React.FC<StatsCardProps> = ({
   color,
 }) => {
   const colorClasses = {
-    blue: {
-      bg: "bg-blue-50 dark:bg-blue-900/20",
-      icon: "text-blue-600 dark:text-blue-400",
-      accent: "border-blue-200 dark:border-blue-800",
+    primary: {
+      bg: "bg-[hsl(var(--info))]/10",
+      icon: "text-[hsl(var(--info))]",
+      accent: "border-[hsl(var(--info))]/30",
     },
-    green: {
-      bg: "bg-green-50 dark:bg-green-900/20",
-      icon: "text-green-600 dark:text-green-400",
-      accent: "border-green-200 dark:border-green-800",
+    success: {
+      bg: "bg-[hsl(var(--success))]/10",
+      icon: "text-[hsl(var(--success))]",
+      accent: "border-[hsl(var(--success))]/30",
     },
-    yellow: {
-      bg: "bg-yellow-50 dark:bg-yellow-900/20",
-      icon: "text-yellow-600 dark:text-yellow-400",
-      accent: "border-yellow-200 dark:border-yellow-800",
+    warning: {
+      bg: "bg-[hsl(var(--warning))]/10",
+      icon: "text-[hsl(var(--warning))]",
+      accent: "border-[hsl(var(--warning))]/30",
     },
-    red: {
-      bg: "bg-red-50 dark:bg-red-900/20",
-      icon: "text-red-600 dark:text-red-400",
-      accent: "border-red-200 dark:border-red-800",
+    error: {
+      bg: "bg-[hsl(var(--error))]/10",
+      icon: "text-[hsl(var(--error))]",
+      accent: "border-[hsl(var(--error))]/30",
     },
-    cyan: {
-      bg: "bg-cyan-50 dark:bg-cyan-900/20",
-      icon: "text-cyan-600 dark:text-cyan-400",
-      accent: "border-cyan-200 dark:border-cyan-800",
+    info: {
+      bg: "bg-[hsl(var(--brand-cyan))]/10",
+      icon: "text-[hsl(var(--brand-cyan))]",
+      accent: "border-[hsl(var(--brand-cyan))]/30",
     },
   };
 
@@ -56,7 +56,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <Card
-      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
+      className={`relative overflow-hidden surface-elevated border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
     >
       <div className="p-6">
         <div className="flex items-center">
@@ -66,14 +66,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
             <div className={`${colors.icon}`}>{icon}</div>
           </div>
           <div className="ml-4 flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
               {title}
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            <p className="text-2xl font-bold text-foreground mt-1">
               {value}
             </p>
             {subValue && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {subValue}
               </p>
             )}
@@ -105,17 +105,17 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = mem
 
   // 根据解锁率确定颜色
   const unlockRateColor = overview.globalUnlockRate >= 80
-    ? "green"
+    ? "success"
     : overview.globalUnlockRate >= 50
-    ? "yellow"
-    : "red";
+    ? "warning"
+    : "error";
 
   // 根据过期节点数确定颜色
   const expiredColor = overview.expiredNodes === 0
-    ? "green"
+    ? "success"
     : overview.expiredNodes <= 3
-    ? "yellow"
-    : "red";
+    ? "warning"
+    : "error";
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -125,7 +125,7 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = mem
         value={overview.totalNodes}
         subValue="已配置的节点"
         icon={<Server className="h-6 w-6" />}
-        color="blue"
+        color="primary"
       />
 
       {/* 全局解锁率 */}
@@ -143,7 +143,7 @@ export const StreamingOverviewStats: React.FC<StreamingOverviewStatsProps> = mem
         value={formatTime(overview.lastScanTime)}
         subValue={new Date(overview.lastScanTime).toLocaleString("zh-CN")}
         icon={<Clock className="h-6 w-6" />}
-        color="cyan"
+        color="info"
       />
 
       {/* 过期节点 */}
