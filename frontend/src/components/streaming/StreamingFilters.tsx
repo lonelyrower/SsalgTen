@@ -75,13 +75,13 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
       <div className="space-y-4">
         {/* 搜索框 */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="搜索节点名称..."
             value={localKeyword}
             onChange={(e) => setLocalKeyword(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg surface-elevated text-foreground focus:ring-2 focus:ring-[hsl(var(--info))] focus:border-transparent"
           />
         </div>
 
@@ -93,7 +93,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
             onChange={(e) =>
               handleFilterChange("platform", parsePlatform(e.target.value))
             }
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-1.5 border border-border rounded-lg surface-elevated text-foreground text-sm focus:ring-2 focus:ring-[hsl(var(--info))] focus:border-transparent"
           >
             <option value="">全部平台</option>
             {STREAMING_SERVICE_ORDER.map((service) => (
@@ -110,7 +110,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
             onChange={(e) =>
               handleFilterChange("status", parseStatus(e.target.value))
             }
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-1.5 border border-border rounded-lg surface-elevated text-foreground text-sm focus:ring-2 focus:ring-[hsl(var(--info))] focus:border-transparent"
           >
             <option value="">全部状态</option>
             <option value="yes">完全解锁</option>
@@ -127,7 +127,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
               onChange={(e) =>
                 handleFilterChange("country", e.target.value || undefined)
               }
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1.5 border border-border rounded-lg surface-elevated text-foreground text-sm focus:ring-2 focus:ring-[hsl(var(--info))] focus:border-transparent"
             >
               <option value="">全部地区</option>
               {availableCountries.map((country) => (
@@ -141,7 +141,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
           {/* 高级筛选切换 */}
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 border border-border rounded-lg surface-elevated text-foreground text-sm hover:brightness-95 transition-colors flex items-center gap-1.5"
           >
             <Filter className="h-4 w-4" />
             <span>{showAdvanced ? "隐藏" : "高级"}筛选</span>
@@ -151,7 +151,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 border border-border rounded-lg surface-elevated text-[hsl(var(--error))] text-sm hover:bg-[hsl(var(--error))]/10 transition-colors flex items-center gap-1.5"
             >
               <X className="h-4 w-4" />
               <span>清除筛选</span>
@@ -161,10 +161,10 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
 
         {/* 高级筛选选项 */}
         {showAdvanced && (
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="pt-4 border-t border-border space-y-3">
             {/* 解锁区域筛选 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 解锁区域
               </label>
               <input
@@ -174,7 +174,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
                 onChange={(e) =>
                   handleFilterChange("region", e.target.value || undefined)
                 }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg surface-elevated text-foreground text-sm focus:ring-2 focus:ring-[hsl(var(--info))] focus:border-transparent"
               />
             </div>
 
@@ -187,11 +187,11 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
                 onChange={(e) =>
                   handleFilterChange("showExpired", e.target.checked)
                 }
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-[hsl(var(--info))] focus:ring-[hsl(var(--info))] border-border rounded"
               />
               <label
                 htmlFor="showExpired"
-                className="text-sm text-gray-700 dark:text-gray-300"
+                className="text-sm text-foreground"
               >
                 显示超过 24 小时未检测的节点
               </label>

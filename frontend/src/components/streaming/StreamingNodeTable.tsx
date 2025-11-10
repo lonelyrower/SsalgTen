@@ -156,7 +156,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
             return (
               <tr
                 key={node.nodeId}
-                className={`${rowGradient} hover:brightness-95 dark:hover:brightness-110 transition-all`}
+                className={`${rowGradient} hover:opacity-90 transition-all`}
               >
                 <td className="px-4 py-4">
                   <div className="flex items-center justify-center h-full">
