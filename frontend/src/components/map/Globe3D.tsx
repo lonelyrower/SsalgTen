@@ -5,144 +5,84 @@ import * as Cesium from "cesium";
 import type { NodeData } from "@/services/api";
 import { useVisitorLocation } from "@/hooks/useVisitorLocation";
 import { useVisitorLocationVisibility } from "@/hooks/useVisitorLocationVisibility";
-import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
+
+// 导入提取的工具和组件
 import {
-  Globe,
-  ZoomIn,
-  ZoomOut,
-  Home,
-  Layers,
-  MapPin,
-  Satellite,
-  Map,
-  Pause,
-  Play,
-} from "lucide-react";
+  type CesiumLayerType,
+  initCesiumIon,
+  configureGlobeVisuals,
+  getImageryProvider,
+  createClusterIconCanvas,
+  setInitialCameraView,
+  getCesiumIonToken,
+} from "./cesium/CesiumConfig";
+import { Globe3DControls } from "./cesium/Globe3DControls";
+import { Globe3DLayerMenu } from "./cesium/Globe3DLayerMenu";
 
 interface Globe3DProps {
   nodes: NodeData[];
   onNodeClick?: (node: NodeData) => void;
   onReady?: () => void;
-  showVisitorLocation?: boolean; // 是否显示访客位置
+  showVisitorLocation?: boolean;
 }
 
-// 创建聚合节点图标
-function createClusterIcon(
-  size: number,
-  count: number,
-  color: Cesium.Color,
-): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-
-  if (ctx) {
-    // 绘制圆形背景
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-    ctx.fillStyle = color.toCssColorString();
-    ctx.fill();
-
-    // 绘制白色边框
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    // 绘制数字
-    ctx.fillStyle = "white";
-    ctx.font = `bold ${Math.min(size / 2.5, 24)}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(count.toString(), size / 2, size / 2);
-  }
-
-  return canvas;
-}
-
-export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = false }: Globe3DProps) {
+export function Globe3D({
+  nodes,
+  onNodeClick,
+  onReady,
+  showVisitorLocation = false,
+}: Globe3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const initializingRef = useRef(false); // 防止重复初始化
+  const initializingRef = useRef(false);
 
-  // 获取访客位置信息（仅在需要时）
-  const { location: visitorLocation, matchedNode, loading: visitorLoading } = useVisitorLocation(
-    showVisitorLocation ? nodes : []
-  );
+  // 获取访客位置信息
+  const {
+    location: visitorLocation,
+    matchedNode,
+    loading: visitorLoading,
+  } = useVisitorLocation(showVisitorLocation ? nodes : []);
 
-  // 访客位置可见性管理（仅在需要时）
-  const { isVisible: isVisitorLocationVisible } = useVisitorLocationVisibility();
+  const { isVisible: isVisitorLocationVisible } =
+    useVisitorLocationVisibility();
 
-  // 图层状态 - 3D 地球专用图层
-  const [currentLayer, setCurrentLayer] = useState<
-    "satellite" | "terrain" | "bluemarble" | "natgeo"
-  >("satellite");
+  // 图层状态
+  const [currentLayer, setCurrentLayer] =
+    useState<CesiumLayerType>("satellite");
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   // 自转控制状态
   const [isRotating, setIsRotating] = useState(true);
   const rotationEnabledRef = useRef(true);
 
-  // 使用 useMemo 缓存节点ID列表，只有当节点ID变化时才重新渲染
+  // 使用 useMemo 缓存节点ID列表
   const nodeIds = useMemo(() => nodes.map((n) => n.id).join(","), [nodes]);
 
-  // useEffect 1: 初始化 Cesium Viewer（仅一次）
+  // 初始化 Cesium Viewer
   useEffect(() => {
     if (!containerRef.current) return;
     if (viewerRef.current && !viewerRef.current.isDestroyed()) return;
-    if (initializingRef.current) return; // 正在初始化，避免重复
+    if (initializingRef.current) return;
 
     initializingRef.current = true;
 
-    // 使用异步函数初始化 Cesium
     const initCesium = async () => {
-      // 读取Cesium Ion配置
-      const w: any = typeof window !== "undefined" ? (window as any) : {};
-
-      const cesiumIonToken =
-        w.APP_CONFIG?.CESIUM_ION_TOKEN ||
-        import.meta.env.VITE_CESIUM_ION_TOKEN ||
-        "";
-
-      // 配置 Cesium Ion（如果有token则启用，否则使用免费tiles）
-      if (cesiumIonToken) {
-        Cesium.Ion.defaultAccessToken = cesiumIonToken;
-        logger.log("✓ Cesium Ion已启用（高质量3D渲染）");
-      } else {
-        // 禁用 Cesium Ion，使用免费地图源
-        Cesium.Ion.defaultAccessToken = "";
-        try {
-          (Cesium.Ion as any).defaultServer = "";
-          (Cesium.Ion as any).enabled = false;
-        } catch {
-          // 忽略错误
-        }
-        logger.log(
-          "ℹ Cesium Ion未配置，使用免费地图源（可在设置中添加API key以获得更好的3D效果）",
-        );
-      }
+      const cesiumIonToken = getCesiumIonToken();
+      const hasIonToken = initCesiumIon();
 
       try {
-        // 3D 地球默认使用高清卫星图（忽略2D地图配置）
-        // 这样确保初始化时就能看到正确的卫星图层
         const imageryProviderPromise =
           Cesium.ArcGisMapServerImageryProvider.fromUrl(
             "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
           );
 
-        // 创建 Cesium Viewer
         const viewer = new Cesium.Viewer(containerRef.current!, {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             imageryProviderPromise,
           ),
-
-          // 如果有Cesium Ion token，使用高质量地形数据
-          terrain: cesiumIonToken
-            ? Cesium.Terrain.fromWorldTerrain()
-            : undefined,
-
-          // UI 配置
+          terrain: hasIonToken ? Cesium.Terrain.fromWorldTerrain() : undefined,
           baseLayerPicker: false,
           geocoder: false,
           homeButton: false,
@@ -154,73 +94,20 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           vrButton: false,
           selectionIndicator: false,
           infoBox: false,
-
-          // 场景配置
           requestRenderMode: true,
           maximumRenderTimeChange: Infinity,
         });
 
         viewerRef.current = viewer;
-
         logger.log("✓ Cesium Viewer 初始化成功");
 
-        // === 视觉增强配置（优化晨昏线效果）===
-        const scene = viewer.scene;
-        const globe = scene.globe;
-
-        // 使用Cesium默认的光照设置，获得更自然的晨昏线效果
-        globe.enableLighting = true;
-
-        // 关键：使用默认的太阳光照，不要过度调整
-        scene.globe.dynamicAtmosphereLighting = true;
-        scene.globe.dynamicAtmosphereLightingFromSun = true;
-
-        // 大气层效果 - 使用接近Cesium默认值
-        if (scene.skyAtmosphere) {
-          scene.skyAtmosphere.show = true;
-          // 使用更接近默认的值，让大气层更自然
-          scene.skyAtmosphere.brightnessShift = 0.0; // 从0.2改为0.0
-          scene.skyAtmosphere.saturationShift = 0.0; // 从0.1改为0.0
-        }
-
-        globe.showGroundAtmosphere = true;
-        // 地面大气层也使用更温和的值
-        globe.atmosphereBrightnessShift = 0.0; // 从0.1改为0.0
-        globe.atmosphereSaturationShift = 0.0; // 从0.1改为0.0
-
-        // 移除自定义基础颜色，使用默认
-        // globe.baseColor = Cesium.Color.BLACK; // 删除这行，让Cesium使用默认颜色
-
-        globe.showWaterEffect = true;
-
-        // 优化夜间过渡效果
-        globe.nightFadeInDistance = 8000000.0; // 增大从5000000，让过渡更柔和
-        globe.nightFadeOutDistance = 15000000.0; // 增大从10000000
-
-        scene.globe.maximumScreenSpaceError = 1.5;
-        scene.globe.tileCacheSize = 200;
-
-        scene.screenSpaceCameraController.enableCollisionDetection = false;
-
-        // 雾效 - 使用更自然的设置
-        scene.fog.enabled = true;
-        scene.fog.density = 0.0001; // 从0.0002减小，让雾更淡
-        scene.fog.minimumBrightness = 0.05; // 从0.03增加到0.05，避免过暗
-
-        // 使用默认的太阳光照（不需要手动设置）
-        // Cesium会自动根据当前时间计算太阳位置
+        // 配置视觉效果
+        configureGlobeVisuals(viewer.scene);
 
         // 设置相机初始位置
-        viewer.camera.setView({
-          destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
-          orientation: {
-            heading: 0,
-            pitch: Cesium.Math.toRadians(-90),
-            roll: 0,
-          },
-        });
+        setInitialCameraView(viewer.camera);
 
-        // 添加点击事件监听器（只触发节点选择，不弹窗）
+        // 添加点击事件监听器
         viewer.screenSpaceEventHandler.setInputAction((movement: any) => {
           const pickedObject = viewer.scene.pick(movement.position);
           if (Cesium.defined(pickedObject) && pickedObject.id) {
@@ -228,13 +115,12 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
             const nodeData = (entity as any)._nodeData;
 
             if (nodeData && onNodeClick) {
-              // 只触发节点选择回调，显示右侧详情面板
               onNodeClick(nodeData);
             }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        // 添加鼠标移动事件监听器 - 动态改变光标样式
+        // 添加鼠标移动事件监听器
         viewer.screenSpaceEventHandler.setInputAction((movement: any) => {
           const pickedObject = viewer.scene.pick(movement.endPosition);
           const canvas = viewer.canvas as HTMLCanvasElement;
@@ -243,19 +129,17 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
             const entity = pickedObject.id;
             const nodeData = (entity as any)._nodeData;
 
-            // 如果悬停在节点或聚合点上，显示指针
             if (nodeData || entity.billboard) {
-              canvas.style.cursor = 'pointer';
+              canvas.style.cursor = "pointer";
             } else {
-              canvas.style.cursor = 'grab';
+              canvas.style.cursor = "grab";
             }
           } else {
-            // 没有悬停在任何对象上，显示抓手
-            canvas.style.cursor = 'grab';
+            canvas.style.cursor = "grab";
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-        // 慢速自动旋转地球（可控制）
+        // 自动旋转地球
         let lastTime = Date.now();
         const tickListener = () => {
           const now = Date.now();
@@ -276,10 +160,9 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
         const entityCollection = viewer.entities as any;
         if (entityCollection.clustering) {
           entityCollection.clustering.enabled = true;
-          entityCollection.clustering.pixelRange = 80; // 聚合距离（像素）
-          entityCollection.clustering.minimumClusterSize = 2; // 最小聚合数量
+          entityCollection.clustering.pixelRange = 80;
+          entityCollection.clustering.minimumClusterSize = 2;
 
-          // 自定义聚合样式
           entityCollection.clustering.clusterEvent.addEventListener(
             (entities: any[], cluster: any) => {
               cluster.billboard.show = true;
@@ -289,7 +172,6 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
               const count = entities.length;
               const size = Math.min(80, 40 + count * 2);
 
-              // 统计在线/离线节点
               let onlineCount = 0;
               let offlineCount = 0;
               entities.forEach((entity: any) => {
@@ -300,7 +182,6 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
                 }
               });
 
-              // 根据节点状态决定聚合颜色
               let clusterColor;
               if (onlineCount > offlineCount) {
                 clusterColor =
@@ -313,8 +194,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
                   Cesium.Color.fromCssColorString("#f59e0b").withAlpha(0.8);
               }
 
-              // 创建聚合图标
-              cluster.billboard.image = createClusterIcon(
+              cluster.billboard.image = createClusterIconCanvas(
                 size,
                 count,
                 clusterColor,
@@ -337,7 +217,6 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
 
     initCesium();
 
-    // 清理函数
     return () => {
       if (viewerRef.current && !viewerRef.current.isDestroyed()) {
         viewerRef.current.destroy();
@@ -345,8 +224,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
       }
       initializingRef.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ← 仅初始化一次，不依赖nodes或onNodeClick
+  }, []);
 
   useEffect(() => {
     if (!isLoading) {
@@ -354,20 +232,24 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
     }
   }, [isLoading, onReady]);
 
-  // useEffect 2: 更新节点标记（当nodes变化时）
+  // 更新节点标记
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer || viewer.isDestroyed()) return;
 
-    // 清除所有现有节点实体
     viewer.entities.removeAll();
 
-    // 添加访客位置标记（仅在启用且可见时）
-    if (showVisitorLocation && visitorLocation && !visitorLoading && isVisitorLocationVisible) {
+    // 添加访客位置标记
+    if (
+      showVisitorLocation &&
+      visitorLocation &&
+      !visitorLoading &&
+      isVisitorLocationVisible
+    ) {
       const isMatching = !!matchedNode;
       const visitorColor = isMatching
-        ? Cesium.Color.fromCssColorString("#8b5cf6") // 紫色（匹配节点）
-        : Cesium.Color.fromCssColorString("#ec4899"); // 粉色（普通）
+        ? Cesium.Color.fromCssColorString("#8b5cf6")
+        : Cesium.Color.fromCssColorString("#ec4899");
 
       const visitorEntity = viewer.entities.add({
         id: "visitor-location",
@@ -377,21 +259,18 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           visitorLocation.latitude,
           100000,
         ),
-
         point: {
           color: visitorColor,
           outlineColor: Cesium.Color.WHITE,
           outlineWidth: 3,
           heightReference: Cesium.HeightReference.NONE,
-          // 添加脉动效果
           pixelSize: new Cesium.CallbackProperty(() => {
             return 20 + Math.sin(Date.now() / 200) * 5;
           }, false) as any,
         },
-
         label: {
           text: "您的位置",
-          font: '14px sans-serif',
+          font: "14px sans-serif",
           fillColor: Cesium.Color.WHITE,
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
@@ -402,14 +281,12 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
         },
       });
 
-      // 存储访客位置数据
       (visitorEntity as any)._visitorData = {
         ...visitorLocation,
         isMatching,
         matchedNode,
       };
 
-      // 如果匹配了节点，添加连接线
       if (isMatching && matchedNode) {
         viewer.entities.add({
           polyline: {
@@ -458,7 +335,6 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           node.latitude,
           100000,
         ),
-
         point: {
           pixelSize: 12,
           color: color,
@@ -471,21 +347,6 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
             }, false) as any,
           }),
         },
-
-        // 移除节点名称标签和弹窗描述
-        // label: {
-        //   text: node.name,
-        //   font: '14px sans-serif',
-        //   fillColor: Cesium.Color.WHITE,
-        //   outlineColor: Cesium.Color.BLACK,
-        //   outlineWidth: 2,
-        //   style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        //   verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        //   pixelOffset: new Cesium.Cartesian2(0, -15),
-        //   heightReference: Cesium.HeightReference.NONE,
-        // },
-
-        // description: 已禁用 infoBox，不需要弹窗内容
       });
 
       (entity as any)._nodeData = node;
@@ -520,7 +381,15 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
         }
       }
     }
-  }, [nodeIds, nodes, showVisitorLocation, visitorLocation, visitorLoading, matchedNode, isVisitorLocationVisible]); // 依赖nodeIds和访客位置，避免不必要的更新
+  }, [
+    nodeIds,
+    nodes,
+    showVisitorLocation,
+    visitorLocation,
+    visitorLoading,
+    matchedNode,
+    isVisitorLocationVisible,
+  ]);
 
   // 点击外部关闭图层菜单
   useEffect(() => {
@@ -538,67 +407,28 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
     }
   }, [showLayerMenu]);
 
-  // 图层切换功能 - 3D 地球专用（修复异步问题）
-  const switchLayer = async (
-    layerType: "satellite" | "terrain" | "bluemarble" | "natgeo",
-  ) => {
+  // 图层切换功能
+  const switchLayer = async (layerType: CesiumLayerType) => {
     const viewer = viewerRef.current;
     if (!viewer || viewer.isDestroyed()) return;
 
     setCurrentLayer(layerType);
     setShowLayerMenu(false);
 
-    // 移除当前图层
     viewer.imageryLayers.removeAll();
 
-    let imageryProviderPromise: Promise<Cesium.ImageryProvider> | null = null;
-
-    switch (layerType) {
-      case "satellite":
-        // 高清卫星影像（Esri 世界影像）
-        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
-          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
-        );
-        break;
-
-      case "terrain":
-        // 地形底图（Esri 世界地形）
-        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
-          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer",
-        );
-        break;
-
-      case "bluemarble":
-        // 蓝色大理石（夜景+白天）
-        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
-          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-        );
-        break;
-
-      case "natgeo":
-      default:
-        // National Geographic 风格（清晰的地理标注）
-        imageryProviderPromise = Cesium.ArcGisMapServerImageryProvider.fromUrl(
-          "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer",
-        );
-        break;
-    }
-
-    if (imageryProviderPromise) {
-      try {
-        const imageryProvider = await imageryProviderPromise;
-        if (viewer && !viewer.isDestroyed()) {
-          viewer.imageryLayers.addImageryProvider(imageryProvider);
-        }
-      } catch (error) {
-        logger.error("图层加载失败:", error);
-        // 失败时回退到 OpenStreetMap
-        const fallbackProvider = new Cesium.OpenStreetMapImageryProvider({
-          url: "https://tile.openstreetmap.org/",
-        });
-        if (viewer && !viewer.isDestroyed()) {
-          viewer.imageryLayers.addImageryProvider(fallbackProvider);
-        }
+    try {
+      const imageryProvider = await getImageryProvider(layerType);
+      if (viewer && !viewer.isDestroyed()) {
+        viewer.imageryLayers.addImageryProvider(imageryProvider);
+      }
+    } catch (error) {
+      logger.error("图层加载失败:", error);
+      const fallbackProvider = new Cesium.OpenStreetMapImageryProvider({
+        url: "https://tile.openstreetmap.org/",
+      });
+      if (viewer && !viewer.isDestroyed()) {
+        viewer.imageryLayers.addImageryProvider(fallbackProvider);
       }
     }
   };
@@ -651,187 +481,21 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
       )}
 
       {/* 控制按钮 */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={toggleRotation}
-          title={isRotating ? "暂停自转" : "恢复自转"}
-          aria-label={isRotating ? "暂停地球自转" : "恢复地球自转"}
-          className={`${
-            isRotating
-              ? "bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800"
-              : "bg-primary hover:bg-primary/90"
-          } shadow-lg border border-gray-200/50 dark:border-gray-600/50`}
-        >
-          {isRotating ? (
-            <Pause className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-          ) : (
-            <Play className="h-4 w-4 text-white" />
-          )}
-        </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={zoomIn}
-          title="放大"
-          aria-label="放大地图"
-          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
-        >
-          <ZoomIn className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-        </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={zoomOut}
-          title="缩小"
-          aria-label="缩小地图"
-          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
-        >
-          <ZoomOut className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-        </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={resetView}
-          title="重置视图"
-          aria-label="重置地图视图到初始位置"
-          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-600/50"
-        >
-          <Home className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-        </Button>
+      <Globe3DControls
+        isRotating={isRotating}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onResetView={resetView}
+        onToggleRotation={toggleRotation}
+      />
 
-      </div>
-
-      {/* Layer switcher */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
-        <div className="relative layer-menu-container">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-lg flex items-center gap-2 border border-gray-200/50 dark:border-gray-600/50 lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
-          >
-            <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-            <span className="hidden sm:inline text-gray-700 dark:text-gray-200">
-              图层
-            </span>
-          </Button>
-
-          {/* 图层选择菜单（简化列表样式，每个选项使用不同主题色） */}
-          {showLayerMenu && (
-            <div
-              className="absolute top-14 right-0 bg-white dark:bg-gray-800  shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
-              role="menu"
-            >
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
-                  选择地图图层
-                </p>
-              </div>
-              <div className="p-2 divide-y divide-gray-100 dark:divide-gray-700">
-                {/* 高清卫星图 - 蓝色 */}
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={currentLayer === "satellite" ? "true" : "false"}
-                  onClick={() => {
-                    switchLayer("satellite");
-                    setShowLayerMenu(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
-                    currentLayer === "satellite"
-                      ? "bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200"
-                      : "bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Satellite className="h-4 w-4" />
-                    高清卫星图
-                  </span>
-                  {currentLayer === "satellite" && (
-                    <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
-                  )}
-                </button>
-
-                {/* 立体地形 - 绿色 */}
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={currentLayer === "terrain" ? "true" : "false"}
-                  onClick={() => {
-                    switchLayer("terrain");
-                    setShowLayerMenu(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
-                    currentLayer === "terrain"
-                      ? "bg-green-600/10 dark:bg-green-900/30 border-l-2 border-green-600 text-green-800 dark:text-green-200"
-                      : "bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Map className="h-4 w-4" />
-                    立体地形
-                  </span>
-                  {currentLayer === "terrain" && (
-                    <div className="w-1.5 h-1.5 bg-green-600 dark:bg-green-300 rounded-full"></div>
-                  )}
-                </button>
-
-                {/* 街道标注 - 紫色 */}
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={
-                    currentLayer === "bluemarble" ? "true" : "false"
-                  }
-                  onClick={() => {
-                    switchLayer("bluemarble");
-                    setShowLayerMenu(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
-                    currentLayer === "bluemarble"
-                      ? "bg-purple-600/10 dark:bg-purple-900/30 border-l-2 border-purple-600 text-purple-800 dark:text-purple-200"
-                      : "bg-white dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    街道标注
-                  </span>
-                  {currentLayer === "bluemarble" && (
-                    <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-300 rounded-full"></div>
-                  )}
-                </button>
-
-                {/* 国家地理风格 - 橙色 */}
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={currentLayer === "natgeo" ? "true" : "false"}
-                  onClick={() => {
-                    switchLayer("natgeo");
-                    setShowLayerMenu(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
-                    currentLayer === "natgeo"
-                      ? "bg-orange-600/10 dark:bg-orange-900/30 border-l-2 border-orange-600 text-orange-800 dark:text-orange-200"
-                      : "bg-white dark:bg-gray-800 hover:bg-orange-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    国家地理风格
-                  </span>
-                  {currentLayer === "natgeo" && (
-                    <div className="w-1.5 h-1.5 bg-orange-600 dark:bg-orange-300 rounded-full"></div>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* 图层切换菜单 */}
+      <Globe3DLayerMenu
+        currentLayer={currentLayer}
+        showMenu={showLayerMenu}
+        onToggleMenu={() => setShowLayerMenu(!showLayerMenu)}
+        onLayerChange={switchLayer}
+      />
     </div>
   );
 }
