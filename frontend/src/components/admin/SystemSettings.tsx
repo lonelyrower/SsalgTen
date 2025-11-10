@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiService, type SystemConfig } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from '@/components/ui/GlassCard';
 import {
   Settings,
   Save,

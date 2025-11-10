@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import type { NodeData, DiagnosticRecord } from "@/services/api";
 import { apiService } from "@/services/api";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from '@/components/ui/GlassCard';
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

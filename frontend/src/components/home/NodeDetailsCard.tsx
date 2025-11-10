@@ -13,7 +13,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
   showNetworkInfo = false,
 }) => {
   return (
-    <GlassCard variant="tech" animated={false} glow={false} className="p-6">
+    <GlassCard variant="tech" size="lg" animated={true} glow={false}>
       <div>
         <div className="flex-1">
           {/* 节点头部信息 */}

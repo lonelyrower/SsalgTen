@@ -9,8 +9,35 @@
   /* Container configuration */
   --breakpoint-2xl: 1400px;
 
-  /* Border radius - Tailwind v4 CSS variables */
-  --radius: 0.75rem;
+  /* ===== 设计系统 - 统一令牌定义 ===== */
+
+  /* 圆角系统 (Border Radius) */
+  --radius-xs: 0.375rem;    /* 6px - 小元素：徽章、标签 */
+  --radius-sm: 0.5rem;      /* 8px - 按钮、输入框 */
+  --radius-md: 0.75rem;     /* 12px - 小卡片、弹窗 */
+  --radius-lg: 1rem;        /* 16px - 标准卡片 */
+  --radius-xl: 1.25rem;     /* 20px - 大卡片、模态框 */
+  --radius-2xl: 1.5rem;     /* 24px - 特大容器 */
+  --radius: 0.75rem;        /* 默认圆角 */
+
+  /* 阴影系统 (Box Shadow) - 分层设计 */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.03);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* 间距系统 (Spacing) - 卡片专用 */
+  --card-padding-sm: 1rem;      /* 16px - 紧凑卡片 */
+  --card-padding-md: 1.25rem;   /* 20px - 标准卡片 */
+  --card-padding-lg: 1.5rem;    /* 24px - 宽松卡片 */
+  --card-padding-xl: 2rem;      /* 32px - 大型容器 */
+
+  /* 边框系统 (Border) */
+  --border-width-thin: 1px;     /* 标准边框 */
+  --border-width-medium: 1.5px; /* 强调边框 */
+  --border-width-thick: 2px;    /* 重点边框 */
 }
 
 @layer base {
@@ -58,6 +85,26 @@
     --warning-foreground: 210 40% 98%;
     --error: 348 83% 47%;
     --error-foreground: 210 40% 98%;
+
+    /* ===== 卡片设计系统 ===== */
+    /* 标准卡片 - 白色背景 */
+    --card-bg: 0 0% 100%;
+    --card-border: 214 32% 91%;
+    --card-shadow: var(--shadow-md);
+    --card-hover-shadow: var(--shadow-lg);
+
+    /* 统一蓝色科技风 - 主题卡片 */
+    --card-tech-bg-from: 189 100% 97%;      /* cyan-50 */
+    --card-tech-bg-via: 0 0% 100%;          /* white */
+    --card-tech-bg-to: 214 100% 97%;        /* blue-50 */
+    --card-tech-border: 189 94% 43% / 0.2;  /* cyan-600/20 */
+    --card-tech-glow: 189 94% 43% / 0.15;   /* cyan-600/15 */
+
+    /* 状态卡片配色 - 统一蓝色系 */
+    --card-primary-from: 199 89% 48%;       /* sky-500 */
+    --card-primary-to: 217 91% 60%;         /* blue-500 */
+    --card-accent-from: 186 94% 45%;        /* cyan-500 */
+    --card-accent-to: 200 98% 48%;          /* lightblue-500 */
   }
 
   .dark {
@@ -99,6 +146,26 @@
     --success: 142 76% 46%;
     --warning: 38 92% 60%;
     --error: 348 83% 57%;
+
+    /* ===== 深色模式卡片设计系统 ===== */
+    /* 标准卡片 - 深色背景，提高对比度 */
+    --card-bg: 222 47% 11%;           /* gray-950 */
+    --card-border: 217 33% 20%;       /* 更明显的边框 */
+    --card-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+    --card-hover-shadow: 0 20px 40px rgb(0 0 0 / 0.5);
+
+    /* 深色模式科技卡片 - 蓝色调 */
+    --card-tech-bg-from: 222 47% 11%;       /* gray-950 */
+    --card-tech-bg-via: 217 33% 15%;        /* blue-950 */
+    --card-tech-bg-to: 189 65% 12%;         /* cyan-950 */
+    --card-tech-border: 189 94% 53% / 0.2;  /* cyan-400/20 */
+    --card-tech-glow: 189 94% 53% / 0.2;    /* cyan-400/20 */
+
+    /* 深色模式状态卡片配色 */
+    --card-primary-from: 199 89% 58%;       /* sky-400 */
+    --card-primary-to: 217 91% 70%;         /* blue-400 */
+    --card-accent-from: 186 94% 55%;        /* cyan-400 */
+    --card-accent-to: 200 98% 58%;          /* lightblue-400 */
   }
 }
 
@@ -178,40 +245,94 @@
     }
   }
   
-  /* 科技感卡片 - 性能优化版 */
+  /* ===== 统一卡片系统 ===== */
+
+  /* 基础卡片 - 使用设计令牌 */
+  .card-base {
+    border-radius: var(--radius-lg);
+    border: var(--border-width-thin) solid hsl(var(--card-border));
+    background: hsl(var(--card-bg));
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-base:hover {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  /* 科技卡片 - 蓝色渐变，统一设计 */
   .tech-card {
     position: relative;
     overflow: hidden;
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow:
-      0 20px 25px -5px rgba(0, 0, 0, 0.1),
-      0 10px 10px -5px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    
-    /* 桌面设备：轻量模糊 + 半透明 */
-    @media (min-width: 1024px) {
-      background-color: rgba(255, 255, 255, 0.85);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
-    }
-    
-    /* 移动设备：不透明背景，无模糊 */
-    @media (max-width: 1023px) {
-      background-color: rgba(255, 255, 255, 0.95);
-    }
+    border-radius: var(--radius-lg);
+    border: var(--border-width-thin) solid hsl(var(--card-tech-border));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card-tech-bg-from)),
+      hsl(var(--card-tech-bg-via)) 50%,
+      hsl(var(--card-tech-bg-to))
+    );
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .dark .tech-card {
-    border-color: rgba(55, 65, 81, 0.2);
-    
-    @media (min-width: 1024px) {
-      background-color: rgba(17, 24, 39, 0.85);
-    }
-    
-    @media (max-width: 1023px) {
-      background-color: rgba(17, 24, 39, 0.95);
-    }
+  .tech-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+  }
+
+  /* 科技卡片光晕效果 */
+  .tech-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card-accent-from) / 0.3),
+      transparent 50%,
+      hsl(var(--card-accent-to) / 0.3)
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .tech-card:hover::before {
+    opacity: 1;
+  }
+
+  /* 统计卡片 - 小尺寸 */
+  .stats-card {
+    border-radius: var(--radius-xl);
+    padding: var(--card-padding-lg);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card-tech-bg-from)),
+      hsl(var(--card-tech-bg-via))
+    );
+    border: var(--border-width-thin) solid hsl(var(--card-tech-border));
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .stats-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  /* 内容卡片 - 标准尺寸 */
+  .content-card {
+    border-radius: var(--radius-lg);
+    padding: var(--card-padding-xl);
+    background: hsl(var(--card-bg));
+    border: var(--border-width-thin) solid hsl(var(--card-border));
+    box-shadow: var(--shadow-md);
   }
   
   /* 渐变按钮 - 纯蓝科技风 */
