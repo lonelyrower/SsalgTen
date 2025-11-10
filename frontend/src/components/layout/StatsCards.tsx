@@ -112,14 +112,14 @@ const StatsCardsComponent = ({
           key={index}
           className={`group relative overflow-hidden border bg-gradient-to-br shadow-[var(--shadow-md)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-xl)] active:scale-[0.98] cursor-pointer ${stat.accent.border} ${stat.accent.bg}`}
           style={{
-            borderRadius: 'var(--radius-xl)',
+            borderRadius: 'var(--radius-lg)',
             borderWidth: 'var(--border-width-thin)',
           }}
         >
           {/* 悬停光晕效果 */}
           <div
             className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${stat.accent.glow}`}
-            style={{ borderRadius: 'var(--radius-xl)' }}
+            style={{ borderRadius: 'var(--radius-lg)' }}
           />
 
           {/* 装饰性光点 */}

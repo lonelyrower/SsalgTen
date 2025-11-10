@@ -16,7 +16,7 @@ const colorClasses = {
   // Netflix 官方红色 #E50914
   netflixRed: {
     bg: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-600 dark:text-red-400",
+    icon: "text-red-600 dark:text-red-300",
     accent: "border-red-500 dark:border-red-600",
     ring: "ring-2 ring-inset ring-red-500",
     progressBg: "bg-red-600",
@@ -24,7 +24,7 @@ const colorClasses = {
   // YouTube 官方红色 #FF0000
   youtubeRed: {
     bg: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-500 dark:text-red-400",
+    icon: "text-red-500 dark:text-red-300",
     accent: "border-red-400 dark:border-red-500",
     ring: "ring-2 ring-inset ring-red-500",
     progressBg: "bg-red-500",
@@ -32,7 +32,7 @@ const colorClasses = {
   // Disney+ 官方蓝色 #113CCF
   disneyBlue: {
     bg: "bg-blue-50 dark:bg-blue-950/40",
-    icon: "text-blue-700 dark:text-blue-400",
+    icon: "text-blue-700 dark:text-blue-300",
     accent: "border-blue-600 dark:border-blue-500",
     ring: "ring-2 ring-inset ring-blue-600",
     progressBg: "bg-blue-600",
@@ -40,7 +40,7 @@ const colorClasses = {
   // Amazon Prime 官方青色 #00A8E1
   amazonCyan: {
     bg: "bg-cyan-50 dark:bg-cyan-950/40",
-    icon: "text-cyan-600 dark:text-cyan-400",
+    icon: "text-cyan-600 dark:text-cyan-300",
     accent: "border-cyan-500 dark:border-cyan-500",
     ring: "ring-2 ring-inset ring-cyan-500",
     progressBg: "bg-cyan-500",
@@ -48,7 +48,7 @@ const colorClasses = {
   // TikTok 官方颜色 #FE2C55 + #00F2EA (使用粉红色)
   tiktokPink: {
     bg: "bg-pink-50 dark:bg-pink-950/40",
-    icon: "text-pink-600 dark:text-pink-400",
+    icon: "text-pink-600 dark:text-pink-300",
     accent: "border-pink-500 dark:border-pink-500",
     ring: "ring-2 ring-inset ring-pink-500",
     progressBg: "bg-pink-500",
@@ -56,7 +56,7 @@ const colorClasses = {
   // Spotify 官方绿色 #1DB954
   spotifyGreen: {
     bg: "bg-green-50 dark:bg-green-950/40",
-    icon: "text-green-600 dark:text-green-400",
+    icon: "text-green-600 dark:text-green-300",
     accent: "border-green-500 dark:border-green-500",
     ring: "ring-2 ring-inset ring-green-500",
     progressBg: "bg-green-500",
@@ -64,7 +64,7 @@ const colorClasses = {
   // ChatGPT 官方绿色 #10A37F
   chatgptTeal: {
     bg: "bg-teal-50 dark:bg-teal-950/40",
-    icon: "text-teal-600 dark:text-teal-400",
+    icon: "text-teal-600 dark:text-teal-300",
     accent: "border-teal-500 dark:border-teal-500",
     ring: "ring-2 ring-inset ring-teal-500",
     progressBg: "bg-teal-600",
@@ -107,7 +107,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               className={`
                 flex-shrink-0 w-[220px] relative overflow-hidden
                 bg-white dark:bg-gray-800 border ${colors.accent}
-                shadow-md hover:shadow-lg transition-all duration-300
+                shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-all duration-300
                 ${onSelect ? "cursor-pointer" : ""}
                 ${isSelected ? colors.ring : ""}
               `}
@@ -116,7 +116,10 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               <div className="p-4">
                 {/* 图标和名称 */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-lg ${colors.bg}`}>
+                  <div
+                    className={`p-2 ${colors.bg}`}
+                    style={{ borderRadius: 'var(--radius-md)' }}
+                  >
                     <StreamingIcon service={platform.service} size="lg" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -152,7 +155,8 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     return (
                       <div
                         key={statusDef.status}
-                        className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50"
+                        className="flex items-center justify-between px-2 py-1 bg-gray-50 dark:bg-gray-900/50"
+                        style={{ borderRadius: 'var(--radius-sm)' }}
                       >
                         <span className="text-gray-600 dark:text-gray-400">
                           {statusDef.label}
