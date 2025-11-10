@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "@/utils/logger";
 import { AgentInstallCommands } from "./AgentInstallCommands";
 import { Button } from "@/components/ui/button";
 import { Download, AlertTriangle, Copy, Check } from "lucide-react";
@@ -29,7 +30,7 @@ export const AgentInstaller: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     } catch (error) {
-      console.error("Failed to copy:", error);
+      logger.error("Failed to copy:", error);
       alert("复制失败，请手动选择并复制命令");
     }
   };

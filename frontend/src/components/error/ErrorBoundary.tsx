@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { logger } from "@/utils/logger";
 import { AlertCircle, RefreshCw, Home, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,7 +34,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    logger.error("ErrorBoundary caught an error:", error, errorInfo);
 
     this.setState({
       error,
@@ -47,11 +48,11 @@ class ErrorBoundary extends Component<Props, State> {
 
     // 在开发环境中记录更详细的错误信息
     if (process.env.NODE_ENV === "development") {
-      console.group("🚨 Error Boundary Details");
-      console.error("Error:", error);
-      console.error("Error Info:", errorInfo);
-      console.error("Component Stack:", errorInfo.componentStack);
-      console.groupEnd();
+      logger.group("🚨 Error Boundary Details");
+      logger.error("Error:", error);
+      logger.error("Error Info:", errorInfo);
+      logger.error("Component Stack:", errorInfo.componentStack);
+      logger.groupEnd();
     }
   }
 

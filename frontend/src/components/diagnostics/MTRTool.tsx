@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { logger } from "@/utils/logger";
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +99,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
         setError(response.error || "MTR 测试失败");
       }
     } catch (err) {
-      console.error("MTR test failed:", err);
+      logger.error("MTR test failed:", err);
       setError(err instanceof Error ? err.message : "网络请求失败");
     } finally {
       setLoading(false);

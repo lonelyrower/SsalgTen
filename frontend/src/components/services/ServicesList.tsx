@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import { logger } from "@/utils/logger";
 import type { NodeService } from "@/types/services";
 import {
   SERVICE_TYPE_CONFIG,
@@ -221,7 +222,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
         setCopiedLink(null);
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy link:', err);
+      logger.error('Failed to copy link:', err);
     }
   };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { apiService, type InstallCommandData } from "@/services/api";
@@ -186,7 +187,7 @@ sudo systemctl reset-failed`,
         });
       }
     } catch (error) {
-      console.error("Failed to build install command:", error);
+      logger.error("Failed to build install command:", error);
       setInstallData(null);
     } finally {
       setLoading(false);
@@ -213,7 +214,7 @@ sudo systemctl reset-failed`,
       setCopied(type);
       setTimeout(() => setCopied(null), 3000);
     } catch (error) {
-      console.error("Failed to copy:", error);
+      logger.error("Failed to copy:", error);
       alert("复制失败，请手动选择并复制命令");
     }
   };

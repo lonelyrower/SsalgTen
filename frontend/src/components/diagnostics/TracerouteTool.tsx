@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { logger } from "@/utils/logger";
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +68,7 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
         setError(response.error || "Traceroute 测试失败");
       }
     } catch (err) {
-      console.error("Traceroute test failed:", err);
+      logger.error("Traceroute test failed:", err);
       setError(err instanceof Error ? err.message : "网络请求失败");
     } finally {
       setLoading(false);

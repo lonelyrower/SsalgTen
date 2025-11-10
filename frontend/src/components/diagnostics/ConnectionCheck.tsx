@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { logger } from "@/utils/logger";
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -99,7 +100,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
         setError(checkError);
       }
     } catch (err) {
-      console.error("Connection check failed:", err);
+      logger.error("Connection check failed:", err);
       setError("连接性检查失败");
       setResult(null);
     } finally {

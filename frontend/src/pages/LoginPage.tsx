@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "@/utils/logger";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ export const LoginPage: React.FC = () => {
         setError("用户名或密码错误");
       }
     } catch (error) {
-      console.error("Login failed:", error);
+      logger.error("Login failed:", error);
       setError("登录失败，请稍后重试");
     } finally {
       setIsSubmitting(false);

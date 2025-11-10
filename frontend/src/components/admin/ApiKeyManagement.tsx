@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { apiService } from "@/services/api";
 import type { ApiKeyInfo } from "@/services/api";
 import { Card } from "@/components/ui/card";
@@ -42,7 +43,7 @@ export const ApiKeyManagement: React.FC = () => {
         setError(response.error || "获取API密钥信息失败");
       }
     } catch (err) {
-      console.error("Failed to fetch API key info:", err);
+      logger.error("Failed to fetch API key info:", err);
       setError("网络错误，无法获取API密钥信息");
     } finally {
       setLoading(false);
@@ -75,7 +76,7 @@ export const ApiKeyManagement: React.FC = () => {
         setError(response.error || "API密钥重新生成失败");
       }
     } catch (err) {
-      console.error("Failed to regenerate API key:", err);
+      logger.error("Failed to regenerate API key:", err);
       setError("API密钥重新生成失败");
     } finally {
       setRegenerating(false);
@@ -101,7 +102,7 @@ export const ApiKeyManagement: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      console.error("复制失败:", e);
+      logger.error("复制失败:", e);
       alert("复制失败，请手动选择并复制");
     }
   };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { logger } from "@/utils/logger";
 import type { NodeData, DiagnosticRecord } from "@/services/api";
 import { apiService } from "@/services/api";
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -56,7 +57,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
         setDiagnosticRecords([]);
       }
     } catch (error) {
-      console.error("Failed to fetch diagnostic records:", error);
+      logger.error("Failed to fetch diagnostic records:", error);
       setDiagnosticRecords([]);
     } finally {
       setLoadingDiagnostics(false);
@@ -74,7 +75,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
         setEvents([]);
       }
     } catch (error) {
-      console.error("Failed to fetch node events:", error);
+      logger.error("Failed to fetch node events:", error);
       setEvents([]);
     } finally {
       setLoadingEvents(false);

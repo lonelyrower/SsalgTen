@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState } from "react";
+import { logger } from "@/utils/logger";
 import { NetworkMetricsChart } from "@/components/charts/NetworkMetricsChart";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export const AnalyticsPanel = memo(
           setStats(null);
         }
       } catch (e) {
-        console.error("获取统计失败:", e);
+        logger.error("获取统计失败:", e);
         setStats(null);
       }
     };

@@ -1,4 +1,5 @@
 import React, {
+import { logger } from "@/utils/logger";
   useState,
   useRef,
   useCallback,
@@ -74,7 +75,7 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
       try {
         await onRefresh();
       } catch (error) {
-        console.error("Refresh failed:", error);
+        logger.error("Refresh failed:", error);
       } finally {
         setIsRefreshing(false);
       }

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "@/utils/logger";
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,7 +154,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
         setError(response.error || "Speedtest 测试失败");
       }
     } catch (err) {
-      console.error("Speedtest failed:", err);
+      logger.error("Speedtest failed:", err);
       setError(err instanceof Error ? err.message : "网络请求失败");
     } finally {
       setLoading(false);

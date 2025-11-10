@@ -1,4 +1,5 @@
 import { apiService, type ApiResponse, type User, type NodeData } from "./api";
+import { logger } from "@/utils/logger";
 
 // Enhanced API service with user feedback
 class EnhancedApiService {
@@ -23,7 +24,7 @@ class EnhancedApiService {
   }
 
   private handleError(operation: string, error: string) {
-    console.error(`${operation} failed:`, error);
+    logger.error(`${operation} failed:`, error);
 
     if (this.notificationCallbacks.showError) {
       let userMessage = error;

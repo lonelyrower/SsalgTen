@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { apiService, type SystemOverviewData } from "@/services/api";
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export const SystemOverview: React.FC = () => {
         setError(response.error || "获取系统概览数据失败");
       }
     } catch (err) {
-      console.error("Failed to fetch system overview:", err);
+      logger.error("Failed to fetch system overview:", err);
       setError("网络错误，无法获取系统概览");
     } finally {
       setLoading(false);
@@ -89,7 +90,7 @@ export const SystemOverview: React.FC = () => {
         });
       }
     } catch (err) {
-      console.error("Cleanup heartbeat logs error:", err);
+      logger.error("Cleanup heartbeat logs error:", err);
       addNotification({
         type: "error",
         title: "清理失败",

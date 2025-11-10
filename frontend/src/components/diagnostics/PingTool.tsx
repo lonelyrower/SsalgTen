@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "@/utils/logger";
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
         setError(response.error || "Ping 测试失败");
       }
     } catch (err) {
-      console.error("Ping test failed:", err);
+      logger.error("Ping test failed:", err);
       setError(err instanceof Error ? err.message : "网络请求失败");
     } finally {
       setLoading(false);

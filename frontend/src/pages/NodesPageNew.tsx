@@ -1,4 +1,5 @@
 import React, {
+import { logger } from "@/utils/logger";
   useState,
   useEffect,
   useMemo,
@@ -97,7 +98,7 @@ export const NodesPageNew: React.FC = () => {
         setHeartbeatData(null);
       }
     } catch (error) {
-      console.error("Failed to fetch heartbeat data:", error);
+      logger.error("Failed to fetch heartbeat data:", error);
       setHeartbeatData(null);
     }
   };

@@ -1,4 +1,5 @@
 import React from "react";
+import { logger } from "@/utils/logger";
 import type { ReactNode } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 import { AlertCircle } from "lucide-react";
@@ -12,7 +13,7 @@ export const PageErrorBoundary: React.FC<{ children: ReactNode }> = ({
   <ErrorBoundary
     onError={(error, errorInfo) => {
       // 在生产环境中，这里可以发送错误报告到监控服务
-      console.error("Page Error:", error, errorInfo);
+      logger.error("Page Error:", error, errorInfo);
     }}
   >
     {children}
@@ -39,7 +40,7 @@ export const ComponentErrorBoundary: React.FC<{
       </div>
     }
     onError={(error, errorInfo) => {
-      console.error(`Component Error in ${componentName}:`, error, errorInfo);
+      logger.error(`Component Error in ${componentName}:`, error, errorInfo);
     }}
   >
     {children}

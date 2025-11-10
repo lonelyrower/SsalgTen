@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { apiService, type NodeData } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -104,7 +105,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
         window.alert(`节点导出失败：${result.error || "未知错误"}`);
       }
     } catch (error) {
-      console.error("Export nodes failed:", error);
+      logger.error("Export nodes failed:", error);
       window.alert("节点导出失败，请稍后重试。");
     } finally {
       setExporting(false);
@@ -267,7 +268,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
         setError(response.error || "更新失败");
       }
     } catch (err) {
-      console.error("Cost update error:", err);
+      logger.error("Cost update error:", err);
       setError(err instanceof Error ? err.message : "更新失败");
     }
   };

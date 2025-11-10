@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "@/utils/logger";
 import type { NodeService } from "@/types/services";
 import { SERVICE_TYPE_CONFIG } from "@/types/services";
 import { Badge } from "../ui/badge";
@@ -309,7 +310,7 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
       showSuccess("已复制到剪贴板");
       setTimeout(() => setCopiedLink(null), 2000);
     } catch (err) {
-      console.error("Failed to copy link:", err);
+      logger.error("Failed to copy link:", err);
     }
   };
 
