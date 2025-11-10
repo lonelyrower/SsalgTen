@@ -32,34 +32,40 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const colorClasses = {
     blue: {
-      bg: "bg-blue-50 dark:bg-blue-900/20",
-      icon: "text-blue-600 dark:text-blue-400",
-      accent: "border-blue-200 dark:border-blue-800",
+      bg: "bg-blue-50 dark:bg-blue-900/30",
+      icon: "text-blue-600 dark:text-blue-300",
+      accent: "border-blue-200/70 dark:border-blue-600/50",
+      glow: "from-blue-400/20 to-blue-500/10",
     },
     green: {
-      bg: "bg-green-50 dark:bg-green-900/20",
-      icon: "text-green-600 dark:text-green-400",
-      accent: "border-green-200 dark:border-green-800",
+      bg: "bg-green-50 dark:bg-green-900/30",
+      icon: "text-green-600 dark:text-green-300",
+      accent: "border-green-200/70 dark:border-green-600/50",
+      glow: "from-green-400/20 to-green-500/10",
     },
     yellow: {
-      bg: "bg-yellow-50 dark:bg-yellow-900/20",
-      icon: "text-yellow-600 dark:text-yellow-400",
-      accent: "border-yellow-200 dark:border-yellow-800",
+      bg: "bg-yellow-50 dark:bg-yellow-900/30",
+      icon: "text-yellow-600 dark:text-yellow-300",
+      accent: "border-yellow-200/70 dark:border-yellow-600/50",
+      glow: "from-yellow-400/20 to-yellow-500/10",
     },
     red: {
-      bg: "bg-red-50 dark:bg-red-900/20",
-      icon: "text-red-600 dark:text-red-400",
-      accent: "border-red-200 dark:border-red-800",
+      bg: "bg-red-50 dark:bg-red-900/30",
+      icon: "text-red-600 dark:text-red-300",
+      accent: "border-red-200/70 dark:border-red-600/50",
+      glow: "from-red-400/20 to-red-500/10",
     },
     cyan: {
-      bg: "bg-cyan-50 dark:bg-cyan-900/20",
-      icon: "text-cyan-600 dark:text-cyan-400",
-      accent: "border-cyan-200 dark:border-cyan-800",
+      bg: "bg-cyan-50 dark:bg-cyan-900/30",
+      icon: "text-cyan-600 dark:text-cyan-300",
+      accent: "border-cyan-200/70 dark:border-cyan-600/50",
+      glow: "from-cyan-400/20 to-cyan-500/10",
     },
     sky: {
-      bg: "bg-sky-50 dark:bg-sky-900/20",
-      icon: "text-sky-600 dark:text-sky-400",
-      accent: "border-sky-200 dark:border-sky-800",
+      bg: "bg-sky-50 dark:bg-sky-900/30",
+      icon: "text-sky-600 dark:text-sky-300",
+      accent: "border-sky-200/70 dark:border-sky-600/50",
+      glow: "from-sky-400/20 to-sky-500/10",
     },
   };
 
@@ -67,24 +73,40 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <Card
-      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
+      className={`relative overflow-hidden bg-white dark:bg-gray-900 border shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-xl)] hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 group cursor-pointer ${colors.accent}`}
+      style={{
+        borderRadius: 'var(--radius-lg)',
+        borderWidth: 'var(--border-width-thin)',
+      }}
     >
-      <div className="p-6">
+      {/* 悬停光晕效果 */}
+      <div
+        className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${colors.glow}`}
+        style={{ borderRadius: 'var(--radius-lg)' }}
+      />
+
+      {/* 装饰性光点 */}
+      <div
+        className={`absolute -top-8 -right-8 w-20 h-20 rounded-full blur-2xl opacity-15 group-hover:opacity-25 transition-opacity duration-300 ${colors.bg}`}
+      />
+
+      <div style={{ padding: 'var(--card-padding-lg)' }}>
         <div className="flex items-center">
           <div
-            className={`flex-shrink-0 p-3 rounded-xl ${colors.bg} group-hover:scale-110 transition-transform duration-300`}
+            className={`flex-shrink-0 p-3 ${colors.bg} group-hover:scale-110 transition-transform duration-300 border border-white/60 dark:border-white/10 shadow-sm`}
+            style={{ borderRadius: 'var(--radius-md)' }}
           >
             <div className={`${colors.icon}`}>{icon}</div>
           </div>
           <div className="ml-4 flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            <p className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
               {title}
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1.5 transition-transform duration-300 group-hover:scale-105 tabular-nums">
               {value}
             </p>
             {subValue && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-300 mt-1.5">
                 {subValue}
               </p>
             )}
@@ -96,25 +118,25 @@ const StatsCard: React.FC<StatsCardProps> = ({
             <div className="flex items-center justify-between text-sm">
               {change !== undefined && (
                 <div
-                  className={`flex items-center space-x-1 ${
+                  className={`flex items-center space-x-1 font-semibold ${
                     change > 0
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-green-600 dark:text-green-300"
                       : change < 0
-                        ? "text-red-600 dark:text-red-400"
+                        ? "text-red-600 dark:text-red-300"
                         : "text-gray-500 dark:text-gray-400"
                   }`}
                 >
                   <TrendingUp
-                    className={`h-4 w-4 ${change < 0 ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 transition-transform duration-300 group-hover:scale-110 ${change < 0 ? "rotate-180" : ""}`}
                   />
-                  <span className="font-medium">
+                  <span className="font-bold">
                     {change > 0 ? "+" : ""}
                     {change}%
                   </span>
                 </div>
               )}
               {changeLabel && (
-                <span className="text-gray-500 dark:text-gray-400 text-xs">
+                <span className="text-gray-500 dark:text-gray-300 text-xs font-medium">
                   {changeLabel}
                 </span>
               )}
@@ -123,10 +145,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
         )}
       </div>
 
-      {/* 装饰性渐变 */}
-      <div
-        className={`absolute top-0 right-0 w-16 h-16 ${colors.bg} rounded-bl-full opacity-20`}
-      ></div>
+      {/* 底部装饰线 */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
     </Card>
   );
 };
