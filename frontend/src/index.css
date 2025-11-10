@@ -92,6 +92,10 @@
     --opacity-disabled: 0.5;
     --opacity-hover: 0.8;
     --opacity-overlay: 0.9;
+
+    /* 终端颜色 - 代码块 */
+    --terminal-bg: 222.2 84% 4.9%;         /* 深色背景 (类似 gray-900) */
+    --terminal-text: 142 76% 56%;          /* 绿色文本 (类似终端) */
   }
 
   .dark {
