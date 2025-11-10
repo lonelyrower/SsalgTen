@@ -29,38 +29,38 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
 
   return (
     <div
-      className={`rounded-lg border p-4 mb-6 ${healthy ? "border-green-200 bg-green-50 dark:bg-green-900/20" : "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20"}`}
+      className={`rounded-lg border p-4 mb-6 ${healthy ? "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10" : "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10"}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">
           <div className="mt-0.5">
             {healthy ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-[hsl(var(--success))]" />
             ) : (
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <AlertTriangle className="h-5 w-5 text-[hsl(var(--warning))]" />
             )}
           </div>
           <div>
-            <div className="font-medium text-gray-900 dark:text-gray-100">
+            <div className="font-medium text-foreground">
               连接性自检{" "}
               {checking && (
-                <Loader2 className="inline h-4 w-4 animate-spin ml-2 text-gray-500" />
+                <Loader2 className="inline h-4 w-4 animate-spin ml-2 text-muted-foreground" />
               )}
             </div>
-            <div className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+            <div className="mt-1 text-sm text-foreground">
               <div className="flex flex-wrap gap-3 mb-2">
                 <span
-                  className={`px-2 py-0.5 rounded text-xs ${apiReachable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                  className={`px-2 py-0.5 rounded text-xs ${apiReachable ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]"}`}
                 >
                   API {apiReachable ? "可达" : "不可达"}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-xs ${socketConnected ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                  className={`px-2 py-0.5 rounded text-xs ${socketConnected ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]"}`}
                 >
                   Socket {socketConnected ? "已连接" : "未连接"}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-xs ${authOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                  className={`px-2 py-0.5 rounded text-xs ${authOk ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]"}`}
                 >
                   认证 {authOk ? "正常" : "异常"}
                 </span>
@@ -77,12 +77,12 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
                   ))}
                 </ul>
               ) : (
-                <div className="text-green-700 dark:text-green-300">
+                <div className="text-[hsl(var(--success))]">
                   系统连接状态良好。
                 </div>
               )}
               {lastCheckedAt && (
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-muted-foreground mt-2">
                   上次检查：{new Date(lastCheckedAt).toLocaleString()}
                 </div>
               )}
@@ -117,7 +117,7 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
                 查看密钥
               </Button>
               <Button
-                className="bg-amber-600 hover:bg-amber-700 text-white"
+                className="bg-[hsl(var(--warning))] hover:bg-[hsl(var(--warning))]/90 text-white"
                 onClick={async () => {
                   if (
                     !confirm(
