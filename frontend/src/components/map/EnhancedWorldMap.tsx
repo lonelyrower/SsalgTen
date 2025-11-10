@@ -322,33 +322,33 @@ const getNodeStyle = (status: string) => {
   switch (normalizedStatus) {
     case "online":
       return {
-        color: "#22c55e",
-        bgColor: "bg-green-50",
-        textColor: "text-green-700",
+        color: "hsl(var(--success))",
+        bgColor: "bg-[hsl(var(--success))]/10",
+        textColor: "text-[hsl(var(--success))]",
         icon: Activity,
         pulse: true,
       };
     case "offline":
       return {
-        color: "#ef4444",
-        bgColor: "bg-red-50",
-        textColor: "text-red-700",
+        color: "hsl(var(--error))",
+        bgColor: "bg-[hsl(var(--error))]/10",
+        textColor: "text-[hsl(var(--error))]",
         icon: AlertTriangle,
         pulse: false,
       };
     case "maintenance":
       return {
-        color: "#f59e0b",
-        bgColor: "bg-yellow-50",
-        textColor: "text-yellow-700",
+        color: "hsl(var(--warning))",
+        bgColor: "bg-[hsl(var(--warning))]/10",
+        textColor: "text-[hsl(var(--warning))]",
         icon: Clock,
         pulse: false,
       };
     default:
       return {
-        color: "#6b7280",
-        bgColor: "bg-gray-50",
-        textColor: "text-gray-700",
+        color: "hsl(var(--muted-foreground))",
+        bgColor: "surface-elevated",
+        textColor: "text-muted-foreground",
         icon: Server,
         pulse: false,
       };
@@ -929,42 +929,42 @@ export const EnhancedWorldMap = memo(
           >
             <Popup className="custom-popup" maxWidth={300}>
               <div className="p-3">
-                <h3 className="font-bold text-base text-pink-700 dark:text-pink-300 mb-2 flex items-center">
+                <h3 className="font-bold text-base text-[hsl(var(--accent))] mb-2 flex items-center">
                   <VisitorMapPin className="h-4 w-4 mr-2" />
                   您的位置
                 </h3>
-                <div className="text-sm text-gray-700 dark:text-gray-200 mb-2 space-y-1">
+                <div className="text-sm text-foreground mb-2 space-y-1">
                   <div>
                     位置: {visitorLocation.city}, {visitorLocation.country}
                   </div>
                   {visitorLocation.ipv4 && (
-                    <div className="font-mono text-xs text-blue-600 dark:text-blue-300">
+                    <div className="font-mono text-xs text-[hsl(var(--info))]">
                       IPv4: {visitorLocation.ipv4}
                     </div>
                   )}
                   {visitorLocation.ipv6 && (
-                    <div className="font-mono text-xs text-indigo-600 dark:text-indigo-300 break-all">
+                    <div className="font-mono text-xs text-[hsl(var(--info))] break-all">
                       IPv6: {visitorLocation.ipv6}
                     </div>
                   )}
                   {visitorLocation.isp && (
-                    <div className="text-xs text-gray-700 dark:text-gray-200">
+                    <div className="text-xs text-foreground">
                       ISP: {visitorLocation.isp}
                     </div>
                   )}
-                  <div className="text-xs text-gray-500 dark:text-gray-300">
+                  <div className="text-xs text-muted-foreground">
                     坐标: {visitorLocation.latitude.toFixed(4)}, {visitorLocation.longitude.toFixed(4)}
                   </div>
                 </div>
                 {isMatching && matchedNode && (
-                  <div className="mt-3 p-2 bg-purple-50 dark:bg-purple-900/40 rounded border border-purple-200 dark:border-purple-600">
-                    <div className="text-sm font-semibold text-purple-700 dark:text-purple-200 mb-1">
+                  <div className="mt-3 p-2 bg-primary/10 rounded border border-border">
+                    <div className="text-sm font-semibold text-primary mb-1">
                       🎯 正在使用此节点
                     </div>
-                    <div className="text-xs text-purple-600 dark:text-purple-300">
+                    <div className="text-xs text-primary">
                       节点名称: {matchedNode.name}
                     </div>
-                    <div className="text-xs text-purple-600 dark:text-purple-300">
+                    <div className="text-xs text-primary">
                       {matchedNode.city}, {matchedNode.country}
                     </div>
                   </div>
@@ -1027,10 +1027,10 @@ export const EnhancedWorldMap = memo(
             >
               <Popup className="custom-popup" maxWidth={300}>
                 <div className="p-3">
-                  <h3 className="font-bold text-base text-gray-900 mb-2">
+                  <h3 className="font-bold text-base text-foreground mb-2">
                     集群节点 ({count})
                   </h3>
-                  <div className="text-sm text-gray-600 mb-2">
+                  <div className="text-sm text-muted-foreground mb-2">
                     在线: {props.online || 0} | 离线: {props.offline || 0}
                     {(() => {
                       const total = (props.online || 0) + (props.offline || 0);
@@ -1044,9 +1044,9 @@ export const EnhancedWorldMap = memo(
                           <span
                             className={`font-semibold ${
                               (props.offline || 0) === 0
-                                ? "text-green-600"
+                                ? "text-[hsl(var(--success))]"
                                 : (props.online || 0) === 0
-                                  ? "text-red-600"
+                                  ? "text-[hsl(var(--error))]"
                                   : "text-primary"
                             }`}
                           >
@@ -1061,7 +1061,7 @@ export const EnhancedWorldMap = memo(
                       );
                     })()}
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {(() => {
                       const currentMapZoom = mapRef.current?.getZoom() || 0;
                       const targetZoom = Math.min(
@@ -1098,19 +1098,19 @@ export const EnhancedWorldMap = memo(
             >
               <Popup className="custom-popup" maxWidth={300}>
                 <div className="p-3">
-                  <h3 className="font-bold text-base text-gray-900 mb-2">
+                  <h3 className="font-bold text-base text-foreground mb-2">
                     {node.name}
                   </h3>
-                  <div className="text-sm text-gray-600 mb-2 space-y-1">
+                  <div className="text-sm text-muted-foreground mb-2 space-y-1">
                     <div>
                       状态:{" "}
                       <span
                         className={`font-semibold ${
                           node.status === "online"
-                            ? "text-green-600"
+                            ? "text-[hsl(var(--success))]"
                             : node.status === "offline"
-                              ? "text-red-600"
-                              : "text-yellow-600"
+                              ? "text-[hsl(var(--error))]"
+                              : "text-[hsl(var(--warning))]"
                         }`}
                       >
                         {node.status.toUpperCase()}
@@ -1121,13 +1121,13 @@ export const EnhancedWorldMap = memo(
                     </div>
                     <div>提供商: {node.provider}</div>
                     {hasOriginalCoords && (
-                      <div className="text-xs text-orange-600 mt-2 p-2 bg-orange-50 rounded">
+                      <div className="text-xs text-[hsl(var(--warning))] mt-2 p-2 bg-[hsl(var(--warning))]/10 rounded">
                         <div className="font-medium">⚠️ 坐标已微调</div>
                         <div>
                           原始坐标: {node._originalLat?.toFixed(6)},{" "}
                           {node._originalLng?.toFixed(6)}
                         </div>
-                        <div className="text-gray-500">
+                        <div className="text-muted-foreground">
                           多节点位于相同位置，已自动分散显示
                         </div>
                       </div>
@@ -1145,7 +1145,7 @@ export const EnhancedWorldMap = memo(
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen
       ? "fullscreen-map flex-1 min-h-full w-full"
-      : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800";
+      : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-border";
     const mapContainerClassName = isFullscreen
       ? "z-0 rounded-none border-none shadow-none"
       : "z-0";
@@ -1162,34 +1162,34 @@ export const EnhancedWorldMap = memo(
               variant="secondary"
               size="sm"
               onClick={() => setShowLayerMenu(!showLayerMenu)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-lg border border-gray-200/60 lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-gray-800/95 dark:hover:bg-gray-700/95 dark:text-white dark:border-gray-600"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-surface-elevated/95 text-foreground hover:bg-surface-elevated shadow-lg border border-border lg:bg-surface-elevated/90 lg:backdrop-blur-[10px]"
               aria-expanded={showLayerMenu}
               aria-haspopup="menu"
             >
-              <Layers className="h-3 w-3 md:h-4 md:w-4 text-gray-700 dark:text-white" />
-              <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-white">
+              <Layers className="h-3 w-3 md:h-4 md:w-4 text-foreground" />
+              <span className="text-xs md:text-sm font-medium text-foreground">
                 图层
               </span>
             </Button>
 
             {/* 图层选择菜单 */}
             {showLayerMenu && (
-              <div className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
-                <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
+              <div className="absolute top-14 right-0 bg-surface-elevated rounded-lg shadow-xl border border-border overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
+                <div className="p-2 border-b border-border bg-surface-base">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-2">
                     选择地图图层
                   </p>
                 </div>
                 <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
                   {/* Carto 提供商组 */}
-                  <div className="rounded-lg border border-purple-200 dark:border-purple-700/40 overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/50">
-                      <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
+                  <div className="rounded-lg border border-primary/20 overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border-b border-primary/20">
+                      <MapPin className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-bold text-primary">
                         CARTO
                       </span>
                     </div>
-                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div className="divide-y divide-border">
                       {allLayers.carto.map((layer) => (
                         <button
                           key={layer.id}
@@ -1205,14 +1205,14 @@ export const EnhancedWorldMap = memo(
                           className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                             currentProvider === "carto" &&
                             currentLayerId === layer.id
-                              ? "bg-purple-600/10 dark:bg-purple-900/30 border-l-2 border-purple-600 text-purple-800 dark:text-purple-200"
-                              : "bg-white dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
+                              ? "bg-primary/10 border-l-2 border-primary text-primary"
+                              : "bg-surface-elevated hover:bg-surface-base text-foreground"
                           }`}
                         >
                           <span className="flex-1 text-left">{layer.name}</span>
                           {currentProvider === "carto" &&
                             currentLayerId === layer.id && (
-                              <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-300 rounded-full"></div>
+                              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
                             )}
                         </button>
                       ))}
@@ -1220,14 +1220,14 @@ export const EnhancedWorldMap = memo(
                   </div>
 
                   {/* OpenStreetMap 提供商组 */}
-                  <div className="rounded-lg border border-green-200 dark:border-green-700/40 overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 border-b border-green-200 dark:border-green-800/50">
-                      <MapIcon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                      <span className="text-xs font-bold text-green-700 dark:text-green-300">
+                  <div className="rounded-lg border border-[hsl(var(--success))]/20 overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[hsl(var(--success))]/10 border-b border-[hsl(var(--success))]/20">
+                      <MapIcon className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
+                      <span className="text-xs font-bold text-[hsl(var(--success))]">
                         OPENSTREETMAP
                       </span>
                     </div>
-                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div className="divide-y divide-border">
                       {allLayers.openstreetmap.map((layer) => (
                         <button
                           key={layer.id}
@@ -1243,14 +1243,14 @@ export const EnhancedWorldMap = memo(
                           className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                             currentProvider === "openstreetmap" &&
                             currentLayerId === layer.id
-                              ? "bg-green-600/10 dark:bg-green-900/30 border-l-2 border-green-600 text-green-800 dark:text-green-200"
-                              : "bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
+                              ? "bg-[hsl(var(--success))]/10 border-l-2 border-[hsl(var(--success))] text-[hsl(var(--success))]"
+                              : "bg-surface-elevated hover:bg-surface-base text-foreground"
                           }`}
                         >
                           <span className="flex-1 text-left">{layer.name}</span>
                           {currentProvider === "openstreetmap" &&
                             currentLayerId === layer.id && (
-                              <div className="w-1.5 h-1.5 bg-green-600 dark:bg-green-300 rounded-full"></div>
+                              <div className="w-1.5 h-1.5 bg-[hsl(var(--success))] rounded-full"></div>
                             )}
                         </button>
                       ))}
@@ -1258,19 +1258,19 @@ export const EnhancedWorldMap = memo(
                   </div>
 
                   {/* Mapbox 提供商组 */}
-                  <div className="rounded-lg border border-blue-200 dark:border-blue-700/40 overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
-                      <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                  <div className="rounded-lg border border-[hsl(var(--info))]/20 overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[hsl(var(--info))]/10 border-b border-[hsl(var(--info))]/20">
+                      <Layers className="h-3.5 w-3.5 text-[hsl(var(--info))]" />
+                      <span className="text-xs font-bold text-[hsl(var(--info))]">
                         MAPBOX
                       </span>
                       {!apiKey && (
-                        <span className="text-xs text-orange-600 dark:text-orange-400">
+                        <span className="text-xs text-[hsl(var(--warning))]">
                           (需要API密钥)
                         </span>
                       )}
                     </div>
-                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div className="divide-y divide-border">
                       {allLayers.mapbox.map((layer) => (
                         <button
                           key={layer.id}
@@ -1292,18 +1292,18 @@ export const EnhancedWorldMap = memo(
                           disabled={!apiKey}
                           className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                             !apiKey
-                              ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-600"
+                              ? "opacity-50 cursor-not-allowed text-muted-foreground"
                               : currentProvider === "mapbox" &&
                                   currentLayerId === layer.id
-                                ? "bg-blue-600/10 dark:bg-blue-900/30 border-l-2 border-blue-600 text-blue-800 dark:text-blue-200"
-                                : "bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
+                                ? "bg-[hsl(var(--info))]/10 border-l-2 border-[hsl(var(--info))] text-[hsl(var(--info))]"
+                                : "bg-surface-elevated hover:bg-surface-base text-foreground"
                           }`}
                         >
                           <span className="flex-1 text-left">{layer.name}</span>
                           {apiKey &&
                             currentProvider === "mapbox" &&
                             currentLayerId === layer.id && (
-                              <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-300 rounded-full"></div>
+                              <div className="w-1.5 h-1.5 bg-[hsl(var(--info))] rounded-full"></div>
                             )}
                         </button>
                       ))}
@@ -1363,7 +1363,7 @@ export const EnhancedWorldMap = memo(
 
         {/* 底部信息栏（固定高度不参与伸缩） */}
         {!isFullscreen && (
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-500 shrink-0">
+          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground shrink-0">
             <div className="flex items-center space-x-4">
               <span>共 {nodes.length} 个节点</span>
               {selectedNode && (
@@ -1376,15 +1376,15 @@ export const EnhancedWorldMap = memo(
         {/* 聚合节点详情模态框 */}
         {showClusterModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-surface-elevated rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b border-border">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-foreground">
                     聚合节点详情 ({clusterNodes.length} 个节点)
                   </h3>
                   <button
                     onClick={() => setShowClusterModal(false)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="text-muted-foreground hover:text-foreground"
                     aria-label="关闭聚合节点详情"
                   >
                     <svg
@@ -1402,7 +1402,7 @@ export const EnhancedWorldMap = memo(
                     </svg>
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   该位置的所有节点（已达到最大缩放级别）
                 </p>
               </div>
@@ -1416,33 +1416,33 @@ export const EnhancedWorldMap = memo(
                         onNodeClick?.(node);
                         setShowClusterModal(false);
                       }}
-                      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                      className="p-4 border border-border rounded-lg hover:bg-surface-base cursor-pointer transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                        <h4 className="font-medium text-foreground text-sm">
                           {node.name}
                         </h4>
                         <div
                           className={`w-3 h-3 rounded-full ${
                             node.status === "online"
-                              ? "bg-green-500"
+                              ? "bg-[hsl(var(--success))]"
                               : node.status === "offline"
-                                ? "bg-red-500"
-                                : "bg-yellow-500"
+                                ? "bg-[hsl(var(--error))]"
+                                : "bg-[hsl(var(--warning))]"
                           }`}
                         ></div>
                       </div>
 
-                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                      <div className="text-xs text-muted-foreground space-y-1">
                         <div>
                           状态:{" "}
                           <span
                             className={`font-medium ${
                               node.status === "online"
-                                ? "text-green-600"
+                                ? "text-[hsl(var(--success))]"
                                 : node.status === "offline"
-                                  ? "text-red-600"
-                                  : "text-yellow-600"
+                                  ? "text-[hsl(var(--error))]"
+                                  : "text-[hsl(var(--warning))]"
                             }`}
                           >
                             {node.status.toUpperCase()}
@@ -1458,7 +1458,7 @@ export const EnhancedWorldMap = memo(
                           </div>
                         )}
                         {node.ipv6 && node.ipv6.includes(":") && (
-                          <div className="font-mono text-indigo-500 dark:text-indigo-300 break-all">
+                          <div className="font-mono text-[hsl(var(--info))] break-all">
                             {node.ipv6}
                           </div>
                         )}
@@ -1468,14 +1468,14 @@ export const EnhancedWorldMap = memo(
                 </div>
               </div>
 
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+              <div className="p-4 border-t border-border bg-surface-base">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-4">
-                    <span className="text-green-600">
+                    <span className="text-[hsl(var(--success))]">
                       在线:{" "}
                       {clusterNodes.filter((n) => n.status === "online").length}
                     </span>
-                    <span className="text-red-600">
+                    <span className="text-[hsl(var(--error))]">
                       离线:{" "}
                       {
                         clusterNodes.filter((n) => n.status === "offline")
@@ -1485,7 +1485,7 @@ export const EnhancedWorldMap = memo(
                   </div>
                   <button
                     onClick={() => setShowClusterModal(false)}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                    className="px-4 py-2 bg-surface-elevated text-foreground rounded hover:bg-surface-overlay transition-colors"
                   >
                     关闭
                   </button>
