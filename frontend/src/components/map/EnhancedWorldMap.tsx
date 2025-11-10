@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
+import { logger } from "@/utils/logger";
   useRef,
   memo,
   useMemo,
@@ -72,7 +73,7 @@ const resolveStoredSelectionMode = (): "manual" | "auto" | null => {
     const stored = localStorage.getItem(LOCAL_STORAGE_SELECTION_KEY);
     return stored === "manual" || stored === "auto" ? stored : null;
   } catch (error) {
-    console.warn(
+    logger.warn(
       "Failed to read map provider selection mode from localStorage",
       error,
     );
@@ -92,7 +93,7 @@ const resolveStoredProvider = (): MapProvider | undefined => {
     }
     return stored;
   } catch (error) {
-    console.warn("Failed to read map provider from localStorage", error);
+    logger.warn("Failed to read map provider from localStorage", error);
     return undefined;
   }
 };
@@ -106,7 +107,7 @@ const resolveStoredLayerId = (provider?: MapProvider): string | undefined => {
       ? stored
       : undefined;
   } catch (error) {
-    console.warn("Failed to read map layer ID from localStorage", error);
+    logger.warn("Failed to read map layer ID from localStorage", error);
     return undefined;
   }
 };
@@ -134,7 +135,7 @@ const resolvePreferredProvider = (): MapProvider => {
   const runtimeProvider = normalizeProvider(w.APP_CONFIG?.MAP_PROVIDER);
   if (runtimeProvider) {
     if (runtimeProvider === "mapbox" && !hasAnyApiKeyAvailable()) {
-      console.warn(
+      logger.warn(
         "[EnhancedWorldMap] MAP_PROVIDER=mapbox but no API key detected, falling back to carto",
       );
     } else {
@@ -147,7 +148,7 @@ const resolvePreferredProvider = (): MapProvider => {
   );
   if (envProvider) {
     if (envProvider === "mapbox" && !hasAnyApiKeyAvailable()) {
-      console.warn(
+      logger.warn(
         "[EnhancedWorldMap] VITE_MAP_PROVIDER=mapbox without API key, falling back to carto",
       );
     } else {
@@ -488,7 +489,7 @@ const BoundsHandler = ({
     try {
       onBoundsChange(map.getBounds());
     } catch (error) {
-      console.warn("Failed to emit initial bounds", error);
+      logger.warn("Failed to emit initial bounds", error);
     }
   }, [map, onBoundsChange]);
   return null;
@@ -731,7 +732,7 @@ export const EnhancedWorldMap = memo(
         }
 
         if (reason) {
-          console.warn(
+          logger.warn(
             `[EnhancedWorldMap] Fallback to default layer due to: ${reason}`,
           );
         }
@@ -746,7 +747,7 @@ export const EnhancedWorldMap = memo(
             localStorage.setItem(LOCAL_STORAGE_LAYER_KEY, fallbackLayerId);
             localStorage.setItem(LOCAL_STORAGE_SELECTION_KEY, "auto");
           } catch (error) {
-            console.warn("Failed to persist fallback map provider", error);
+            logger.warn("Failed to persist fallback map provider", error);
           }
         }
         return true;
@@ -786,7 +787,7 @@ export const EnhancedWorldMap = memo(
             manual ? "manual" : "auto",
           );
         } catch (error) {
-          console.warn("Failed to save map preferences to localStorage", error);
+          logger.warn("Failed to save map preferences to localStorage", error);
         }
       }
     };
@@ -1020,7 +1021,7 @@ export const EnhancedWorldMap = memo(
                       });
                     }
                   } catch (error) {
-                    console.error("Failed to handle cluster click", error);
+                    logger.error("Failed to handle cluster click", error);
                   }
                 },
               }}
@@ -1145,7 +1146,7 @@ export const EnhancedWorldMap = memo(
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen
       ? "fullscreen-map flex-1 min-h-full w-full"
-      : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800";
+      : "flex-1 min-h-[300px] md:min-h-[480px] w-full  overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800";
     const mapContainerClassName = isFullscreen
       ? "z-0 rounded-none border-none shadow-none"
       : "z-0";
@@ -1174,7 +1175,7 @@ export const EnhancedWorldMap = memo(
 
             {/* 图层选择菜单 */}
             {showLayerMenu && (
-              <div className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
+              <div className="absolute top-14 right-0 bg-white dark:bg-gray-800  shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
                 <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
                     选择地图图层
@@ -1376,7 +1377,7 @@ export const EnhancedWorldMap = memo(
         {/* 聚合节点详情模态框 */}
         {showClusterModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="bg-white dark:bg-gray-800  shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1416,7 +1417,7 @@ export const EnhancedWorldMap = memo(
                         onNodeClick?.(node);
                         setShowClusterModal(false);
                       }}
-                      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                      className="p-4 border border-gray-200 dark:border-gray-600  hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm">

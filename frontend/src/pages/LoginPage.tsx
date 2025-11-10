@@ -94,7 +94,7 @@ export const LoginPage: React.FC = () => {
             {/* Logo 和标题 */}
             <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-6">
-                <div className="p-4 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-sky-500/40">
+                <div className="p-4 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600  shadow-lg shadow-sky-500/40">
                   <Shield className="h-12 w-12 text-white" />
                 </div>
               </div>
@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80 rounded-xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-all duration-200 bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
+                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80  focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-all duration-200 bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
                   placeholder="请输入用户名"
                   autoComplete="username"
                   disabled={isSubmitting}
@@ -148,7 +148,7 @@ export const LoginPage: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-colors"
+                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80  focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-colors"
                   placeholder="请输入密码"
                   autoComplete="current-password"
                   disabled={isSubmitting}
@@ -167,7 +167,7 @@ export const LoginPage: React.FC = () => {
 
             {/* 错误信息 */}
             {error && (
-              <div className="p-3 border border-red-300/80 bg-red-50/80 dark:border-red-800/60 dark:bg-red-900/30 rounded-lg shadow-inner shadow-red-500/10">
+              <div className="p-3 border border-red-300/80 bg-red-50/80 dark:border-red-800/60 dark:bg-red-900/30  shadow-inner shadow-red-500/10">
                 <p className="text-sm text-red-600 dark:text-red-300">
                   {error}
                 </p>
@@ -192,7 +192,7 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* 默认账户提示 */}
-          <div className="mt-8 rounded-xl border border-cyan-200/70 bg-cyan-50/70 p-4 text-cyan-700 shadow-inner shadow-cyan-500/10 dark:border-cyan-900/50 dark:bg-sky-900/20 dark:text-cyan-200">
+          <div className="mt-8  border border-cyan-200/70 bg-cyan-50/70 p-4 text-cyan-700 shadow-inner shadow-cyan-500/10 dark:border-cyan-900/50 dark:bg-sky-900/20 dark:text-cyan-200">
             <p className="text-sm text-center font-semibold">
               <strong>默认管理员账户：</strong>
             </p>

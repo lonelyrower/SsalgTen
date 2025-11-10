@@ -83,7 +83,7 @@ class IPService {
           break;
         }
       } catch (error) {
-        console.warn(`IP API failed, trying next:`, error);
+        logger.warn(`IP API failed, trying next:`, error);
         continue;
       }
     }

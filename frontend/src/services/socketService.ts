@@ -1,5 +1,7 @@
 import { io, Socket } from "socket.io-client";
+import { logger } from "@/utils/logger";
 import { TokenManager } from "./api";
+import { logger } from "@/utils/logger";
 
 interface SocketService {
   socket: Socket | null;
@@ -59,7 +61,7 @@ class SocketServiceImpl implements SocketService {
 
     const token = TokenManager.getToken();
     if (!token) {
-      console.warn("无法建立Socket连接：缺少认证token");
+      logger.warn("无法建立Socket连接：缺少认证token");
       return;
     }
 
@@ -112,7 +114,7 @@ class SocketServiceImpl implements SocketService {
     this.socket.on("connect", () => {
       this.connected = true;
       this.reconnectAttempts = 0;
-      console.log("Socket.IO 连接成功", { url: serverUrl });
+      logger.log("Socket.IO 连接成功", { url: serverUrl });
       this.notifyConnectionStatus(true);
 
       // 重新订阅节点心跳详情
@@ -137,7 +139,7 @@ class SocketServiceImpl implements SocketService {
 
     this.socket.on("disconnect", (reason) => {
       this.connected = false;
-      console.log("Socket.IO 连接断开:", reason);
+      logger.log("Socket.IO 连接断开:", reason);
       this.notifyConnectionStatus(false);
 
       // 只在非手动断开时尝试重连
@@ -148,9 +150,9 @@ class SocketServiceImpl implements SocketService {
 
     this.socket.on("connect_error", (error) => {
       this.connected = false;
-      console.error("Socket.IO 连接错误:", error);
-      console.log("连接URL:", serverUrl);
-      console.log("Token长度:", token?.length || 0);
+      logger.error("Socket.IO 连接错误:", error);
+      logger.log("连接URL:", serverUrl);
+      logger.log("Token长度:", token?.length || 0);
 
       const errorObj =
         error instanceof Error ? error : new Error(String(error));
@@ -173,13 +175,13 @@ class SocketServiceImpl implements SocketService {
       this.connected = false;
       this.callbacks = {};
       this.reconnectAttempts = 0;
-      console.log("Socket.IO 连接已关闭");
+      logger.log("Socket.IO 连接已关闭");
     }
   };
 
   private handleReconnect = () => {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error(
+      logger.error(
         `Socket重连失败，已达到最大重试次数 (${this.maxReconnectAttempts})`,
       );
       const error = new Error(
@@ -195,7 +197,7 @@ class SocketServiceImpl implements SocketService {
       30000,
     );
 
-    console.log(
+    logger.log(
       `Socket重连中... (${this.reconnectAttempts}/${this.maxReconnectAttempts})，${delay}ms后重试`,
     );
 
@@ -214,7 +216,7 @@ class SocketServiceImpl implements SocketService {
       try {
         callback(error);
       } catch (e) {
-        console.error("连接错误回调执行失败:", e);
+        logger.error("连接错误回调执行失败:", e);
       }
     });
   };
@@ -224,7 +226,7 @@ class SocketServiceImpl implements SocketService {
       try {
         callback(connected);
       } catch (e) {
-        console.error("连接状态回调执行失败:", e);
+        logger.error("连接状态回调执行失败:", e);
       }
     });
   };
@@ -253,7 +255,7 @@ class SocketServiceImpl implements SocketService {
 
   subscribeToNodes = (callback: (data: unknown) => void) => {
     if (!this.socket) {
-      console.warn("Socket未连接，无法订阅节点更新");
+      logger.warn("Socket未连接，无法订阅节点更新");
       return;
     }
 
@@ -274,7 +276,7 @@ class SocketServiceImpl implements SocketService {
     callback: (data: unknown) => void,
   ) => {
     if (!this.socket) {
-      console.warn("Socket未连接，无法订阅诊断更新");
+      logger.warn("Socket未连接，无法订阅诊断更新");
       return;
     }
 
@@ -293,7 +295,7 @@ class SocketServiceImpl implements SocketService {
 
   requestRealtimeNodes = () => {
     if (!this.socket) {
-      console.warn("Socket未连接，无法请求实时节点数据");
+      logger.warn("Socket未连接，无法请求实时节点数据");
       return;
     }
 
@@ -324,7 +326,7 @@ class SocketServiceImpl implements SocketService {
     callback: (payload: { nodeId: string; data: unknown }) => void,
   ) => {
     if (!this.socket) {
-      console.warn("Socket未连接，无法订阅节点心跳详情");
+      logger.warn("Socket未连接，无法订阅节点心跳详情");
       return;
     }
     this.socket.emit("subscribe_node_heartbeat", nodeId);
@@ -342,7 +344,7 @@ class SocketServiceImpl implements SocketService {
             try {
               cb(payload);
             } catch (e) {
-              console.error(e);
+              logger.error(e);
             }
           }
         },
@@ -367,7 +369,7 @@ class SocketServiceImpl implements SocketService {
     callback: (event: unknown) => void,
   ) => {
     if (!this.socket) {
-      console.warn("Socket未连接，无法订阅节点事件");
+      logger.warn("Socket未连接，无法订阅节点事件");
       return;
     }
     this.socket.emit("subscribe_node_events", nodeId);
@@ -383,7 +385,7 @@ class SocketServiceImpl implements SocketService {
           try {
             cb(ev);
           } catch (e) {
-            console.error(e);
+            logger.error(e);
           }
         }
       });

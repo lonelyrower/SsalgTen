@@ -105,7 +105,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
       <div className="space-y-4 text-left">
         {/* 标题 */}
         <div className="flex items-center gap-2 pb-3 border-b border-green-200/30 dark:border-green-700/30">
-          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+          <div className="p-2 bg-green-100 dark:bg-green-900/30 ">
             <Wifi className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
           <div className="flex-1">
@@ -151,7 +151,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: 8.8.8.8)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
 
@@ -163,7 +163,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value={1}>1 次</option>
               <option value={4}>4 次</option>
@@ -194,7 +194,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ">
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         )}
@@ -225,7 +225,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
+              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20  border border-green-200/50 dark:border-green-700/50">
                 <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
                   <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
                   平均延迟
@@ -234,7 +234,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
                   {formatLatency(result.avg ?? result.time)}
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
+              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20  border border-green-200/50 dark:border-green-700/50">
                 <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
                   <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
                   丢包率
@@ -246,13 +246,13 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
-              <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30">
+              <div className="p-3 bg-green-50/50 dark:bg-green-900/10  border border-green-200/30 dark:border-green-700/30">
                 <p>最小延迟</p>
                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
                   {formatLatency(result.min)}
                 </p>
               </div>
-              <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30">
+              <div className="p-3 bg-green-50/50 dark:bg-green-900/10  border border-green-200/30 dark:border-green-700/30">
                 <p>最大延迟</p>
                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
                   {formatLatency(result.max)}
@@ -274,7 +274,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
                 <summary className="cursor-pointer text-xs text-green-600 dark:text-green-400 hover:underline">
                   查看原始输出
                 </summary>
-                <div className="mt-2 p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30 max-h-60 overflow-y-auto">
+                <div className="mt-2 p-3 bg-green-50/50 dark:bg-green-900/10  border border-green-200/30 dark:border-green-700/30 max-h-60 overflow-y-auto">
                   <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
                     {result.output}
                   </pre>

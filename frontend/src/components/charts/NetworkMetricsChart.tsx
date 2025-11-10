@@ -273,7 +273,7 @@ export const NetworkMetricsChart = memo(
         {/* 图表标题和控制 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/10 ">
               {type === "pie" ? (
                 <PieChartIcon className="h-5 w-5 text-primary" />
               ) : type === "bar" ? (

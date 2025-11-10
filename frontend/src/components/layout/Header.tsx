@@ -53,7 +53,7 @@ export const Header = () => {
               {/* 外层发光 */}
               <div className="absolute inset-0 bg-cyan-500/30 blur-md group-hover:bg-cyan-400/40 transition-all" />
               {/* 六边形背景 */}
-              <div className="relative p-2.5 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400/50 backdrop-blur-sm transition-all">
+              <div className="relative p-2.5 bg-gradient-to-br from-cyan-500/20 to-blue-600/20  border border-cyan-500/30 group-hover:border-cyan-400/50 backdrop-blur-sm transition-all">
                 <Network
                   className="h-6 w-6 text-cyan-400 group-hover:text-cyan-300 transition-colors"
                   strokeWidth={2.5}
@@ -80,7 +80,7 @@ export const Header = () => {
               <>
                 <Link
                   to="/dashboard"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`relative flex items-center space-x-1.5 px-3 py-2  text-sm font-medium transition-all ${
                     isActive("/dashboard")
                       ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
                       : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
@@ -94,7 +94,7 @@ export const Header = () => {
                 </Link>
                 <Link
                   to="/nodes"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`relative flex items-center space-x-1.5 px-3 py-2  text-sm font-medium transition-all ${
                     isActive("/nodes")
                       ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
                       : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
@@ -108,7 +108,7 @@ export const Header = () => {
                 </Link>
                 <Link
                   to="/streaming"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`relative flex items-center space-x-1.5 px-3 py-2  text-sm font-medium transition-all ${
                     isActive("/streaming")
                       ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
                       : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
@@ -122,7 +122,7 @@ export const Header = () => {
                 </Link>
                 <Link
                   to="/services"
-                  className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`relative flex items-center space-x-1.5 px-3 py-2  text-sm font-medium transition-all ${
                     isActive("/services")
                       ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
                       : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
@@ -137,7 +137,7 @@ export const Header = () => {
                 {isAuthenticated && (
                   <Link
                     to="/admin"
-                    className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`relative flex items-center space-x-1.5 px-3 py-2  text-sm font-medium transition-all ${
                       isActive("/admin")
                         ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
                         : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
@@ -159,7 +159,7 @@ export const Header = () => {
             {/* 连接状态指示器 - 仅在已认证时显示 */}
             {isAuthenticated && (
               <div
-                className={`hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                className={`hidden lg:flex items-center space-x-1.5 px-3 py-2  text-xs font-medium transition-all ${
                   connected
                     ? "bg-green-500/15 text-green-300 border border-green-500/30 hover:border-green-500/50"
                     : "bg-red-500/15 text-red-300 border border-red-500/30 hover:border-red-500/50"
@@ -184,14 +184,14 @@ export const Header = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all mobile-touch-target"
+                className="flex items-center space-x-1.5 px-3 py-2  text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all mobile-touch-target"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="hidden lg:inline">退出</span>
               </Button>
             ) : (
               <Link to="/login">
-                <Button className="flex items-center space-x-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40 transition-all mobile-touch-target">
+                <Button className="flex items-center space-x-1.5 px-4 py-2  text-sm font-medium bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[var(--shadow-lg)] shadow-cyan-500/30 hover:shadow-cyan-500/40 transition-all mobile-touch-target">
                   <Activity className="h-4 w-4" />
                   <span className="hidden sm:inline">登录</span>
                 </Button>

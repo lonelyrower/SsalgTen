@@ -4,7 +4,7 @@ interface ErrorBannerProps {
 
 export const ErrorBanner: React.FC<ErrorBannerProps> = ({ error }) => {
   return (
-    <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+    <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 ">
       <div className="flex items-center">
         <div className="text-red-500 mr-2">⚠️</div>
         <div>

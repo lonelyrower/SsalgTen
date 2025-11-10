@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { logger } from "@/utils/logger";
 import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/utils/logger";
 import { socketService } from "@/services/socketService";
 import { compareNodes, compareStats, deepEqual } from "@/utils/deepCompare";
 import { apiService } from "@/services/api";
@@ -298,7 +300,7 @@ export function useRealTime() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "无法连接到后端服务器";
-      console.warn("Failed to fetch nodes via REST fallback:", error);
+      logger.warn("Failed to fetch nodes via REST fallback:", error);
       setRealtimeData((prev) => ({
         ...prev,
         error: errorMessage,

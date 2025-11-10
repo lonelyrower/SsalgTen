@@ -228,10 +228,10 @@ export const ApiKeyManagement: React.FC = () => {
         {apiKeyInfo && (
           <div className="space-y-6">
             {/* 密钥信息卡片 */}
-            <div className={`p-4 rounded-lg border-2 ${getSecurityColor()}`}>
+            <div className={`p-4  border-2 ${getSecurityColor()}`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-white/50">
+                  <div className="p-2  bg-white/50">
                     {getSecurityStatus() === "secure" ? (
                       <Shield className="h-6 w-6" />
                     ) : (

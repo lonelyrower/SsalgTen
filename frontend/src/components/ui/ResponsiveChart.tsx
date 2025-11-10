@@ -92,7 +92,7 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
+      className={`relative bg-white dark:bg-gray-800  shadow-lg border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
     >
       {/* 图表头部 */}
       {(title || allowFullscreen) && (
@@ -195,7 +195,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
+      className={`bg-white dark:bg-gray-800  p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">

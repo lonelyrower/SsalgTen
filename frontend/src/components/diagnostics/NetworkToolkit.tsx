@@ -234,7 +234,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                       e.target.value as typeof diagnosticFilter,
                     )
                   }
-                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="ALL">全部类型</option>
                   <option value="PING">PING</option>
@@ -311,7 +311,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                               <summary className="cursor-pointer text-xs text-primary hover:underline">
                                 查看详细结果
                               </summary>
-                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 rounded-lg">
+                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 ">
                                 <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
                                   {record.result}
                                 </pre>
@@ -411,7 +411,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                               <summary className="cursor-pointer text-xs text-primary hover:underline">
                                 查看详细信息
                               </summary>
-                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 rounded-lg">
+                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 ">
                                 <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
                                   {JSON.stringify(event.details, null, 2)}
                                 </pre>

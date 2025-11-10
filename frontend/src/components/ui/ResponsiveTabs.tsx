@@ -180,7 +180,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
           aria-expanded={dropdownOpen ? "true" : "false"}
           aria-haspopup="listbox"
           aria-label="选择标签页"
-          className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700  shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
         >
           <div className="flex items-center space-x-3">
             {activeTabInfo?.icon && (
@@ -207,7 +207,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
 
             {/* 下拉菜单 */}
             <div
-              className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden"
+              className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700  shadow-lg z-20 overflow-hidden"
               role="listbox"
               aria-label="选择标签页"
             >

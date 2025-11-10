@@ -1,6 +1,7 @@
 // 运行时配置加载器 - 应用启动时从后端获取最新的地图配置
 
 import { apiService } from "@/services/api";
+import { logger } from "@/utils/logger";
 
 interface MapConfigResponse {
   provider?: string;
@@ -79,16 +80,16 @@ export async function loadMapConfig(): Promise<void> {
 
       config.MAP_PROVIDER = provider;
 
-      console.info(
+      logger.info(
         "%cMap Config Loaded",
         "color: #10b981; font-weight: bold",
         `Provider: ${config.MAP_PROVIDER}`,
       );
     } else {
-      console.warn("Failed to load map config, using defaults");
+      logger.warn("Failed to load map config, using defaults");
     }
   } catch (error) {
-    console.error("Error loading map config:", error);
+    logger.error("Error loading map config:", error);
     // 失败时使用兜底配置，确保组件仍可渲染
     const config = ensureAppConfig();
     if (typeof config.MAP_PROVIDER !== "string") {

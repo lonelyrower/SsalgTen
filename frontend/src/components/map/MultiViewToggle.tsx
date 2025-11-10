@@ -13,7 +13,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-500 bg-gray-100 dark:bg-gray-900 p-1",
+        "relative inline-flex items-center  border border-gray-200 dark:border-gray-500 bg-gray-100 dark:bg-gray-900 p-1",
         "shadow-sm dark:shadow-md overflow-hidden",
         className,
       )}
@@ -23,7 +23,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
       {/* sliding indicator */}
       <div
         className={cn(
-          "absolute top-1 bottom-1 w-1/3 rounded-lg transition-all duration-200 ease-out",
+          "absolute top-1 bottom-1 w-1/3  transition-all duration-200 ease-out",
           "bg-white dark:bg-gradient-to-br dark:from-gray-600 dark:to-gray-500 shadow-md dark:shadow-lg dark:shadow-cyan-500/20",
           value === "list"
             ? "left-1"
@@ -39,7 +39,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
         aria-selected={value === "list"}
         onClick={() => onChange("list")}
         className={cn(
-          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium ",
           "flex items-center justify-center gap-2 transition-colors",
           value === "list"
             ? "text-gray-900 dark:text-gray-100"
@@ -57,7 +57,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
         aria-selected={value === "2d"}
         onClick={() => onChange("2d")}
         className={cn(
-          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium ",
           "flex items-center justify-center gap-2 transition-colors",
           value === "2d"
             ? "text-gray-900 dark:text-gray-100"
@@ -75,7 +75,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
         aria-selected={value === "3d"}
         onClick={() => onChange("3d")}
         className={cn(
-          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium ",
           "flex items-center justify-center gap-2 transition-colors",
           value === "3d"
             ? "text-gray-900 dark:text-gray-100"

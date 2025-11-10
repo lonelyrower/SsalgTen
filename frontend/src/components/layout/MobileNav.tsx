@@ -98,7 +98,7 @@ export const MobileNav: React.FC = () => {
             />
 
             {/* 侧边菜单 */}
-            <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-[9999] shadow-xl transform transition-transform duration-300">
+            <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-[9999] shadow-[var(--shadow-xl)] transform transition-transform duration-300">
               <div className="flex flex-col h-full">
                 {/* 用户信息区域 */}
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -148,7 +148,7 @@ export const MobileNav: React.FC = () => {
                           key={item.path}
                           to={item.path}
                           onClick={() => setIsOpen(false)}
-                          className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                          className={`flex items-center space-x-3 px-3 py-3  text-sm font-medium transition-colors ${
                             isActive
                               ? "bg-primary/10 text-primary"
                               : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"

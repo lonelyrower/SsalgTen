@@ -101,12 +101,12 @@ export const AnalyticsPanel = memo(
 
           <div className="flex items-center space-x-3">
             {/* 时间范围选择 */}
-            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex bg-gray-100 dark:bg-gray-800  p-1">
               {(["1h", "24h", "7d", "30d"] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
-                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1 text-sm font-medium  transition-colors ${
                     timeRange === range
                       ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
                       : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -150,7 +150,7 @@ export const AnalyticsPanel = memo(
                 <GlassCard key={index} className="p-6" animated>
                   <div className="flex items-center justify-between">
                     <div
-                      className={`p-3 rounded-xl bg-${metric.color}-50 dark:bg-${metric.color}-900/20`}
+                      className={`p-3  bg-${metric.color}-50 dark:bg-${metric.color}-900/20`}
                     >
                       <IconComponent
                         className={`h-6 w-6 text-${metric.color}-600`}

@@ -127,7 +127,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
         {/* 标题 - 统一样式 */}
         <div className="flex items-center justify-between pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+            <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 ">
               <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
             </div>
             <div className="flex-1">
@@ -142,7 +142,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           <button
             onClick={performCheck}
             disabled={checking}
-            className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-lg transition-colors"
+            className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30  transition-colors"
             title="重新检查"
             aria-label="重新检查连接性"
           >
@@ -154,7 +154,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ">
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         )}
@@ -163,7 +163,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
         {result && (
           <div className="space-y-3">
           {/* 节点状态 */}
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10  border border-cyan-200/30 dark:border-cyan-700/30">
             <div className="flex items-center gap-3">
               {result.nodeOnline ? (
                 <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -186,7 +186,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           </div>
 
           {/* 访客IP */}
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10  border border-cyan-200/30 dark:border-cyan-700/30">
             <div className="flex items-center gap-3">
               <Globe className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
               <div>
@@ -199,7 +199,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           </div>
 
           {/* 基本延迟 */}
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10  border border-cyan-200/30 dark:border-cyan-700/30">
             <div className="flex items-center gap-3">
               <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
               <div>
@@ -244,7 +244,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
           {/* 丢包 */}
           {result.packetLoss !== null && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10  border border-cyan-200/30 dark:border-cyan-700/30">
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 丢包率
               </div>

@@ -15,7 +15,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/90 p-1",
+        "relative inline-flex items-center  border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/90 p-1",
         "shadow-sm overflow-hidden",
         className,
       )}
@@ -25,7 +25,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
       {/* sliding indicator */}
       <div
         className={cn(
-          "absolute top-1 bottom-1 w-1/2 rounded-lg transition-all duration-200 ease-out",
+          "absolute top-1 bottom-1 w-1/2  transition-all duration-200 ease-out",
           "bg-white dark:bg-gray-600 shadow-md dark:shadow-gray-900/50",
           value === "2d" ? "left-1" : "left-1/2",
         )}
@@ -37,7 +37,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
         aria-selected={value === "2d"}
         onClick={() => onChange("2d")}
         className={cn(
-          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium ",
           "flex items-center justify-center gap-2 transition-colors",
           value === "2d"
             ? "text-gray-900 dark:text-gray-100"
@@ -55,7 +55,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
         aria-selected={value === "3d"}
         onClick={() => onChange("3d")}
         className={cn(
-          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium ",
           "flex items-center justify-center gap-2 transition-colors",
           value === "3d"
             ? "text-gray-900 dark:text-gray-100"

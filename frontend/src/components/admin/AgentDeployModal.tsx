@@ -23,13 +23,18 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deploy-modal-title"
+    >
+      <Card className="bg-white dark:bg-gray-800  shadow-[var(--shadow-xl)] max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 头部 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <Server className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <Server className="h-6 w-6 text-blue-600" aria-hidden="true" />
+            <h2 id="deploy-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
               部署网络监控探针
             </h2>
           </div>
@@ -38,8 +43,9 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
             size="sm"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
+            aria-label="关闭对话框"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 

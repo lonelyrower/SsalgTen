@@ -81,7 +81,7 @@ class ErrorBoundary extends Component<Props, State> {
       // 默认错误UI
       return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800  shadow-lg p-6">
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
@@ -99,7 +99,7 @@ class ErrorBoundary extends Component<Props, State> {
 
               {/* 错误详情（仅开发环境显示） */}
               {process.env.NODE_ENV === "development" && this.state.error && (
-                <details className="text-left mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <details className="text-left mb-6 p-4 bg-gray-50 dark:bg-gray-700 ">
                   <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                     <Bug className="h-4 w-4 mr-2" />
                     开发者信息

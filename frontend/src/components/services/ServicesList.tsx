@@ -120,7 +120,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
   return (
     <Card
-      className={`p-3 transition-all shadow-md hover:shadow-lg ${colorScheme.gradient} ${colorScheme.border}`}
+      className={`p-3 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] ${colorScheme.gradient} ${colorScheme.border}`}
     >
       <div className="space-y-2.5">
         {/* 服务类型图标和名称 */}
@@ -150,7 +150,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
 
         {/* 节点信息 */}
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-gray-900/30">
+        <div className="flex items-center gap-2 p-2  bg-white/50 dark:bg-gray-900/30">
           {service.nodeCountry && (
             <CountryFlagSvg country={service.nodeCountry} className="w-5 h-5 flex-shrink-0" />
           )}
@@ -274,7 +274,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
     serviceName.includes("hysteria")
   ) {
     return (
-      <div className="space-y-1.5 p-2 rounded-lg bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
         {protocol && (
           <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
             <Shield className="h-3 w-3 flex-shrink-0" />
@@ -323,7 +323,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
         : undefined);
 
     return (
-      <div className="space-y-1.5 p-2 rounded-lg bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
         {primaryDomain && (
           <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
             <Globe className="h-3 w-3 flex-shrink-0" />
@@ -357,7 +357,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // SsalgTen Agent
   if (serviceName.includes("agent") || serviceName.includes("ssalgten")) {
     return (
-      <div className="space-y-1.5 p-2 rounded-lg bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
         <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
           <Activity className="h-3 w-3 flex-shrink-0" />
           <span className="font-medium">节点基础组件</span>
@@ -383,7 +383,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 数据库服务
   if (service.type === "database") {
     return (
-      <div className="space-y-1.5 p-2 rounded-lg bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
         {port && (
           <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
             <Network className="h-3 w-3 flex-shrink-0" />
@@ -407,7 +407,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 容器运行时 - 默认只提示
   if (service.type === "container" || serviceName === "docker") {
     return (
-      <div className="p-2 rounded-lg bg-white/30 dark:bg-gray-900/20">
+      <div className="p-2  bg-white/30 dark:bg-gray-900/20">
         <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
           <Box className="h-3 w-3 flex-shrink-0" />
           <span>容器运行时</span>
@@ -419,7 +419,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 默认展示 - 尽量提供域名、端口和分享链接
   if (primaryDomain || port || shareLinkSection) {
     return (
-      <div className="space-y-1.5 p-2 rounded-lg bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
         {primaryDomain && (
           <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
             <Globe className="h-3 w-3 flex-shrink-0" />

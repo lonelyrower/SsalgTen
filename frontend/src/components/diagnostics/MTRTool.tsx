@@ -170,7 +170,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
       <div className="space-y-4 text-left">
         {/* 标题 */}
         <div className="flex items-center gap-2 pb-3 border-b border-orange-200/30 dark:border-orange-700/30">
-          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 ">
             <Activity className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </div>
           <div className="flex-1">
@@ -216,7 +216,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: google.com)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -228,7 +228,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value={5}>5 次</option>
               <option value={10}>10 次 (默认)</option>
@@ -258,7 +258,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
         </Button>
 
         {/* 提示信息 */}
-        <div className="p-3 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-200/30 dark:border-orange-700/30">
+        <div className="p-3 bg-orange-50/50 dark:bg-orange-900/10  border border-orange-200/30 dark:border-orange-700/30">
           <p className="text-xs text-gray-600 dark:text-gray-400">
             <strong>提示：</strong>MTR 结合 Ping 与 Traceroute，可展示各跳延迟与丢包情况
           </p>
@@ -266,7 +266,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ">
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         )}
@@ -297,7 +297,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg border border-orange-200/50 dark:border-orange-700/50">
+              <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20  border border-orange-200/50 dark:border-orange-700/50">
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                   平均延迟
                 </div>
@@ -307,7 +307,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
                   )}
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg border border-orange-200/50 dark:border-orange-700/50">
+              <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20  border border-orange-200/50 dark:border-orange-700/50">
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                   丢包率
                 </div>
@@ -319,7 +319,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-orange-200/30 dark:border-orange-700/30">
+            <div className="overflow-x-auto  border border-orange-200/30 dark:border-orange-700/30">
               <table className="min-w-full divide-y divide-orange-200/40 dark:divide-orange-900/30 text-xs">
                 <thead className="bg-orange-50/70 dark:bg-orange-900/20 text-gray-600 dark:text-gray-300">
                   <tr>
@@ -400,7 +400,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
                 <summary className="cursor-pointer text-xs text-orange-600 dark:text-orange-400 hover:underline">
                   查看原始输出
                 </summary>
-                <div className="mt-2 p-3 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-200/30 dark:border-orange-700/30 max-h-60 overflow-y-auto">
+                <div className="mt-2 p-3 bg-orange-50/50 dark:bg-orange-900/10  border border-orange-200/30 dark:border-orange-700/30 max-h-60 overflow-y-auto">
                   <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
                     {result.output}
                   </pre>

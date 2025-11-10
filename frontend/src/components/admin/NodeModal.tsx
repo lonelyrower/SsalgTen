@@ -206,13 +206,18 @@ export const NodeModal: React.FC<NodeModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="node-modal-title"
+    >
       <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 头部 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <Server className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <Server className="h-6 w-6 text-primary" aria-hidden="true" />
+            <h2 id="node-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
               {node ? "编辑节点" : "添加节点"}
             </h2>
           </div>
@@ -221,17 +226,22 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             size="sm"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
+            aria-label="关闭对话框"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 
         {/* 内容区域 */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div
+              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+              role="alert"
+              aria-live="assertive"
+            >
               <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                <AlertCircle className="h-5 w-5 text-red-500 mr-2" aria-hidden="true" />
                 <p className="text-red-800 dark:text-red-200">{error}</p>
               </div>
             </div>
@@ -242,15 +252,16 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                  <Settings className="h-5 w-5 mr-2 text-primary" />
+                  <Settings className="h-5 w-5 mr-2 text-primary" aria-hidden="true" />
                   基本信息
                 </h3>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="node-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     节点名称 *
                   </label>
                   <input
+                    id="node-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
@@ -260,9 +271,11 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                         : "border-gray-300 dark:border-gray-600"
                     }`}
                     placeholder="输入节点名称"
+                    aria-invalid={!!validationErrors.name}
+                    aria-describedby={validationErrors.name ? "node-name-error" : undefined}
                   />
                   {validationErrors.name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p id="node-name-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
                       {validationErrors.name}
                     </p>
                   )}
@@ -577,10 +590,11 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             onClick={handleSubmit}
             disabled={loading}
             className=""
+            aria-busy={loading}
           >
             {loading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" aria-hidden="true"></div>
                 {node ? "更新中..." : "创建中..."}
               </>
             ) : node ? (

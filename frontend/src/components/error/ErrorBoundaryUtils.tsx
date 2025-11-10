@@ -26,7 +26,7 @@ export const ComponentErrorBoundary: React.FC<{
 }> = ({ children, componentName }) => (
   <ErrorBoundary
     fallback={
-      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+      <div className="p-4 bg-red-50 dark:bg-red-900/20  border border-red-200 dark:border-red-800">
         <div className="flex items-center space-x-2 text-red-700 dark:text-red-400">
           <AlertCircle className="h-5 w-5" />
           <span className="text-sm font-medium">

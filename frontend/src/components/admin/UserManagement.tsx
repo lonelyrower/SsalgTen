@@ -180,14 +180,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </div>
 
         {/* 搜索和过滤器 */}
-        <Card className="p-4 bg-white dark:bg-gray-800 shadow-sm">
+        <Card className="p-4 bg-white dark:bg-gray-800 shadow-[var(--shadow-sm)]">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="搜索用户名、邮箱或姓名..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -196,7 +196,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <Filter className="h-4 w-4 text-gray-500" />
               <select
                 aria-label="筛选用户角色"
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
               >
@@ -231,7 +231,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       )}
 
       {/* 用户表格 */}
-      <Card className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 shadow-[var(--shadow-lg)] overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
@@ -469,7 +469,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+          <Card className="bg-white dark:bg-gray-800 p-6  shadow-[var(--shadow-xl)] max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0 w-10 h-10 mx-auto bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
                 <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />

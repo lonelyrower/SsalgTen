@@ -270,7 +270,7 @@ export const SystemOverview: React.FC = () => {
                 {stats.nodes.totalNodes}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 ">
               <Server className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
@@ -297,7 +297,7 @@ export const SystemOverview: React.FC = () => {
                 {stats.heartbeats.last24h.toLocaleString()}
               </p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 ">
               <Activity className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
@@ -318,7 +318,7 @@ export const SystemOverview: React.FC = () => {
                 {stats?.resources.memoryPercent}%
               </p>
             </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 ">
               <HardDrive className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
@@ -340,7 +340,7 @@ export const SystemOverview: React.FC = () => {
                 {stats?.resources.cpuPercent}%
               </p>
             </div>
-            <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+            <div className="p-3 bg-orange-100 dark:bg-orange-900/30 ">
               <Zap className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
@@ -366,7 +366,7 @@ export const SystemOverview: React.FC = () => {
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
-                className="min-w-[180px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="min-w-[180px] px-3 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
                 value={retainHours}
                 onChange={(e) => setRetainHours(Number(e.target.value))}
                 disabled={cleanupLoading}

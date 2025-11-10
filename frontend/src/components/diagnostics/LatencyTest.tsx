@@ -196,7 +196,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       <GlassCard variant="info" className="space-y-5 text-left">
         {/* 标题 - 统一靠左对齐 */}
         <div className="flex items-center gap-2 pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
-          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 ">
             <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
           </div>
           <div className="flex-1">
@@ -251,7 +251,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {/* 测试站点预览 */}
-        <div className="p-4 bg-cyan-50/30 dark:bg-cyan-900/10 rounded-lg border border-cyan-200/40 dark:border-cyan-700/40">
+        <div className="p-4 bg-cyan-50/30 dark:bg-cyan-900/10  border border-cyan-200/40 dark:border-cyan-700/40">
           <div className="flex items-center gap-2 mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
             <Target className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
             将测试以下站点：
