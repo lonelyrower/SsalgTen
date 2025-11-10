@@ -56,10 +56,10 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
   // 全屏模式
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col">
+      <div className="fixed inset-0 z-50 surface-base flex flex-col">
         {/* 全屏模式头部 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-lg font-semibold text-foreground">
             {title || "图表"}
           </h3>
           <Button
@@ -92,13 +92,13 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
+      className={`relative surface-elevated rounded-lg shadow-lg border border-border mobile-safe ${className}`}
     >
       {/* 图表头部 */}
       {(title || allowFullscreen) && (
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           {title && (
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mobile-text-readable">
+            <h3 className="text-lg font-semibold text-foreground mobile-text-readable">
               {title}
             </h3>
           )}
@@ -195,22 +195,22 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mobile-safe ${className}`}
+      className={`surface-elevated rounded-lg p-4 sm:p-6 shadow-sm border border-border mobile-safe ${className}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mobile-text-readable">
+          <p className="text-sm font-medium text-muted-foreground mobile-text-readable">
             {title}
           </p>
           <p
-            className={`mt-2 font-bold text-gray-900 dark:text-white mobile-text-readable ${
+            className={`mt-2 font-bold text-foreground mobile-text-readable ${
               isMobile ? "text-2xl" : "text-3xl"
             }`}
           >
             {value}
           </p>
           {subtitle && (
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+            <p className="mt-1 text-sm text-muted-foreground">
               {subtitle}
             </p>
           )}
@@ -228,14 +228,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <span
             className={`font-medium ${
               trend.isPositive
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-[hsl(var(--success))]"
+                : "text-[hsl(var(--error))]"
             }`}
           >
             {trend.isPositive ? "+" : ""}
             {trend.value}%
           </span>
-          <span className="ml-2 text-gray-500 dark:text-gray-400">较上期</span>
+          <span className="ml-2 text-muted-foreground">较上期</span>
         </div>
       )}
     </div>

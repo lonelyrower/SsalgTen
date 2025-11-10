@@ -35,11 +35,11 @@ const TabButton: React.FC<TabButtonProps> = ({
   const desktopStyles = `
     flex items-center space-x-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap
     transition-all duration-200 rounded-t-lg transform
-    focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900
+    focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
     ${
       isActive
-        ? "border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-sm font-semibold scale-105"
-        : "border-transparent text-gray-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 dark:text-gray-400 dark:hover:text-primary hover:scale-105 hover:-translate-y-0.5 hover:shadow-sm"
+        ? "border-primary text-primary bg-primary/10 shadow-sm font-semibold scale-105"
+        : "border-transparent text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 hover:scale-105 hover:-translate-y-0.5 hover:shadow-sm"
     }
   `;
 
@@ -50,7 +50,7 @@ const TabButton: React.FC<TabButtonProps> = ({
     ${
       isActive
         ? "bg-primary/10 text-primary font-semibold"
-        : "text-gray-700 dark:text-gray-300 hover:bg-primary/5 hover:text-primary dark:hover:bg-gray-700/50 hover:translate-x-1"
+        : "text-foreground hover:bg-primary/5 hover:text-primary hover:translate-x-1"
     }
   `;
 
@@ -152,7 +152,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
     <div className={className}>
       {/* 桌面端标签页 */}
       <div className="hidden md:block">
-        <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="border-b border-border">
           <nav
             className="-mb-px flex space-x-6"
             role="tablist"
@@ -180,13 +180,13 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
           aria-expanded={dropdownOpen ? "true" : "false"}
           aria-haspopup="listbox"
           aria-label="选择标签页"
-          className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          className="w-full flex items-center justify-between p-3 surface-elevated border border-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           <div className="flex items-center space-x-3">
             {activeTabInfo?.icon && (
               <activeTabInfo.icon className="h-5 w-5 text-primary" />
             )}
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="font-medium text-foreground">
               {activeTabInfo?.label}
             </span>
           </div>
@@ -207,7 +207,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
 
             {/* 下拉菜单 */}
             <div
-              className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden"
+              className="absolute top-full left-0 right-0 mt-2 surface-elevated border border-border rounded-lg shadow-lg z-20 overflow-hidden"
               role="listbox"
               aria-label="选择标签页"
             >

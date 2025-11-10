@@ -21,22 +21,22 @@ export const GlassCard = memo(
   }: GlassCardProps) => {
     const variants = {
       // 默认：轻量模糊（桌面10px，移动禁用）
-      default: "glass border-white/20 dark:border-white/10",
+      default: "glass border-white/20",
 
       // 微妙：移动优先，无模糊
       subtle:
-        "surface-elevated border-white/10 dark:border-white/5 lg:bg-[hsl(var(--surface-elevated))]/70 lg:backdrop-blur-[8px]",
+        "surface-elevated border-white/10 lg:bg-[hsl(var(--surface-elevated))]/70 lg:backdrop-blur-[8px]",
 
       // 强烈：仅桌面使用模糊，移动使用高不透明度
       strong:
-        "bg-[hsl(var(--surface-elevated))]/95 border-white/30 dark:border-white/20 lg:bg-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
+        "bg-[hsl(var(--surface-elevated))]/95 border-white/30 lg:bg-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
 
       // 科技：响应式模糊
       tech: "tech-card border-primary/20",
 
       // 渐变：桌面模糊，移动纯色 - 使用品牌色系
       gradient:
-        "bg-gradient-to-br from-[hsl(var(--surface-elevated))]/95 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--brand-blue))]/10 border-white/20 dark:border-[hsl(var(--brand-cyan))]/10 lg:from-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
+        "bg-gradient-to-br from-[hsl(var(--surface-elevated))]/95 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--brand-blue))]/10 border-white/20 lg:from-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
     };
 
     const animationClass = animated
