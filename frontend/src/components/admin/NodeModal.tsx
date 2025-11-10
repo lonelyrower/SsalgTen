@@ -207,12 +207,12 @@ export const NodeModal: React.FC<NodeModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <Card className="surface-elevated rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
             <Server className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               {node ? "编辑节点" : "添加节点"}
             </h2>
           </div>
@@ -220,7 +220,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -229,10 +229,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
         {/* 内容区域 */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="mb-6 p-4 bg-[hsl(var(--error))]/10 border border-[hsl(var(--error))]/30 rounded-lg">
               <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                <p className="text-red-800 dark:text-red-200">{error}</p>
+                <AlertCircle className="h-5 w-5 text-[hsl(var(--error))] mr-2" />
+                <p className="text-[hsl(var(--error))]">{error}</p>
               </div>
             </div>
           )}
@@ -241,28 +241,28 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             {/* 基本信息 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                <h3 className="text-lg font-medium text-foreground flex items-center">
                   <Settings className="h-5 w-5 mr-2 text-primary" />
                   基本信息
                 </h3>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     节点名称 *
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.name
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="输入节点名称"
                   />
                   {validationErrors.name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.name}
                     </p>
                   )}
@@ -270,7 +270,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       国家 *
                     </label>
                     <input
@@ -279,22 +279,22 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       onChange={(e) =>
                         handleInputChange("country", e.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                      className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                         validationErrors.country
-                          ? "border-red-300 dark:border-red-600"
-                          : "border-gray-300 dark:border-gray-600"
+                          ? "border-[hsl(var(--error))]"
+                          : "border-border"
                       }`}
                       placeholder="中国"
                     />
                     {validationErrors.country && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-1 text-sm text-[hsl(var(--error))]">
                         {validationErrors.country}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       城市 *
                     </label>
                     <input
@@ -303,15 +303,15 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       onChange={(e) =>
                         handleInputChange("city", e.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                      className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                         validationErrors.city
-                          ? "border-red-300 dark:border-red-600"
-                          : "border-gray-300 dark:border-gray-600"
+                          ? "border-[hsl(var(--error))]"
+                          : "border-border"
                       }`}
                       placeholder="北京"
                     />
                     {validationErrors.city && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-1 text-sm text-[hsl(var(--error))]">
                         {validationErrors.city}
                       </p>
                     )}
@@ -319,7 +319,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     服务商 *
                   </label>
                   <input
@@ -328,22 +328,22 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     onChange={(e) =>
                       handleInputChange("provider", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.provider
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="阿里云"
                   />
                   {validationErrors.provider && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.provider}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     描述
                   </label>
                   <textarea
@@ -352,7 +352,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       handleInputChange("description", e.target.value)
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="节点描述信息"
                   />
                 </div>
@@ -360,57 +360,57 @@ export const NodeModal: React.FC<NodeModalProps> = ({
 
               {/* 网络配置 */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                  <Globe className="h-5 w-5 mr-2 text-green-600" />
+                <h3 className="text-lg font-medium text-foreground flex items-center">
+                  <Globe className="h-5 w-5 mr-2 text-[hsl(var(--success))]" />
                   网络配置
                 </h3>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     IPv4地址 *
                   </label>
                   <input
                     type="text"
                     value={formData.ipv4}
                     onChange={(e) => handleInputChange("ipv4", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.ipv4
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="192.168.1.1"
                   />
                   {validationErrors.ipv4 && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.ipv4}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     IPv6地址
                   </label>
                   <input
                     type="text"
                     value={formData.ipv6}
                     onChange={(e) => handleInputChange("ipv6", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.ipv6
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="2001:db8::1"
                   />
                   {validationErrors.ipv6 && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.ipv6}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     端口 *
                   </label>
                   <input
@@ -421,22 +421,22 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     }
                     min="1"
                     max="65535"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.port
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="3002"
                   />
                   {validationErrors.port && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.port}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     API密钥 *
                   </label>
                   <input
@@ -445,15 +445,15 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     onChange={(e) =>
                       handleInputChange("apiKey", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.apiKey
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="agent-api-key-here"
                   />
                   {validationErrors.apiKey && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.apiKey}
                     </p>
                   )}
@@ -462,15 +462,15 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             </div>
 
             {/* 地理位置 */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
-                <MapPin className="h-5 w-5 mr-2 text-orange-600" />
+            <div className="border-t border-border pt-6">
+              <h3 className="text-lg font-medium text-foreground flex items-center mb-4">
+                <MapPin className="h-5 w-5 mr-2 text-[hsl(var(--warning))]" />
                 地理位置
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     纬度 *
                   </label>
                   <input
@@ -485,22 +485,22 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     step="0.000001"
                     min="-90"
                     max="90"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.latitude
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="39.904211"
                   />
                   {validationErrors.latitude && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.latitude}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     经度 *
                   </label>
                   <input
@@ -515,15 +515,15 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     step="0.000001"
                     min="-180"
                     max="180"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.longitude
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-[hsl(var(--error))]"
+                        : "border-border"
                     }`}
                     placeholder="116.407395"
                   />
                   {validationErrors.longitude && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className="mt-1 text-sm text-[hsl(var(--error))]">
                       {validationErrors.longitude}
                     </p>
                   )}
@@ -532,9 +532,9 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             </div>
 
             {/* 状态设置 */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
-                <Activity className="h-5 w-5 mr-2 text-purple-600" />
+            <div className="border-t border-border pt-6">
+              <h3 className="text-lg font-medium text-foreground flex items-center mb-4">
+                <Activity className="h-5 w-5 mr-2 text-[hsl(var(--secondary))]" />
                 状态设置
               </h3>
 
@@ -546,16 +546,16 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   onChange={(e) =>
                     handleInputChange("enabled", e.target.checked)
                   }
-                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  className="h-4 w-4 text-primary border-border rounded focus:ring-primary"
                 />
                 <label
                   htmlFor="enabled"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className="text-sm font-medium text-foreground"
                 >
                   启用节点
                 </label>
               </div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-muted-foreground">
                 禁用的节点将不会接收诊断请求
               </p>
             </div>
@@ -563,7 +563,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
         </div>
 
         {/* 底部按钮 */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-border bg-muted/50">
           <Button
             type="button"
             variant="outline"

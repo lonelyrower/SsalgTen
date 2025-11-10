@@ -111,15 +111,15 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
       case "online":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-[hsl(var(--success))]" />;
       case "offline":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4 text-[hsl(var(--error))]" />;
       case "warning":
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-[hsl(var(--warning))]" />;
       case "maintenance":
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-[hsl(var(--info))]" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -127,15 +127,15 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
       case "online":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
       case "offline":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]";
       case "warning":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+        return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]";
       case "maintenance":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+        return "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-muted/50 text-muted-foreground";
     }
   };
 
@@ -276,12 +276,12 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
   if (loading) {
     return (
       <div className={`${className} animate-pulse`}>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
+        <div className="h-8 bg-muted rounded mb-6"></div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="h-16 bg-gray-200 dark:bg-gray-700 rounded"
+              className="h-16 bg-muted rounded"
             ></div>
           ))}
         </div>
@@ -295,14 +295,14 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Settings className="h-6 w-6 mr-3 text-blue-600" />
+            <h2 className="text-2xl font-bold text-foreground flex items-center">
+              <Settings className="h-6 w-6 mr-3 text-[hsl(var(--info))]" />
               节点管理
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
+            <p className="text-muted-foreground mt-1 text-sm">
               重命名、删除节点和部署新节点
             </p>
-            <div className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+            <div className="mt-1 text-sm text-muted-foreground">
               共 {filteredNodes.length} 个节点 •{" "}
               {filteredNodes.filter((n) => n.status === "online").length} 在线 •
               <a
@@ -335,25 +335,25 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                 导出节点
               </Button>
               {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-36 surface-elevated border border-border rounded-lg shadow-lg z-10">
                   <button
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleExportNodes("json")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                    className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted/50 first:rounded-t-lg"
                   >
                     JSON
                   </button>
                   <button
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleExportNodes("csv")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted/50"
                   >
                     CSV
                   </button>
                   <button
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleExportNodes("markdown")}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
+                    className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted/50 last:rounded-b-lg"
                   >
                     Markdown
                   </button>
@@ -383,11 +383,11 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
         {/* 搜索区域 */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="搜索节点名称、国家、服务商或ASN..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-9 pr-4 py-2 border border-border rounded-lg surface-base text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -397,7 +397,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
           </label>
           <select
             id="node-status-filter"
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-2 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -410,16 +410,16 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
 
       {/* 错误提示 */}
       {error && (
-        <Card className="p-4 mb-6 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <Card className="p-4 mb-6 bg-[hsl(var(--error))]/10 border-[hsl(var(--error))]/30">
           <div className="flex items-center">
-            <div className="text-red-500 mr-3">⚠️</div>
+            <div className="text-[hsl(var(--error))] mr-3">⚠️</div>
             <div>
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-[hsl(var(--error))]">{error}</p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setError("")}
-                className="text-red-600 hover:text-red-700 mt-2"
+                className="text-[hsl(var(--error))] hover:text-[hsl(var(--error))]/80 mt-2"
               >
                 关闭
               </Button>
@@ -431,12 +431,12 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       {/* 导入过期VPS（占位节点）对话框 */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-2xl w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+          <Card className="surface-elevated p-0 rounded-2xl shadow-2xl max-w-2xl w-full border-0 ring-1 ring-border overflow-hidden">
             <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 导入过期 VPS
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 支持两种方式：1) 选择文件（.txt 每行一个 IP；或
                 .json，数组为包含 ip 字段的对象）；2) 直接在文本框中粘贴
                 IP（每行一个）。
@@ -481,7 +481,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     placeholder={
                       '示例:\n203.0.113.10\n2001:db8::1234\n或 JSON:\n[{"ip":"203.0.113.10","name":"Expired-1"}]'
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                    className="w-full px-3 py-2 border border-border rounded-lg surface-base text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary font-mono"
                   />
                 </div>
 
@@ -497,7 +497,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                 </label>
 
                 {importResult && (
-                  <div className="text-sm text-gray-700 dark:text-gray-200 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded">
+                  <div className="text-sm text-foreground bg-[hsl(var(--success))]/10 p-3 rounded">
                     导入完成：新增 {importResult.created}，更新{" "}
                     {importResult.updated}，跳过 {importResult.skipped}，共{" "}
                     {importResult.total}
@@ -513,7 +513,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     setImportText("");
                     setImportResult(null);
                   }}
-                  className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="min-w-[80px]"
                 >
                   取消
                 </Button>
@@ -607,53 +607,53 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="w-8 px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-8 px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {/* 状态指示 */}
                 </th>
-                <th className="w-64 px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-64 px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   节点信息
                 </th>
-                <th className="w-56 px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-56 px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   位置
                 </th>
-                <th className="w-20 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-20 px-2 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   状态
                 </th>
-                <th className="w-32 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-32 px-2 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   最后在线
                 </th>
-                <th className="w-28 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-28 px-2 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   月度成本
                 </th>
-                <th className="w-28 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="w-28 px-2 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="surface-base divide-y divide-border">
               {filteredNodes.map((node) => (
                 <tr
                   key={node.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="hover:bg-muted/30"
                 >
                   <td className="w-8 px-3 py-4 text-center">
                     {getStatusIcon(node.status)}
                   </td>
                   <td className="w-64 px-3 py-4">
                     <div className="flex flex-col items-center">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
+                      <div className="text-sm font-medium text-foreground truncate max-w-xs">
                         {node.name}
                       </div>
                       {node.ipv4 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                        <div className="text-xs text-muted-foreground font-mono">
                           IPv4: {node.ipv4}
                         </div>
                       )}
                       {node.ipv6 && node.ipv6.includes(":") && (
                         <div
-                          className="text-xs text-purple-600 dark:text-purple-400 font-mono truncate max-w-xs"
+                          className="text-xs text-[hsl(var(--secondary))] font-mono truncate max-w-xs"
                           title={node.ipv6}
                         >
                           IPv6: {node.ipv6}
@@ -663,20 +663,20 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                   </td>
                   <td className="w-56 px-3 py-4">
                     <div className="flex flex-col items-center">
-                      <div className="text-sm text-gray-900 dark:text-white inline-flex items-center gap-1.5">
+                      <div className="text-sm text-foreground inline-flex items-center gap-1.5">
                         <CountryFlagSvg country={node.country} />
                         <span className="truncate">
                           {node.city}, {node.country}
                         </span>
                       </div>
                       <div
-                        className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs text-center"
+                        className="text-xs text-muted-foreground truncate max-w-xs text-center"
                         title={node.provider}
                       >
                         {node.provider}
                       </div>
                       {node.asnNumber && (
-                        <div className="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+                        <div className="text-xs text-[hsl(var(--info))] font-mono mt-0.5">
                           {node.asnNumber}
                         </div>
                       )}
@@ -689,7 +689,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                       {getStatusText(node.status)}
                     </span>
                   </td>
-                  <td className="w-32 px-2 py-4 text-xs text-center text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  <td className="w-32 px-2 py-4 text-xs text-center text-muted-foreground whitespace-nowrap">
                     {node.lastSeen
                       ? new Date(node.lastSeen).toLocaleDateString("zh-CN")
                       : "未知"}
@@ -710,20 +710,20 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                               handleCostCancel();
                             }
                           }}
-                          className="w-20 px-2 py-1 text-sm border border-blue-500 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                          className="w-20 px-2 py-1 text-sm border border-primary rounded focus:ring-2 focus:ring-primary surface-base text-foreground"
                           placeholder="USD"
                           autoFocus
                         />
                         <button
                           onClick={() => handleCostSave(node.id)}
-                          className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                          className="p-1 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10 rounded"
                           title="保存"
                         >
                           <CheckCircle className="h-4 w-4" />
                         </button>
                         <button
                           onClick={handleCostCancel}
-                          className="p-1 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+                          className="p-1 text-muted-foreground hover:bg-muted/50 rounded"
                           title="取消"
                         >
                           ×
@@ -732,12 +732,12 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     ) : (
                       <button
                         onClick={() => handleCostEdit(node.id, node.monthlyCost)}
-                        className="text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        className="text-sm text-foreground hover:text-primary transition-colors"
                         title="点击编辑"
                       >
                         {node.monthlyCost !== null && node.monthlyCost !== undefined
                           ? `$${Number(node.monthlyCost).toFixed(2)}`
-                          : <span className="text-gray-400 dark:text-gray-500">点击设置</span>}
+                          : <span className="text-muted-foreground">点击设置</span>}
                       </button>
                     )}
                   </td>
@@ -747,7 +747,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => openRenameModal(node.id, node.name)}
-                        className="text-gray-400 hover:text-blue-600 p-1.5"
+                        className="text-muted-foreground hover:text-primary p-1.5"
                         title="重命名节点"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -756,7 +756,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowDeleteConfirm(node.id)}
-                        className="text-gray-400 hover:text-red-600 p-1.5"
+                        className="text-muted-foreground hover:text-[hsl(var(--error))] p-1.5"
                         title="删除节点"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -772,13 +772,13 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
 
       {filteredNodes.length === 0 && (
         <div className="text-center py-8">
-          <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <Server className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             {searchTerm || filterStatus !== "all"
               ? "没有找到匹配的节点"
               : "还没有节点"}
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             {searchTerm || filterStatus !== "all"
               ? "请尝试调整搜索条件"
               : "部署第一个节点开始监控"}
@@ -807,17 +807,17 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+          <Card className="surface-elevated p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-border overflow-hidden">
             <div className="p-6">
               <div className="flex items-start mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mr-4">
-                  <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                <div className="flex-shrink-0 w-12 h-12 bg-[hsl(var(--error))]/10 rounded-full flex items-center justify-center mr-4">
+                  <Trash2 className="w-6 h-6 text-[hsl(var(--error))]" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     删除节点
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     确定要删除这个监控节点吗？删除后将无法恢复该节点的所有历史数据和配置信息。
                   </p>
                 </div>
@@ -826,7 +826,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                 <Button
                   variant="outline"
                   onClick={() => setShowDeleteConfirm(null)}
-                  className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="min-w-[80px]"
                 >
                   取消
                 </Button>
@@ -846,24 +846,24 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       {/* 重命名节点对话框 */}
       {showRenameModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+          <Card className="surface-elevated p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-border overflow-hidden">
             <div className="p-6">
               <div className="flex items-start mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-4">
-                  <Edit2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="flex-shrink-0 w-12 h-12 bg-[hsl(var(--info))]/10 rounded-full flex items-center justify-center mr-4">
+                  <Edit2 className="w-6 h-6 text-[hsl(var(--info))]" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     重命名节点
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                     请输入新的节点名称
                   </p>
                   <input
                     type="text"
                     value={newNodeName}
                     onChange={(e) => setNewNodeName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="w-full px-3 py-2 border border-border rounded-lg surface-base text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
                     placeholder="输入节点名称"
                     autoFocus
                     onKeyDown={(e) => {
@@ -884,7 +884,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     setShowRenameModal(null);
                     setNewNodeName("");
                   }}
-                  className="min-w-[80px] hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="min-w-[80px]"
                 >
                   取消
                 </Button>
