@@ -66,7 +66,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <GlassCard variant="strong" className="p-3 min-w-[150px]">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <p className="text-sm font-medium text-foreground">
             {label}
           </p>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -76,7 +76,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-xs text-gray-600 dark:text-gray-300">
+              <span className="text-xs text-muted-foreground">
                 {entry.name}:{" "}
                 <span className="font-semibold">{entry.value}</span>
                 {entry.unit && (
@@ -109,7 +109,7 @@ export const NetworkMetricsChart = memo(
     const renderChart = () => {
       if (!chartData.length) {
         return (
-          <div className="w-full h-[160px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div className="w-full h-[160px] flex items-center justify-center text-muted-foreground">
             暂无数据
           </div>
         );
@@ -283,10 +283,10 @@ export const NetworkMetricsChart = memo(
               )}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">
+              <h3 className="font-semibold text-foreground">
                 {title}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+              <p className="text-sm text-muted-foreground capitalize">
                 {metric.replace("_", " ")} · {timeRange}
               </p>
             </div>
@@ -314,7 +314,7 @@ export const NetworkMetricsChart = memo(
 
         {/* 时间范围选择器 */}
         {type !== "pie" && (
-          <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-border">
             {["1h", "24h", "7d", "30d"].map((range) => (
               <Button
                 key={range}

@@ -132,11 +132,11 @@ export const ApiKeyManagement: React.FC = () => {
     const status = getSecurityStatus();
     switch (status) {
       case "secure":
-        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800";
+        return "text-[hsl(var(--success))] bg-[hsl(var(--success))]/10 border-[hsl(var(--success))]/30";
       case "warning":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
+        return "text-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10 border-[hsl(var(--warning))]/30";
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800";
+        return "text-muted-foreground bg-muted/50 border-border";
     }
   };
 
@@ -152,12 +152,12 @@ export const ApiKeyManagement: React.FC = () => {
     return (
       <Card className="p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="h-6 bg-muted rounded mb-4"></div>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="h-4 bg-gray-200 dark:bg-gray-700 rounded"
+                className="h-4 bg-muted rounded"
               ></div>
             ))}
           </div>
@@ -170,19 +170,19 @@ export const ApiKeyManagement: React.FC = () => {
     <div className="space-y-6">
       {/* 状态消息 */}
       {error && (
-        <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <Card className="p-4 bg-[hsl(var(--error))]/10 border-[hsl(var(--error))]/30">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-500 mr-3" />
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+            <AlertTriangle className="h-5 w-5 text-[hsl(var(--error))] mr-3" />
+            <p className="text-[hsl(var(--error))]">{error}</p>
           </div>
         </Card>
       )}
 
       {success && (
-        <Card className="p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+        <Card className="p-4 bg-[hsl(var(--success))]/10 border-[hsl(var(--success))]/30">
           <div className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-            <p className="text-green-800 dark:text-green-200">{success}</p>
+            <CheckCircle className="h-5 w-5 text-[hsl(var(--success))] mr-3" />
+            <p className="text-[hsl(var(--success))]">{success}</p>
           </div>
         </Card>
       )}
@@ -191,11 +191,11 @@ export const ApiKeyManagement: React.FC = () => {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-              <Key className="h-5 w-5 mr-2 text-indigo-600" />
+            <h3 className="text-lg font-semibold text-foreground flex items-center">
+              <Key className="h-5 w-5 mr-2 text-[hsl(var(--info))]" />
               API 密钥管理
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               管理Agent节点连接的API密钥和安全配置
             </p>
           </div>
@@ -274,7 +274,7 @@ export const ApiKeyManagement: React.FC = () => {
                   </Button>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <code className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 rounded font-mono text-sm">
+                  <code className="flex-1 p-3 surface-base rounded font-mono text-sm">
                     {showKey
                       ? apiKeyInfo.key
                       : `${apiKeyInfo.key.slice(0, 8)}${"*".repeat(32)}`}
@@ -297,45 +297,45 @@ export const ApiKeyManagement: React.FC = () => {
 
             {/* 使用统计 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 p-4">
+              <Card className="bg-[hsl(var(--info))]/10 border-[hsl(var(--info))]/30 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="text-sm text-[hsl(var(--info))]">
                       使用次数
                     </p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                    <p className="text-2xl font-bold text-foreground">
                       {apiKeyInfo.usageCount.toLocaleString()}
                     </p>
                   </div>
-                  <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                  <Activity className="h-8 w-8 text-[hsl(var(--info))]" />
                 </div>
               </Card>
 
-              <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 p-4">
+              <Card className="bg-[hsl(var(--success))]/10 border-[hsl(var(--success))]/30 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-300">
+                    <p className="text-sm text-[hsl(var(--success))]">
                       最后使用
                     </p>
-                    <p className="text-lg font-semibold text-green-900 dark:text-green-100">
+                    <p className="text-lg font-semibold text-foreground">
                       {formatLastUsed(apiKeyInfo.lastUsed)}
                     </p>
                   </div>
-                  <Clock className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  <Clock className="h-8 w-8 text-[hsl(var(--success))]" />
                 </div>
               </Card>
 
-              <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 p-4">
+              <Card className="bg-primary/10 border-primary/30 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">
+                    <p className="text-sm text-primary">
                       密钥类型
                     </p>
-                    <p className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+                    <p className="text-lg font-semibold text-foreground">
                       {apiKeyInfo.isDefault ? "系统默认" : "自定义"}
                     </p>
                   </div>
-                  <Zap className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                  <Zap className="h-8 w-8 text-primary" />
                 </div>
               </Card>
             </div>
@@ -344,15 +344,15 @@ export const ApiKeyManagement: React.FC = () => {
             {apiKeyInfo.security && (
               <div className="space-y-3">
                 {apiKeyInfo.security.warnings.length > 0 && (
-                  <Card className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-                    <h5 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
+                  <Card className="p-4 bg-[hsl(var(--warning))]/10 border-[hsl(var(--warning))]/30">
+                    <h5 className="font-semibold text-[hsl(var(--warning))] mb-2 flex items-center">
                       <AlertTriangle className="h-4 w-4 mr-2" />
                       安全警告
                     </h5>
-                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                    <ul className="text-sm text-[hsl(var(--warning))] space-y-1">
                       {apiKeyInfo.security.warnings.map((warning, index) => (
                         <li key={index} className="flex items-start">
-                          <span className="text-yellow-600 mr-2">•</span>
+                          <span className="text-[hsl(var(--warning))] mr-2">•</span>
                           {warning}
                         </li>
                       ))}

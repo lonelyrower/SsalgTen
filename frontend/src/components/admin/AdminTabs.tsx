@@ -24,7 +24,7 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
       className={cn(
         "relative inline-flex items-center rounded-xl border-2 border-border",
         "surface-elevated backdrop-blur-sm p-1.5",
-        "shadow-lg dark:shadow-xl overflow-hidden",
+        "shadow-lg overflow-hidden",
         className,
       )}
       role="tablist"

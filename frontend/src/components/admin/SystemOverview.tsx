@@ -136,16 +136,16 @@ export const SystemOverview: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="h-8 bg-muted rounded mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="h-32 bg-gray-200 dark:bg-gray-700 rounded"
+                className="h-32 bg-muted rounded"
               ></div>
             ))}
           </div>
-          <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded mt-6"></div>
+          <div className="h-48 bg-muted rounded mt-6"></div>
         </div>
       </div>
     );
@@ -154,11 +154,11 @@ export const SystemOverview: React.FC = () => {
   if (error) {
     return (
       <GlassCard variant="danger" hover={false} className="text-center">
-        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+        <AlertCircle className="h-12 w-12 text-[hsl(var(--error))] mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-[hsl(var(--error))] mb-2">
           数据加载失败
         </h3>
-        <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+        <p className="text-[hsl(var(--error))] mb-4">{error}</p>
         <Button variant="outline" size="sm" onClick={fetchStats}>
           <RefreshCw className="h-4 w-4 mr-2" />
           重新加载
@@ -190,16 +190,16 @@ export const SystemOverview: React.FC = () => {
       {/* 头部信息 */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-foreground">
             系统统计总览
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             实时监控系统运行状况和关键指标
           </p>
         </div>
         <div className="flex items-center space-x-4">
           {lastUpdate && (
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-muted-foreground">
               更新时间: {lastUpdate.toLocaleTimeString()}
             </span>
           )}
@@ -214,7 +214,7 @@ export const SystemOverview: React.FC = () => {
       <GlassCard variant={getHealthVariant(healthStatus)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-white/50 dark:bg-black/20">
+            <div className="p-3 rounded-full bg-white/50 backdrop-blur-sm">
               {healthStatus === "excellent" || healthStatus === "good" ? (
                 <CheckCircle2 className="h-8 w-8" />
               ) : (
@@ -263,24 +263,24 @@ export const SystemOverview: React.FC = () => {
         <GlassCard variant="info">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-muted-foreground">
                 节点总数
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-foreground">
                 {stats.nodes.totalNodes}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Server className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-[hsl(var(--info))]/20 rounded-lg">
+              <Server className="h-6 w-6 text-[hsl(var(--info))]" />
             </div>
           </div>
           <div className="mt-4 flex items-center space-x-4 text-sm">
-            <span className="flex items-center text-green-600 dark:text-green-400">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <span className="flex items-center text-[hsl(var(--success))]">
+              <div className="w-2 h-2 bg-[hsl(var(--success))] rounded-full mr-2"></div>
               在线 {stats.nodes.onlineNodes}
             </span>
-            <span className="flex items-center text-red-600 dark:text-red-400">
-              <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+            <span className="flex items-center text-[hsl(var(--error))]">
+              <div className="w-2 h-2 bg-[hsl(var(--error))] rounded-full mr-2"></div>
               离线 {stats.nodes.offlineNodes}
             </span>
           </div>
@@ -290,18 +290,18 @@ export const SystemOverview: React.FC = () => {
         <GlassCard variant="success">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-muted-foreground">
                 24小时心跳
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-foreground">
                 {stats.heartbeats.last24h.toLocaleString()}
               </p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Activity className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="p-3 bg-[hsl(var(--success))]/20 rounded-lg">
+              <Activity className="h-6 w-6 text-[hsl(var(--success))]" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 flex items-center text-sm text-muted-foreground">
             <TrendingUp className="h-4 w-4 mr-1" />
             平均 {stats.heartbeats.avgPerHour}/小时
           </div>
@@ -311,18 +311,18 @@ export const SystemOverview: React.FC = () => {
         <GlassCard variant="purple">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-muted-foreground">
                 内存使用
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-foreground">
                 {stats?.resources.memoryPercent}%
               </p>
             </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <HardDrive className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <div className="p-3 bg-primary/20 rounded-lg">
+              <HardDrive className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 flex items-center text-sm text-muted-foreground">
             <Database className="h-4 w-4 mr-1" />
             {stats?.resources.memoryUsedMB}MB / {stats?.resources.memoryTotalMB}
             MB
@@ -333,18 +333,18 @@ export const SystemOverview: React.FC = () => {
         <GlassCard variant="orange">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-muted-foreground">
                 CPU使用率
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-foreground">
                 {stats?.resources.cpuPercent}%
               </p>
             </div>
-            <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <Zap className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            <div className="p-3 bg-[hsl(var(--warning))]/20 rounded-lg">
+              <Zap className="h-6 w-6 text-[hsl(var(--warning))]" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 flex items-center text-sm text-muted-foreground">
             <Activity className="h-4 w-4 mr-1" />
             进程负载
           </div>
@@ -355,18 +355,18 @@ export const SystemOverview: React.FC = () => {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <Trash2 className="h-5 w-5 text-red-500 dark:text-red-400" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <Trash2 className="h-5 w-5 text-[hsl(var(--error))]" />
+                <h3 className="text-lg font-semibold text-foreground">
                   历史心跳清理
                 </h3>
               </div>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
+              <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
                 手动清理历史心跳记录，确保每个节点仅保留最新数据
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
-                className="min-w-[180px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="min-w-[180px] px-3 py-2 border border-border rounded-md surface-base text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 value={retainHours}
                 onChange={(e) => setRetainHours(Number(e.target.value))}
                 disabled={cleanupLoading}

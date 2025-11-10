@@ -430,7 +430,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
 
       {/* 导入过期VPS（占位节点）对话框 */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="surface-elevated p-0 rounded-2xl shadow-2xl max-w-2xl w-full border-0 ring-1 ring-border overflow-hidden">
             <div className="p-6">
               <h3 className="text-xl font-bold text-foreground mb-2">
@@ -466,7 +466,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                         setError("读取文件失败");
                       }
                     }}
-                    className="block w-full text-sm text-gray-700 dark:text-gray-200"
+                    className="block w-full text-sm text-foreground"
                   />
                 </div>
 
@@ -491,8 +491,8 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     checked={importNeverAdopt}
                     onChange={(e) => setImportNeverAdopt(e.target.checked)}
                   />
-                  <span className="text-gray-700 dark:text-gray-300">
-                    设置为“纪念/冻结”（neverAdopt）
+                  <span className="text-foreground">
+                    设置为"纪念/冻结"（neverAdopt）
                   </span>
                 </label>
 
@@ -806,7 +806,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
 
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="surface-elevated p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-border overflow-hidden">
             <div className="p-6">
               <div className="flex items-start mb-6">
@@ -845,7 +845,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
 
       {/* 重命名节点对话框 */}
       {showRenameModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="surface-elevated p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-border overflow-hidden">
             <div className="p-6">
               <div className="flex items-start mb-6">

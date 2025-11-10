@@ -46,13 +46,13 @@ const StatsCardsComponent = ({
       Icon: Server,
       badge: "实时监控",
       accent: {
-        bg: "from-sky-50 via-white to-cyan-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60",
-        border: "border-sky-200/70 dark:border-cyan-700/60",
+        bg: "surface-base",
+        border: "border-border",
         iconWrapper:
-          "bg-cyan-500/12 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-200 border border-white/60 dark:border-white/10",
+          "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-border",
         badge:
-          "bg-white/80 text-cyan-700 border border-sky-200/60 dark:bg-cyan-500/15 dark:text-cyan-100 dark:border-cyan-700/40",
-        glow: "from-cyan-400/25 via-transparent to-blue-500/20",
+          "surface-base text-[hsl(var(--info))] border border-border",
+        glow: "from-[hsl(var(--info))]/25 via-transparent to-[hsl(var(--info))]/20",
       },
     },
     {
@@ -62,13 +62,13 @@ const StatsCardsComponent = ({
       Icon: Globe,
       badge: "国际化",
       accent: {
-        bg: "from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60",
-        border: "border-emerald-200/70 dark:border-emerald-700/60",
+        bg: "surface-base",
+        border: "border-border",
         iconWrapper:
-          "bg-emerald-500/12 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200 border border-white/60 dark:border-white/10",
+          "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))] border border-border",
         badge:
-          "bg-white/80 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-500/15 dark:text-emerald-100 dark:border-emerald-700/40",
-        glow: "from-emerald-400/25 via-transparent to-teal-500/20",
+          "surface-base text-[hsl(var(--success))] border border-border",
+        glow: "from-[hsl(var(--success))]/25 via-transparent to-[hsl(var(--success))]/20",
       },
     },
     {
@@ -78,13 +78,13 @@ const StatsCardsComponent = ({
       Icon: Building,
       badge: "多元化",
       accent: {
-        bg: "from-fuchsia-50 via-white to-purple-50 dark:from-slate-800 dark:via-fuchsia-950/60 dark:to-purple-950/60",
-        border: "border-fuchsia-200/70 dark:border-fuchsia-700/60",
+        bg: "surface-base",
+        border: "border-border",
         iconWrapper:
-          "bg-fuchsia-500/12 text-fuchsia-600 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 border border-white/60 dark:border-white/10",
+          "bg-primary/15 text-primary border border-border",
         badge:
-          "bg-white/80 text-fuchsia-700 border border-fuchsia-200/60 dark:bg-fuchsia-500/15 dark:text-fuchsia-100 dark:border-fuchsia-700/40",
-        glow: "from-fuchsia-400/25 via-transparent to-purple-500/20",
+          "surface-base text-primary border border-border",
+        glow: "from-primary/25 via-transparent to-primary/20",
       },
     },
     {
@@ -94,13 +94,13 @@ const StatsCardsComponent = ({
       Icon: HardDrive,
       badge: "累计",
       accent: {
-        bg: "from-amber-50 via-white to-orange-50 dark:from-slate-800 dark:via-amber-950/60 dark:to-orange-950/60",
-        border: "border-amber-200/70 dark:border-amber-700/60",
+        bg: "surface-base",
+        border: "border-border",
         iconWrapper:
-          "bg-amber-500/12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-200 border border-white/60 dark:border-white/10",
+          "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border border-border",
         badge:
-          "bg-white/80 text-amber-700 border border-amber-200/60 dark:bg-amber-500/15 dark:text-amber-100 dark:border-amber-700/40",
-        glow: "from-amber-400/25 via-transparent to-orange-500/20",
+          "surface-base text-[hsl(var(--warning))] border border-border",
+        glow: "from-[hsl(var(--warning))]/25 via-transparent to-[hsl(var(--warning))]/20",
       },
     },
   ];
@@ -123,7 +123,7 @@ const StatsCardsComponent = ({
                 >
                   <stat.Icon className="h-6 w-6" />
                 </div>
-                <p className="text-base font-semibold text-slate-700 dark:text-slate-200">
+                <p className="text-base font-semibold text-foreground">
                   {stat.title}
                 </p>
               </div>
@@ -134,10 +134,10 @@ const StatsCardsComponent = ({
               </span>
             </div>
             <div className="space-y-2">
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              <div className="text-3xl font-bold text-foreground">
                 {stat.value}
               </div>
-              <div className="text-sm text-slate-600 dark:text-slate-300">
+              <div className="text-sm text-muted-foreground">
                 {stat.subtitle}
               </div>
             </div>

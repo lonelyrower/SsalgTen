@@ -41,8 +41,8 @@ const LegendItem: React.FC<{
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-violet-100/70 dark:border-violet-900/40 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="font-medium text-slate-900 dark:text-white">{label}</p>
+      <div className="rounded-xl border border-violet-100/70 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+        <p className="font-medium text-foreground">{label}</p>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {payload.map((entry: any, index: number) => (
           <LegendItem
@@ -108,18 +108,18 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
 
   return (
     <div
-      className={`group relative h-full overflow-hidden rounded-2xl border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col ${className}`}
+      className={`group relative h-full overflow-hidden rounded-2xl border-2 border-violet-200/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-indigo-400/15 via-transparent to-violet-500/15" />
       <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-indigo-400/15 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-200">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-600">
             <Globe className="h-5 w-5" />
           </span>
           国家/地区分布
         </h3>
-        <div className="text-sm text-slate-500 dark:text-slate-300">
+        <div className="text-sm text-muted-foreground">
           覆盖 {totalCountries} 个国家/地区
         </div>
       </div>
@@ -152,7 +152,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
             {countryStats.slice(0, LIST_LIMIT).map((item, index) => (
               <div
                 key={item.country}
-                className="flex items-center justify-between rounded-xl border border-violet-100/60 dark:border-violet-900/40 bg-white/80 dark:bg-white/10 px-3 py-2.5 backdrop-blur-sm transition-colors hover:border-violet-200 dark:hover:border-violet-400/40"
+                className="flex items-center justify-between rounded-xl border border-violet-100/60 bg-white/80 px-3 py-2.5 backdrop-blur-sm transition-colors hover:border-violet-200"
               >
                 <div className="flex items-center space-x-2">
                   {index < 3 ? (
@@ -166,12 +166,12 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
                       }`}
                     />
                   ) : (
-                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-4">
+                    <span className="text-sm font-medium text-muted-foreground w-4">
                       #{index + 1}
                     </span>
                   )}
                   <CountryFlagSvg country={item.country} />
-                  <span className="text-sm font-medium text-slate-900 dark:text-white">
+                  <span className="text-sm font-medium text-foreground">
                     {item.country}
                   </span>
                 </div>
@@ -187,16 +187,16 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
               </div>
             ))}
             {totalCountries > LIST_LIMIT && (
-              <div className="col-span-2 text-xs text-slate-500 dark:text-slate-300 text-right">
+              <div className="col-span-2 text-xs text-muted-foreground text-right">
                 还有 {totalCountries - LIST_LIMIT} 个国家/地区未显示
               </div>
             )}
           </div>
         </>
       ) : (
-        <div className="relative flex items-center justify-center h-32 text-slate-500 dark:text-slate-300">
+        <div className="relative flex items-center justify-center h-32 text-muted-foreground">
           <div className="text-center">
-            <MapPin className="h-8 w-8 mx-auto mb-2 text-indigo-400/70 dark:text-indigo-300/60" />
+            <MapPin className="h-8 w-8 mx-auto mb-2 text-indigo-400/70" />
             <p className="text-sm">暂无地理分布数据</p>
           </div>
         </div>
