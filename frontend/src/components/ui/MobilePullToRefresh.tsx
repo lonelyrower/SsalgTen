@@ -1,11 +1,11 @@
 import React, {
-import { logger } from "@/utils/logger";
   useState,
   useRef,
   useCallback,
   useEffect,
   useMemo,
 } from "react";
+import { logger } from "@/utils/logger";
 import { RefreshCw } from "lucide-react";
 import { useMobile } from "@/hooks/useMobile";
 

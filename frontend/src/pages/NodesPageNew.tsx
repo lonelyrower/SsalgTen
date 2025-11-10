@@ -1,5 +1,4 @@
 import React, {
-import { logger } from "@/utils/logger";
   useState,
   useEffect,
   useMemo,
@@ -7,6 +6,7 @@ import { logger } from "@/utils/logger";
   Suspense,
   lazy,
 } from "react";
+import { logger } from "@/utils/logger";
 import { useInView } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { useRealTime } from "@/hooks/useRealTime";

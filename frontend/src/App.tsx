@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { logger } from "@/utils/logger";
 import {
-import { logger } from "@/utils/logger";
   BrowserRouter as Router,
   Routes,
   Route,
