@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, RefreshCw, Calendar, AlertCircle, Info, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { apiService } from "@/services/api";
 import type { NodeData } from "@/services/api";
 

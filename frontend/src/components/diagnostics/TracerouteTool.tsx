@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";

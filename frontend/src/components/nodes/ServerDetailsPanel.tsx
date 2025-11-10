@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { memo } from "react";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import {
   Cpu,
