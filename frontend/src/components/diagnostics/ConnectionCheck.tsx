@@ -125,16 +125,16 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
     <GlassCard variant="info">
       <div className="space-y-4 text-left">
         {/* 标题 - 统一样式 */}
-        <div className="flex items-center justify-between pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
+        <div className="flex items-center justify-between pb-3 border-b border-[hsl(var(--info))]/30">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-              <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            <div className="p-2 bg-[hsl(var(--info))]/10 rounded-lg">
+              <Zap className="h-5 w-5 text-[hsl(var(--info))]" />
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-base font-semibold text-foreground">
                 连接性自检
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 测试节点到您的连通性和延迟
               </p>
             </div>
@@ -142,20 +142,20 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           <button
             onClick={performCheck}
             disabled={checking}
-            className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-lg transition-colors"
+            className="p-2 hover:bg-[hsl(var(--info))]/10 rounded-lg transition-colors"
             title="重新检查"
             aria-label="重新检查连接性"
           >
             <RefreshCw
-              className={`h-4 w-4 text-cyan-600 dark:text-cyan-400 ${checking ? "animate-spin" : ""}`}
+              className={`h-4 w-4 text-[hsl(var(--info))] ${checking ? "animate-spin" : ""}`}
             />
           </button>
         </div>
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="p-3 bg-[hsl(var(--error))]/10 border border-[hsl(var(--error))]/30 rounded-lg">
+            <p className="text-sm text-[hsl(var(--error))]">{error}</p>
           </div>
         )}
 
@@ -163,16 +163,16 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
         {result && (
           <div className="space-y-3">
           {/* 节点状态 */}
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center justify-between p-3 bg-[hsl(var(--info))]/5 rounded-lg border border-[hsl(var(--info))]/20">
             <div className="flex items-center gap-3">
               {result.nodeOnline ? (
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <CheckCircle className="h-5 w-5 text-[hsl(var(--success))]" />
               ) : (
-                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <XCircle className="h-5 w-5 text-[hsl(var(--error))]" />
               )}
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">节点状态</p>
-                <p className="font-semibold text-gray-900 dark:text-white">
+                <p className="text-sm text-muted-foreground">节点状态</p>
+                <p className="font-semibold text-foreground">
                   {result.nodeOnline ? "在线" : "离线"}
                 </p>
               </div>
@@ -186,12 +186,12 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           </div>
 
           {/* 访客IP */}
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center justify-between p-3 bg-[hsl(var(--info))]/5 rounded-lg border border-[hsl(var(--info))]/20">
             <div className="flex items-center gap-3">
-              <Globe className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+              <Globe className="h-5 w-5 text-[hsl(var(--info))]" />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">您的IP地址</p>
-                <p className="font-mono font-semibold text-gray-900 dark:text-white">
+                <p className="text-sm text-muted-foreground">您的IP地址</p>
+                <p className="font-mono font-semibold text-foreground">
                   {result.visitorIP || "无法获取"}
                 </p>
               </div>
@@ -199,14 +199,14 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
           </div>
 
           {/* 基本延迟 */}
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
+          <div className="flex items-center justify-between p-3 bg-[hsl(var(--info))]/5 rounded-lg border border-[hsl(var(--info))]/20">
             <div className="flex items-center gap-3">
-              <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+              <Zap className="h-5 w-5 text-[hsl(var(--info))]" />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   节点 → 您的延迟
                 </p>
-                <p className="font-semibold text-gray-900 dark:text-white">
+                <p className="font-semibold text-foreground">
                   {result.latency !== null ? (
                     <>
                       <span className="text-2xl">
@@ -215,7 +215,7 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
                       <span className="text-sm ml-1">ms</span>
                     </>
                   ) : (
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-muted-foreground">
                       {result.nodeOnline ? "测试中..." : "节点离线"}
                     </span>
                   )}
@@ -244,18 +244,18 @@ export const ConnectionCheck: React.FC<ConnectionCheckProps> = ({ node }) => {
 
           {/* 丢包 */}
           {result.packetLoss !== null && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-between p-3 bg-[hsl(var(--info))]/5 rounded-lg border border-[hsl(var(--info))]/20">
+              <div className="text-sm text-muted-foreground">
                 丢包率
               </div>
-              <div className="font-semibold text-gray-900 dark:text-white">
+              <div className="font-semibold text-foreground">
                 {result.packetLoss.toFixed(1)}%
               </div>
             </div>
           )}
 
           {/* 最后检查时间 */}
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+          <div className="text-xs text-muted-foreground text-center">
             最后检查: {result.lastChecked.toLocaleTimeString("zh-CN")}
           </div>
           </div>
