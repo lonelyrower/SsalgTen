@@ -57,7 +57,8 @@ export const SelectTrigger: React.FC<SelectTriggerProps> = ({ className = "", ch
     <button
       type="button"
       onClick={() => setIsOpen(!isOpen)}
-      className={`flex items-center justify-between px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${className}`}
+      className={`flex items-center justify-between px-3 py-2 border text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${className}`}
+      style={{ borderRadius: 'var(--radius-md)' }}
     >
       {children}
       <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -102,7 +103,8 @@ export const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   return (
     <div
       ref={contentRef}
-      className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto"
+      className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-[var(--shadow-lg)] max-h-60 overflow-auto"
+      style={{ borderRadius: 'var(--radius-md)' }}
     >
       {children}
     </div>
@@ -127,7 +129,7 @@ export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
       type="button"
       onClick={handleClick}
       className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-        isSelected ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium" : ""
+        isSelected ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-medium" : ""
       }`}
     >
       {children}
