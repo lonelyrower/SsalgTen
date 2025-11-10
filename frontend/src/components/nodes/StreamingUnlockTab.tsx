@@ -63,10 +63,10 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
       {/* 头部信息 */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">
             流媒体解锁状态
           </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <div className="flex items-center space-x-2 text-sm text-[hsl(var(--muted-foreground))] mt-1">
             <Clock className="h-4 w-4" />
             <span>最后检测: {formatLastTested(lastTested)}</span>
           </div>
@@ -92,12 +92,12 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
       </div>
 
       {/* 提示信息 */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div className="bg-[hsl(var(--info))]/10 border border-[hsl(var(--info))]/30 rounded-lg p-4">
         <div className="flex items-start space-x-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900 dark:text-blue-100">
+          <AlertCircle className="h-5 w-5 text-[hsl(var(--info))] flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-[hsl(var(--foreground))]">
             <p className="font-medium mb-1">提示</p>
-            <p className="text-blue-700 dark:text-blue-200">
+            <p className="text-[hsl(var(--info))]">
               流媒体解锁检测功能正在开发中，当前显示的是模拟数据。
               后端实现后将自动显示真实的解锁状态。
             </p>
@@ -122,14 +122,14 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
   const getStatusBg = () => {
     switch (service.status) {
       case "yes":
-        return "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800";
+        return "bg-[hsl(var(--success))]/10 border-[hsl(var(--success))]/30";
       case "no":
-        return "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800";
+        return "bg-[hsl(var(--error))]/10 border-[hsl(var(--error))]/30";
       case "org":
       case "pending":
-        return "bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800";
+        return "bg-[hsl(var(--warning))]/10 border-[hsl(var(--warning))]/30";
       default:
-        return "bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-700";
+        return "bg-[hsl(var(--muted))]/50 border-[hsl(var(--border))]";
     }
   };
 
@@ -140,11 +140,11 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
       native: {
         text: "Native 原生IP",
         color:
-          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]",
       },
       dns: {
         text: "DNS 解锁",
-        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+        color: "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))]",
       },
     };
 
@@ -164,7 +164,7 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
         <div className="flex items-center space-x-2">
           <span className="text-2xl">{service.icon}</span>
           <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white">
+            <h4 className="font-semibold text-[hsl(var(--foreground))]">
               {service.name}
             </h4>
             <p className={`text-sm ${STATUS_COLORS[service.status]}`}>
@@ -177,15 +177,15 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
       <div className="space-y-2">
         {service.region && (
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">解锁区域:</span>
-            <span className="font-mono font-medium text-gray-900 dark:text-white">
+            <span className="text-[hsl(var(--muted-foreground))]">解锁区域:</span>
+            <span className="font-mono font-medium text-[hsl(var(--foreground))]">
               {service.region}
             </span>
           </div>
         )}
         {service.unlockType && (
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">类型:</span>
+            <span className="text-[hsl(var(--muted-foreground))]">类型:</span>
             {getUnlockTypeBadge(service.unlockType)}
           </div>
         )}

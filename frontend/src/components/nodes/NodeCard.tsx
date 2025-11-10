@@ -93,10 +93,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <CountryFlagSvg country={node.country} className="w-7 h-7" />
               )}
               <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
+                <h3 className="text-lg font-bold text-[hsl(var(--foreground))] mb-0.5">
                   {node.name}
                 </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                <p className="text-xs text-[hsl(var(--muted-foreground))] flex items-center gap-1">
                   <Globe className="h-3 w-3" />
                   {node.city}, {node.country}
                 </p>
@@ -115,8 +115,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* ASN */}
             {node.asnNumber && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">ASN:</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">ASN:</span>
+                <span className="text-sm font-semibold text-[hsl(var(--foreground))]">
                   {node.asnNumber}
                 </span>
               </div>
