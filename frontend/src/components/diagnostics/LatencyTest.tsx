@@ -78,15 +78,15 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
   const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
       case "excellent":
-        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+        return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
       case "good":
-        return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+        return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]";
       case "poor":
-        return "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
+        return "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]";
       case "failed":
-        return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300";
+        return "bg-muted text-muted-foreground";
       default:
-        return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -195,15 +195,15 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
     <div className="space-y-6">
       <GlassCard variant="info" className="space-y-5 text-left">
         {/* 标题 - 统一靠左对齐 */}
-        <div className="flex items-center gap-2 pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
-          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-            <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+        <div className="flex items-center gap-2 pb-3 border-b border-[hsl(var(--info))]/30">
+          <div className="p-2 bg-[hsl(var(--info))]/10 rounded-lg">
+            <Zap className="h-5 w-5 text-[hsl(var(--info))]" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-foreground">
               延迟测试 - 节点到全球站点
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               选择测试范围后即可开始，系统会依次 Ping 全球热门站点并统计响应情况
             </p>
           </div>
@@ -251,18 +251,18 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {/* 测试站点预览 */}
-        <div className="p-4 bg-cyan-50/30 dark:bg-cyan-900/10 rounded-lg border border-cyan-200/40 dark:border-cyan-700/40">
-          <div className="flex items-center gap-2 mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
-            <Target className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
+        <div className="p-4 bg-[hsl(var(--info))]/5 rounded-lg border border-[hsl(var(--info))]/20">
+          <div className="flex items-center gap-2 mb-2 text-xs font-medium text-foreground">
+            <Target className="h-3 w-3 text-[hsl(var(--info))]" />
             将测试以下站点：
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {currentTargets.map((target, index) => (
               <div
                 key={index}
-                className="flex items-center gap-1.5 px-2 py-1 bg-white/60 dark:bg-gray-800/40 rounded text-xs text-gray-600 dark:text-gray-400"
+                className="flex items-center gap-1.5 px-2 py-1 surface-elevated rounded text-xs text-muted-foreground"
               >
-                <span className="w-1 h-1 rounded-full bg-cyan-500" />
+                <span className="w-1 h-1 rounded-full bg-[hsl(var(--info))]" />
                 {target}
               </div>
             ))}
@@ -270,8 +270,8 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
-            {error}
+          <div className="p-3 bg-[hsl(var(--error))]/10 border border-[hsl(var(--error))]/30 rounded-lg">
+            <p className="text-sm text-[hsl(var(--error))]">{error}</p>
           </div>
         )}
       </GlassCard>
@@ -279,44 +279,44 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       {testResult && (
         <div className="space-y-4">
           <GlassCard variant="default" className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2 text-slate-900 dark:text-white">
-              <Clock className="h-5 w-5 text-emerald-500" />
+            <div className="flex flex-wrap items-center gap-2 text-foreground">
+              <Clock className="h-5 w-5 text-[hsl(var(--success))]" />
               测试结果概览
               <Badge variant="outline" className="rounded-full px-3 py-1 text-xs">
                 {testResult.testType === "standard" ? "标准测试" : "完整测试"}
               </Badge>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+              <div className="rounded-xl border border-border surface-elevated p-4 text-center">
+                <div className="text-2xl font-semibold text-foreground">
                   {testResult.summary.successful}/{testResult.summary.total}
                 </div>
-                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">成功站点</div>
+                <div className="mt-1 text-xs text-muted-foreground">成功站点</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300">
+              <div className="rounded-xl border border-border surface-elevated p-4 text-center">
+                <div className="text-2xl font-semibold text-[hsl(var(--info))]">
                   {testResult.summary.averageLatency.toFixed(1)}ms
                 </div>
-                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">平均延迟</div>
+                <div className="mt-1 text-xs text-muted-foreground">平均延迟</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
+              <div className="rounded-xl border border-border surface-elevated p-4 text-center">
+                <div className="text-2xl font-semibold text-[hsl(var(--success))]">
                   {testResult.summary.excellentCount}
                 </div>
-                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">优秀连接</div>
+                <div className="mt-1 text-xs text-muted-foreground">优秀连接</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-amber-600 dark:text-amber-300">
+              <div className="rounded-xl border border-border surface-elevated p-4 text-center">
+                <div className="text-2xl font-semibold text-[hsl(var(--warning))]">
                   {(testResult.duration / 1000).toFixed(1)}s
                 </div>
-                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">测试耗时</div>
+                <div className="mt-1 text-xs text-muted-foreground">测试耗时</div>
               </div>
             </div>
           </GlassCard>
 
           <GlassCard variant="default" hover={false} className="space-y-4 pt-2">
-            <div className="flex items-center gap-2 text-slate-900 dark:text-white pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
-              <Zap className="h-5 w-5 text-purple-500" />
+            <div className="flex items-center gap-2 text-foreground pb-2 border-b border-border">
+              <Zap className="h-5 w-5 text-primary" />
               详细延迟结果
             </div>
             <div className="grid gap-3">
@@ -347,8 +347,8 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{getStatusIcon(result.status)}</span>
                         <div>
-                          <div className="font-medium text-slate-900 dark:text-white">{result.target}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                          <div className="font-medium text-foreground">{result.target}</div>
+                          <div className="text-xs text-muted-foreground">
                             {getStatusDescription(result.status)}
                           </div>
                         </div>
@@ -358,7 +358,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                           {formatLatency(result.latency)}
                         </Badge>
                         {result.error && (
-                          <span className="max-w-64 text-xs text-red-500 dark:text-red-300">
+                          <span className="max-w-64 text-xs text-[hsl(var(--error))]">
                             {result.error}
                           </span>
                         )}
@@ -371,8 +371,8 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
           </GlassCard>
 
           <GlassCard variant="default">
-            <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-              <div className="font-medium text-slate-900 dark:text-white">延迟等级说明</div>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="font-medium text-foreground">延迟等级说明</div>
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="flex items-center gap-2">
                   <span>🟢</span>
