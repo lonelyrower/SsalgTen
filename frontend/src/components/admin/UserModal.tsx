@@ -208,18 +208,18 @@ export const UserModal: React.FC<UserModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <Card className="surface-elevated rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 标题栏 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-primary/15 rounded-lg">
               <UserIcon className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-foreground">
                 {isEditing ? "编辑用户" : "添加用户"}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 {isEditing ? "修改用户信息和权限" : "创建新的系统用户"}
               </p>
             </div>
@@ -228,7 +228,7 @@ export const UserModal: React.FC<UserModalProps> = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -238,9 +238,9 @@ export const UserModal: React.FC<UserModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* 全局错误 */}
           {errors.submit && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
-              <span className="text-red-700 dark:text-red-400">
+            <div className="p-4 bg-[hsl(var(--error))]/10 border border-[hsl(var(--error))]/30 rounded-lg flex items-center">
+              <AlertCircle className="h-5 w-5 text-[hsl(var(--error))] mr-3" />
+              <span className="text-[hsl(var(--error))]">
                 {errors.submit}
               </span>
             </div>
@@ -248,27 +248,27 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           {/* 用户名 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               用户名 *
             </label>
             <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.username
-                    ? "border-red-300 dark:border-red-600"
-                    : "border-gray-300 dark:border-gray-600"
+                    ? "border-[hsl(var(--error))]"
+                    : "border-border"
                 }`}
                 placeholder="请输入用户名"
                 disabled={loading}
               />
             </div>
             {errors.username && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-[hsl(var(--error))]">
                 {errors.username}
               </p>
             )}
@@ -276,27 +276,27 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           {/* 邮箱 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               邮箱地址 *
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.email
-                    ? "border-red-300 dark:border-red-600"
-                    : "border-gray-300 dark:border-gray-600"
+                    ? "border-[hsl(var(--error))]"
+                    : "border-border"
                 }`}
                 placeholder="请输入邮箱地址"
                 disabled={loading}
               />
             </div>
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-[hsl(var(--error))]">
                 {errors.email}
               </p>
             )}
@@ -304,7 +304,7 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           {/* 姓名 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               显示名称
             </label>
             <input
@@ -312,7 +312,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-3 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="请输入显示名称（可选）"
               disabled={loading}
             />
@@ -320,20 +320,20 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           {/* 密码 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               {isEditing ? "新密码（留空则不修改）" : "密码 *"}
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.password
-                    ? "border-red-300 dark:border-red-600"
-                    : "border-gray-300 dark:border-gray-600"
+                    ? "border-[hsl(var(--error))]"
+                    : "border-border"
                 }`}
                 placeholder={isEditing ? "留空表示不修改密码" : "请输入密码"}
                 disabled={loading}
@@ -341,7 +341,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 disabled={loading}
               >
                 {showPassword ? (
@@ -352,7 +352,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-[hsl(var(--error))]">
                 {errors.password}
               </p>
             )}
@@ -361,20 +361,20 @@ export const UserModal: React.FC<UserModalProps> = ({
           {/* 确认密码 */}
           {(!isEditing || formData.password.trim()) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 确认密码 *
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                  className={`w-full pl-10 pr-12 py-3 border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary ${
                     errors.confirmPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "border-[hsl(var(--error))]"
+                      : "border-border"
                   }`}
                   placeholder="请再次输入密码"
                   disabled={loading}
@@ -382,7 +382,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   disabled={loading}
                 >
                   {showConfirmPassword ? (
@@ -393,7 +393,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                <p className="mt-1 text-sm text-[hsl(var(--error))]">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -402,17 +402,17 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           {/* 角色选择 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               用户角色 *
             </label>
             <div className="relative">
-              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <select
                 name="role"
                 aria-label="用户角色"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-3 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={loading}
               >
                 <option value="VIEWER">查看者 - 只读权限</option>
@@ -430,19 +430,19 @@ export const UserModal: React.FC<UserModalProps> = ({
               name="active"
               checked={formData.active}
               onChange={handleInputChange}
-              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
               disabled={loading}
             />
             <label
               htmlFor="active"
-              className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+              className="ml-2 block text-sm text-foreground"
             >
               启用账户
             </label>
           </div>
 
           {/* 按钮组 */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-border">
             <Button
               type="button"
               variant="outline"
