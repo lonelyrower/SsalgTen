@@ -270,7 +270,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
+          <div className="border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
             {error}
           </div>
         )}
@@ -287,25 +287,25 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
               </Badge>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-slate-900 dark:text-white">
                   {testResult.summary.successful}/{testResult.summary.total}
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">成功站点</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300">
                   {testResult.summary.averageLatency.toFixed(1)}ms
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">平均延迟</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
                   {testResult.summary.excellentCount}
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">优秀连接</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-amber-600 dark:text-amber-300">
                   {(testResult.duration / 1000).toFixed(1)}s
                 </div>

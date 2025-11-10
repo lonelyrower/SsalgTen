@@ -1183,7 +1183,7 @@ export const EnhancedWorldMap = memo(
                 </div>
                 <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
                   {/* Carto 提供商组 */}
-                  <div className="rounded-lg border border-purple-200 dark:border-purple-700/40 overflow-hidden">
+                  <div className="border border-purple-200 dark:border-purple-700/40 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/50">
                       <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                       <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
@@ -1221,7 +1221,7 @@ export const EnhancedWorldMap = memo(
                   </div>
 
                   {/* OpenStreetMap 提供商组 */}
-                  <div className="rounded-lg border border-green-200 dark:border-green-700/40 overflow-hidden">
+                  <div className="border border-green-200 dark:border-green-700/40 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 border-b border-green-200 dark:border-green-800/50">
                       <MapIcon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                       <span className="text-xs font-bold text-green-700 dark:text-green-300">
@@ -1259,7 +1259,7 @@ export const EnhancedWorldMap = memo(
                   </div>
 
                   {/* Mapbox 提供商组 */}
-                  <div className="rounded-lg border border-blue-200 dark:border-blue-700/40 overflow-hidden">
+                  <div className="border border-blue-200 dark:border-blue-700/40 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
                       <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       <span className="text-xs font-bold text-blue-700 dark:text-blue-300">

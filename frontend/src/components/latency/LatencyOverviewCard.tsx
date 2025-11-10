@@ -84,7 +84,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
       {/* 头部 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-primary/15 rounded-lg">
+          <div className="p-2 bg-primary/15" style={{ borderRadius: "var(--radius-md)" }}>
             <Wifi className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -134,7 +134,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
 
       {/* 错误状态 */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
           <div className="flex items-center space-x-2 text-red-700 dark:text-red-300">
             <Activity className="h-4 w-4" />
             <span className="text-sm">{error}</span>

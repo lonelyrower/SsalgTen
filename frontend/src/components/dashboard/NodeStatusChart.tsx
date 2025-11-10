@@ -13,7 +13,7 @@ const CustomTooltip = ({ active, payload, total }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+      <div className="bg-white dark:bg-gray-800 p-3 shadow-lg border border-gray-200 dark:border-gray-600">
         <p className="font-medium text-gray-900 dark:text-white">{data.name}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           数量: {data.value} (
@@ -52,7 +52,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}
+      className={`bg-white dark:bg-gray-800 shadow-lg p-6 ${className}`}
     >
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
@@ -91,7 +91,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
           {/* 图例和统计 */}
           <div className="flex-1 space-y-4">
             <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20" style={{ borderRadius: "var(--radius-md)" }}>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   <span className="text-sm font-medium text-green-700 dark:text-green-300">
@@ -108,7 +108,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20" style={{ borderRadius: "var(--radius-md)" }}>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-red-500"></div>
                   <span className="text-sm font-medium text-red-700 dark:text-red-300">
@@ -127,7 +127,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
             </div>
 
             {/* 可用率指示器 */}
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="p-3 bg-gray-50 dark:bg-gray-700/50" style={{ borderRadius: "var(--radius-md)" }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   系统可用率

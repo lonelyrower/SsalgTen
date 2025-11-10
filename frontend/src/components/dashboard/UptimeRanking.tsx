@@ -57,7 +57,7 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-emerald-200/60 dark:border-emerald-700/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
+    <div className="group relative h-full overflow-hidden border-2 border-emerald-200/60 dark:border-emerald-700/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-emerald-400/15 via-transparent to-teal-500/15" />
       <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-emerald-300/20 blur-3xl" />
       <div className="relative mb-4 flex-shrink-0">
@@ -80,7 +80,7 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
             topNodes.map((node, index) => (
               <div
                 key={node.id}
-                className="flex items-center justify-between rounded-xl border border-emerald-100/70 dark:border-emerald-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-emerald-200 dark:hover:border-emerald-400/40"
+                className="flex items-center justify-between border border-emerald-100/70 dark:border-emerald-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-emerald-200 dark:hover:border-emerald-400/40"
               >
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <div className="flex items-center space-x-2">

@@ -41,7 +41,7 @@ const LegendItem: React.FC<{
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-violet-100/70 dark:border-violet-900/40 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+      <div className="border border-violet-100/70 dark:border-violet-900/40 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-lg backdrop-blur-sm">
         <p className="font-medium text-slate-900 dark:text-white">{label}</p>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {payload.map((entry: any, index: number) => (
@@ -108,7 +108,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
 
   return (
     <div
-      className={`group relative h-full overflow-hidden rounded-2xl border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col ${className}`}
+      className={`group relative h-full overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-indigo-400/15 via-transparent to-violet-500/15" />
       <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-indigo-400/15 blur-3xl" />
@@ -152,7 +152,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
             {countryStats.slice(0, LIST_LIMIT).map((item, index) => (
               <div
                 key={item.country}
-                className="flex items-center justify-between rounded-xl border border-violet-100/60 dark:border-violet-900/40 bg-white/80 dark:bg-white/10 px-3 py-2.5 backdrop-blur-sm transition-colors hover:border-violet-200 dark:hover:border-violet-400/40"
+                className="flex items-center justify-between border border-violet-100/60 dark:border-violet-900/40 bg-white/80 dark:bg-white/10 px-3 py-2.5 backdrop-blur-sm transition-colors hover:border-violet-200 dark:hover:border-violet-400/40"
               >
                 <div className="flex items-center space-x-2">
                   {index < 3 ? (
