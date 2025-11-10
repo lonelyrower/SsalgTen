@@ -87,31 +87,31 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
       icon: '🔐',
       label: '代理服务',
       count: proxyServices.length,
-      gradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30',
-      activeColor: 'border-blue-500 text-blue-600 dark:text-blue-400',
+      gradient: 'from-[hsl(var(--info))]/5 to-[hsl(var(--info))]/8',
+      activeColor: 'border-[hsl(var(--info))] text-[hsl(var(--info))]',
     },
     {
       key: 'web' as ServiceCategory,
       icon: '🌐',
       label: 'Web 服务',
       count: webServices.length,
-      gradient: 'from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30',
-      activeColor: 'border-emerald-500 text-emerald-600 dark:text-emerald-400',
+      gradient: 'from-[hsl(var(--success))]/5 to-[hsl(var(--success))]/8',
+      activeColor: 'border-[hsl(var(--success))] text-[hsl(var(--success))]',
     },
     {
       key: 'other' as ServiceCategory,
       icon: '📦',
       label: '基础组件 & 其他',
       count: otherServices.length,
-      gradient: 'from-gray-50 to-slate-50 dark:from-gray-950/30 dark:to-slate-950/30',
-      activeColor: 'border-gray-500 text-gray-600 dark:text-gray-400',
+      gradient: 'from-surface-elevated to-surface-elevated',
+      activeColor: 'border-border text-muted-foreground',
     },
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    <div className="bg-surface-base rounded-lg shadow overflow-hidden">
       {/* 标签页导航 */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-border">
         <nav className="flex -mb-px overflow-x-auto" aria-label="服务类型">
           {tabs.map((tab) => (
             <button
@@ -121,7 +121,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                 flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 whitespace-nowrap transition-colors
                 ${activeTab === tab.key
                   ? `${tab.activeColor} bg-gradient-to-r ${tab.gradient}`
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }
               `}
               disabled={tab.count === 0}
@@ -131,8 +131,8 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
               <span className={`
                 px-2 py-0.5 text-xs rounded-full
                 ${activeTab === tab.key
-                  ? 'bg-white/50 dark:bg-gray-900/50'
-                  : 'bg-gray-100 dark:bg-gray-700'
+                  ? 'bg-surface-elevated'
+                  : 'bg-surface-elevated'
                 }
               `}>
                 {tab.count}
@@ -155,27 +155,27 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
 // Proxy 服务表格 - 显示:名称、节点、协议、分享链接、更新时间
 const ProxyServicesTable: React.FC<{ services: NodeService[] }> = ({ services }) => {
   return (
-    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-      <thead className="bg-gray-50 dark:bg-gray-900">
+    <table className="min-w-full divide-y divide-border">
+      <thead className="bg-surface-elevated">
         <tr>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             服务名称
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             节点
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             协议
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             分享链接
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             更新时间
           </th>
         </tr>
       </thead>
-      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+      <tbody className="bg-surface-base divide-y divide-border">
         {services.map((service, index) => (
           <ProxyServiceRow key={service.id} service={service} colorIndex={index % 4} />
         ))}
@@ -187,27 +187,27 @@ const ProxyServicesTable: React.FC<{ services: NodeService[] }> = ({ services })
 // Web 服务表格 - 显示:名称、节点、域名、端口、更新时间
 const WebServicesTable: React.FC<{ services: NodeService[] }> = ({ services }) => {
   return (
-    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-      <thead className="bg-gray-50 dark:bg-gray-900">
+    <table className="min-w-full divide-y divide-border">
+      <thead className="bg-surface-elevated">
         <tr>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             服务名称
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             节点
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             域名
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             端口
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             更新时间
           </th>
         </tr>
       </thead>
-      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+      <tbody className="bg-surface-base divide-y divide-border">
         {services.map((service, index) => (
           <WebServiceRow key={service.id} service={service} colorIndex={index % 4} />
         ))}
@@ -219,27 +219,27 @@ const WebServicesTable: React.FC<{ services: NodeService[] }> = ({ services }) =
 // 其他服务表格 - 显示:名称、节点、类型、端口、更新时间
 const OtherServicesTable: React.FC<{ services: NodeService[] }> = ({ services }) => {
   return (
-    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-      <thead className="bg-gray-50 dark:bg-gray-900">
+    <table className="min-w-full divide-y divide-border">
+      <thead className="bg-surface-elevated">
         <tr>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             服务名称
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             节点
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             类型
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             端口
           </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
             更新时间
           </th>
         </tr>
       </thead>
-      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+      <tbody className="bg-surface-base divide-y divide-border">
         {services.map((service, index) => (
           <OtherServiceRow key={service.id} service={service} colorIndex={index % 4} />
         ))}
@@ -250,10 +250,10 @@ const OtherServicesTable: React.FC<{ services: NodeService[] }> = ({ services })
 
 // 渐变配色方案 - 与流媒体页面保持一致
 const ROW_COLOR_SCHEMES = [
-  "bg-gradient-to-r from-blue-50/80 via-cyan-50/50 to-blue-100/60 dark:from-blue-950/30 dark:via-cyan-950/20 dark:to-blue-900/30 hover:from-blue-100 hover:to-blue-150 dark:hover:from-blue-900/40 dark:hover:to-blue-800/40",
-  "bg-gradient-to-r from-purple-50/80 via-violet-50/50 to-purple-100/60 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/30 hover:from-purple-100 hover:to-purple-150 dark:hover:from-purple-900/40 dark:hover:to-purple-800/40",
-  "bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-emerald-100/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-emerald-900/30 hover:from-emerald-100 hover:to-emerald-150 dark:hover:from-emerald-900/40 dark:hover:to-emerald-800/40",
-  "bg-gradient-to-r from-orange-50/80 via-amber-50/50 to-orange-100/60 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-orange-900/30 hover:from-orange-100 hover:to-orange-150 dark:hover:from-orange-900/40 dark:hover:to-orange-800/40",
+  "bg-gradient-to-r from-[hsl(var(--info))]/5 via-[hsl(var(--info))]/3 to-[hsl(var(--info))]/8 hover:from-[hsl(var(--info))]/10 hover:to-[hsl(var(--info))]/15",
+  "bg-gradient-to-r from-primary/5 via-primary/3 to-primary/8 hover:from-primary/10 hover:to-primary/15",
+  "bg-gradient-to-r from-[hsl(var(--success))]/5 via-[hsl(var(--success))]/3 to-[hsl(var(--success))]/8 hover:from-[hsl(var(--success))]/10 hover:to-[hsl(var(--success))]/15",
+  "bg-gradient-to-r from-[hsl(var(--warning))]/5 via-[hsl(var(--warning))]/3 to-[hsl(var(--warning))]/8 hover:from-[hsl(var(--warning))]/10 hover:to-[hsl(var(--warning))]/15",
 ];
 
 // Proxy 服务行组件
@@ -320,11 +320,11 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
         <div className="flex items-center justify-center gap-2">
           <span className="text-2xl">{typeIcon}</span>
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-sm font-medium text-foreground">
               {service.name}
             </div>
             {service.version && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 v{service.version}
               </div>
             )}
@@ -341,7 +341,7 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
               className="w-5 h-5"
             />
           )}
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-foreground">
             {service.nodeName || service.nodeId}
           </span>
         </div>
@@ -362,7 +362,7 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
             ))}
           </div>
         ) : (
-          <span className="text-xs text-gray-400">-</span>
+          <span className="text-xs text-muted-foreground">-</span>
         )}
       </td>
 
@@ -376,17 +376,17 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
                 className="flex items-center justify-center gap-2 group"
               >
                 <code
-                  className="block text-xs text-gray-600 dark:text-gray-400 font-mono truncate max-w-xs text-center"
+                  className="block text-xs text-muted-foreground font-mono truncate max-w-xs text-center"
                   title={link}
                 >
                   {link}
                 </code>
                 <button
                   onClick={(e) => handleCopyLink(link, e)}
-                  className={`flex-shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
+                  className={`flex-shrink-0 p-1 rounded hover:bg-surface-elevated transition-colors ${
                     copiedLink === link
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      ? "text-[hsl(var(--success))]"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                   title={copiedLink === link ? "已复制" : "复制链接"}
                 >
@@ -399,14 +399,14 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
               </div>
             ))
           ) : (
-            <div className="text-center text-xs text-gray-400">-</div>
+            <div className="text-center text-xs text-muted-foreground">-</div>
           )}
         </div>
       </td>
 
       {/* 更新时间 */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>{timeAgo}</span>
         </div>
@@ -441,11 +441,11 @@ const WebServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = ({
         <div className="flex items-center justify-center gap-2">
           <span className="text-2xl">{typeIcon}</span>
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-sm font-medium text-foreground">
               {service.name}
             </div>
             {service.version && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 v{service.version}
               </div>
             )}
@@ -462,7 +462,7 @@ const WebServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = ({
               className="w-5 h-5"
             />
           )}
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-foreground">
             {service.nodeName || service.nodeId}
           </span>
         </div>
@@ -472,11 +472,11 @@ const WebServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = ({
       <td className="px-6 py-4">
         <div className="max-w-xs mx-auto text-center">
           {primaryDomain ? (
-            <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
+            <div className="text-sm text-foreground truncate">
               {primaryDomain}
             </div>
           ) : (
-            <span className="text-xs text-gray-400">-</span>
+            <span className="text-xs text-muted-foreground">-</span>
           )}
         </div>
       </td>
@@ -484,17 +484,17 @@ const WebServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = ({
       {/* 端口 */}
       <td className="px-6 py-4 whitespace-nowrap text-center">
         {allPorts.length > 0 ? (
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-foreground">
             {allPorts.join(", ")}
           </span>
         ) : (
-          <span className="text-xs text-gray-400">-</span>
+          <span className="text-xs text-muted-foreground">-</span>
         )}
       </td>
 
       {/* 更新时间 */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>{timeAgo}</span>
         </div>
@@ -528,11 +528,11 @@ const OtherServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
         <div className="flex items-center justify-center gap-2">
           <span className="text-2xl">{typeIcon}</span>
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-sm font-medium text-foreground">
               {service.name}
             </div>
             {service.version && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 v{service.version}
               </div>
             )}
@@ -549,7 +549,7 @@ const OtherServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
               className="w-5 h-5"
             />
           )}
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-foreground">
             {service.nodeName || service.nodeId}
           </span>
         </div>
@@ -557,7 +557,7 @@ const OtherServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
 
       {/* 类型 */}
       <td className="px-6 py-4 whitespace-nowrap text-center">
-        <span className="text-sm text-gray-700 dark:text-gray-300">
+        <span className="text-sm text-foreground">
           {typeConfig.name}
         </span>
       </td>
@@ -565,17 +565,17 @@ const OtherServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
       {/* 端口 */}
       <td className="px-6 py-4 whitespace-nowrap text-center">
         {allPorts.length > 0 ? (
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-foreground">
             {allPorts.join(", ")}
           </span>
         ) : (
-          <span className="text-xs text-gray-400">-</span>
+          <span className="text-xs text-muted-foreground">-</span>
         )}
       </td>
 
       {/* 更新时间 */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>{timeAgo}</span>
         </div>

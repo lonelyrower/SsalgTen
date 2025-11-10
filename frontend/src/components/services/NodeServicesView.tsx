@@ -55,23 +55,23 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
   const colorSchemes = [
     {
       gradient:
-        "bg-gradient-to-br from-blue-50/80 via-cyan-50/50 to-blue-100/60 dark:from-blue-950/30 dark:via-cyan-950/20 dark:to-blue-900/30",
-      border: "border-l border-blue-400 dark:border-blue-500",
+        "bg-gradient-to-br from-[hsl(var(--info))]/5 via-[hsl(var(--info))]/3 to-[hsl(var(--info))]/8",
+      border: "border-l border-[hsl(var(--info))]",
     },
     {
       gradient:
-        "bg-gradient-to-br from-purple-50/80 via-violet-50/50 to-purple-100/60 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/30",
-      border: "border-l border-purple-400 dark:border-purple-500",
+        "bg-gradient-to-br from-primary/5 via-primary/3 to-primary/8",
+      border: "border-l border-primary",
     },
     {
       gradient:
-        "bg-gradient-to-br from-emerald-50/80 via-teal-50/50 to-emerald-100/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-emerald-900/30",
-      border: "border-l border-emerald-400 dark:border-emerald-500",
+        "bg-gradient-to-br from-[hsl(var(--success))]/5 via-[hsl(var(--success))]/3 to-[hsl(var(--success))]/8",
+      border: "border-l border-[hsl(var(--success))]",
     },
     {
       gradient:
-        "bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-orange-100/60 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-orange-900/30",
-      border: "border-l border-orange-400 dark:border-orange-500",
+        "bg-gradient-to-br from-[hsl(var(--warning))]/5 via-[hsl(var(--warning))]/3 to-[hsl(var(--warning))]/8",
+      border: "border-l border-[hsl(var(--warning))]",
     },
   ];
 
@@ -89,10 +89,10 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
               <CountryFlagSvg country={overview.nodeCountry} className="w-7 h-7 flex-shrink-0" />
             )}
             <div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="text-base font-semibold text-foreground truncate">
                 {overview.nodeName}
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Globe className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">
                   {overview.nodeCity ? `${overview.nodeCity}, ${overview.nodeCountry}` : overview.nodeCountry}
@@ -113,12 +113,12 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
             {overview.services.map((service) => (
               <div
                 key={service.id}
-                className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:shadow-sm transition-shadow"
+                className="py-2 px-3 rounded-lg border border-border bg-surface-elevated hover:shadow-sm transition-shadow"
               >
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 text-center truncate">
+                <div className="text-sm font-medium text-foreground text-center truncate">
                   {service.name}
                   {service.version && (
-                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="ml-2 text-xs text-muted-foreground">
                       v{service.version}
                     </span>
                   )}
@@ -127,14 +127,14 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center py-8 text-sm text-muted-foreground">
             该节点暂无服务
           </div>
         )}
 
         {/* 底部信息 */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             <span>{timeAgo}</span>
           </div>
