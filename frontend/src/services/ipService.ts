@@ -168,7 +168,7 @@ class IPService {
    * 免费，45次/分钟，支持 IPv4 和 IPv6
    */
   private async fetchFromIPApi(): Promise<IPLocationData | null> {
-    const response = await fetch('http://ip-api.com/json/?fields=status,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,query', {
+    const response = await fetch('https://ip-api.com/json/?fields=status,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,query', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

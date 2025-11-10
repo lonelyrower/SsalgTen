@@ -81,7 +81,7 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({
           : window.location.origin
       ) as string;
       // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
-      const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
+      const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 10)}`;
       const base = {
         masterUrl: masterUrl,
         apiKey: apiKey,
