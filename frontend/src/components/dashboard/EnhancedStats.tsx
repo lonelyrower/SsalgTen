@@ -35,31 +35,37 @@ const StatsCard: React.FC<StatsCardProps> = ({
       bg: "bg-[hsl(var(--primary))]/10",
       icon: "text-[hsl(var(--primary))]",
       accent: "border-[hsl(var(--primary))]/30",
+      glow: "from-[hsl(var(--primary))]/10 via-transparent to-[hsl(var(--primary))]/5",
     },
     success: {
       bg: "bg-[hsl(var(--success))]/10",
       icon: "text-[hsl(var(--success))]",
       accent: "border-[hsl(var(--success))]/30",
+      glow: "from-[hsl(var(--success))]/10 via-transparent to-[hsl(var(--success))]/5",
     },
     warning: {
       bg: "bg-[hsl(var(--warning))]/10",
       icon: "text-[hsl(var(--warning))]",
       accent: "border-[hsl(var(--warning))]/30",
+      glow: "from-[hsl(var(--warning))]/10 via-transparent to-[hsl(var(--warning))]/5",
     },
     error: {
       bg: "bg-[hsl(var(--error))]/10",
       icon: "text-[hsl(var(--error))]",
       accent: "border-[hsl(var(--error))]/30",
+      glow: "from-[hsl(var(--error))]/10 via-transparent to-[hsl(var(--error))]/5",
     },
     info: {
       bg: "bg-[hsl(var(--info))]/10",
       icon: "text-[hsl(var(--info))]",
       accent: "border-[hsl(var(--info))]/30",
+      glow: "from-[hsl(var(--info))]/10 via-transparent to-[hsl(var(--info))]/5",
     },
     brand: {
       bg: "bg-[hsl(var(--brand-cyan))]/10",
       icon: "text-[hsl(var(--brand-cyan))]",
       accent: "border-[hsl(var(--brand-cyan))]/30",
+      glow: "from-[hsl(var(--brand-cyan))]/10 via-transparent to-[hsl(var(--brand-cyan))]/5",
     },
   };
 
@@ -83,7 +89,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
       <div style={{ padding: 'var(--card-padding-lg)' }}>
         <div className="flex items-center">
           <div
-            className={`flex-shrink-0 p-3 ${colors.bg} group-hover:scale-110 transition-transform duration-300 border border-white/60 dark:border-white/10 shadow-sm`}
+            className={`flex-shrink-0 p-3 ${colors.bg} group-hover:scale-110 transition-transform duration-300 border border-border/60 shadow-sm`}
             style={{ borderRadius: 'var(--radius-md)' }}
           >
             <div className={`${colors.icon}`}>{icon}</div>

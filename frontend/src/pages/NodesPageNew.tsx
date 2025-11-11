@@ -174,7 +174,7 @@ export const NodesPageNew: React.FC = () => {
   // 如果显示详情页面（包含诊断工具、系统详情、日志等）
   if (showDetails && selectedNode) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-background">
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-6 w-full">
@@ -184,16 +184,16 @@ export const NodesPageNew: React.FC = () => {
                 onClick={() => setShowDetails(false)}
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                className="gap-2 text-muted-foreground hover:text-foreground"
               >
                 ← 返回
               </Button>
-              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+              <div className="h-6 w-px bg-border" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-foreground">
                   节点详情
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   {selectedNode.name} ({selectedNode.city}, {selectedNode.country})
                 </p>
               </div>
@@ -212,7 +212,7 @@ export const NodesPageNew: React.FC = () => {
 
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-background">
       <Header />
 
       {/* Background effects */}
@@ -227,20 +227,20 @@ export const NodesPageNew: React.FC = () => {
       <div ref={containerRef} className="relative flex-1 overflow-y-auto">
         <main className="max-w-7xl mx-auto px-4 py-8 w-full flex flex-col gap-6 min-h-full">
         {/* Search and Filters - Enhanced Design */}
-        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm  border border-gray-200/60 dark:border-gray-700/60 shadow-lg p-4">
+        <div className="relative surface-elevated/80 backdrop-blur-sm rounded-xl border border-border/60 shadow-lg p-4">
           {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5  pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--brand-cyan))]/5 via-[hsl(var(--brand-blue))]/5 to-primary/5 rounded-xl pointer-events-none" />
 
           <div className="relative flex flex-col sm:flex-row gap-4">
             {/* Search input with enhanced styling */}
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-[hsl(var(--brand-cyan))] transition-colors" />
               <input
                 type="text"
                 placeholder="搜索节点名称、位置、IP、ASN、服务商..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700  focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-3 bg-muted/50 border border-border rounded-lg focus:ring-2 focus:ring-[hsl(var(--brand-cyan))] focus:border-[hsl(var(--brand-cyan))] transition-all text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
@@ -251,19 +251,19 @@ export const NodesPageNew: React.FC = () => {
                 onClick={handleRefresh}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                className="flex items-center gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
                 <span className="hidden sm:inline">刷新</span>
               </Button>
 
               {/* Status filter with icon */}
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700  px-3 py-2">
-                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                  className="bg-transparent focus:outline-none text-sm font-medium text-foreground cursor-pointer"
                 >
                   <option value="all">全部状态</option>
                   <option value="online">在线</option>
@@ -281,12 +281,12 @@ export const NodesPageNew: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start flex-1">
           {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
           <div className="lg:col-span-2 h-full">
-            <div className="bg-white dark:bg-gray-800  shadow-lg p-6 flex flex-col h-full lg:h-[800px]">
+            <div className="surface-elevated rounded-xl shadow-lg p-6 flex flex-col h-full lg:h-[800px]">
               {viewMode === "list" ? (
                 /* List View */
-                <div className="space-y-4 flex-1 overflow-y-auto pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div className="space-y-4 flex-1 overflow-y-auto pr-2 pt-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent">
                   {filteredNodes.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                       <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
                       <p>未找到匹配的节点</p>
                     </div>

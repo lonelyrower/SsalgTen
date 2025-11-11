@@ -16,6 +16,7 @@ interface GlassCardProps {
   hoverTransform?: boolean;
   hover?: boolean; // Alias for animated (backward compatibility)
   motion?: boolean; // Enable framer-motion animations
+  interactive?: boolean; // Interactive card (scales on click)
 }
 
 /**
@@ -23,39 +24,36 @@ interface GlassCardProps {
  *
  * @param variant - 卡片变体
  *   布局类型：
- *   - base: 基础白色卡片
+ *   - default: 基础白色卡片
+ *   - subtle: 微妙样式（移动优先）
+ *   - strong: 强烈样式（桌面模糊）
  *   - tech: 科技感蓝色渐变卡片
- *   - stats: 统计卡片（适合数据展示）
- *   - content: 内容卡片（适合长文本）
+ *   - gradient: 渐变卡片
  *
- *   状态类型（统一蓝色系）：
- *   - success: 成功状态（蓝绿渐变）
- *   - warning: 警告状态（蓝黄渐变）
- *   - danger: 危险状态（蓝红渐变）
- *   - info: 信息状态（纯蓝渐变）
- *
- * @param size - 内边距大小
- *   - sm: 16px (紧凑)
- *   - md: 20px (标准)
- *   - lg: 24px (宽松)
- *   - xl: 32px (超大)
+ *   状态类型：
+ *   - success: 成功状态（绿色系）
+ *   - warning: 警告状态（黄色系）
+ *   - danger: 危险状态（红色系）
+ *   - info: 信息状态（蓝色系）
+ *   - purple: 紫色系
+ *   - orange: 橙色系
  *
  * @param animated - 是否启用悬停动画
  * @param glow - 是否添加发光效果
  * @param interactive - 是否为交互式卡片（点击时缩放）
- * @param motionEnabled - 是否启用 framer-motion 入场动画
+ * @param motion - 是否启用 framer-motion 入场动画
  */
 export const GlassCard = memo(
   ({
     children,
     className = "",
-    variant = "base",
-    size = "lg",
+    variant = "default",
     animated = true,
     glow = false,
     hoverTransform = true,
     hover,
     motion: enableMotion = false,
+    interactive = false,
   }: GlassCardProps) => {
     // Backward compatibility: hover prop maps to animated
     const isAnimated = animated || (hover !== undefined ? hover : false);
@@ -81,7 +79,7 @@ export const GlassCard = memo(
         "bg-gradient-to-br from-[hsl(var(--surface-elevated))]/95 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--brand-blue))]/10 border-white/20 lg:from-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
     };
 
-    // Color variants (from admin/GlassCard)
+    // Color variants with design system tokens
     const colorVariants: Record<ColorVariant, {
       border: string;
       bg: string;
@@ -89,39 +87,39 @@ export const GlassCard = memo(
       glowCircle: string;
     }> = {
       success: {
-        border: "border-green-200/60 dark:border-green-700/60",
-        bg: "from-green-50 via-white to-emerald-50 dark:from-slate-800 dark:via-green-950/60 dark:to-emerald-950/60",
-        glow: "from-green-400/15 via-transparent to-emerald-500/15",
-        glowCircle: "bg-green-400/20",
+        border: "border-[hsl(var(--success))]/30",
+        bg: "bg-gradient-to-br from-[hsl(var(--success))]/10 via-[hsl(var(--surface))]/95 to-[hsl(var(--success))]/5",
+        glow: "from-[hsl(var(--success))]/15 via-transparent to-[hsl(var(--success))]/10",
+        glowCircle: "bg-[hsl(var(--success))]/20",
       },
       warning: {
-        border: "border-yellow-200/60 dark:border-yellow-700/60",
-        bg: "from-yellow-50 via-white to-amber-50 dark:from-slate-800 dark:via-yellow-950/60 dark:to-amber-950/60",
-        glow: "from-yellow-400/15 via-transparent to-amber-500/15",
-        glowCircle: "bg-yellow-400/20",
+        border: "border-[hsl(var(--warning))]/30",
+        bg: "bg-gradient-to-br from-[hsl(var(--warning))]/10 via-[hsl(var(--surface))]/95 to-[hsl(var(--warning))]/5",
+        glow: "from-[hsl(var(--warning))]/15 via-transparent to-[hsl(var(--warning))]/10",
+        glowCircle: "bg-[hsl(var(--warning))]/20",
       },
       danger: {
-        border: "border-red-200/60 dark:border-red-700/60",
-        bg: "from-red-50 via-white to-rose-50 dark:from-slate-800 dark:via-red-950/60 dark:to-rose-950/60",
-        glow: "from-red-400/15 via-transparent to-rose-500/15",
-        glowCircle: "bg-red-400/20",
+        border: "border-[hsl(var(--error))]/30",
+        bg: "bg-gradient-to-br from-[hsl(var(--error))]/10 via-[hsl(var(--surface))]/95 to-[hsl(var(--error))]/5",
+        glow: "from-[hsl(var(--error))]/15 via-transparent to-[hsl(var(--error))]/10",
+        glowCircle: "bg-[hsl(var(--error))]/20",
       },
       info: {
-        border: "border-cyan-200/60 dark:border-cyan-700/60",
-        bg: "from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60",
-        glow: "from-cyan-400/15 via-transparent to-blue-500/15",
-        glowCircle: "bg-cyan-400/20",
+        border: "border-[hsl(var(--info))]/30",
+        bg: "bg-gradient-to-br from-[hsl(var(--info))]/10 via-[hsl(var(--surface))]/95 to-[hsl(var(--info))]/5",
+        glow: "from-[hsl(var(--info))]/15 via-transparent to-[hsl(var(--info))]/10",
+        glowCircle: "bg-[hsl(var(--info))]/20",
       },
       purple: {
-        border: "border-purple-200/60 dark:border-purple-700/60",
-        bg: "from-purple-50 via-white to-violet-50 dark:from-slate-800 dark:via-purple-950/60 dark:to-violet-950/60",
-        glow: "from-purple-400/15 via-transparent to-violet-500/15",
+        border: "border-purple-500/30",
+        bg: "bg-gradient-to-br from-purple-500/10 via-[hsl(var(--surface))]/95 to-violet-500/5",
+        glow: "from-purple-400/15 via-transparent to-violet-500/10",
         glowCircle: "bg-purple-400/20",
       },
       orange: {
-        border: "border-orange-200/60 dark:border-orange-700/60",
-        bg: "from-orange-50 via-white to-amber-50 dark:from-slate-800 dark:via-orange-950/60 dark:to-amber-950/60",
-        glow: "from-orange-400/15 via-transparent to-amber-500/15",
+        border: "border-orange-500/30",
+        bg: "bg-gradient-to-br from-orange-500/10 via-[hsl(var(--surface))]/95 to-amber-500/5",
+        glow: "from-orange-400/15 via-transparent to-amber-500/10",
         glowCircle: "bg-orange-400/20",
       },
     };
@@ -148,7 +146,7 @@ export const GlassCard = memo(
 
     // 发光效果
     const glowClass = glow
-      ? "shadow-[0_0_30px_hsl(var(--card-accent-from)/0.3)]"
+      ? "shadow-[0_0_30px_hsl(var(--brand-cyan)/0.3)]"
       : "";
 
     // Build className based on variant type
@@ -184,6 +182,7 @@ export const GlassCard = memo(
           variantClasses,
           glowClass,
           animationClass,
+          interactiveClass,
           "relative overflow-hidden",
           className
         )}
@@ -218,26 +217,16 @@ export const GlassCard = memo(
           <div className="absolute top-0 left-0 right-0 h-px bg-primary/30" />
         )}
 
-        {/* 装饰性光点 */}
-        <div
-          className={cn(
-            "absolute -top-12 -right-12 w-32 h-32 rounded-full blur-2xl pointer-events-none",
-            `bg-gradient-to-br ${config.glowColor}`
-          )}
-        />
-
-        {/* 内容区域 */}
-        <div className="relative z-10">{children}</div>
-      </>
-    );
-
         {/* 科技感背景效果 (style variants) */}
         {variant === "tech" && (
           <>
             <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
           </>
         )}
+
+        {/* 内容区域 */}
+        <div className="relative z-10">{children}</div>
       </Wrapper>
     );
   }
