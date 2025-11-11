@@ -569,11 +569,13 @@ export class StreamingController {
       >(Prisma.sql`
         WITH latest AS (
           SELECT
-            "nodeId",
-            "service",
-            MAX("testedAt") AS "latestTestedAt"
-          FROM "streaming_tests"
-          GROUP BY "nodeId", "service"
+            st."nodeId",
+            st."service",
+            MAX(st."testedAt") AS "latestTestedAt"
+          FROM "streaming_tests" st
+          INNER JOIN "nodes" n ON n."id" = st."nodeId"
+          WHERE n."status" = 'ONLINE'
+          GROUP BY st."nodeId", st."service"
         )
         SELECT
           st."service",
