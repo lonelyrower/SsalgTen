@@ -284,7 +284,7 @@ export const StreamingPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-background">
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-8 w-full">
@@ -297,7 +297,7 @@ export const StreamingPage: React.FC = () => {
 
   if (error || !overview) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-background">
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-8 w-full">
@@ -312,34 +312,34 @@ export const StreamingPage: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-background">
       <Header />
 
       <div className="flex-1 overflow-y-auto">
         <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
         {/* Search and Filters - Enhanced Design */}
-        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm  border border-gray-200/60 dark:border-gray-700/60 shadow-lg p-4">
+        <div className="relative surface-elevated/80 backdrop-blur-sm rounded-xl border border-border/60 shadow-lg p-4">
           {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5  pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--brand-cyan))]/5 via-[hsl(var(--brand-blue))]/5 to-primary/5 rounded-xl pointer-events-none" />
 
           <div className="relative flex flex-col sm:flex-row gap-4">
             {/* Search input with enhanced styling */}
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-[hsl(var(--brand-cyan))] transition-colors" />
               <input
                 type="text"
                 placeholder="搜索节点名称..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700  focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-3 bg-muted/50 border border-border rounded-lg focus:ring-2 focus:ring-[hsl(var(--brand-cyan))] focus:border-[hsl(var(--brand-cyan))] transition-all text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             {/* Action buttons group */}
             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
               {/* Country filter */}
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700  px-3 py-2">
-                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
                 <select
                   value={filters.country || "all"}
                   onChange={(e) =>
@@ -348,7 +348,7 @@ export const StreamingPage: React.FC = () => {
                       country: e.target.value === "all" ? undefined : e.target.value,
                     }))
                   }
-                  className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                  className="bg-transparent focus:outline-none text-sm font-medium text-foreground cursor-pointer"
                   aria-label="筛选国家"
                 >
                   <option value="all">全部国家</option>
@@ -366,7 +366,7 @@ export const StreamingPage: React.FC = () => {
                 size="sm"
                 onClick={handleTriggerAll}
                 disabled={bulkTriggering || filteredNodes.length === 0}
-                className="gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                className="gap-2"
               >
                 <Film className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">{bulkTriggering ? "检测中..." : "批量检测"}</span>
@@ -378,21 +378,21 @@ export const StreamingPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 disabled={refreshing}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                className="flex items-center gap-2"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">{refreshing ? "刷新中..." : "刷新"}</span>
               </Button>
 
               {/* View mode toggle */}
-              <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700  p-1">
+              <div className="flex items-center bg-muted/50 border border-border rounded-lg p-1">
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
-                  className={`p-2  transition-colors ${
+                  className={`p-2 rounded transition-colors ${
                     viewMode === "list"
-                      ? "bg-cyan-500 text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-[hsl(var(--brand-cyan))] text-white"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                   title="列表视图"
                   aria-label="切换到列表视图"
@@ -402,10 +402,10 @@ export const StreamingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
-                  className={`p-2  transition-colors ${
+                  className={`p-2 rounded transition-colors ${
                     viewMode === "grid"
-                      ? "bg-cyan-500 text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-[hsl(var(--brand-cyan))] text-white"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                   title="卡片视图"
                   aria-label="切换到卡片视图"
@@ -422,14 +422,14 @@ export const StreamingPage: React.FC = () => {
         {nodes.length === 0 ? (
           <Card>
             <CardContent className="py-16 text-center">
-              <Film className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              <Film className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 暂无流媒体检测数据
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 系统还未收集到流媒体解锁数据。请确保：
               </p>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 mb-6 text-left max-w-md mx-auto space-y-2">
+              <ul className="text-sm text-muted-foreground mb-6 text-left max-w-md mx-auto space-y-2">
                 <li>• Agent 已正常启动并连接到主服务器</li>
                 <li>• Agent 会在启动后 1 分钟内执行首次检测</li>
                 <li>• 之后每 24 小时自动执行一次检测</li>
@@ -451,7 +451,7 @@ export const StreamingPage: React.FC = () => {
           <>
             {/* 平台卡片 - 始终显示 */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Filter className="h-4 w-4" />
                 平台统计（点击筛选）
               </h3>
@@ -474,9 +474,9 @@ export const StreamingPage: React.FC = () => {
             {/* 节点列表 */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h2 className="text-lg font-semibold text-foreground">
                   节点解锁详情
-                  <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
                     ({filteredNodes.length} 个节点)
                   </span>
                 </h2>
@@ -485,7 +485,7 @@ export const StreamingPage: React.FC = () => {
               {filteredNodes.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center">
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-muted-foreground">
                       {searchInput
                         ? `未找到匹配的节点 "${searchInput}"`
                         : "没有找到符合条件的节点"}

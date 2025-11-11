@@ -133,11 +133,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getBorderColor = () => {
     switch (notification.type) {
       case "success":
-        return "border-green-200 dark:border-green-800";
+        return "border-[hsl(var(--success))]/30";
       case "error":
-        return "border-red-200 dark:border-red-800";
+        return "border-[hsl(var(--error))]/30";
       case "warning":
-        return "border-yellow-200 dark:border-yellow-800";
+        return "border-[hsl(var(--warning))]/30";
       case "info":
       default:
         return "border-primary/30";
@@ -147,11 +147,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getBackgroundColor = () => {
     switch (notification.type) {
       case "success":
-        return "bg-green-50 dark:bg-green-900/20";
+        return "bg-[hsl(var(--success))]/10";
       case "error":
-        return "bg-red-50 dark:bg-red-900/20";
+        return "bg-[hsl(var(--error))]/10";
       case "warning":
-        return "bg-yellow-50 dark:bg-yellow-900/20";
+        return "bg-[hsl(var(--warning))]/10";
       case "info":
       default:
         return "bg-primary/10";
@@ -168,21 +168,21 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">{getIcon()}</div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <p className="text-sm font-medium text-foreground">
             {notification.title}
           </p>
           {notification.message && (
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               {notification.message}
             </p>
           )}
         </div>
         <button
           onClick={() => onRemove(notification.id)}
-          className="flex-shrink-0 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+          className="flex-shrink-0 p-1 hover:bg-muted rounded-full transition-colors"
           aria-label="关闭通知"
         >
-          <X className="h-4 w-4 text-gray-400" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
     </div>
