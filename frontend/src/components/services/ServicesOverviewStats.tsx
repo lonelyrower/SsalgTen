@@ -39,7 +39,7 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
       return (
         <span
           key={type}
-          className="px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-200 text-xs font-medium"
+          className="px-2 py-1 rounded-full bg-surface-elevated text-muted-foreground text-xs font-medium"
         >
           {(config?.name ?? type) as string} · {count}
         </span>
@@ -52,18 +52,18 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
         {/* 总节点数 */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Server className="h-4 w-4" />
               总节点数
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-foreground">
               {stats.totalNodes}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {stats.expiredNodes > 0 && (
-                <span className="text-yellow-600 dark:text-yellow-300">
+                <span className="text-[hsl(var(--warning))]">
                   {stats.expiredNodes} 个数据过期
                 </span>
               )}
@@ -75,16 +75,16 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
         {/* 服务总量 */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Server className="h-4 w-4" />
               服务总数
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-foreground">
               {stats.totalServices}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               最近同步 {lastUpdatedLabel}
             </p>
           </CardContent>
@@ -93,16 +93,16 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
         {/* 运行中 */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Play className="h-4 w-4" />
               运行中
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600 dark:text-green-300">
+            <div className="text-3xl font-bold text-[hsl(var(--success))]">
               {stats.runningServices}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {runningPercentage}% 占比
             </p>
           </CardContent>
@@ -111,7 +111,7 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
         {/* 停止 / 异常 */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Square className="h-4 w-4" />
               停止 / 异常
             </CardTitle>
@@ -119,24 +119,24 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
           <CardContent className="space-y-2">
             <div className="flex items-baseline justify-between gap-4">
               <div>
-                <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">
+                <div className="text-2xl font-bold text-muted-foreground">
                   {stats.stoppedServices}
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-300">
+                <p className="text-sm text-muted-foreground">
                   未运行的服务
                 </p>
               </div>
               <div
                 className={`text-2xl font-bold ${
                   stats.failedServices === 0
-                    ? "text-green-600 dark:text-green-300"
-                    : "text-red-600 dark:text-red-300"
+                    ? "text-[hsl(var(--success))]"
+                    : "text-[hsl(var(--error))]"
                 }`}
               >
                 {stats.failedServices}
               </div>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-300 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
               需要关注
             </p>
@@ -146,7 +146,7 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             类型分布
           </CardTitle>
         </CardHeader>
@@ -154,7 +154,7 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
           {serviceTypeBadges.length > 0 ? (
             <div className="flex flex-wrap gap-2">{serviceTypeBadges}</div>
           ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-300">暂无服务数据</p>
+            <p className="text-sm text-muted-foreground">暂无服务数据</p>
           )}
         </CardContent>
       </Card>

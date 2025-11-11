@@ -84,13 +84,13 @@ const DetailItem = ({
   mono?: boolean;
 }) => {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-slate-200/70 dark:border-slate-700/30 last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-[hsl(var(--border))] last:border-0">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-        <span className="text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap">{label}</span>
+        <Icon className="h-4 w-4 text-[hsl(var(--info))]" />
+        <span className="text-[hsl(var(--muted-foreground))] text-sm whitespace-nowrap">{label}</span>
       </div>
       <span
-        className={`text-slate-900 dark:text-slate-900 dark:text-white font-semibold text-sm ${mono ? "font-mono" : ""}`}
+        className={`text-[hsl(var(--foreground))] font-semibold text-sm ${mono ? "font-mono" : ""}`}
       >
         {value}
       </span>
@@ -119,14 +119,14 @@ const ResourceBar = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-2">
+      <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))] mb-2">
         <span>{label}</span>
-        <span className="font-semibold text-slate-900 dark:text-white">
+        <span className="font-semibold text-[hsl(var(--foreground))]">
           {value}
           {unit}
         </span>
       </div>
-      <div className="h-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-full overflow-hidden">
+      <div className="h-2 bg-[hsl(var(--muted))]/70 rounded-full overflow-hidden">
         <motion.div
           className={`h-full ${colorMap[color]} rounded-full`}
           initial={{ width: 0 }}
@@ -155,14 +155,14 @@ export const EnhancedNodeDetailsPanel: React.FC<
       <motion.div
         className={`group relative ${
           isModalLayout
-            ? "max-h-[60vh] w-full  p-6"
-            : "sticky top-24 lg:h-[800px]  p-8 hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)]"
-        } overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-[var(--shadow-lg)] transition-all duration-300 flex flex-col`}
+            ? "max-h-[60vh] w-full rounded-2xl p-6"
+            : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
+        } overflow-hidden border-2 border-primary/60 bg-gradient-to-br from-primary/10 via-[hsl(var(--surface-base))] to-primary/5 shadow-lg transition-all duration-300 flex flex-col`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-indigo-400/15 via-transparent to-violet-500/15" />
-        <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-indigo-400/15 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-primary/15 via-transparent to-primary/10" />
+        <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-primary/15 blur-3xl" />
         <div className="relative text-center py-12">
           <motion.div
             className="text-6xl mb-4"
@@ -171,7 +171,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
           >
             🌍
           </motion.div>
-          <p className="text-slate-600 dark:text-slate-300">选择一个节点查看详情</p>
+          <p className="text-[hsl(var(--muted-foreground))]">选择一个节点查看详情</p>
         </div>
       </motion.div>
     );
@@ -181,16 +181,16 @@ export const EnhancedNodeDetailsPanel: React.FC<
   const isOnline = node.status === "online";
   const themeColors = isOnline
     ? {
-        border: "border-cyan-200/60 dark:border-cyan-700/60",
-        bg: "from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60",
-        glow: "from-cyan-400/15 via-transparent to-blue-500/15",
-        glowCircle: "bg-cyan-400/20",
+        border: "border-[hsl(var(--info))]/30",
+        bg: "from-[hsl(var(--info))]/10 via-[hsl(var(--surface-base))] to-[hsl(var(--info))]/5",
+        glow: "from-[hsl(var(--info))]/15 via-transparent to-[hsl(var(--info))]/10",
+        glowCircle: "bg-[hsl(var(--info))]/20",
       }
     : {
-        border: "border-rose-200/60 dark:border-rose-700/60",
-        bg: "from-rose-50 via-white to-pink-50 dark:from-slate-800 dark:via-rose-950/60 dark:to-pink-950/60",
-        glow: "from-rose-400/15 via-transparent to-pink-500/15",
-        glowCircle: "bg-rose-400/20",
+        border: "border-[hsl(var(--error))]/30",
+        bg: "from-[hsl(var(--error))]/10 via-[hsl(var(--surface-base))] to-[hsl(var(--error))]/5",
+        glow: "from-[hsl(var(--error))]/15 via-transparent to-[hsl(var(--error))]/10",
+        glowCircle: "bg-[hsl(var(--error))]/20",
       };
 
   return (
@@ -212,14 +212,14 @@ export const EnhancedNodeDetailsPanel: React.FC<
         <span className="text-5xl">{getStatusIcon(node.status)}</span>
         <div className="flex-1">
           <div className="flex items-start gap-3">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white flex-1 break-words">
+            <h3 className="text-2xl font-black text-[hsl(var(--foreground))] flex-1 break-words">
               {node.name}
             </h3>
             <Badge
               variant={node.status === "online" ? "success" : "destructive"}
               className={node.status === "online"
-                ? "bg-green-500/20 text-green-700 dark:text-green-200 border border-green-500/30"
-                : "bg-red-500/20 text-red-700 dark:text-red-200 border border-red-500/30"
+                ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border border-[hsl(var(--success))]/30"
+                : "bg-[hsl(var(--error))]/20 text-[hsl(var(--error))] border border-[hsl(var(--error))]/30"
               }
             >
               {node.status.toUpperCase()}
@@ -231,7 +231,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             aria-label="关闭"
           >
             <X className="h-5 w-5" />
@@ -240,13 +240,13 @@ export const EnhancedNodeDetailsPanel: React.FC<
       </div>
 
       {/* Tabs */}
-      <div className="relative flex gap-2 mb-6 p-1 bg-slate-200/70 dark:bg-slate-800/50 ">
+      <div className="relative flex gap-2 mb-6 p-1 bg-[hsl(var(--muted))]/70 rounded-lg">
         <button
           onClick={() => setActiveTab("info")}
           className={`flex-1 px-4 py-2  text-sm font-semibold transition-colors ${
             activeTab === "info"
-              ? "bg-cyan-600 text-white shadow-[var(--shadow-md)]"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+              ? "bg-[hsl(var(--info))] text-white shadow-md"
+              : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/50"
           }`}
         >
           <Server className="h-4 w-4 inline mr-2" />
@@ -256,8 +256,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
           onClick={() => setActiveTab("resources")}
           className={`flex-1 px-4 py-2  text-sm font-semibold transition-colors ${
             activeTab === "resources"
-              ? "bg-cyan-600 text-white shadow-[var(--shadow-md)]"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+              ? "bg-[hsl(var(--info))] text-white shadow-md"
+              : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/50"
           }`}
         >
           <BarChart3 className="h-4 w-4 inline mr-2" />
@@ -274,8 +274,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
             className="space-y-1"
           >
             {/* 地址信息区域 */}
-            <div className="pb-2 mb-2 border-b border-slate-200/70 dark:border-slate-700/30">
-              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">地址信息</h4>
+            <div className="pb-2 mb-2 border-b border-[hsl(var(--border))]">
+              <h4 className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-wide mb-2">地址信息</h4>
               <DetailItem
                 label="位置"
                 value={
@@ -307,8 +307,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
             </div>
 
             {/* 网络信息区域 */}
-            <div className="pb-2 mb-2 border-b border-slate-200/70 dark:border-slate-700/30">
-              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">网络信息</h4>
+            <div className="pb-2 mb-2 border-b border-[hsl(var(--border))]">
+              <h4 className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-wide mb-2">网络信息</h4>
               {node.asnNumber && (
                 <DetailItem
                   label="ASN"
@@ -321,7 +321,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
             {/* 系统信息区域 */}
             <div>
-              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">系统信息</h4>
+              <h4 className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-wide mb-2">系统信息</h4>
               {node.osType && (
                 <DetailItem
                   label="操作系统"
@@ -357,8 +357,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
               <>
                 {heartbeatData?.cpuInfo && (
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <Cpu className="h-4 w-4 text-cyan-400" />
+                    <h4 className="text-sm font-bold text-[hsl(var(--foreground))] mb-3 flex items-center gap-2">
+                      <Cpu className="h-4 w-4 text-[hsl(var(--info))]" />
                       CPU 使用率
                     </h4>
                     <ResourceBar
@@ -377,8 +377,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
                 {heartbeatData?.memoryInfo && (
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <MemoryStick className="h-4 w-4 text-purple-400" />
+                    <h4 className="text-sm font-bold text-[hsl(var(--foreground))] mb-3 flex items-center gap-2">
+                      <MemoryStick className="h-4 w-4 text-primary" />
                       内存使用
                     </h4>
                     <ResourceBar
@@ -411,8 +411,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
                 {heartbeatData?.diskInfo && (
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <HardDrive className="h-4 w-4 text-yellow-400" />
+                    <h4 className="text-sm font-bold text-[hsl(var(--foreground))] mb-3 flex items-center gap-2">
+                      <HardDrive className="h-4 w-4 text-[hsl(var(--warning))]" />
                       磁盘使用
                     </h4>
                     <ResourceBar
@@ -445,9 +445,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
                 {/* 网络流量 */}
                 {heartbeatData?.networkInfo && heartbeatData.networkInfo.length > 0 && (
-                  <div className="pt-4 border-t border-slate-200/70 dark:border-slate-700/30">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <ArrowUpDown className="h-4 w-4 text-blue-400" />
+                  <div className="pt-4 border-t border-[hsl(var(--border))]">
+                    <h4 className="text-sm font-bold text-[hsl(var(--foreground))] mb-3 flex items-center gap-2">
+                      <ArrowUpDown className="h-4 w-4 text-[hsl(var(--info))]" />
                       网络流量
                     </h4>
                     {(() => {
@@ -460,28 +460,28 @@ export const EnhancedNodeDetailsPanel: React.FC<
                       return (
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">↓ 接收:</span>
-                            <span className="text-slate-900 dark:text-white font-medium">
+                            <span className="text-[hsl(var(--muted-foreground))]">↓ 接收:</span>
+                            <span className="text-[hsl(var(--foreground))] font-medium">
                               {(totalRx / 1024 / 1024 / 1024).toFixed(2)} GB
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">↑ 发送:</span>
-                            <span className="text-slate-900 dark:text-white font-medium">
+                            <span className="text-[hsl(var(--muted-foreground))]">↑ 发送:</span>
+                            <span className="text-[hsl(var(--foreground))] font-medium">
                               {(totalTx / 1024 / 1024 / 1024).toFixed(2)} GB
                             </span>
                           </div>
                           {(totalRxBps > 0 || totalTxBps > 0) && (
                             <>
                               <div className="flex justify-between">
-                                <span className="text-slate-500 dark:text-slate-400">速率 ↓:</span>
-                                <span className="text-green-600 dark:text-green-400 font-medium">
+                                <span className="text-[hsl(var(--muted-foreground))]">速率 ↓:</span>
+                                <span className="text-[hsl(var(--success))] font-medium">
                                   {totalRxBps > 0 ? `${(totalRxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-slate-500 dark:text-slate-400">速率 ↑:</span>
-                                <span className="text-blue-600 dark:text-blue-400 font-medium">
+                                <span className="text-[hsl(var(--muted-foreground))]">速率 ↑:</span>
+                                <span className="text-[hsl(var(--info))] font-medium">
                                   {totalTxBps > 0 ? `${(totalTxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
                                 </span>
                               </div>
@@ -494,13 +494,13 @@ export const EnhancedNodeDetailsPanel: React.FC<
                 )}
 
                 {heartbeatData?.uptime && (
-                  <div className="pt-4 border-t border-slate-200/70 dark:border-slate-700/30">
+                  <div className="pt-4 border-t border-[hsl(var(--border))]">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400 flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-green-400" />
+                      <span className="text-[hsl(var(--muted-foreground))] flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-[hsl(var(--success))]" />
                         运行时间
                       </span>
-                      <span className="text-slate-900 dark:text-white font-semibold">
+                      <span className="text-[hsl(var(--foreground))] font-semibold">
                         {Math.floor(heartbeatData.uptime / 86400)}天
                       </span>
                     </div>
@@ -508,7 +508,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
                 )}
               </>
             ) : (
-              <div className="text-center py-8 text-slate-600 dark:text-slate-400">
+              <div className="text-center py-8 text-[hsl(var(--muted-foreground))]">
                 <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>暂无资源监控数据</p>
               </div>
@@ -528,7 +528,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
             查看详情
           </Button>
         </motion.div>
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-xs text-center text-[hsl(var(--muted-foreground))] mt-2">
           包含网络诊断、系统详情、运行日志等
         </p>
       </div>

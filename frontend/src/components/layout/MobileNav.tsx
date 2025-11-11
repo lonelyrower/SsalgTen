@@ -51,13 +51,13 @@ export const MobileNav: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return <Settings className="h-4 w-4 text-red-500" />;
+        return <Settings className="h-4 w-4 text-[hsl(var(--error))]" />;
       case "OPERATOR":
         return <Settings className="h-4 w-4 text-primary" />;
       case "VIEWER":
-        return <Users className="h-4 w-4 text-green-500" />;
+        return <Users className="h-4 w-4 text-[hsl(var(--success))]" />;
       default:
-        return <Users className="h-4 w-4 text-gray-500" />;
+        return <Users className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -98,10 +98,10 @@ export const MobileNav: React.FC = () => {
             />
 
             {/* 侧边菜单 */}
-            <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-[9999] shadow-[var(--shadow-xl)] transform transition-transform duration-300">
+            <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full surface-base z-[9999] shadow-xl transform transition-transform duration-300">
               <div className="flex flex-col h-full">
                 {/* 用户信息区域 */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="p-6 border-b border-border">
                   {isAuthenticated ? (
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 h-12 w-12">
@@ -112,12 +112,12 @@ export const MobileNav: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {user?.name || user?.username}
                         </p>
                         <div className="flex items-center space-x-1 mt-1">
                           {getRoleIcon(user?.role || "")}
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-muted-foreground">
                             {getRoleText(user?.role || "")}
                           </p>
                         </div>
@@ -125,10 +125,10 @@ export const MobileNav: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <h3 className="text-lg font-semibold text-foreground">
                         欢迎使用 SsalgTen
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-muted-foreground">
                         网络监控管理系统
                       </p>
                     </div>
@@ -151,12 +151,12 @@ export const MobileNav: React.FC = () => {
                           className={`flex items-center space-x-3 px-3 py-3  text-sm font-medium transition-colors ${
                             isActive
                               ? "bg-primary/10 text-primary"
-                              : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              : "text-muted-foreground hover:bg-muted"
                           }`}
                         >
                           <Icon
                             className={`h-5 w-5 ${
-                              isActive ? "text-primary" : "text-gray-400"
+                              isActive ? "text-primary" : "text-muted-foreground"
                             }`}
                           />
                           <span>{item.label}</span>
@@ -166,12 +166,12 @@ export const MobileNav: React.FC = () => {
                 </nav>
 
                 {/* 底部操作区域 */}
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="p-4 border-t border-border">
                   {isAuthenticated ? (
                     <Button
                       onClick={handleLogout}
                       variant="ghost"
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                      className="w-full justify-start text-[hsl(var(--error))] hover:text-[hsl(var(--error))] hover:bg-[hsl(var(--error))]/10"
                     >
                       <LogOut className="h-4 w-4 mr-3" />
                       退出登录

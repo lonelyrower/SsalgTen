@@ -15,59 +15,59 @@ interface StreamingPlatformCardsProps {
 const colorClasses = {
   // Netflix 官方红色 #E50914
   netflixRed: {
-    bg: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-600 dark:text-red-300",
-    accent: "border-red-500 dark:border-red-600",
-    ring: "ring-2 ring-inset ring-red-500",
-    progressBg: "bg-red-600",
+    bg: "bg-[hsl(var(--error))]/10",
+    icon: "text-[hsl(var(--error))]",
+    accent: "border-[hsl(var(--error))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--error))]",
+    progressBg: "bg-[hsl(var(--error))]",
   },
   // YouTube 官方红色 #FF0000
   youtubeRed: {
-    bg: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-500 dark:text-red-300",
-    accent: "border-red-400 dark:border-red-500",
-    ring: "ring-2 ring-inset ring-red-500",
-    progressBg: "bg-red-500",
+    bg: "bg-[hsl(var(--error))]/10",
+    icon: "text-[hsl(var(--error))]",
+    accent: "border-[hsl(var(--error))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--error))]",
+    progressBg: "bg-[hsl(var(--error))]",
   },
   // Disney+ 官方蓝色 #113CCF
   disneyBlue: {
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    icon: "text-blue-700 dark:text-blue-300",
-    accent: "border-blue-600 dark:border-blue-500",
-    ring: "ring-2 ring-inset ring-blue-600",
-    progressBg: "bg-blue-600",
+    bg: "bg-[hsl(var(--info))]/10",
+    icon: "text-[hsl(var(--info))]",
+    accent: "border-[hsl(var(--info))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--info))]",
+    progressBg: "bg-[hsl(var(--info))]",
   },
   // Amazon Prime 官方青色 #00A8E1
   amazonCyan: {
-    bg: "bg-cyan-50 dark:bg-cyan-950/40",
-    icon: "text-cyan-600 dark:text-cyan-300",
-    accent: "border-cyan-500 dark:border-cyan-500",
-    ring: "ring-2 ring-inset ring-cyan-500",
-    progressBg: "bg-cyan-500",
+    bg: "bg-[hsl(var(--brand-cyan))]/10",
+    icon: "text-[hsl(var(--brand-cyan))]",
+    accent: "border-[hsl(var(--brand-cyan))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--brand-cyan))]",
+    progressBg: "bg-[hsl(var(--brand-cyan))]",
   },
   // TikTok 官方颜色 #FE2C55 + #00F2EA (使用粉红色)
   tiktokPink: {
-    bg: "bg-pink-50 dark:bg-pink-950/40",
-    icon: "text-pink-600 dark:text-pink-300",
-    accent: "border-pink-500 dark:border-pink-500",
-    ring: "ring-2 ring-inset ring-pink-500",
-    progressBg: "bg-pink-500",
+    bg: "bg-primary/10",
+    icon: "text-primary",
+    accent: "border-primary",
+    ring: "ring-2 ring-inset ring-primary",
+    progressBg: "bg-primary",
   },
   // Spotify 官方绿色 #1DB954
   spotifyGreen: {
-    bg: "bg-green-50 dark:bg-green-950/40",
-    icon: "text-green-600 dark:text-green-300",
-    accent: "border-green-500 dark:border-green-500",
-    ring: "ring-2 ring-inset ring-green-500",
-    progressBg: "bg-green-500",
+    bg: "bg-[hsl(var(--success))]/10",
+    icon: "text-[hsl(var(--success))]",
+    accent: "border-[hsl(var(--success))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--success))]",
+    progressBg: "bg-[hsl(var(--success))]",
   },
   // ChatGPT 官方绿色 #10A37F
   chatgptTeal: {
-    bg: "bg-teal-50 dark:bg-teal-950/40",
-    icon: "text-teal-600 dark:text-teal-300",
-    accent: "border-teal-500 dark:border-teal-500",
-    ring: "ring-2 ring-inset ring-teal-500",
-    progressBg: "bg-teal-600",
+    bg: "bg-[hsl(var(--success))]/10",
+    icon: "text-[hsl(var(--success))]",
+    accent: "border-[hsl(var(--success))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--success))]",
+    progressBg: "bg-[hsl(var(--success))]",
   },
 } as const;
 
@@ -95,7 +95,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
   return (
     <div className="relative">
       {/* 横向滚动容器 */}
-      <div className="flex gap-4 overflow-x-auto pb-2 pl-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+      <div className="flex gap-4 overflow-x-auto pb-2 pl-1 scrollbar-thin scrollbar-thumb-muted-foreground scrollbar-track-transparent">
         {stats.map((platform) => {
           const isSelected = selectedService === platform.service;
           const platformColor = getPlatformColor(platform.service);
@@ -106,8 +106,8 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               key={platform.service}
               className={`
                 flex-shrink-0 w-[220px] relative overflow-hidden
-                bg-white dark:bg-gray-800 border ${colors.accent}
-                shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-all duration-300
+                surface-elevated border ${colors.accent}
+                shadow-md hover:shadow-lg transition-all duration-300
                 ${onSelect ? "cursor-pointer" : ""}
                 ${isSelected ? colors.ring : ""}
               `}
@@ -123,7 +123,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     <StreamingIcon service={platform.service} size="lg" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                    <h4 className="font-semibold text-foreground truncate">
                       {platform.name}
                     </h4>
                   </div>
@@ -132,7 +132,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                 {/* 解锁率 */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <TrendingUp className="h-3 w-3" />
                       解锁率
                     </span>
@@ -140,7 +140,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                       {Math.round(platform.unlockRate)}%
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${colors.progressBg}`}
                       style={{ width: `${Math.round(platform.unlockRate)}%` }}
@@ -155,10 +155,9 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     return (
                       <div
                         key={statusDef.status}
-                        className="flex items-center justify-between px-2 py-1 bg-gray-50 dark:bg-gray-900/50"
-                        style={{ borderRadius: 'var(--radius-sm)' }}
+                        className="flex items-center justify-between px-2 py-1 rounded bg-muted/50"
                       >
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-muted-foreground">
                           {statusDef.label}
                         </span>
                         <span className={`font-semibold ${statusDef.color}`}>

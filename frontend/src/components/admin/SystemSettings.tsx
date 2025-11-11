@@ -172,7 +172,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
           value={currentValue}
           onChange={(e) => handleChange(config.key, e.target.value)}
           placeholder={info.placeholder}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full px-4 py-2 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
         />
       );
     }
@@ -183,7 +183,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
         value={currentValue}
         onChange={(e) => handleChange(config.key, e.target.value)}
         placeholder={info.placeholder}
-        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+        className="w-full px-4 py-2 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
       />
     );
   };
@@ -191,12 +191,12 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
   if (loading) {
     return (
       <div className={`${className} animate-pulse`}>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
+        <div className="h-8 bg-muted rounded mb-6"></div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-32 bg-gray-200 dark:bg-gray-700 rounded"
+              className="h-32 bg-muted rounded"
             ></div>
           ))}
         </div>
@@ -210,11 +210,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+            <h1 className="text-3xl font-bold text-foreground flex items-center">
               <Settings className="h-8 w-8 mr-3 text-primary" />
               系统配置
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-muted-foreground mt-2">
               管理系统基本设置
             </p>
           </div>
@@ -233,7 +233,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
               size="sm"
               onClick={handleReset}
               disabled={saving}
-              className="text-orange-600 hover:text-orange-700"
+              className="text-[hsl(var(--warning))] hover:text-[hsl(var(--warning))]/80"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               恢复默认
@@ -246,14 +246,14 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
       {error && (
         <GlassCard variant="danger" hover={false} className="mb-6 p-4">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-[hsl(var(--error))] mr-3 mt-0.5" />
             <div className="flex-1">
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-[hsl(var(--error))]">{error}</p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setError("")}
-                className="text-red-600 hover:text-red-700 mt-2 h-auto p-0"
+                className="text-[hsl(var(--error))] hover:text-[hsl(var(--error))]/80 mt-2 h-auto p-0"
               >
                 关闭
               </Button>
@@ -265,8 +265,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
       {success && (
         <GlassCard variant="success" hover={false} className="mb-6 p-4">
           <div className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-            <p className="text-green-800 dark:text-green-200">{success}</p>
+            <CheckCircle className="h-5 w-5 text-[hsl(var(--success))] mr-3" />
+            <p className="text-[hsl(var(--success))]">{success}</p>
           </div>
         </GlassCard>
       )}
@@ -282,22 +282,22 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
             "system.name": {
               icon: "🏷️",
               color: "from-blue-500 to-cyan-500",
-              bg: "bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20",
+              bg: "bg-gradient-to-br from-[hsl(var(--info))]/10 to-[hsl(var(--info))]/5",
             },
             "map.api_key": {
               icon: "🗺️",
               color: "from-green-500 to-emerald-500",
-              bg: "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20",
+              bg: "bg-gradient-to-br from-[hsl(var(--success))]/10 to-[hsl(var(--success))]/5",
             },
             "cesium.ion_token": {
               icon: "🌍",
               color: "from-orange-500 to-amber-500",
-              bg: "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20",
+              bg: "bg-gradient-to-br from-[hsl(var(--warning))]/10 to-[hsl(var(--warning))]/5",
             },
           }[config.key] || {
             icon: "⚙️",
             color: "from-gray-500 to-slate-500",
-            bg: "bg-gray-50 dark:bg-gray-800",
+            bg: "bg-muted/50",
           };
 
           return (
@@ -306,7 +306,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
               variant="default"
               className={`overflow-hidden ${
                 hasChanged
-                  ? "ring-2 ring-blue-500 dark:ring-blue-400"
+                  ? "ring-2 ring-[hsl(var(--info))]"
                   : ""
               }`}
             >
@@ -322,16 +322,16 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
                   </div>
                   <div className="flex-1 space-y-3">
                     <div>
-                      <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                      <label className="block text-lg font-semibold text-foreground mb-1">
                         {info.name}
                       </label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-muted-foreground">
                         {info.desc}
                       </p>
                     </div>
                     {renderInput(config)}
                     {config.unit && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         单位：{config.unit}
                       </p>
                     )}
@@ -345,17 +345,17 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
 
       {configs.length === 0 && (
         <GlassCard hover={false} className="text-center p-12">
-          <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">暂无系统配置</p>
+          <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">暂无系统配置</p>
         </GlassCard>
       )}
 
       {/* 保存按钮 */}
       {changedConfigs.size > 0 && (
-        <div className="mt-8 flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 ">
+        <div className="mt-8 flex items-center justify-between p-4 bg-[hsl(var(--info))]/10 border border-[hsl(var(--info))]/30 rounded-lg">
           <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-blue-500 mr-3" />
-            <span className="text-sm text-blue-800 dark:text-blue-200">
+            <AlertCircle className="h-5 w-5 text-[hsl(var(--info))] mr-3" />
+            <span className="text-sm text-[hsl(var(--info))]">
               您有 {changedConfigs.size} 项未保存的更改
             </span>
           </div>

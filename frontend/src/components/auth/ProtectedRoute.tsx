@@ -19,10 +19,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // 如果正在加载认证状态，显示加载器
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-surface-base">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -36,7 +36,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // 如果需要特定角色但权限不足，显示权限不足页面
   if (requiredRole && !hasRole(requiredRole)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-surface-base">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="mb-6">
             <div className="mx-auto h-24 w-24 text-red-500 mb-4">
@@ -49,10 +49,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-foreground mb-2">
               权限不足
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-muted-foreground mb-6">
               您没有访问此页面的权限。需要{" "}
               {requiredRole === "ADMIN"
                 ? "管理员"

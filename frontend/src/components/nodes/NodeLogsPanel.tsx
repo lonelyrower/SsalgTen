@@ -64,16 +64,16 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
-        className="bg-white dark:bg-gray-800  shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
+        className="bg-[hsl(var(--surface-elevated))] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--border))]">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">节点日志</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{node.name}</p>
+            <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">节点日志</h2>
+            <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">{node.name}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -97,15 +97,15 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
           {loading && events.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <RefreshCw className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-spin" />
-                <p className="text-gray-600 dark:text-gray-400">加载日志中...</p>
+                <RefreshCw className="h-12 w-12 mx-auto mb-4 text-[hsl(var(--muted-foreground))] animate-spin" />
+                <p className="text-[hsl(var(--muted-foreground))]">加载日志中...</p>
               </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-                <p className="text-red-600 dark:text-red-400">{error}</p>
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-[hsl(var(--error))]" />
+                <p className="text-[hsl(var(--error))]">{error}</p>
                 <Button variant="outline" size="sm" onClick={fetchEvents} className="mt-4">
                   重试
                 </Button>
@@ -114,8 +114,8 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
           ) : events.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <Info className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 dark:text-gray-400">暂无日志记录</p>
+                <Info className="h-12 w-12 mx-auto mb-4 text-[hsl(var(--muted-foreground))]" />
+                <p className="text-[hsl(var(--muted-foreground))]">暂无日志记录</p>
               </div>
             </div>
           ) : (
@@ -152,7 +152,7 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
                           <summary className="cursor-pointer hover:opacity-100">
                             详细信息
                           </summary>
-                          <pre className="mt-2 p-2 bg-black/5 dark:bg-black/20 rounded overflow-x-auto">
+                          <pre className="mt-2 p-2 bg-[hsl(var(--surface-elevated))] rounded overflow-x-auto">
                             {JSON.stringify(event.details, null, 2)}
                           </pre>
                         </details>

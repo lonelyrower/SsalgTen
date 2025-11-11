@@ -57,18 +57,18 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden border-2 border-emerald-200/60 dark:border-emerald-700/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-emerald-400/15 via-transparent to-teal-500/15" />
-      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-emerald-300/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-[hsl(var(--success))]/30 surface-elevated shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--success))]/10 via-transparent to-[hsl(var(--success))]/5" />
+      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-[hsl(var(--success))]/20 blur-3xl" />
       <div className="relative mb-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]">
               <Clock className="h-5 w-5" />
             </span>
             正常运行时间排行
           </h3>
-          <div className="text-sm text-slate-500 dark:text-slate-300">
+          <div className="text-sm text-muted-foreground">
             Top {topNodes.length}
           </div>
         </div>
@@ -80,7 +80,7 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
             topNodes.map((node, index) => (
               <div
                 key={node.id}
-                className="flex items-center justify-between border border-emerald-100/70 dark:border-emerald-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-emerald-200 dark:hover:border-emerald-400/40"
+                className="flex items-center justify-between rounded-xl border border-[hsl(var(--success))]/20 bg-[hsl(var(--surface-elevated))]/80 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-[hsl(var(--success))]/40"
               >
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
@@ -88,55 +88,55 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
                       <Award
                         className={`h-5 w-5 ${
                           index === 0
-                            ? "text-yellow-500"
+                            ? "text-[hsl(var(--warning))]"
                             : index === 1
-                              ? "text-gray-400"
-                              : "text-orange-600"
+                              ? "text-muted-foreground"
+                              : "text-[hsl(var(--info))]"
                         }`}
                       />
                     ) : (
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-5">
+                      <span className="text-sm font-medium text-muted-foreground w-5">
                         #{index + 1}
                       </span>
                     )}
                   </div>
                   <CountryFlagSvg country={node.country} className="w-6 h-6" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {node.name}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <div className="flex-1 h-2 bg-emerald-100/80 dark:bg-emerald-900/30 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-[hsl(var(--success))]/20 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
+                          className="h-full bg-[hsl(var(--success))]"
                           style={{
                             width: `${node.uptimePercent}%`,
                           }}
                         />
                       </div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 w-12 text-right">
+                      <span className="text-xs text-muted-foreground w-12 text-right">
                         {node.uptimePercent.toFixed(1)}%
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300 text-right">
+                  <p className="text-sm font-bold text-[hsl(var(--success))] text-right">
                     {formatUptime(node.uptime || 0)}
                   </p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-              <Clock className="h-12 w-12 mx-auto mb-2 text-emerald-400/60" />
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-2 text-[hsl(var(--success))]/60" />
               <p>暂无正常运行时间数据</p>
             </div>
           )}
         </div>
-        <div className="pt-3 border-t border-emerald-100/50 dark:border-emerald-900/30">
-          <div className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span className="text-emerald-400">💡</span>
+        <div className="pt-3 border-t border-border">
+          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+            <span className="text-[hsl(var(--success))]">💡</span>
             <p>显示节点从创建以来的在线时间占比</p>
           </div>
         </div>

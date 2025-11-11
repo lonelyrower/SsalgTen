@@ -23,33 +23,33 @@ interface ErrorStateProps {
 const errorConfig = {
   error: {
     icon: AlertTriangle,
-    color: "text-red-500 dark:text-red-300",
-    bgColor: "bg-red-50 dark:bg-red-900/30",
-    borderColor: "border-red-200 dark:border-red-600/50",
+    color: "text-[hsl(var(--error))]",
+    bgColor: "bg-[hsl(var(--error))]/10",
+    borderColor: "border-[hsl(var(--error))]/30",
     defaultTitle: "出现错误",
     defaultMessage: "抱歉，发生了意外错误。",
   },
   network: {
     icon: WifiOff,
-    color: "text-orange-500 dark:text-orange-300",
-    bgColor: "bg-orange-50 dark:bg-orange-900/30",
-    borderColor: "border-orange-200 dark:border-orange-600/50",
+    color: "text-[hsl(var(--warning))]",
+    bgColor: "bg-[hsl(var(--warning))]/10",
+    borderColor: "border-[hsl(var(--warning))]/30",
     defaultTitle: "网络连接失败",
     defaultMessage: "请检查网络连接并重试。",
   },
   "not-found": {
     icon: AlertCircle,
-    color: "text-gray-500 dark:text-gray-300",
-    bgColor: "bg-gray-50 dark:bg-gray-800/50",
-    borderColor: "border-gray-200 dark:border-gray-600/50",
+    color: "text-muted-foreground",
+    bgColor: "surface-elevated",
+    borderColor: "border-border",
     defaultTitle: "页面未找到",
     defaultMessage: "抱歉，您访问的页面不存在。",
   },
   "access-denied": {
     icon: AlertTriangle,
-    color: "text-yellow-500 dark:text-yellow-300",
-    bgColor: "bg-yellow-50 dark:bg-yellow-900/30",
-    borderColor: "border-yellow-200 dark:border-yellow-600/50",
+    color: "text-[hsl(var(--warning))]",
+    bgColor: "bg-[hsl(var(--warning))]/10",
+    borderColor: "border-[hsl(var(--warning))]/30",
     defaultTitle: "访问被拒绝",
     defaultMessage: "您没有权限访问此资源。",
   },
@@ -125,14 +125,14 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 
         {/* 标题 */}
         <h3
-          className={`${sizeStyles.title} font-bold text-gray-900 dark:text-white mb-3`}
+          className={`${sizeStyles.title} font-bold text-foreground mb-3`}
         >
           {title || config.defaultTitle}
         </h3>
 
         {/* 消息 */}
         <p
-          className={`${sizeStyles.message} text-gray-600 dark:text-gray-400 mb-6 leading-relaxed`}
+          className={`${sizeStyles.message} text-muted-foreground mb-6 leading-relaxed`}
         >
           {message || config.defaultMessage}
         </p>
@@ -161,8 +161,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               size="sm"
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
-                border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200
-                hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200
+                border-border text-muted-foreground
+                hover:surface-elevated transition-all duration-200
               `}
             >
               <Home className="h-4 w-4" />

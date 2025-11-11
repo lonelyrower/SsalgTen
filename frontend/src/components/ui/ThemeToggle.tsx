@@ -22,9 +22,9 @@ export const ThemeToggle: React.FC = () => {
       aria-label={isDark ? "切换到浅色模式" : "切换到深色模式"}
     >
       {isDark ? (
-        <Sun className="h-4 w-4 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
+        <Sun className="h-4 w-4 text-[hsl(var(--warning))] group-hover:text-[hsl(var(--warning))]/80 transition-colors" />
       ) : (
-        <Moon className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+        <Moon className="h-4 w-4 text-[hsl(var(--info))] group-hover:text-[hsl(var(--info))]/80 transition-colors" />
       )}
     </Button>
   );

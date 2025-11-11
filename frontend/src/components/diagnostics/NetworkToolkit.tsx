@@ -98,24 +98,24 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
 
   const getStatusIcon = (success: boolean) => {
     return success ? (
-      <CheckCircle className="h-4 w-4 text-green-600" />
+      <CheckCircle className="h-4 w-4 text-[hsl(var(--success))]" />
     ) : (
-      <XCircle className="h-4 w-4 text-red-600" />
+      <XCircle className="h-4 w-4 text-[hsl(var(--error))]" />
     );
   };
 
   const getDiagnosticTypeColor = (type: string) => {
     switch (type) {
       case "PING":
-        return "bg-primary/10 text-primary";
+        return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
       case "TRACEROUTE":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-primary/10 text-primary";
       case "MTR":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
+        return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]";
       case "SPEEDTEST":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+        return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -149,15 +149,15 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
   const getTypeColor = (type: string) => {
     const lowerType = type.toLowerCase();
     if (lowerType.includes("error") || lowerType.includes("fail")) {
-      return "text-red-600 dark:text-red-400";
+      return "text-[hsl(var(--error))]";
     }
     if (lowerType.includes("warning") || lowerType.includes("warn")) {
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-[hsl(var(--warning))]";
     }
     if (lowerType.includes("success") || lowerType.includes("complete")) {
-      return "text-green-600 dark:text-green-400";
+      return "text-[hsl(var(--success))]";
     }
-    return "text-blue-600 dark:text-blue-400";
+    return "text-[hsl(var(--info))]";
   };
 
   const getEventVariant = (type: string): "default" | "success" | "danger" | "warning" => {
@@ -172,6 +172,20 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
       return "success";
     }
     return "default";
+  };
+
+  const getEventBadgeColor = (type: string): string => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("error") || lowerType.includes("fail")) {
+      return "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]";
+    }
+    if (lowerType.includes("warning")) {
+      return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]";
+    }
+    if (lowerType.includes("success")) {
+      return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
+    }
+    return "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]";
   };
 
   if (!selectedNode) {
@@ -223,7 +237,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
           {/* 诊断记录控制面板 */}
           <GlassCard variant="default" hover={false}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <History className="h-4 w-4" />
                 <span>诊断历史记录</span>
               </h3>
@@ -235,7 +249,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                       e.target.value as typeof diagnosticFilter,
                     )
                   }
-                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-3 py-1.5 border border-border rounded-lg text-sm surface-base text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="ALL">全部类型</option>
                   <option value="PING">PING</option>
@@ -263,7 +277,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                 <LoadingSpinner text="加载诊断记录..." />
               </div>
             ) : filteredDiagnostics.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-muted-foreground">
                 <History className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>
                   {diagnosticFilter === "ALL"
@@ -287,22 +301,22 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                             <Badge className={getDiagnosticTypeColor(record.type)}>
                               {record.type}
                             </Badge>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-xs text-muted-foreground">
                               {record.success ? "成功" : "失败"}
                             </span>
                           </div>
 
                           {record.target && (
                             <div className="flex items-center gap-2 mb-2">
-                              <Target className="h-3 w-3 text-gray-500" />
-                              <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
+                              <Target className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm font-mono text-muted-foreground">
                                 {record.target}
                               </span>
                             </div>
                           )}
 
                           {record.error && (
-                            <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+                            <p className="text-sm text-[hsl(var(--error))] mb-2">
                               {record.error}
                             </p>
                           )}
@@ -312,7 +326,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                               <summary className="cursor-pointer text-xs text-primary hover:underline">
                                 查看详细结果
                               </summary>
-                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 ">
+                              <div className="mt-2 p-3 surface-elevated rounded-lg">
                                 <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
                                   {record.result}
                                 </pre>
@@ -322,7 +336,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           <span>{formatDuration(record.duration)}</span>
@@ -348,7 +362,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
           {/* 运行日志 */}
           <GlassCard variant="default" hover={false}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <FileText className="h-4 w-4" />
                 <span>节点运行日志</span>
               </h3>
@@ -371,7 +385,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                 <LoadingSpinner text="加载日志..." />
               </div>
             ) : events.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>暂无运行日志</p>
               </div>
@@ -386,23 +400,13 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge
-                              className={
-                                event.type.toLowerCase().includes("error") || event.type.toLowerCase().includes("fail")
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                  : event.type.toLowerCase().includes("warning")
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                  : event.type.toLowerCase().includes("success")
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                              }
-                            >
+                            <Badge className={getEventBadgeColor(event.type)}>
                               {event.type}
                             </Badge>
                           </div>
 
                           {event.message && (
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                            <p className="text-sm text-foreground mb-2">
                               {event.message}
                             </p>
                           )}
@@ -412,7 +416,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                               <summary className="cursor-pointer text-xs text-primary hover:underline">
                                 查看详细信息
                               </summary>
-                              <div className="mt-2 p-3 bg-black/5 dark:bg-black/20 ">
+                              <div className="mt-2 p-3 surface-elevated rounded-lg">
                                 <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
                                   {JSON.stringify(event.details, null, 2)}
                                 </pre>
@@ -422,7 +426,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         <span className="text-right">
                           {new Date(event.timestamp).toLocaleString("zh-CN", {

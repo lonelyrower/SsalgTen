@@ -154,9 +154,9 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             {/* 系统概览 - 使用 info 变体（蓝色） */}
             <GlassCard variant="info">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 ">
-                    <Server className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
+                  <div className="p-2 bg-[hsl(var(--info))]/20 rounded-lg">
+                    <Server className="h-5 w-5 text-[hsl(var(--info))]" />
                   </div>
                   <span>系统概览</span>
                 </h3>
@@ -171,32 +171,32 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">主机名</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{node.hostname || node.name}</p>
+                    <p className="text-[hsl(var(--muted-foreground))]">主机名</p>
+                    <p className="font-medium text-[hsl(var(--foreground))]">{node.hostname || node.name}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">操作系统</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{node.osType || "Unknown"}</p>
+                    <p className="text-[hsl(var(--muted-foreground))]">操作系统</p>
+                    <p className="font-medium text-[hsl(var(--foreground))]">{node.osType || "Unknown"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">系统版本</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{node.osVersion || "Unknown"}</p>
+                    <p className="text-[hsl(var(--muted-foreground))]">系统版本</p>
+                    <p className="font-medium text-[hsl(var(--foreground))]">{node.osVersion || "Unknown"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">运行时间</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="text-[hsl(var(--muted-foreground))]">运行时间</p>
+                    <p className="font-medium text-[hsl(var(--foreground))]">
                       {formatUptime(heartbeatData?.uptime)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">地理位置</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="text-[hsl(var(--muted-foreground))]">地理位置</p>
+                    <p className="font-medium text-[hsl(var(--foreground))]">
                       {node.city}, {node.country}
                     </p>
                   </div>
                   {heartbeatData?.virtualization && (
                     <div>
-                      <p className="text-gray-600 dark:text-gray-400 text-center">虚拟化</p>
+                      <p className="text-[hsl(var(--muted-foreground))] text-center">虚拟化</p>
                       <div className="flex items-center justify-center space-x-2">
                         <Badge variant="secondary" className="text-xs">
                           {heartbeatData.virtualization.type}
@@ -211,29 +211,29 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             {/* CPU 信息 - 使用 orange 变体（橙色） */}
             <GlassCard variant="orange">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-orange-100 dark:bg-orange-900/30 ">
-                    <Cpu className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
+                  <div className="p-2 bg-[hsl(var(--warning))]/20 rounded-lg">
+                    <Cpu className="h-5 w-5 text-[hsl(var(--warning))]" />
                   </div>
                   <span>CPU</span>
                 </h3>
                 {heartbeatData?.cpuInfo && (
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                       {heartbeatData.cpuInfo.usage.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">使用率</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">使用率</p>
                   </div>
                 )}
               </div>
               <div>
                 {heartbeatData?.cpuInfo ? (
                   <div className="space-y-3">
-                    <div className="pb-3 border-b border-orange-200/30 dark:border-orange-700/30">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                    <div className="pb-3 border-b border-[hsl(var(--border))]">
+                      <p className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
                         {heartbeatData.cpuInfo.model}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
                         {heartbeatData.cpuInfo.cores} 核心 · {heartbeatData.cpuInfo.threads} 线程 · {heartbeatData.cpuInfo.frequency}MHz · {heartbeatData.cpuInfo.architecture}
                       </p>
                     </div>
@@ -241,10 +241,10 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     <div className="grid grid-cols-2 gap-3">
                       {heartbeatData.cpuInfo.temperature && (
                         <div className="flex items-center space-x-2">
-                          <Thermometer className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+                          <Thermometer className="h-4 w-4 text-[hsl(var(--warning))]" />
                           <div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">温度</p>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            <p className="text-xs text-[hsl(var(--muted-foreground))]">温度</p>
+                            <p className="text-sm font-medium text-[hsl(var(--foreground))]">
                               {heartbeatData.cpuInfo.temperature}°C
                             </p>
                           </div>
@@ -252,10 +252,10 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                       )}
                       {heartbeatData.loadAverage && heartbeatData.loadAverage.length > 0 && (
                         <div className="flex items-center space-x-2">
-                          <Gauge className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+                          <Gauge className="h-4 w-4 text-[hsl(var(--warning))]" />
                           <div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">负载(1m)</p>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            <p className="text-xs text-[hsl(var(--muted-foreground))]">负载(1m)</p>
+                            <p className="text-sm font-medium text-[hsl(var(--foreground))]">
                               {heartbeatData.loadAverage[0]?.toFixed(2)}
                             </p>
                           </div>
@@ -264,7 +264,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p className="text-[hsl(var(--muted-foreground))] text-center py-4">
                     暂无CPU信息
                   </p>
                 )}
@@ -274,18 +274,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             {/* 内存信息 - 使用 purple 变体（紫色） */}
             <GlassCard variant="purple">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 ">
-                    <MemoryStick className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <MemoryStick className="h-5 w-5 text-primary" />
                   </div>
                   <span>内存</span>
                 </h3>
                 {heartbeatData?.memoryInfo && (
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                       {heartbeatData.memoryInfo.usage.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">使用率</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">使用率</p>
                   </div>
                 )}
               </div>
@@ -294,37 +294,37 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">总容量</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="text-[hsl(var(--muted-foreground))]">总容量</p>
+                        <p className="font-medium text-[hsl(var(--foreground))]">
                           {(heartbeatData.memoryInfo.total / 1024).toFixed(1)} GB
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">已使用</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="text-[hsl(var(--muted-foreground))]">已使用</p>
+                        <p className="font-medium text-[hsl(var(--foreground))]">
                           {(heartbeatData.memoryInfo.used / 1024).toFixed(1)} GB
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">可用</p>
-                        <p className="font-medium text-green-600 dark:text-green-400">
+                        <p className="text-[hsl(var(--muted-foreground))]">可用</p>
+                        <p className="font-medium text-[hsl(var(--success))]">
                           {(heartbeatData.memoryInfo.available / 1024).toFixed(1)} GB
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">空闲</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="text-[hsl(var(--muted-foreground))]">空闲</p>
+                        <p className="font-medium text-[hsl(var(--foreground))]">
                           {(heartbeatData.memoryInfo.free / 1024).toFixed(1)} GB
                         </p>
                       </div>
                     </div>
 
                     {(heartbeatData.memoryInfo.type || heartbeatData.memoryInfo.speed) && (
-                      <div className="pt-3 border-t border-purple-200/30 dark:border-purple-700/30">
+                      <div className="pt-3 border-t border-[hsl(var(--border))]">
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           {heartbeatData.memoryInfo.type && (
                             <div>
-                              <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">类型</p>
+                              <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">类型</p>
                               <Badge variant="secondary" className="text-xs">
                                 {heartbeatData.memoryInfo.type}
                               </Badge>
@@ -332,8 +332,8 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                           )}
                           {heartbeatData.memoryInfo.speed && (
                             <div>
-                              <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">频率</p>
-                              <p className="font-medium text-gray-900 dark:text-white">
+                              <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">频率</p>
+                              <p className="font-medium text-[hsl(var(--foreground))]">
                                 {heartbeatData.memoryInfo.speed} MT/s
                               </p>
                             </div>
@@ -343,7 +343,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p className="text-[hsl(var(--muted-foreground))] text-center py-4">
                     暂无内存信息
                   </p>
                 )}
@@ -353,18 +353,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             {/* 磁盘信息 - 使用 warning 变体（黄色） */}
             <GlassCard variant="warning">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 ">
-                    <HardDrive className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
+                  <div className="p-2 bg-[hsl(var(--warning))]/20 rounded-lg">
+                    <HardDrive className="h-5 w-5 text-[hsl(var(--warning))]" />
                   </div>
                   <span>磁盘</span>
                 </h3>
                 {heartbeatData?.diskInfo && (
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                       {heartbeatData.diskInfo.usage.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">使用率</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">使用率</p>
                   </div>
                 )}
               </div>
@@ -373,25 +373,25 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">总容量</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="text-[hsl(var(--muted-foreground))]">总容量</p>
+                        <p className="font-medium text-[hsl(var(--foreground))]">
                           {heartbeatData.diskInfo.total} GB
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">已使用</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="text-[hsl(var(--muted-foreground))]">已使用</p>
+                        <p className="font-medium text-[hsl(var(--foreground))]">
                           {heartbeatData.diskInfo.used} GB
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">可用空间</p>
-                        <p className="font-medium text-green-600 dark:text-green-400">
+                        <p className="text-[hsl(var(--muted-foreground))]">可用空间</p>
+                        <p className="font-medium text-[hsl(var(--success))]">
                           {heartbeatData.diskInfo.free} GB
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">类型</p>
+                        <p className="text-[hsl(var(--muted-foreground))]">类型</p>
                         {heartbeatData.diskInfo.type ? (
                           <Badge
                             variant={
@@ -404,17 +404,17 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                             {heartbeatData.diskInfo.type}
                           </Badge>
                         ) : (
-                          <p className="font-medium text-gray-900 dark:text-white">未知</p>
+                          <p className="font-medium text-[hsl(var(--foreground))]">未知</p>
                         )}
                       </div>
                     </div>
 
                     {(heartbeatData.diskInfo.model || heartbeatData.diskInfo.temperature || heartbeatData.diskInfo.health) && (
-                      <div className="pt-3 border-t border-yellow-200/30 dark:border-yellow-700/30 space-y-2">
+                      <div className="pt-3 border-t border-[hsl(var(--border))] space-y-2">
                         {heartbeatData.diskInfo.model && (
                           <div>
-                            <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">型号</p>
-                            <p className="font-medium text-sm text-gray-900 dark:text-white">
+                            <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">型号</p>
+                            <p className="font-medium text-sm text-[hsl(var(--foreground))]">
                               {heartbeatData.diskInfo.model}
                             </p>
                           </div>
@@ -422,14 +422,14 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                         <div className="flex items-center justify-between">
                           {heartbeatData.diskInfo.health && (
                             <div className="flex items-center space-x-2">
-                              <span className="text-xs text-gray-600 dark:text-gray-400">健康:</span>
+                              <span className="text-xs text-[hsl(var(--muted-foreground))]">健康:</span>
                               {getHealthBadge(heartbeatData.diskInfo.health)}
                             </div>
                           )}
                           {heartbeatData.diskInfo.temperature && (
                             <div className="flex items-center space-x-2">
-                              <Thermometer className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
-                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              <Thermometer className="h-4 w-4 text-[hsl(var(--warning))]" />
+                              <span className="text-sm font-medium text-[hsl(var(--foreground))]">
                                 {heartbeatData.diskInfo.temperature}°C
                               </span>
                             </div>
@@ -439,7 +439,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p className="text-[hsl(var(--muted-foreground))] text-center py-4">
                     暂无磁盘信息
                   </p>
                 )}
@@ -449,9 +449,9 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             {/* 网络信息 - 使用 success 变体（绿色） */}
             <GlassCard variant="success">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/30 ">
-                    <Network className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
+                  <div className="p-2 bg-[hsl(var(--success))]/20 rounded-lg">
+                    <Network className="h-5 w-5 text-[hsl(var(--success))]" />
                   </div>
                   <span>网络</span>
                 </h3>
@@ -462,32 +462,32 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   <div className="grid grid-cols-1 gap-3 text-sm">
                     {node.ipv4 && (
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">IPv4 地址</p>
-                        <p className="font-medium font-mono text-gray-900 dark:text-white">{node.ipv4}</p>
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">IPv4 地址</p>
+                        <p className="font-medium font-mono text-[hsl(var(--foreground))]">{node.ipv4}</p>
                       </div>
                     )}
                     {node.ipv6 && node.ipv6.includes(":") && (
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">IPv6 地址</p>
-                        <p className="font-medium font-mono text-xs text-gray-900 dark:text-white break-all">
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">IPv6 地址</p>
+                        <p className="font-medium font-mono text-xs text-[hsl(var(--foreground))] break-all">
                           {node.ipv6}
                         </p>
                       </div>
                     )}
                     {(node as any).asnNumber && (
-                      <div className="pt-3 border-t border-green-200/30 dark:border-green-700/30">
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-2">ASN 信息</p>
+                      <div className="pt-3 border-t border-[hsl(var(--border))]">
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-2">ASN 信息</p>
                         <div className="grid grid-cols-2 gap-3 text-xs">
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">ASN</span>
-                            <p className="font-medium text-gray-900 dark:text-white">
+                            <span className="text-[hsl(var(--muted-foreground))]">ASN</span>
+                            <p className="font-medium text-[hsl(var(--foreground))]">
                               {(node as any).asnNumber}
                             </p>
                           </div>
                           {(node as any).asnName && (
                             <div>
-                              <span className="text-gray-600 dark:text-gray-400">名称</span>
-                              <p className="font-medium text-gray-900 dark:text-white">
+                              <span className="text-[hsl(var(--muted-foreground))]">名称</span>
+                              <p className="font-medium text-[hsl(var(--foreground))]">
                                 {(node as any).asnName}
                               </p>
                             </div>
@@ -500,20 +500,20 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   {/* 网络流量统计 */}
                   {heartbeatData?.networkInfo &&
                     heartbeatData.networkInfo.length > 0 && (
-                      <div className="pt-3 border-t border-green-200/30 dark:border-green-700/30">
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">流量统计</p>
+                      <div className="pt-3 border-t border-[hsl(var(--border))]">
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-3">流量统计</p>
                         {/* 总吞吐量显示 */}
-                        <div className="flex items-center justify-between mb-3 p-2 bg-green-50/50 dark:bg-green-900/10 ">
+                        <div className="flex items-center justify-between mb-3 p-2 bg-[hsl(var(--success))]/10 rounded-lg">
                           <div className="flex items-center space-x-3 text-xs">
                             <div>
-                              <span className="text-gray-600 dark:text-gray-400">接收 ↓</span>
-                              <p className="text-green-600 dark:text-green-400 font-medium">
+                              <span className="text-[hsl(var(--muted-foreground))]">接收 ↓</span>
+                              <p className="text-[hsl(var(--success))] font-medium">
                                 {formatBps(rxSeries[rxSeries.length - 1])}
                               </p>
                             </div>
                             <div>
-                              <span className="text-gray-600 dark:text-gray-400">发送 ↑</span>
-                              <p className="text-blue-600 dark:text-blue-400 font-medium">
+                              <span className="text-[hsl(var(--muted-foreground))]">发送 ↑</span>
+                              <p className="text-[hsl(var(--info))] font-medium">
                                 {formatBps(txSeries[txSeries.length - 1])}
                               </p>
                             </div>
@@ -527,10 +527,10 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                           {heartbeatData.networkInfo.map((net, index) => (
                             <div
                               key={index}
-                              className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 p-3  border border-green-200/30 dark:border-green-700/30"
+                              className="bg-[hsl(var(--success))]/10 p-3 rounded-lg border border-[hsl(var(--success))]/30"
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                <span className="font-medium text-sm text-[hsl(var(--foreground))]">
                                   {net.interface}
                                 </span>
                                 {net.speed && (
@@ -541,20 +541,20 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                               </div>
                               <div className="grid grid-cols-2 gap-3 text-xs">
                                 <div>
-                                  <p className="text-gray-600 dark:text-gray-400 mb-1">接收</p>
-                                  <p className="font-medium text-gray-900 dark:text-white">
+                                  <p className="text-[hsl(var(--muted-foreground))] mb-1">接收</p>
+                                  <p className="font-medium text-[hsl(var(--foreground))]">
                                     {formatBytes(net.bytesReceived)}
                                   </p>
-                                  <p className="text-gray-500 dark:text-gray-400">
+                                  <p className="text-[hsl(var(--muted-foreground))]">
                                     {net.packetsReceived.toLocaleString()} 包
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-gray-600 dark:text-gray-400 mb-1">发送</p>
-                                  <p className="font-medium text-gray-900 dark:text-white">
+                                  <p className="text-[hsl(var(--muted-foreground))] mb-1">发送</p>
+                                  <p className="font-medium text-[hsl(var(--foreground))]">
                                     {formatBytes(net.bytesSent)}
                                   </p>
-                                  <p className="text-gray-500 dark:text-gray-400">
+                                  <p className="text-[hsl(var(--muted-foreground))]">
                                     {net.packetsSent.toLocaleString()} 包
                                   </p>
                                 </div>
@@ -571,18 +571,18 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             {/* 进程和服务 - 使用 danger 变体（红色） */}
             <GlassCard variant="danger">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-red-100 dark:bg-red-900/30 ">
-                    <Activity className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
+                  <div className="p-2 bg-[hsl(var(--error))]/20 rounded-lg">
+                    <Activity className="h-5 w-5 text-[hsl(var(--error))]" />
                   </div>
                   <span>进程和服务</span>
                 </h3>
                 {heartbeatData?.processInfo && (
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                       {heartbeatData.processInfo.total}
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">总进程</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">总进程</p>
                   </div>
                 )}
               </div>
@@ -590,24 +590,24 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                 {/* 进程信息 */}
                 {heartbeatData?.processInfo && (
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">进程统计</p>
+                    <p className="text-[hsl(var(--muted-foreground))] text-xs mb-3">进程统计</p>
                     <div className="grid grid-cols-3 gap-3 text-sm">
-                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">运行中</p>
-                        <p className="font-bold text-green-600 dark:text-green-400 text-lg">
+                      <div className="text-center p-3 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">运行中</p>
+                        <p className="font-bold text-[hsl(var(--success))] text-lg">
                           {heartbeatData.processInfo.running}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">睡眠</p>
-                        <p className="font-bold text-gray-900 dark:text-white text-lg">
+                      <div className="text-center p-3 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">睡眠</p>
+                        <p className="font-bold text-[hsl(var(--foreground))] text-lg">
                           {heartbeatData.processInfo.sleeping}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">僵尸</p>
+                      <div className="text-center p-3 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                        <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">僵尸</p>
                         <p
-                          className={`font-bold text-lg ${heartbeatData.processInfo.zombie > 0 ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}
+                          className={`font-bold text-lg ${heartbeatData.processInfo.zombie > 0 ? "text-[hsl(var(--error))]" : "text-[hsl(var(--foreground))]"}`}
                         >
                           {heartbeatData.processInfo.zombie}
                         </p>
@@ -627,17 +627,17 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                     if (activeServices.length === 0) return null;
 
                     return (
-                      <div className="pt-4 border-t border-red-200/50 dark:border-red-700/30 space-y-3">
+                      <div className="pt-4 border-t border-[hsl(var(--border))] space-y-3">
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">系统服务</p>
+                          <p className="text-[hsl(var(--muted-foreground))] text-xs mb-3">系统服务</p>
                           <div className="grid grid-cols-3 gap-2">
                             {activeServices.map(([service]) => (
                               <div
                                 key={service}
-                                className="flex items-center space-x-2 p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30"
+                                className="flex items-center space-x-2 p-2 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30"
                               >
-                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                <span className="text-xs capitalize text-gray-900 dark:text-white font-medium">
+                                <div className="w-2 h-2 rounded-full bg-[hsl(var(--success))] animate-pulse"></div>
+                                <span className="text-xs capitalize text-[hsl(var(--foreground))] font-medium">
                                   {service}
                                 </span>
                               </div>
@@ -650,13 +650,13 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                           const detail = svc?.xrayDetail;
                           if (!detail) return null;
                           return (
-                            <div className="pt-3 border-t border-red-200/50 dark:border-red-700/30">
-                              <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">
+                            <div className="pt-3 border-t border-[hsl(var(--border))]">
+                              <p className="text-[hsl(var(--muted-foreground))] text-xs mb-3">
                                 Xray 自检
                               </p>
                               <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                                  <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">进程</p>
+                                <div className="p-2 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                                  <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">进程</p>
                                   <Badge
                                     variant={
                                       detail.running ? "success" : "secondary"
@@ -666,8 +666,8 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                     {detail.running ? "存在" : "未检测到"}
                                   </Badge>
                                 </div>
-                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                                  <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">TCP连通</p>
+                                <div className="p-2 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                                  <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">TCP连通</p>
                                   <Badge
                                     variant={
                                       detail.tcpOk ? "success" : "destructive"
@@ -677,15 +677,15 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                     {detail.tcpOk ? "正常" : "失败"}
                                   </Badge>
                                 </div>
-                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                                  <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">监听地址</p>
-                                  <p className="font-medium font-mono text-xs text-gray-900 dark:text-white">
+                                <div className="p-2 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                                  <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">监听地址</p>
+                                  <p className="font-medium font-mono text-xs text-[hsl(var(--foreground))]">
                                     {detail.host}:{detail.port}
                                   </p>
                                 </div>
                                 {detail.tls !== undefined && (
-                                  <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                                    <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">TLS握手</p>
+                                  <div className="p-2 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                                    <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">TLS握手</p>
                                     <Badge
                                       variant={
                                         detail.tlsOk ? "success" : "secondary"
@@ -697,15 +697,15 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                   </div>
                                 )}
                                 {detail.sni && (
-                                  <div className="col-span-2 p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
-                                    <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">SNI</p>
-                                    <p className="font-medium font-mono text-xs text-gray-900 dark:text-white break-all">
+                                  <div className="col-span-2 p-2 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/30">
+                                    <p className="text-[hsl(var(--muted-foreground))] text-xs mb-1">SNI</p>
+                                    <p className="font-medium font-mono text-xs text-[hsl(var(--foreground))] break-all">
                                       {detail.sni}
                                     </p>
                                   </div>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic">
+                              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-3 italic">
                                 提示：如 Agent 运行在 bridge 网络，已透过 /host/proc 识别宿主进程。
                               </p>
                             </div>

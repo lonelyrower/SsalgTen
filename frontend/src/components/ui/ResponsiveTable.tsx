@@ -85,7 +85,7 @@ export const ResponsiveTableCell: React.FC<ResponsiveTableCellProps> = ({
     return (
       <div className={`mobile-table-cell ${className}`}>
         {label && (
-          <span className="mobile-table-label text-sm font-medium text-gray-500 dark:text-gray-400">
+          <span className="mobile-table-label text-sm font-medium text-muted-foreground">
             {label}:
           </span>
         )}
@@ -176,7 +176,7 @@ export function SimpleResponsiveTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-8 text-muted-foreground">
         {emptyMessage}
       </div>
     );
@@ -190,7 +190,7 @@ export function SimpleResponsiveTable<T>({
             key={index}
             className={`mobile-card-row ${
               onRowClick
-                ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                ? "cursor-pointer hover:surface-elevated"
                 : ""
             }`}
             onClick={() => onRowClick?.(item)}
@@ -219,11 +219,11 @@ export function SimpleResponsiveTable<T>({
     <div className="mobile-table">
       <table className={`w-full ${className}`}>
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700">
+          <tr className="border-b border-border">
             {columns.map((column) => (
               <th
                 key={String(column.key)}
-                className={`text-left py-3 px-4 font-medium text-gray-900 dark:text-white ${column.className || ""}`}
+                className={`text-left py-3 px-4 font-medium text-foreground ${column.className || ""}`}
               >
                 {column.label}
               </th>
@@ -234,9 +234,9 @@ export function SimpleResponsiveTable<T>({
           {data.map((item, index) => (
             <tr
               key={index}
-              className={`border-b border-gray-100 dark:border-gray-800 ${
+              className={`border-b border-border/50 ${
                 onRowClick
-                  ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  ? "cursor-pointer hover:surface-elevated/50"
                   : ""
               }`}
               onClick={() => onRowClick?.(item)}
@@ -250,7 +250,7 @@ export function SimpleResponsiveTable<T>({
                 return (
                   <td
                     key={String(column.key)}
-                    className={`py-3 px-4 text-gray-700 dark:text-gray-300 ${column.className || ""}`}
+                    className={`py-3 px-4 text-foreground ${column.className || ""}`}
                   >
                     {renderedValue}
                   </td>

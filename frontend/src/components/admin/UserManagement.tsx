@@ -58,26 +58,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return <Shield className="h-4 w-4 text-red-500" />;
+        return <Shield className="h-4 w-4 text-[hsl(var(--error))]" />;
       case "OPERATOR":
         return <Settings className="h-4 w-4 text-primary" />;
       case "VIEWER":
-        return <Eye className="h-4 w-4 text-green-500" />;
+        return <Eye className="h-4 w-4 text-[hsl(var(--success))]" />;
       default:
-        return <Users className="h-4 w-4 text-gray-500" />;
+        return <Users className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]";
       case "OPERATOR":
         return "bg-primary/10 text-primary";
       case "VIEWER":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-muted/50 text-muted-foreground";
     }
   };
 
@@ -122,12 +122,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   if (loading) {
     return (
       <div className={`${className} animate-pulse`}>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
+        <div className="h-8 bg-muted rounded mb-6"></div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="h-16 bg-gray-200 dark:bg-gray-700 rounded"
+              className="h-16 bg-muted rounded"
             ></div>
           ))}
         </div>
@@ -141,11 +141,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Users className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-blue-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center">
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-[hsl(var(--info))]" />
               用户管理
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
               管理系统用户账户和权限
             </p>
           </div>
@@ -180,23 +180,23 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </div>
 
         {/* 搜索和过滤器 */}
-        <Card className="p-4 bg-white dark:bg-gray-800 shadow-[var(--shadow-sm)]">
+        <Card className="p-4 surface-base shadow-sm">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="搜索用户名、邮箱或姓名..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center space-x-3">
-              <Filter className="h-4 w-4 text-gray-500" />
+              <Filter className="h-4 w-4 text-muted-foreground" />
               <select
                 aria-label="筛选用户角色"
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600  bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 border border-border rounded-lg surface-base text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
               >
@@ -212,16 +212,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* 错误提示 */}
       {error && (
-        <Card className="p-4 mb-6 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <Card className="p-4 mb-6 bg-[hsl(var(--error))]/10 border-[hsl(var(--error))]/30">
           <div className="flex items-center">
-            <div className="text-red-500 mr-3">⚠️</div>
+            <div className="text-[hsl(var(--error))] mr-3">⚠️</div>
             <div>
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-[hsl(var(--error))]">{error}</p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setError("")}
-                className="text-red-600 hover:text-red-700 mt-2"
+                className="text-[hsl(var(--error))] hover:text-[hsl(var(--error))]/80 mt-2"
               >
                 关闭
               </Button>
@@ -231,13 +231,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       )}
 
       {/* 用户表格 */}
-      <Card className="bg-white dark:bg-gray-800 shadow-[var(--shadow-lg)] overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <Card className="surface-base shadow-lg overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-border">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
               用户列表
             </h2>
-            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               共 {filteredUsers.length} 个用户
             </div>
           </div>
@@ -246,33 +246,33 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         {/* 桌面端表格 */}
         <div className="hidden lg:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   用户信息
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   角色
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   状态
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   最后登录
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   创建时间
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="surface-base divide-y divide-border">
               {filteredUsers.map((user) => (
                 <tr
                   key={user.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                  className="hover:bg-muted/30 transition-colors duration-150"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -284,13 +284,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {user.name || user.username}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                           @{user.username}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                           {user.email}
                         </div>
                       </div>
@@ -310,19 +310,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.active
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
+                          : "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]"
                       }`}
                     >
                       {user.active ? "活跃" : "禁用"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.lastLogin
                       ? new Date(user.lastLogin).toLocaleString("zh-CN")
                       : "从未登录"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(user.createdAt).toLocaleDateString("zh-CN")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -331,7 +331,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setEditingUser(user)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        className="text-primary hover:text-primary/80 hover:bg-primary/10"
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -339,7 +339,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowDeleteConfirm(user.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="text-[hsl(var(--error))] hover:text-[hsl(var(--error))]/80 hover:bg-[hsl(var(--error))]/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -356,7 +356,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           {filteredUsers.map((user) => (
             <div
               key={user.id}
-              className="p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+              className="p-4 border-b border-border last:border-b-0"
             >
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 h-12 w-12">
@@ -370,13 +370,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {user.name || user.username}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         @{user.username}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {user.email}
                       </p>
                     </div>
@@ -386,7 +386,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setEditingUser(user)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 h-8 w-8 p-0"
+                        className="text-primary hover:text-primary/80 hover:bg-primary/10 h-8 w-8 p-0"
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -394,7 +394,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowDeleteConfirm(user.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-8 w-8 p-0"
+                        className="text-[hsl(var(--error))] hover:text-[hsl(var(--error))]/80 hover:bg-[hsl(var(--error))]/10 h-8 w-8 p-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -414,15 +414,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         user.active
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
+                          : "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))]"
                       }`}
                     >
                       {user.active ? "活跃" : "禁用"}
                     </span>
                   </div>
 
-                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                  <div className="mt-2 text-xs text-muted-foreground space-y-1">
                     <p>
                       最后登录:{" "}
                       {user.lastLogin
@@ -442,8 +442,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
         {filteredUsers.length === 0 && (
           <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
               {searchTerm || filterRole !== "all"
                 ? "没有找到匹配的用户"
                 : "还没有用户"}
@@ -468,17 +468,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="bg-white dark:bg-gray-800 p-6  shadow-[var(--shadow-xl)] max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <Card className="surface-elevated p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
-              <div className="flex-shrink-0 w-10 h-10 mx-auto bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <div className="flex-shrink-0 w-10 h-10 mx-auto bg-[hsl(var(--error))]/10 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-[hsl(var(--error))]" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                <h3 className="text-lg font-medium text-foreground">
                   删除用户
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   确定要删除这个用户吗？此操作不可恢复。
                 </p>
               </div>

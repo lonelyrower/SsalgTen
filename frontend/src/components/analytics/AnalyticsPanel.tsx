@@ -92,25 +92,25 @@ export const AnalyticsPanel = memo(
         {/* 控制面板 */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-foreground">
               数据分析面板
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               实时网络监控数据分析和趋势预测
             </p>
           </div>
 
           <div className="flex items-center space-x-3">
             {/* 时间范围选择 */}
-            <div className="flex bg-gray-100 dark:bg-gray-800  p-1">
+            <div className="flex bg-muted rounded-lg p-1">
               {(["1h", "24h", "7d", "30d"] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
                   className={`px-3 py-1 text-sm font-medium  transition-colors ${
                     timeRange === range
-                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {range}
@@ -151,7 +151,7 @@ export const AnalyticsPanel = memo(
                 <GlassCard key={index} className="p-6" animated>
                   <div className="flex items-center justify-between">
                     <div
-                      className={`p-3  bg-${metric.color}-50 dark:bg-${metric.color}-900/20`}
+                      className={`p-3 rounded-xl bg-${metric.color}-50`}
                     >
                       <IconComponent
                         className={`h-6 w-6 text-${metric.color}-600`}
@@ -169,14 +169,14 @@ export const AnalyticsPanel = memo(
                     )}
                   </div>
                   <div className="mt-4">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-foreground">
                       {metric.value ?? "—"}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {metric.label}
                     </p>
                     {metric.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         {metric.description}
                       </p>
                     )}
@@ -187,7 +187,7 @@ export const AnalyticsPanel = memo(
           </div>
         ) : (
           <GlassCard className="p-6">
-            <div className="text-center text-gray-600 dark:text-gray-400">
+            <div className="text-center text-muted-foreground">
               暂无关键指标数据
             </div>
           </GlassCard>
@@ -271,11 +271,11 @@ export const AnalyticsPanel = memo(
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-muted-foreground">
                   实时监控已启用
                 </span>
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-500">
+              <div className="text-sm text-muted-foreground">
                 最后更新: {new Date().toLocaleTimeString()}
               </div>
             </div>

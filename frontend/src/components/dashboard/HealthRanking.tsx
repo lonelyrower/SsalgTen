@@ -44,19 +44,19 @@ const calculateHealthScore = (node: NodeData): number => {
 };
 
 const getHealthColor = (score: number): string => {
-  if (score >= 90) return "text-green-500";
-  if (score >= 70) return "text-blue-500";
-  if (score >= 50) return "text-yellow-500";
-  if (score >= 30) return "text-orange-500";
-  return "text-red-500";
+  if (score >= 90) return "text-[hsl(var(--success))]";
+  if (score >= 70) return "text-[hsl(var(--info))]";
+  if (score >= 50) return "text-[hsl(var(--warning))]";
+  if (score >= 30) return "text-[hsl(var(--warning))]";
+  return "text-[hsl(var(--error))]";
 };
 
 const getHealthGradient = (score: number): string => {
-  if (score >= 90) return "from-green-500 to-emerald-500";
-  if (score >= 70) return "from-blue-500 to-cyan-500";
-  if (score >= 50) return "from-yellow-500 to-amber-500";
-  if (score >= 30) return "from-orange-500 to-red-500";
-  return "from-red-500 to-rose-500";
+  if (score >= 90) return "bg-[hsl(var(--success))]";
+  if (score >= 70) return "bg-[hsl(var(--info))]";
+  if (score >= 50) return "bg-[hsl(var(--warning))]";
+  if (score >= 30) return "bg-[hsl(var(--warning))]";
+  return "bg-[hsl(var(--error))]";
 };
 
 const getHealthLabel = (score: number): string => {
@@ -80,17 +80,17 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden border-2 border-rose-200/60 dark:border-rose-700/60 bg-gradient-to-br from-rose-50 via-white to-pink-50 dark:from-slate-800 dark:via-rose-950/60 dark:to-pink-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-rose-400/15 via-transparent to-pink-500/15" />
-      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-rose-300/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-[hsl(var(--error))]/30 surface-elevated shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--error))]/10 via-transparent to-[hsl(var(--error))]/5" />
+      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-[hsl(var(--error))]/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-200">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--error))]/15 text-[hsl(var(--error))]">
             <Heart className="h-5 w-5" />
           </span>
           节点健康度排行
         </h3>
-        <div className="text-sm text-slate-500 dark:text-slate-300">
+        <div className="text-sm text-muted-foreground">
           Top {rankedNodes.length}
         </div>
       </div>
@@ -100,7 +100,7 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
           rankedNodes.map((node, index) => (
             <div
               key={node.id}
-              className="flex items-center justify-between border border-rose-100/70 dark:border-rose-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-rose-200 dark:hover:border-rose-400/40"
+              className="flex items-center justify-between rounded-xl border border-[hsl(var(--error))]/20 bg-[hsl(var(--surface-elevated))]/80 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-[hsl(var(--error))]/40"
             >
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
@@ -108,34 +108,34 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
                     <Award
                       className={`h-5 w-5 ${
                         index === 0
-                          ? "text-yellow-500"
+                          ? "text-[hsl(var(--warning))]"
                           : index === 1
-                            ? "text-gray-400"
-                            : "text-orange-600"
+                            ? "text-muted-foreground"
+                            : "text-[hsl(var(--info))]"
                       }`}
                     />
                   ) : (
-                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-5">
+                    <span className="text-sm font-medium text-muted-foreground w-5">
                       #{index + 1}
                     </span>
                   )}
                 </div>
                 <CountryFlagSvg country={node.country} className="w-6 h-6" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {node.name}
                   </p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <div className="flex-1 h-2 bg-rose-100/70 dark:bg-rose-900/30 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-muted/70 rounded-full overflow-hidden">
                       <div
-                        className={`h-full bg-gradient-to-r ${getHealthGradient(node.healthScore)}`}
+                        className={`h-full ${getHealthGradient(node.healthScore)}`}
                         style={{
                           width: `${node.healthScore}%`,
                         }}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-slate-500 dark:text-slate-300">
+                  <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-muted-foreground">
                     <span>CPU: {node.cpuUsage?.toFixed(1) || "N/A"}%</span>
                     <span>内存: {node.memoryUsage?.toFixed(1) || "N/A"}%</span>
                     <span>磁盘: {node.diskUsage?.toFixed(1) || "N/A"}%</span>
@@ -146,15 +146,15 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
                 <p className={`text-lg font-bold ${getHealthColor(node.healthScore)}`}>
                   {node.healthScore.toFixed(0)}%
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-300">
+                <p className="text-xs text-muted-foreground">
                   {getHealthLabel(node.healthScore)}
                 </p>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-2 text-rose-400/60" />
+          <div className="text-center py-8 text-muted-foreground">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-2 text-[hsl(var(--error))]/60" />
             <p>暂无健康度数据</p>
           </div>
         )}

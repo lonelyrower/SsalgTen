@@ -85,26 +85,44 @@
     --warning-foreground: 210 40% 98%;
     --error: 348 83% 47%;
     --error-foreground: 210 40% 98%;
+    --info: 200 98% 48%;
+    --info-foreground: 210 40% 98%;
 
-    /* ===== 卡片设计系统 ===== */
-    /* 标准卡片 - 白色背景 */
-    --card-bg: 0 0% 100%;
-    --card-border: 214 32% 91%;
-    --card-shadow: var(--shadow-md);
-    --card-hover-shadow: var(--shadow-lg);
+    /* 语义化状态颜色 - 节点/服务状态 */
+    --status-online: 142 76% 36%;          /* 等同于 success */
+    --status-online-bg: 142 76% 36%;       /* green-500 */
+    --status-offline: 348 83% 47%;          /* 等同于 error */
+    --status-offline-bg: 348 83% 47%;      /* red-500 */
+    --status-unknown: 215.4 16.3% 46.9%;   /* gray */
+    --status-unknown-bg: 215.4 16.3% 46.9%;
 
-    /* 统一蓝色科技风 - 主题卡片 */
-    --card-tech-bg-from: 189 100% 97%;      /* cyan-50 */
-    --card-tech-bg-via: 0 0% 100%;          /* white */
-    --card-tech-bg-to: 214 100% 97%;        /* blue-50 */
-    --card-tech-border: 189 94% 43% / 0.2;  /* cyan-600/20 */
-    --card-tech-glow: 189 94% 43% / 0.15;   /* cyan-600/15 */
+    /* 表面颜色系统 */
+    --surface-base: var(--background);      /* 基础背景 */
+    --surface-elevated: var(--card);        /* 抬升表面 */
+    --surface-overlay: var(--popover);      /* 浮层表面 */
 
-    /* 状态卡片配色 - 统一蓝色系 */
-    --card-primary-from: 199 89% 48%;       /* sky-500 */
-    --card-primary-to: 217 91% 60%;         /* blue-500 */
-    --card-accent-from: 186 94% 45%;        /* cyan-500 */
-    --card-accent-to: 200 98% 48%;          /* lightblue-500 */
+    /* 品牌颜色 - 科技蓝色系 */
+    --brand-cyan: 189 94% 43%;              /* cyan-500 */
+    --brand-blue: 217 91% 55%;              /* blue-600 */
+    --brand-dark: 222.2 84% 4.9%;           /* slate-900 */
+
+    /* 阴影系统 */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+    --shadow-glow-cyan: 0 8px 32px rgba(6, 182, 212, 0.3);
+    --shadow-glow-blue: 0 8px 32px rgba(59, 130, 246, 0.3);
+
+    /* 透明度标准 */
+    --opacity-disabled: 0.5;
+    --opacity-hover: 0.8;
+    --opacity-overlay: 0.9;
+
+    /* 终端颜色 - 代码块 */
+    --terminal-bg: 222.2 84% 4.9%;         /* 深色背景 (类似 gray-900) */
+    --terminal-text: 142 76% 56%;          /* 绿色文本 (类似终端) */
   }
 
   .dark {
@@ -146,26 +164,29 @@
     --success: 142 76% 46%;
     --warning: 38 92% 60%;
     --error: 348 83% 57%;
+    --info: 200 98% 58%;
 
-    /* ===== 深色模式卡片设计系统 ===== */
-    /* 标准卡片 - 深色背景，提高对比度 */
-    --card-bg: 222 47% 11%;           /* gray-950 */
-    --card-border: 217 33% 20%;       /* 更明显的边框 */
-    --card-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
-    --card-hover-shadow: 0 20px 40px rgb(0 0 0 / 0.5);
+    /* 深色模式语义化状态颜色 */
+    --status-online: 142 76% 46%;
+    --status-online-bg: 142 76% 46%;
+    --status-offline: 348 83% 57%;
+    --status-offline-bg: 348 83% 57%;
+    --status-unknown: 215 20.2% 65.1%;
+    --status-unknown-bg: 215 20.2% 65.1%;
 
-    /* 深色模式科技卡片 - 蓝色调 */
-    --card-tech-bg-from: 222 47% 11%;       /* gray-950 */
-    --card-tech-bg-via: 217 33% 15%;        /* blue-950 */
-    --card-tech-bg-to: 189 65% 12%;         /* cyan-950 */
-    --card-tech-border: 189 94% 53% / 0.2;  /* cyan-400/20 */
-    --card-tech-glow: 189 94% 53% / 0.2;    /* cyan-400/20 */
+    /* 深色模式品牌颜色 */
+    --brand-cyan: 189 94% 53%;
+    --brand-blue: 217 91% 65%;
+    --brand-dark: 222.2 84% 4.9%;
 
-    /* 深色模式状态卡片配色 */
-    --card-primary-from: 199 89% 58%;       /* sky-400 */
-    --card-primary-to: 217 91% 70%;         /* blue-400 */
-    --card-accent-from: 186 94% 55%;        /* cyan-400 */
-    --card-accent-to: 200 98% 58%;          /* lightblue-400 */
+    /* 深色模式阴影 */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.7);
+    --shadow-glow-cyan: 0 8px 32px rgba(6, 182, 212, 0.4);
+    --shadow-glow-blue: 0 8px 32px rgba(59, 130, 246, 0.4);
   }
 }
 
@@ -374,7 +395,7 @@
     background: inherit;
   }
 
-  /* 语义化状态徽章 */
+  /* ========== 语义化状态徽章 ========== */
   .status-badge-online {
     background: hsl(var(--success) / 0.2);
     color: hsl(var(--success));
@@ -409,6 +430,123 @@
     background: hsl(var(--warning) / 0.2);
     color: hsl(var(--warning-foreground));
     border: 1px solid hsl(var(--warning) / 0.3);
+  }
+
+  /* ========== 节点状态样式 ========== */
+  /* 在线状态 */
+  .node-status-online {
+    color: hsl(var(--status-online));
+    background: hsl(var(--status-online) / 0.2);
+    border-color: hsl(var(--status-online) / 0.5);
+  }
+
+  /* 离线状态 */
+  .node-status-offline {
+    color: hsl(var(--status-offline));
+    background: hsl(var(--status-offline) / 0.2);
+    border-color: hsl(var(--status-offline) / 0.5);
+  }
+
+  /* 未知状态 */
+  .node-status-unknown {
+    color: hsl(var(--status-unknown));
+    background: hsl(var(--status-unknown) / 0.2);
+    border-color: hsl(var(--status-unknown) / 0.5);
+  }
+
+  /* ========== 品牌渐变系统 ========== */
+  /* 主品牌渐变 - 青蓝色 */
+  .bg-brand-gradient {
+    background: linear-gradient(to right, hsl(var(--brand-cyan)), hsl(var(--brand-blue)), hsl(var(--primary)));
+  }
+
+  /* 品牌渐变按钮 */
+  .btn-brand-gradient {
+    background: linear-gradient(to right, hsl(var(--brand-cyan)), hsl(var(--brand-blue)));
+    color: white;
+    font-weight: 600;
+    border-radius: calc(var(--radius) - 2px);
+    box-shadow: var(--shadow-glow-cyan);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-brand-gradient:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+  }
+
+  /* 品牌渐变文字 */
+  .text-brand-gradient {
+    background: linear-gradient(to right, hsl(var(--brand-cyan)), hsl(var(--brand-blue)));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  /* ========== 卡片状态渐变背景 ========== */
+  /* 在线节点卡片渐变 */
+  .card-online-gradient {
+    background: linear-gradient(to bottom right,
+      hsl(var(--status-online) / 0.1),
+      hsl(var(--success) / 0.05)
+    );
+    border-color: hsl(var(--status-online) / 0.3);
+  }
+
+  .dark .card-online-gradient {
+    background: linear-gradient(to bottom right,
+      hsl(var(--status-online) / 0.15),
+      hsl(var(--success) / 0.1)
+    );
+  }
+
+  /* 离线节点卡片渐变 */
+  .card-offline-gradient {
+    background: linear-gradient(to bottom right,
+      hsl(var(--status-offline) / 0.1),
+      hsl(var(--error) / 0.05)
+    );
+    border-color: hsl(var(--status-offline) / 0.3);
+  }
+
+  .dark .card-offline-gradient {
+    background: linear-gradient(to bottom right,
+      hsl(var(--status-offline) / 0.15),
+      hsl(var(--error) / 0.1)
+    );
+  }
+
+  /* 选中状态卡片渐变 */
+  .card-selected-gradient {
+    background: linear-gradient(to bottom right,
+      hsl(var(--brand-cyan) / 0.15),
+      hsl(var(--brand-blue) / 0.1)
+    );
+    border-color: hsl(var(--brand-cyan) / 0.5);
+    box-shadow: var(--shadow-glow-cyan);
+  }
+
+  .dark .card-selected-gradient {
+    background: linear-gradient(to bottom right,
+      hsl(var(--brand-cyan) / 0.2),
+      hsl(var(--brand-blue) / 0.15)
+    );
+  }
+
+  /* ========== 表面颜色工具类 ========== */
+  .surface-base {
+    background: hsl(var(--surface-base));
+    color: hsl(var(--foreground));
+  }
+
+  .surface-elevated {
+    background: hsl(var(--surface-elevated));
+    color: hsl(var(--card-foreground));
+  }
+
+  .surface-overlay {
+    background: hsl(var(--surface-overlay));
+    color: hsl(var(--popover-foreground));
   }
 
   /* 性能优化：轻量模糊工具类 */

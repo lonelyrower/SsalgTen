@@ -164,13 +164,13 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center"
         ref={indicatorRef}
       >
-        <div className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-600 p-3">
+        <div className="flex flex-col items-center justify-center surface-elevated rounded-full shadow-lg border border-border p-3">
           <RefreshCw
             className={`h-5 w-5 text-primary ${
               isRefreshing ? "animate-spin" : ""
-            } ${pullDistance >= threshold && !isRefreshing ? "text-green-500" : ""}`}
+            } ${pullDistance >= threshold && !isRefreshing ? "text-[hsl(var(--success))]" : ""}`}
           />
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 whitespace-nowrap">
+          <div className="text-xs text-muted-foreground mt-1 whitespace-nowrap">
             {isRefreshing
               ? "刷新中..."
               : pullDistance >= threshold

@@ -107,18 +107,13 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="password-modal-title"
-    >
-      <Card className="bg-white dark:bg-gray-800 shadow-[var(--shadow-xl)] max-w-md w-full">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="surface-elevated rounded-lg shadow-xl max-w-md w-full">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
-            <Lock className="h-6 w-6 text-blue-600" aria-hidden="true" />
-            <h2 id="password-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
+            <Lock className="h-6 w-6 text-[hsl(var(--info))]" />
+            <h2 className="text-xl font-semibold text-foreground">
               修改密码
             </h2>
           </div>
@@ -138,7 +133,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* 当前密码 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 当前密码
               </label>
               <div className="relative">
@@ -146,17 +141,17 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary surface-base text-foreground ${
                     errors.currentPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
-                  } dark:bg-gray-700 dark:text-white`}
+                      ? "border-[hsl(var(--error))]"
+                      : "border-border"
+                  }`}
                   placeholder="请输入当前密码"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                 >
                   {showCurrentPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -166,7 +161,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 </button>
               </div>
               {errors.currentPassword && (
-                <div className="flex items-center mt-2 text-red-600 text-sm">
+                <div className="flex items-center mt-2 text-[hsl(var(--error))] text-sm">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.currentPassword}
                 </div>
@@ -175,7 +170,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
             {/* 新密码 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 新密码
               </label>
               <div className="relative">
@@ -183,17 +178,17 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary surface-base text-foreground ${
                     errors.newPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
-                  } dark:bg-gray-700 dark:text-white`}
+                      ? "border-[hsl(var(--error))]"
+                      : "border-border"
+                  }`}
                   placeholder="请输入新密码（至少6个字符）"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                 >
                   {showNewPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -203,7 +198,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 </button>
               </div>
               {errors.newPassword && (
-                <div className="flex items-center mt-2 text-red-600 text-sm">
+                <div className="flex items-center mt-2 text-[hsl(var(--error))] text-sm">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.newPassword}
                 </div>
@@ -212,7 +207,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
             {/* 确认新密码 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 确认新密码
               </label>
               <div className="relative">
@@ -220,17 +215,17 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary surface-base text-foreground ${
                     errors.confirmPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
-                  } dark:bg-gray-700 dark:text-white`}
+                      ? "border-[hsl(var(--error))]"
+                      : "border-border"
+                  }`}
                   placeholder="请再次输入新密码"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -240,7 +235,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 </button>
               </div>
               {errors.confirmPassword && (
-                <div className="flex items-center mt-2 text-red-600 text-sm">
+                <div className="flex items-center mt-2 text-[hsl(var(--error))] text-sm">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.confirmPassword}
                 </div>

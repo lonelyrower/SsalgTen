@@ -205,7 +205,7 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
         <span className="text-base">❓</span>
         {showName && (
           <span
-            className={`${textSizeClasses[size]} text-gray-700 dark:text-gray-300`}
+            className={`${textSizeClasses[size]} text-foreground`}
           >
             {country}
           </span>
@@ -219,13 +219,13 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
         <div
-          className={`${sizeClasses[size]} bg-gray-200 dark:bg-gray-700 rounded-sm flex items-center justify-center`}
+          className={`${sizeClasses[size]} bg-muted rounded-sm flex items-center justify-center`}
         >
           <span className="text-xs text-gray-500">🌍</span>
         </div>
         {showName && (
           <span
-            className={`${textSizeClasses[size]} text-gray-700 dark:text-gray-300`}
+            className={`${textSizeClasses[size]} text-foreground`}
           >
             {country}
           </span>
@@ -249,7 +249,7 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
           const parent = target.parentElement;
           if (parent) {
             const fallback = document.createElement("div");
-            fallback.className = `${sizeClasses[size]} bg-gray-200 dark:bg-gray-700 rounded-sm flex items-center justify-center`;
+            fallback.className = `${sizeClasses[size]} bg-muted rounded-sm flex items-center justify-center`;
             // Use textContent instead of innerHTML to avoid XSS risk
             const span = document.createElement("span");
             span.className = "text-xs text-gray-500";
@@ -261,7 +261,7 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
       />
       {showName && (
         <span
-          className={`${textSizeClasses[size]} text-gray-700 dark:text-gray-300`}
+          className={`${textSizeClasses[size]} text-foreground`}
         >
           {country}
         </span>

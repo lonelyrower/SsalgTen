@@ -10,35 +10,35 @@ interface SystemMetricsProps {
 interface ResourceBarProps {
   label: string;
   value: number;
-  color: "cyan" | "purple" | "green" | "yellow" | "orange";
+  color: "primary" | "secondary" | "success" | "warning" | "info";
 }
 
 const ResourceBar: React.FC<ResourceBarProps> = ({ label, value, color }) => {
   const colorMap = {
-    cyan: "bg-cyan-500",
-    purple: "bg-purple-500",
-    green: "bg-green-500",
-    yellow: "bg-yellow-500",
-    orange: "bg-orange-500",
+    primary: "bg-[hsl(var(--brand-cyan))]",
+    secondary: "bg-[hsl(var(--secondary))]",
+    success: "bg-[hsl(var(--success))]",
+    warning: "bg-[hsl(var(--warning))]",
+    info: "bg-[hsl(var(--info))]",
   };
 
   const textColorMap = {
-    cyan: "text-cyan-600 dark:text-cyan-300",
-    purple: "text-purple-600 dark:text-purple-300",
-    green: "text-green-600 dark:text-green-300",
-    yellow: "text-yellow-600 dark:text-yellow-300",
-    orange: "text-orange-600 dark:text-orange-300",
+    primary: "text-[hsl(var(--brand-cyan))]",
+    secondary: "text-[hsl(var(--secondary))]",
+    success: "text-[hsl(var(--success))]",
+    warning: "text-[hsl(var(--warning))]",
+    info: "text-[hsl(var(--info))]",
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2 text-sm">
-        <span className="text-slate-500 dark:text-slate-300">{label}</span>
+        <span className="text-muted-foreground">{label}</span>
         <span className={`font-semibold ${textColorMap[color]}`}>
           {value.toFixed(1)}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-slate-200/70 dark:bg-slate-800/70 overflow-hidden">
+      <div className="h-2 rounded-full bg-muted/70 overflow-hidden">
         <motion.div
           className={`h-full ${colorMap[color]} rounded-full`}
           initial={{ width: 0 }}
@@ -179,65 +179,65 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden border-2 border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-cyan-400/15 via-transparent to-blue-500/15" />
-      <div className="absolute -top-12 -right-16 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-[hsl(var(--brand-cyan))]/30 surface-elevated shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--brand-cyan))]/10 via-transparent to-[hsl(var(--brand-blue))]/10" />
+      <div className="absolute -top-12 -right-16 h-32 w-32 rounded-full bg-[hsl(var(--brand-cyan))]/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-200">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--brand-cyan))]/15 text-[hsl(var(--brand-cyan))]">
             <Zap className="h-5 w-5" />
           </span>
           系统资源概览
         </h3>
-        <div className="text-sm text-slate-500 dark:text-slate-300">
+        <div className="text-sm text-muted-foreground">
           {metrics.nodesWithData > 0 ? `${metrics.nodesWithData} 节点` : "无数据"}
         </div>
       </div>
 
       <div className="relative space-y-4 flex-1 overflow-y-auto pr-1">
-        <ResourceBar label="CPU 使用率" value={metrics.avgCpu} color="cyan" />
+        <ResourceBar label="CPU 使用率" value={metrics.avgCpu} color="primary" />
         <ResourceBar
           label="内存使用率"
           value={metrics.avgMemory}
-          color="purple"
+          color="secondary"
         />
         <ResourceBar
           label="磁盘使用率"
           value={metrics.avgDisk}
-          color="orange"
+          color="warning"
         />
         <ResourceBar
           label="节点健康度"
           value={metrics.healthRate}
-          color="green"
+          color="success"
         />
         <ResourceBar
           label="在线率"
           value={metrics.onlineRate}
-          color="cyan"
+          color="primary"
         />
         <ResourceBar
           label="IPv6 覆盖率"
           value={metrics.ipv6CoverageRate}
-          color="purple"
+          color="info"
         />
 
         {/* 额外的统计信息 */}
-        <div className="pt-4 mt-4 border-t border-slate-200/70 dark:border-slate-700/60">
+        <div className="pt-4 mt-4 border-t border-border">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">
                 {metrics.avgUptimeDays.toFixed(1)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 平均运行天数
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-500">
+              <div className="text-2xl font-bold text-[hsl(var(--success))]">
                 {metrics.avgLoad.toFixed(2)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 系统负载
               </div>
             </div>

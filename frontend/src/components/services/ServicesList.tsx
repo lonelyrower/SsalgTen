@@ -97,23 +97,23 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   const colorSchemes = [
     {
       gradient:
-        "bg-gradient-to-br from-blue-50/80 via-cyan-50/50 to-blue-100/60 dark:from-blue-950/30 dark:via-cyan-950/20 dark:to-blue-900/30",
-      border: "border-l border-blue-400 dark:border-blue-500",
+        "bg-gradient-to-br from-[hsl(var(--info))]/5 via-[hsl(var(--info))]/3 to-[hsl(var(--info))]/8",
+      border: "border-l border-[hsl(var(--info))]",
     },
     {
       gradient:
-        "bg-gradient-to-br from-purple-50/80 via-violet-50/50 to-purple-100/60 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/30",
-      border: "border-l border-purple-400 dark:border-purple-500",
+        "bg-gradient-to-br from-primary/5 via-primary/3 to-primary/8",
+      border: "border-l border-primary",
     },
     {
       gradient:
-        "bg-gradient-to-br from-emerald-50/80 via-teal-50/50 to-emerald-100/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-emerald-900/30",
-      border: "border-l border-emerald-400 dark:border-emerald-500",
+        "bg-gradient-to-br from-[hsl(var(--success))]/5 via-[hsl(var(--success))]/3 to-[hsl(var(--success))]/8",
+      border: "border-l border-[hsl(var(--success))]",
     },
     {
       gradient:
-        "bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-orange-100/60 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-orange-900/30",
-      border: "border-l border-orange-400 dark:border-orange-500",
+        "bg-gradient-to-br from-[hsl(var(--warning))]/5 via-[hsl(var(--warning))]/3 to-[hsl(var(--warning))]/8",
+      border: "border-l border-[hsl(var(--warning))]",
     },
   ];
 
@@ -128,10 +128,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <div className="flex items-start gap-2">
           <span className="text-3xl flex-shrink-0">{typeConfig.icon}</span>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+            <h3 className="text-base font-semibold text-foreground truncate">
               {service.name}
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               {typeConfig.name}
               {service.version && ` v${service.version}`}
             </p>
@@ -151,11 +151,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
 
         {/* 节点信息 */}
-        <div className="flex items-center gap-2 p-2  bg-white/50 dark:bg-gray-900/30">
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-surface-elevated">
           {service.nodeCountry && (
             <CountryFlagSvg country={service.nodeCountry} className="w-5 h-5 flex-shrink-0" />
           )}
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 truncate">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
             <Server className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{service.nodeName || service.nodeId}</span>
           </div>
@@ -165,8 +165,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <ServiceDetails service={service} />
 
         {/* 底部信息 */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             <span>{timeAgo}</span>
           </div>
@@ -232,7 +232,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
         {processedShareLinks.slice(0, 2).map((link, index) => (
           <div
             key={index}
-            className="flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-400 group"
+            className="flex items-center gap-1 text-[11px] text-muted-foreground group"
           >
             <LinkIcon className="h-3 w-3 flex-shrink-0" />
             <span className="truncate font-mono flex-1" title={link}>
@@ -243,7 +243,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
                 e.stopPropagation();
                 handleCopyLink(link);
               }}
-              className={`opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded ${copiedLink === link ? "opacity-100 text-green-600 dark:text-green-400" : ""}`}
+              className={`opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-surface-elevated rounded ${copiedLink === link ? "opacity-100 text-[hsl(var(--success))]" : ""}`}
               title={copiedLink === link ? "已复制" : "复制链接"}
             >
               {copiedLink === link ? (
@@ -255,7 +255,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
           </div>
         ))}
         {processedShareLinks.length > 2 && (
-          <div className="text-[11px] text-gray-500 dark:text-gray-500">
+          <div className="text-[11px] text-muted-foreground">
             +{processedShareLinks.length - 2} 条更多链接
           </div>
         )}
@@ -275,9 +275,9 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
     serviceName.includes("hysteria")
   ) {
     return (
-      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2 rounded-lg bg-surface-elevated">
         {protocol && (
-          <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Shield className="h-3 w-3 flex-shrink-0" />
             <span className="font-medium">类型:</span>
             <Badge variant="outline" className="text-xs uppercase tracking-wide">
@@ -286,7 +286,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
           </div>
         )}
         {allPorts.length > 0 && (
-          <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Network className="h-3 w-3 flex-shrink-0" />
             <span className="font-medium">端口:</span>
             <span className="flex gap-1 flex-wrap">
@@ -300,7 +300,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
           </div>
         )}
         {primaryDomain && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Globe className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{primaryDomain}</span>
           </div>
@@ -324,18 +324,18 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
         : undefined);
 
     return (
-      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2 rounded-lg bg-surface-elevated">
         {primaryDomain && (
-          <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Globe className="h-3 w-3 flex-shrink-0" />
             <span className="truncate font-medium">{primaryDomain}</span>
             {service.sslEnabled && (
-              <Shield className="h-3 w-3 text-green-600 dark:text-green-400 ml-1" />
+              <Shield className="h-3 w-3 text-[hsl(var(--success))] ml-1" />
             )}
           </div>
         )}
         {port && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Network className="h-3 w-3 flex-shrink-0" />
             <span>端口: {port}</span>
             {webProtocol && (
@@ -346,7 +346,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
           </div>
         )}
         {extraDomainsCount > 0 && (
-          <div className="text-xs text-gray-500 dark:text-gray-500">
+          <div className="text-xs text-muted-foreground">
             +{extraDomainsCount} 个额外域名
           </div>
         )}
@@ -358,19 +358,19 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // SsalgTen Agent
   if (serviceName.includes("agent") || serviceName.includes("ssalgten")) {
     return (
-      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
-        <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+      <div className="space-y-1.5 p-2 rounded-lg bg-surface-elevated">
+        <div className="flex items-center gap-1 text-xs text-foreground">
           <Activity className="h-3 w-3 flex-shrink-0" />
           <span className="font-medium">节点基础组件</span>
         </div>
         {port && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Network className="h-3 w-3 flex-shrink-0" />
             <span>端口: {port}</span>
           </div>
         )}
         {service.containerInfo && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Box className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">
               {(service.containerInfo as { containerName?: string }).containerName || "Docker 运行中"}
@@ -384,16 +384,16 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 数据库服务
   if (service.type === "database") {
     return (
-      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2 rounded-lg bg-surface-elevated">
         {port && (
-          <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Network className="h-3 w-3 flex-shrink-0" />
             <span className="font-medium">端口:</span>
             <span>{port}</span>
           </div>
         )}
         {service.containerInfo && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Box className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">
               {(service.containerInfo as { containerName?: string }).containerName || "运行实例"}
@@ -408,8 +408,8 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 容器运行时 - 默认只提示
   if (service.type === "container" || serviceName === "docker") {
     return (
-      <div className="p-2  bg-white/30 dark:bg-gray-900/20">
-        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+      <div className="p-2 rounded-lg bg-surface-elevated">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Box className="h-3 w-3 flex-shrink-0" />
           <span>容器运行时</span>
         </div>
@@ -420,15 +420,15 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 默认展示 - 尽量提供域名、端口和分享链接
   if (primaryDomain || port || shareLinkSection) {
     return (
-      <div className="space-y-1.5 p-2  bg-white/30 dark:bg-gray-900/20">
+      <div className="space-y-1.5 p-2 rounded-lg bg-surface-elevated">
         {primaryDomain && (
-          <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Globe className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{primaryDomain}</span>
           </div>
         )}
         {port && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Network className="h-3 w-3 flex-shrink-0" />
             <span>端口: {port}</span>
           </div>

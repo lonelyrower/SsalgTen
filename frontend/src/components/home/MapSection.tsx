@@ -59,12 +59,12 @@ export const MapSection: React.FC<MapSectionProps> = ({
       {/* Top controls (centered) - Two-row layout */}
       <div className="pointer-events-none absolute top-4 sm:top-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
         {/* Row 1: View Mode Toggle */}
-        <div className="pointer-events-auto rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md shadow-lg dark:bg-black/40">
+        <div className="pointer-events-auto rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md shadow-lg">
           <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         </div>
 
         {/* Row 2: Node Statistics & Visitor Location Toggle */}
-        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg dark:bg-black/40">
+        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg">
           <div className="flex items-center gap-1.5 text-white">
             <span className="status-indicator bg-green-400" />
             <span className="font-medium">

@@ -23,18 +23,13 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="deploy-modal-title"
-    >
-      <Card className="bg-white dark:bg-gray-800  shadow-[var(--shadow-xl)] max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+      <Card className="surface-elevated rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
-            <Server className="h-6 w-6 text-blue-600" aria-hidden="true" />
-            <h2 id="deploy-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
+            <Server className="h-6 w-6 text-[hsl(var(--info))]" />
+            <h2 className="text-xl font-semibold text-foreground">
               部署网络监控探针
             </h2>
           </div>
@@ -42,8 +37,7 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-            aria-label="关闭对话框"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </Button>
@@ -53,22 +47,22 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <Terminal className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <Terminal className="h-12 w-12 text-[hsl(var(--info))] mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 部署监控探针
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 使用下面的命令在您的VPS上快速部署监控节点
               </p>
             </div>
 
             {/* 系统要求 */}
-            <Card className="p-4 bg-gray-50 dark:bg-gray-900">
-              <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-2 text-orange-500" />
+            <Card className="p-4 bg-muted/50">
+              <h4 className="font-medium text-foreground mb-3 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-2 text-[hsl(var(--warning))]" />
                 系统要求
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                 <div>
                   <strong>操作系统:</strong>
                   <br />
@@ -126,8 +120,8 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
         </div>
 
         {/* 底部帮助链接 */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+        <div className="px-6 py-4 border-t border-border bg-muted/50">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>需要帮助？</span>
             <Button
               variant="ghost"
@@ -138,7 +132,7 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
                   "_blank",
                 )
               }
-              className="flex items-center space-x-1 text-blue-600 hover:text-blue-700"
+              className="flex items-center space-x-1 text-[hsl(var(--info))] hover:text-[hsl(var(--info))]/80"
             >
               <ExternalLink className="h-3 w-3" />
               <span>查看部署文档</span>

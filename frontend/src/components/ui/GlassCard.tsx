@@ -52,43 +52,24 @@ export const GlassCard = memo(
     interactive = false,
     motionEnabled = false,
   }: GlassCardProps) => {
-    // 变体样式配置 - 统一使用蓝色科技风
-    const variantConfig = {
-      // 布局类型
-      base: {
-        className: "card-base",
-        glowColor: "from-cyan-400/10 to-blue-500/10",
-      },
-      tech: {
-        className: "tech-card",
-        glowColor: "from-cyan-400/10 to-blue-500/10",
-      },
-      stats: {
-        className: "stats-card",
-        glowColor: "from-sky-400/10 to-blue-500/10",
-      },
-      content: {
-        className: "content-card",
-        glowColor: "from-cyan-400/10 to-blue-500/10",
-      },
+    const variants = {
+      // 默认：轻量模糊（桌面10px，移动禁用）
+      default: "glass border-white/20",
 
-      // 状态类型 - 统一蓝色系
-      success: {
-        className: "border-[var(--border-width-thin)] border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
-        glowColor: "from-cyan-400/15 to-blue-500/15",
-      },
-      warning: {
-        className: "border-[var(--border-width-thin)] border-sky-200/60 dark:border-sky-700/60 bg-gradient-to-br from-sky-50 via-white to-cyan-50 dark:from-slate-800 dark:via-sky-950/60 dark:to-cyan-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
-        glowColor: "from-sky-400/15 to-cyan-500/15",
-      },
-      danger: {
-        className: "border-[var(--border-width-thin)] border-blue-200/60 dark:border-blue-700/60 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-800 dark:via-blue-950/60 dark:to-indigo-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
-        glowColor: "from-blue-400/15 to-indigo-500/15",
-      },
-      info: {
-        className: "border-[var(--border-width-thin)] border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-sky-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-sky-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
-        glowColor: "from-cyan-400/15 to-sky-500/15",
-      },
+      // 微妙：移动优先，无模糊
+      subtle:
+        "surface-elevated border-white/10 lg:bg-[hsl(var(--surface-elevated))]/70 lg:backdrop-blur-[8px]",
+
+      // 强烈：仅桌面使用模糊，移动使用高不透明度
+      strong:
+        "bg-[hsl(var(--surface-elevated))]/95 border-white/30 lg:bg-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
+
+      // 科技：响应式模糊
+      tech: "tech-card border-primary/20",
+
+      // 渐变：桌面模糊，移动纯色 - 使用品牌色系
+      gradient:
+        "bg-gradient-to-br from-[hsl(var(--surface-elevated))]/95 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--brand-blue))]/10 border-white/20 lg:from-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
     };
 
     const config = variantConfig[variant];

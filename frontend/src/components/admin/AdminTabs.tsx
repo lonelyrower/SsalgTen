@@ -22,9 +22,9 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
   return (
     <div
       className={cn(
-        "relative inline-flex items-center  border-2 border-gray-200/60 dark:border-gray-700/60",
-        "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-1.5",
-        "shadow-[var(--shadow-lg)] dark:shadow-[var(--shadow-xl)] overflow-hidden",
+        "relative inline-flex items-center rounded-xl border-2 border-border",
+        "surface-elevated backdrop-blur-sm p-1.5",
+        "shadow-lg overflow-hidden",
         className,
       )}
       role="tablist"
@@ -33,8 +33,8 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
       {/* Sliding indicator */}
       <div
         className={cn(
-          "absolute top-1.5 bottom-1.5  transition-all duration-300 ease-out",
-          "bg-gradient-to-br from-cyan-500 to-blue-500 shadow-[var(--shadow-md)]",
+          "absolute top-1.5 bottom-1.5 rounded-lg transition-all duration-300 ease-out",
+          "bg-brand-gradient shadow-md",
         )}
         style={{
           width: `calc(${tabWidth}% - 0.375rem)`,
@@ -60,7 +60,7 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
               "min-w-[100px] sm:min-w-[120px]",
               isActive
                 ? "text-white"
-                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className={cn("h-4 w-4", isActive ? "text-white" : "")} />

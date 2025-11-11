@@ -81,41 +81,41 @@ class ErrorBoundary extends Component<Props, State> {
 
       // 默认错误UI
       return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800  shadow-lg p-6">
+        <div className="min-h-screen bg-surface-base flex items-center justify-center p-4">
+          <div className="max-w-md w-full surface-elevated rounded-lg shadow-lg p-6">
             <div className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
-                  <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                <div className="rounded-full bg-[hsl(var(--error))]/10 p-3">
+                  <AlertCircle className="h-8 w-8 text-[hsl(var(--error))]" />
                 </div>
               </div>
 
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-xl font-semibold text-foreground mb-2">
                 应用程序出现错误
               </h1>
 
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <p className="text-muted-foreground mb-6">
                 很抱歉，应用程序遇到了意外错误。请尝试刷新页面或返回首页。
               </p>
 
               {/* 错误详情（仅开发环境显示） */}
               {process.env.NODE_ENV === "development" && this.state.error && (
-                <details className="text-left mb-6 p-4 bg-gray-50 dark:bg-gray-700 ">
-                  <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                <details className="text-left mb-6 p-4 bg-muted rounded-lg">
+                  <summary className="cursor-pointer text-sm font-medium text-foreground mb-2 flex items-center">
                     <Bug className="h-4 w-4 mr-2" />
                     开发者信息
                   </summary>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
+                  <div className="text-xs text-muted-foreground space-y-2">
                     <div>
                       <strong>错误:</strong>
-                      <pre className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded text-red-700 dark:text-red-400 overflow-x-auto whitespace-pre-wrap">
+                      <pre className="mt-1 p-2 bg-[hsl(var(--error))]/10 rounded text-[hsl(var(--error))] overflow-x-auto whitespace-pre-wrap">
                         {this.state.error.toString()}
                       </pre>
                     </div>
                     {this.state.errorInfo && (
                       <div>
                         <strong>组件堆栈:</strong>
-                        <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-600 rounded text-xs overflow-x-auto whitespace-pre-wrap">
+                        <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto whitespace-pre-wrap">
                           {this.state.errorInfo.componentStack}
                         </pre>
                       </div>
@@ -157,8 +157,8 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* 联系信息 */}
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-6 pt-4 border-t border-border">
+                <p className="text-xs text-muted-foreground">
                   如果问题持续出现，请联系技术支持
                 </p>
               </div>

@@ -81,13 +81,13 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
   );
 
   return (
-    <div className="overflow-x-auto  border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[var(--shadow-sm)]">
-      <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-        <thead className="bg-slate-50 dark:bg-slate-900/60">
+    <div className="overflow-x-auto rounded-xl border border-border surface-elevated shadow-sm">
+      <table className="min-w-full divide-y divide-border">
+        <thead className="bg-muted/50">
           <tr>
             <th
               scope="col"
-              className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-48"
+              className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48"
             >
               节点
             </th>
@@ -99,8 +99,8 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                   scope="col"
                   className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider w-28 transition-all ${
                     isSelected
-                      ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
-                      : "text-slate-500"
+                      ? "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
+                      : "text-muted-foreground"
                   }`}
                   title={col.label}
                 >
@@ -112,19 +112,19 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
             })}
             <th
               scope="col"
-              className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-36"
+              className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-36"
             >
               最近检测
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24"
+              className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-24"
             >
               操作
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+        <tbody className="divide-y divide-border">
           {nodes.map((node, index) => {
             const isTesting = !!testingMap[node.nodeId];
             const isExpired =
@@ -145,10 +145,10 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
 
             // 与卡片模式一致的 4 组背景渐变
             const colorSchemes = [
-              "bg-gradient-to-br from-blue-50/80 via-cyan-50/50 to-blue-100/60 dark:from-blue-950/30 dark:via-cyan-950/20 dark:to-blue-900/30",
-              "bg-gradient-to-br from-purple-50/80 via-violet-50/50 to-purple-100/60 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/30",
-              "bg-gradient-to-br from-emerald-50/80 via-teal-50/50 to-emerald-100/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-emerald-900/30",
-              "bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-orange-100/60 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-orange-900/30",
+              "bg-gradient-to-br from-[hsl(var(--info))]/10 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--info))]/15",
+              "bg-gradient-to-br from-[hsl(var(--secondary))]/10 via-[hsl(var(--secondary))]/5 to-[hsl(var(--secondary))]/15",
+              "bg-gradient-to-br from-[hsl(var(--success))]/10 via-[hsl(var(--success))]/5 to-[hsl(var(--success))]/15",
+              "bg-gradient-to-br from-[hsl(var(--warning))]/10 via-[hsl(var(--warning))]/5 to-[hsl(var(--warning))]/15",
             ];
 
             const rowGradient = colorSchemes[index % 4];
@@ -156,11 +156,11 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
             return (
               <tr
                 key={node.nodeId}
-                className={`${rowGradient} hover:brightness-95 dark:hover:brightness-110 transition-all`}
+                className={`${rowGradient} hover:opacity-90 transition-all`}
               >
                 <td className="px-4 py-4">
                   <div className="flex items-center justify-center h-full">
-                    <div className="flex items-center gap-2.5 text-slate-900 dark:text-slate-100">
+                    <div className="flex items-center gap-2.5 text-foreground">
                       {node.country && (
                         <CountryFlagSvg country={node.country} className="w-6 h-6" />
                       )}
@@ -168,7 +168,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                         <div className="font-semibold truncate max-w-[200px]">
                           {node.nodeName}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Globe className="h-3 w-3" />
                           {node.city ? `${node.city}, ${node.country}` : node.country}
                         </p>
@@ -183,8 +183,8 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     return (
                       <td
                         key={col.key}
-                        className={`px-4 py-4 text-center text-xs text-slate-400 transition-all ${
-                          isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                        className={`px-4 py-4 text-center text-xs text-muted-foreground transition-all ${
+                          isSelected ? "bg-[hsl(var(--info))]/10" : ""
                         }`}
                       >
                         —
@@ -202,7 +202,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     <td
                       key={col.key}
                       className={`px-4 py-4 transition-all ${
-                        isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                        isSelected ? "bg-[hsl(var(--info))]/10" : ""
                       }`}
                     >
                       <div className="flex flex-col gap-1 items-center">
@@ -214,7 +214,7 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                         {/* 第二行：区域信息 */}
                         {STATUS_WITH_DETAILS.has(serviceResult.status) &&
                           serviceResult.region && (
-                            <div className="text-xs text-slate-600 dark:text-slate-400">
+                            <div className="text-xs text-muted-foreground">
                               {serviceResult.region.toUpperCase()}
                             </div>
                           )}
@@ -233,11 +233,11 @@ export const StreamingNodeTable: React.FC<StreamingNodeTableProps> = ({
                     </td>
                   );
                 })}
-                <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
+                <td className="px-4 py-4 text-sm text-muted-foreground">
                   <div className="flex items-center justify-center h-full">
                     <div className="flex flex-col gap-1 items-center">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-slate-400" />
+                        <Clock className="h-4 w-4 text-muted-foreground" />
                         <span>{relativeTime}</span>
                       </div>
                       {isExpired && (

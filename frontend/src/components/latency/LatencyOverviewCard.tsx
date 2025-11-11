@@ -53,27 +53,27 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
     if (average < 50)
       return {
         color: "text-green-600",
-        bg: "bg-green-100 dark:bg-green-900/20",
+        bg: "bg-[hsl(var(--success))]/10",
         level: "优秀",
         icon: <TrendingDown className="h-4 w-4" />,
       };
     if (average < 100)
       return {
         color: "text-yellow-600",
-        bg: "bg-yellow-100 dark:bg-yellow-900/20",
+        bg: "bg-[hsl(var(--warning))]/10",
         level: "良好",
         icon: <Activity className="h-4 w-4" />,
       };
     if (average < 200)
       return {
         color: "text-orange-600",
-        bg: "bg-orange-100 dark:bg-orange-900/20",
+        bg: "bg-[hsl(var(--warning))]/10",
         level: "一般",
         icon: <TrendingUp className="h-4 w-4" />,
       };
     return {
       color: "text-red-600",
-      bg: "bg-red-100 dark:bg-red-900/20",
+      bg: "bg-[hsl(var(--error))]/10",
       level: "需要关注",
       icon: <TrendingUp className="h-4 w-4" />,
     };
@@ -88,10 +88,10 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             <Wifi className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground">
               连通性概览
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               到您的延迟统计
             </p>
           </div>
@@ -134,8 +134,8 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
 
       {/* 错误状态 */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          <div className="flex items-center space-x-2 text-red-700 dark:text-red-300">
+        <div className="mb-4 p-3 bg-[hsl(var(--error))]/10 rounded-lg border border-[hsl(var(--error))]/20">
+          <div className="flex items-center space-x-2 text-[hsl(var(--error))]">
             <Activity className="h-4 w-4" />
             <span className="text-sm">{error}</span>
           </div>
@@ -146,14 +146,14 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
       {isTestingInProgress && progress.total > 0 && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-muted-foreground">
               测试进度: {progress.completed} / {progress.total}
             </span>
             <span className="text-sm font-medium text-primary">
               {progress.percentage}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-muted rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress.percentage}%` }}
@@ -168,10 +168,10 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
           {/* 主要指标 */}
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+              <div className="text-2xl font-bold text-foreground mb-1">
                 {stats.average}ms
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 平均延迟
               </div>
               {stats.average > 0 && (
@@ -190,7 +190,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               <div className="text-lg font-semibold text-green-600 mb-1">
                 {stats.min}ms
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 最佳延迟
               </div>
             </div>
@@ -199,7 +199,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
               <div className="text-lg font-semibold text-red-600 mb-1">
                 {stats.max}ms
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 最高延迟
               </div>
             </div>
@@ -208,10 +208,10 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
           {/* 延迟分布 */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-foreground">
                 延迟分布
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {stats.tested} / {stats.total} 个节点
               </span>
             </div>
@@ -219,10 +219,10 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             <div className="grid grid-cols-5 gap-2">
               {stats.distribution.map((dist, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="text-sm font-medium text-foreground">
                     {dist.count}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-muted-foreground">
                     {dist.range}
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             <div>
               <div className="flex items-center space-x-2 mb-2">
                 <Globe className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm font-medium text-foreground">
                   最佳节点
                 </span>
               </div>
@@ -250,10 +250,10 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                       <span className="w-4 h-4 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">
                         {index + 1}
                       </span>
-                      <span className="text-gray-700 dark:text-gray-300">
+                      <span className="text-foreground">
                         {node.nodeName}
                       </span>
-                      <span className="text-gray-500 dark:text-gray-500 text-xs flex items-center space-x-1">
+                      <span className="text-muted-foreground text-xs flex items-center space-x-1">
                         <CountryFlagSvg country={node.country} size={14} />
                         <span>
                           {node.location || `${node.city}, ${node.country}`}
@@ -270,8 +270,8 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
           )}
 
           {/* 最后更新时间 */}
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="pt-2 border-t border-border">
+            <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
               <span>最后更新: {formatLastUpdate(lastUpdated)}</span>
             </div>
@@ -280,13 +280,13 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
       ) : (
         // 空状态
         <div className="text-center py-8">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Wifi className="h-8 w-8 text-gray-400" />
           </div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <h4 className="text-lg font-medium text-foreground mb-2">
             尚未进行延迟测试
           </h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             开始测试以查看您到各个节点的连通性情况
           </p>
         </div>

@@ -15,9 +15,11 @@ const badgeVariants = cva(
           "border-transparent bg-red-500 dark:bg-red-600 text-white dark:text-gray-50 hover:bg-red-600 dark:hover:bg-red-700",
         outline: "text-foreground border-gray-300 dark:border-gray-600",
         success:
-          "border-transparent bg-green-500 dark:bg-green-600 text-white dark:text-gray-50 hover:bg-green-600 dark:hover:bg-green-700",
+          "border-transparent bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] hover:bg-[hsl(var(--success))]/80",
         warning:
-          "border-transparent bg-yellow-500 dark:bg-yellow-600 text-white dark:text-gray-50 hover:bg-yellow-600 dark:hover:bg-yellow-700",
+          "border-transparent bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] hover:bg-[hsl(var(--warning))]/80",
+        info:
+          "border-transparent bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))] hover:bg-[hsl(var(--info))]/80",
       },
     },
     defaultVariants: {

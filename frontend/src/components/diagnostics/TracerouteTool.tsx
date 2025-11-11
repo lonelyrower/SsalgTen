@@ -117,15 +117,15 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
     <GlassCard variant="purple">
       <div className="space-y-4 text-left">
         {/* 标题 */}
-        <div className="flex items-center gap-2 pb-3 border-b border-purple-200/30 dark:border-purple-700/30">
-          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 ">
-            <Route className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+        <div className="flex items-center gap-2 pb-3 border-b border-primary/30">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Route className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-foreground">
               Traceroute
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               追踪数据包的路由路径
             </p>
           </div>
@@ -133,7 +133,7 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
 
         {/* 快捷目标 */}
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+          <label className="text-xs text-muted-foreground mb-2 block">
             快捷目标
           </label>
           <div className="flex flex-wrap gap-2">
@@ -155,8 +155,8 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
         {/* 输入区域 */}
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
-              目标地址 <span className="text-red-500">*</span>
+            <label className="text-xs text-muted-foreground mb-2 block">
+              目标地址 <span className="text-[hsl(var(--error))]">*</span>
             </label>
             <input
               type="text"
@@ -164,19 +164,19 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: google.com)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm surface-base text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
           <div>
-            <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+            <label className="text-xs text-muted-foreground mb-2 block">
               最大跳数
             </label>
             <select
               value={maxHops}
               onChange={(e) => setMaxHops(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600  text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm surface-base text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value={15}>15 跳</option>
               <option value={30}>30 跳 (默认)</option>
@@ -190,7 +190,7 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
         <Button
           onClick={runTraceroute}
           disabled={loading || !target.trim()}
-          className="w-full bg-purple-600 hover:bg-purple-500 text-white"
+          className="w-full bg-primary hover:bg-primary/90 text-white"
         >
           {loading ? (
             <>
@@ -206,16 +206,16 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
         </Button>
 
         {/* 提示信息 */}
-        <div className="p-3 bg-purple-50/50 dark:bg-purple-900/10  border border-purple-200/30 dark:border-purple-700/30">
-          <p className="text-xs text-gray-600 dark:text-gray-400">
+        <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <p className="text-xs text-muted-foreground">
             <strong>提示：</strong>Traceroute 可能需要 30-60 秒完成，请耐心等待
           </p>
         </div>
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="p-3 bg-[hsl(var(--error))]/10 border border-[hsl(var(--error))]/30 rounded-lg">
+            <p className="text-sm text-[hsl(var(--error))]">{error}</p>
           </div>
         )}
 
@@ -228,7 +228,7 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
               </Badge>
               <button
                 onClick={copyResult}
-                className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:underline"
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
               >
                 {copied ? (
                   <>
@@ -245,21 +245,21 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20  border border-purple-200/50 dark:border-purple-700/50">
-                <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
-                  <Activity className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
+                  <Activity className="h-4 w-4 text-primary" />
                   跳数
                 </div>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                <p className="text-xl font-semibold text-foreground">
                   {result.totalHops ?? hopRows.length}
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20  border border-purple-200/50 dark:border-purple-700/50">
-                <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
-                  <Activity className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
+                  <Activity className="h-4 w-4 text-primary" />
                   耗时
                 </div>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                <p className="text-xl font-semibold text-foreground">
                   {typeof result.duration === "number"
                     ? `${(result.duration / 1000).toFixed(2)} 秒`
                     : "N/A"}
@@ -267,9 +267,9 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
               </div>
             </div>
 
-            <div className="overflow-x-auto  border border-purple-200/30 dark:border-purple-700/30">
-              <table className="min-w-full divide-y divide-purple-200/30 dark:divide-purple-800/30 text-xs">
-                <thead className="bg-purple-50/60 dark:bg-purple-900/20 text-gray-600 dark:text-gray-300">
+            <div className="overflow-x-auto rounded-lg border border-primary/20">
+              <table className="min-w-full divide-y divide-border text-xs">
+                <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">跳数</th>
                     <th className="px-3 py-2 text-left font-medium">节点</th>
@@ -278,16 +278,16 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
                     <th className="px-3 py-2 text-left font-medium">RTT #3</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-purple-100 dark:divide-purple-900/30">
+                <tbody className="divide-y divide-border">
                   {hopRows.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={5} className="px-3 py-4 text-center text-muted-foreground">
                         未获取到有效的路由跳数
                       </td>
                     </tr>
                   ) : (
                     hopRows.map((row) => (
-                      <tr key={row.hop} className="text-gray-700 dark:text-gray-200">
+                      <tr key={row.hop} className="text-foreground">
                         <td className="px-3 py-2 font-mono">{row.hop}</td>
                         <td className="px-3 py-2 break-all">{row.address}</td>
                         <td className="px-3 py-2">{formatLatency(row.rtt1)}</td>
@@ -300,18 +300,18 @@ export const TracerouteTool: React.FC<TracerouteToolProps> = ({ nodeId }) => {
               </table>
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div className="text-xs text-muted-foreground space-y-1">
               {result.target && <p>目标：{result.target}</p>}
               {result.executedAt && <p>执行节点：{result.executedAt}</p>}
             </div>
 
             {result.output && (
               <details className="mt-2">
-                <summary className="cursor-pointer text-xs text-purple-600 dark:text-purple-400 hover:underline">
+                <summary className="cursor-pointer text-xs text-primary hover:underline">
                   查看原始输出
                 </summary>
-                <div className="mt-2 p-3 bg-purple-50/50 dark:bg-purple-900/10  border border-purple-200/30 dark:border-purple-700/30 max-h-60 overflow-y-auto">
-                  <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                <div className="mt-2 p-3 bg-primary/5 rounded-lg border border-primary/20 max-h-60 overflow-y-auto">
+                  <pre className="text-xs font-mono whitespace-pre-wrap text-foreground">
                     {result.output}
                   </pre>
                 </div>

@@ -103,8 +103,7 @@ export const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   return (
     <div
       ref={contentRef}
-      className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-[var(--shadow-lg)] max-h-60 overflow-auto"
-      style={{ borderRadius: 'var(--radius-md)' }}
+      className="absolute z-50 mt-1 w-full surface-elevated border border-border rounded-lg shadow-lg max-h-60 overflow-auto"
     >
       {children}
     </div>
@@ -128,8 +127,8 @@ export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
     <button
       type="button"
       onClick={handleClick}
-      className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-        isSelected ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-medium" : ""
+      className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
+        isSelected ? "bg-blue-50 text-blue-600 font-medium" : ""
       }`}
     >
       {children}
