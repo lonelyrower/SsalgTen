@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { logger } from "@/utils/logger";
 import { apiService, type SystemOverviewData } from "@/services/api";
-import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/hooks/useNotification";
 import {

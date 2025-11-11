@@ -3,15 +3,19 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+type StyleVariant = "default" | "subtle" | "strong" | "tech" | "gradient";
+type ColorVariant = "success" | "warning" | "danger" | "info" | "purple" | "orange";
+type Variant = StyleVariant | ColorVariant;
+
 interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: "base" | "tech" | "stats" | "content" | "success" | "warning" | "danger" | "info";
-  size?: "sm" | "md" | "lg" | "xl";
+  variant?: Variant;
   animated?: boolean;
   glow?: boolean;
-  interactive?: boolean;
-  motionEnabled?: boolean;
+  hoverTransform?: boolean;
+  hover?: boolean; // Alias for animated (backward compatibility)
+  motion?: boolean; // Enable framer-motion animations
 }
 
 /**
@@ -49,10 +53,15 @@ export const GlassCard = memo(
     size = "lg",
     animated = true,
     glow = false,
-    interactive = false,
-    motionEnabled = false,
+    hoverTransform = true,
+    hover,
+    motion: enableMotion = false,
   }: GlassCardProps) => {
-    const variants = {
+    // Backward compatibility: hover prop maps to animated
+    const isAnimated = animated || (hover !== undefined ? hover : false);
+
+    // Style variants (original ui/GlassCard)
+    const styleVariants: Record<StyleVariant, string> = {
       // 默认：轻量模糊（桌面10px，移动禁用）
       default: "glass border-white/20",
 
@@ -72,20 +81,65 @@ export const GlassCard = memo(
         "bg-gradient-to-br from-[hsl(var(--surface-elevated))]/95 via-[hsl(var(--brand-cyan))]/5 to-[hsl(var(--brand-blue))]/10 border-white/20 lg:from-[hsl(var(--surface-elevated))]/80 lg:backdrop-blur-[12px]",
     };
 
-    const config = variantConfig[variant];
-
-    // 内边距大小映射
-    const paddingClasses = {
-      sm: "p-4",
-      md: "p-5",
-      lg: "p-6",
-      xl: "p-8",
+    // Color variants (from admin/GlassCard)
+    const colorVariants: Record<ColorVariant, {
+      border: string;
+      bg: string;
+      glow: string;
+      glowCircle: string;
+    }> = {
+      success: {
+        border: "border-green-200/60 dark:border-green-700/60",
+        bg: "from-green-50 via-white to-emerald-50 dark:from-slate-800 dark:via-green-950/60 dark:to-emerald-950/60",
+        glow: "from-green-400/15 via-transparent to-emerald-500/15",
+        glowCircle: "bg-green-400/20",
+      },
+      warning: {
+        border: "border-yellow-200/60 dark:border-yellow-700/60",
+        bg: "from-yellow-50 via-white to-amber-50 dark:from-slate-800 dark:via-yellow-950/60 dark:to-amber-950/60",
+        glow: "from-yellow-400/15 via-transparent to-amber-500/15",
+        glowCircle: "bg-yellow-400/20",
+      },
+      danger: {
+        border: "border-red-200/60 dark:border-red-700/60",
+        bg: "from-red-50 via-white to-rose-50 dark:from-slate-800 dark:via-red-950/60 dark:to-rose-950/60",
+        glow: "from-red-400/15 via-transparent to-rose-500/15",
+        glowCircle: "bg-red-400/20",
+      },
+      info: {
+        border: "border-cyan-200/60 dark:border-cyan-700/60",
+        bg: "from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60",
+        glow: "from-cyan-400/15 via-transparent to-blue-500/15",
+        glowCircle: "bg-cyan-400/20",
+      },
+      purple: {
+        border: "border-purple-200/60 dark:border-purple-700/60",
+        bg: "from-purple-50 via-white to-violet-50 dark:from-slate-800 dark:via-purple-950/60 dark:to-violet-950/60",
+        glow: "from-purple-400/15 via-transparent to-violet-500/15",
+        glowCircle: "bg-purple-400/20",
+      },
+      orange: {
+        border: "border-orange-200/60 dark:border-orange-700/60",
+        bg: "from-orange-50 via-white to-amber-50 dark:from-slate-800 dark:via-orange-950/60 dark:to-amber-950/60",
+        glow: "from-orange-400/15 via-transparent to-amber-500/15",
+        glowCircle: "bg-orange-400/20",
+      },
     };
 
-    // 动画类
-    const animationClass = animated
-      ? "transition-all duration-300 ease-out hover:-translate-y-1"
-      : "";
+    const isColorVariant = (v: Variant): v is ColorVariant => {
+      return ['success', 'warning', 'danger', 'info', 'purple', 'orange'].includes(v);
+    };
+
+    const isStyleVariant = (v: Variant): v is StyleVariant => {
+      return ['default', 'subtle', 'strong', 'tech', 'gradient'].includes(v);
+    };
+
+    // Animation classes
+    const animationClass = isAnimated
+      ? hoverTransform
+        ? "transition-transform duration-500 hover:transform hover:scale-[1.02] hover:-translate-y-1 card-3d"
+        : "transition-shadow duration-500 hover:shadow-xl"
+      : "transition-colors duration-300";
 
     // 交互式卡片
     const interactiveClass = interactive
@@ -97,16 +151,71 @@ export const GlassCard = memo(
       ? "shadow-[0_0_30px_hsl(var(--card-accent-from)/0.3)]"
       : "";
 
-    const cardContent = (
-      <>
-        {/* 悬停光晕效果 */}
-        {animated && (
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br rounded-[var(--radius-lg)]",
-              config.glowColor
+    // Build className based on variant type
+    let variantClasses = "";
+    let colorConfig: typeof colorVariants[ColorVariant] | null = null;
+
+    if (isStyleVariant(variant)) {
+      variantClasses = styleVariants[variant];
+    } else if (isColorVariant(variant)) {
+      colorConfig = colorVariants[variant];
+      variantClasses = cn(
+        "rounded-2xl border-2 p-6 overflow-hidden",
+        "bg-gradient-to-br shadow-lg transition-all duration-300",
+        colorConfig.border,
+        colorConfig.bg,
+        isAnimated && "group hover:-translate-y-0.5 hover:shadow-xl"
+      );
+    }
+
+    // Use motion or regular Card
+    const Wrapper = enableMotion ? motion.div : Card;
+    const motionProps = enableMotion
+      ? {
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.3 },
+        }
+      : {};
+
+    return (
+      <Wrapper
+        className={cn(
+          variantClasses,
+          glowClass,
+          animationClass,
+          "relative overflow-hidden",
+          className
+        )}
+        {...motionProps}
+      >
+        {/* Color variant decorations */}
+        {colorConfig && (
+          <>
+            {/* Glow effect on hover */}
+            {isAnimated && (
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                  "bg-gradient-to-br rounded-2xl",
+                  colorConfig.glow
+                )}
+              />
             )}
-          />
+
+            {/* Decorative glow circle */}
+            <div
+              className={cn(
+                "absolute -top-12 -right-14 h-28 w-28 rounded-full blur-3xl",
+                colorConfig.glowCircle
+              )}
+            />
+          </>
+        )}
+
+        {/* 顶部装饰线 (style variants) */}
+        {(variant === "tech" || variant === "gradient") && (
+          <div className="absolute top-0 left-0 right-0 h-px bg-primary/30" />
         )}
 
         {/* 装饰性光点 */}
@@ -122,36 +231,16 @@ export const GlassCard = memo(
       </>
     );
 
-    const baseClasses = cn(
-      config.className,
-      paddingClasses[size],
-      animationClass,
-      interactiveClass,
-      glowClass,
-      "relative overflow-hidden group",
-      className
+        {/* 科技感背景效果 (style variants) */}
+        {variant === "tech" && (
+          <>
+            <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 pointer-events-none" />
+          </>
+        )}
+      </Wrapper>
     );
-
-    // 使用 framer-motion 或普通 Card
-    if (motionEnabled) {
-      return (
-        <motion.div
-          className={baseClasses}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {cardContent}
-        </motion.div>
-      );
-    }
-
-    return (
-      <Card className={baseClasses}>
-        {cardContent}
-      </Card>
-    );
-  },
+  }
 );
 
 GlassCard.displayName = "GlassCard";

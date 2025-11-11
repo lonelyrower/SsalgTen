@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { logger } from "@/utils/logger";
-import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { apiService } from "@/services/api";
