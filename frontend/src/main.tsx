@@ -1,5 +1,7 @@
 import { StrictMode } from "react";
+import { logger } from "@/utils/logger";
 import { createRoot } from "react-dom/client";
+import { logger } from "@/utils/logger";
 import "./index.css";
 import App from "./App.tsx";
 import { loadMapConfig } from "./utils/configLoader";
@@ -8,7 +10,7 @@ import { loadMapConfig } from "./utils/configLoader";
 declare const __BUILD_TIME__: string;
 
 // Log build information
-console.info(
+logger.info(
   `%c🚀 SsalgTen Frontend %c\n` +
     `%cBuild Time: ${__BUILD_TIME__}\n` +
     `%cIf you see old content, please: %c\n` +
@@ -31,12 +33,12 @@ window.addEventListener("unhandledrejection", (event) => {
       "listener indicated an asynchronous response",
     )
   ) {
-    console.warn("Browser extension related error suppressed:", event.reason);
+    logger.warn("Browser extension related error suppressed:", event.reason);
     event.preventDefault();
     return;
   }
   // Log other errors for debugging
-  console.error("Unhandled promise rejection:", event.reason);
+  logger.error("Unhandled promise rejection:", event.reason);
 });
 
 // Handle runtime errors
@@ -46,7 +48,7 @@ window.addEventListener("error", (event) => {
     event.message?.includes("Extension") ||
     event.filename?.includes("extension")
   ) {
-    console.warn("Browser extension error suppressed:", event.message);
+    logger.warn("Browser extension error suppressed:", event.message);
     event.preventDefault();
     return;
   }
@@ -62,7 +64,7 @@ loadMapConfig()
     );
   })
   .catch((error) => {
-    console.error("Failed to initialize app:", error);
+    logger.error("Failed to initialize app:", error);
     // 即使加载失败也要渲染应用
     createRoot(document.getElementById("root")!).render(
       <StrictMode>

@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { Header } from "@/components/layout/Header";
+import { logger } from "@/utils/logger";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { MapSection } from "@/components/home/MapSection";
@@ -35,7 +37,7 @@ export const HomePage = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isInitialLoad && nodes.length === 0) {
-        console.warn("Data loading timeout, showing page anyway");
+        logger.warn("Data loading timeout, showing page anyway");
         setIsInitialLoad(false);
         setLoadTimeout(true);
       }

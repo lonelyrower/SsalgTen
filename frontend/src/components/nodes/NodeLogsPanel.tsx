@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, RefreshCw, Calendar, AlertCircle, Info, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from '@/components/ui/GlassCard';
 import { apiService } from "@/services/api";
 import type { NodeData } from "@/services/api";
 
@@ -64,7 +64,7 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
+        className="bg-white dark:bg-gray-800  shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}

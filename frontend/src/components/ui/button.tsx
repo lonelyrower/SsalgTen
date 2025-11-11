@@ -4,31 +4,31 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation cursor-pointer transform active:scale-95 hover:-translate-y-0.5",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation cursor-pointer transform active:scale-95 hover:-translate-y-0.5",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-lg",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-lg",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)]",
         outline:
-          "border-2 border-primary/30 text-primary bg-background hover:bg-primary/10 hover:border-primary hover:shadow-md active:border-primary/70",
+          "border-2 border-primary/30 text-primary bg-background hover:bg-primary/10 hover:border-primary hover:shadow-[var(--shadow-md)] active:border-primary/70",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-lg",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)]",
         ghost:
           "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
         link: "text-primary underline-offset-4 hover:underline active:text-primary/80",
         success:
-          "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-lg dark:bg-emerald-600 dark:hover:bg-emerald-700",
+          "bg-emerald-600 text-white hover:bg-emerald-700 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:text-gray-50",
         warning:
-          "bg-orange-600 text-white hover:bg-orange-700 shadow-sm hover:shadow-lg dark:bg-orange-600 dark:hover:bg-orange-700",
-        info: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-lg dark:bg-blue-600 dark:hover:bg-blue-700",
+          "bg-orange-600 text-white hover:bg-orange-700 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] dark:bg-orange-500 dark:hover:bg-orange-600 dark:text-gray-50",
+        info: "bg-blue-600 text-white hover:bg-blue-700 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-gray-50",
       },
       size: {
         default: "h-11 px-4 py-2 min-h-[44px]",
-        sm: "h-10 rounded-md px-3 min-h-[44px]",
-        lg: "h-12 rounded-md px-8 min-h-[48px]",
+        sm: "h-10 px-3 min-h-[44px]",
+        lg: "h-12 px-8 min-h-[48px]",
         icon: "h-11 w-11 min-h-[44px] min-w-[44px]",
       },
     },
@@ -46,11 +46,12 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
+        style={{ borderRadius: 'var(--radius-sm)', ...style }}
         ref={ref}
         {...props}
       />

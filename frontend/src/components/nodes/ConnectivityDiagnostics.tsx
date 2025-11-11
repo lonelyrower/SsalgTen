@@ -29,7 +29,7 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
 
   return (
     <div
-      className={`rounded-lg border p-4 mb-6 ${healthy ? "border-green-200 bg-green-50 dark:bg-green-900/20" : "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20"}`}
+      className={`border p-4 mb-6 ${healthy ? "border-green-200 bg-green-50 dark:bg-green-900/20" : "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20"}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">

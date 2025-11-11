@@ -51,7 +51,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
           <div className="relative">
             <div className="absolute top-0 left-0">
               <div className="relative">
-                <div className="p-2 bg-primary/15 rounded-xl border border-white/10">
+                <div className="p-2 bg-primary/15  border border-white/10">
                   <Activity className="h-5 w-5 text-primary" />
                 </div>
                 {node.status === "online" && (
@@ -79,7 +79,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
 
           <div className="mt-4 space-y-3 text-sm">
             <div className="grid grid-cols-1 gap-3">
-              <div className="glass rounded-lg border border-white/10 px-4 py-3 text-center">
+              <div className="glass  border border-white/10 px-4 py-3 text-center">
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   地理位置
@@ -92,7 +92,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
                 </div>
               </div>
 
-              <div className="glass rounded-lg border border-white/10 px-4 py-3 text-center">
+              <div className="glass  border border-white/10 px-4 py-3 text-center">
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <Server className="h-4 w-4" />
                   服务提供商
@@ -103,12 +103,12 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="glass rounded-lg border border-white/10 px-4 py-3 text-center">
+                <div className="glass  border border-white/10 px-4 py-3 text-center">
                   <div className="text-xs text-muted-foreground">运行状态</div>
                   <div className="mt-2 flex justify-center">
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold",
+                        "inline-flex items-center  px-2.5 py-1 text-xs font-semibold",
                         node.status === "online"
                           ? "status-badge-online"
                           : "status-badge-offline",
@@ -119,7 +119,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
                   </div>
                 </div>
                 {lastSeen && (
-                  <div className="glass rounded-lg border border-white/10 px-4 py-3 text-center">
+                  <div className="glass  border border-white/10 px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-4 w-4" />
                       最后在线
@@ -136,7 +136,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
               (node.ipv4 || (node.ipv6 && node.ipv6.includes(":"))) && (
                 <div className="grid grid-cols-1 gap-3">
                   {node.ipv4 && (
-                    <div className="glass rounded-lg border border-white/10 px-4 py-3 text-center">
+                    <div className="glass  border border-white/10 px-4 py-3 text-center">
                       <div className="text-xs text-muted-foreground">
                         IPv4 地址
                       </div>
@@ -146,7 +146,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
                     </div>
                   )}
                   {node.ipv6 && node.ipv6.includes(":") && (
-                    <div className="glass rounded-lg border border-white/10 px-4 py-3 text-center">
+                    <div className="glass  border border-white/10 px-4 py-3 text-center">
                       <div className="text-xs text-muted-foreground">
                         IPv6 地址
                       </div>

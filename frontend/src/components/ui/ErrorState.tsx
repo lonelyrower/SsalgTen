@@ -23,33 +23,33 @@ interface ErrorStateProps {
 const errorConfig = {
   error: {
     icon: AlertTriangle,
-    color: "text-red-500 dark:text-red-400",
-    bgColor: "bg-red-50 dark:bg-red-900/20",
-    borderColor: "border-red-200 dark:border-red-800",
+    color: "text-red-500 dark:text-red-300",
+    bgColor: "bg-red-50 dark:bg-red-900/30",
+    borderColor: "border-red-200 dark:border-red-600/50",
     defaultTitle: "出现错误",
     defaultMessage: "抱歉，发生了意外错误。",
   },
   network: {
     icon: WifiOff,
-    color: "text-orange-500 dark:text-orange-400",
-    bgColor: "bg-orange-50 dark:bg-orange-900/20",
-    borderColor: "border-orange-200 dark:border-orange-800",
+    color: "text-orange-500 dark:text-orange-300",
+    bgColor: "bg-orange-50 dark:bg-orange-900/30",
+    borderColor: "border-orange-200 dark:border-orange-600/50",
     defaultTitle: "网络连接失败",
     defaultMessage: "请检查网络连接并重试。",
   },
   "not-found": {
     icon: AlertCircle,
-    color: "text-gray-500 dark:text-gray-400",
-    bgColor: "bg-gray-50 dark:bg-gray-800",
-    borderColor: "border-gray-200 dark:border-gray-700",
+    color: "text-gray-500 dark:text-gray-300",
+    bgColor: "bg-gray-50 dark:bg-gray-800/50",
+    borderColor: "border-gray-200 dark:border-gray-600/50",
     defaultTitle: "页面未找到",
     defaultMessage: "抱歉，您访问的页面不存在。",
   },
   "access-denied": {
     icon: AlertTriangle,
-    color: "text-yellow-500 dark:text-yellow-400",
-    bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
-    borderColor: "border-yellow-200 dark:border-yellow-800",
+    color: "text-yellow-500 dark:text-yellow-300",
+    bgColor: "bg-yellow-50 dark:bg-yellow-900/30",
+    borderColor: "border-yellow-200 dark:border-yellow-600/50",
     defaultTitle: "访问被拒绝",
     defaultMessage: "您没有权限访问此资源。",
   },
@@ -105,16 +105,17 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     <div className={`flex items-center justify-center min-h-64 ${className}`}>
       <div
         className={`
-        max-w-md w-full text-center rounded-2xl border shadow-lg
+        max-w-md w-full text-center border shadow-[var(--shadow-lg)]
         ${config.bgColor} ${config.borderColor} ${sizeStyles.container}
       `}
+        style={{ borderRadius: 'var(--radius-2xl)' }}
       >
         {/* 图标装饰 */}
         <div className="relative mb-6">
           <div
             className={`
             absolute inset-0 rounded-full opacity-20 blur-xl
-            ${config.bgColor.replace("50", "200").replace("900/20", "600/40")}
+            ${config.bgColor.replace("50", "200").replace("900/30", "600/40")}
           `}
           ></div>
           <div className="relative">
@@ -145,8 +146,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               size="sm"
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
-                
-                shadow-lg hover:shadow-xl transform hover:scale-105
+                shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transform hover:scale-105
               `}
             >
               <RefreshCw className="h-4 w-4 text-primary" />
@@ -161,8 +161,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               size="sm"
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
-                border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300
-                hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200
+                border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200
+                hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200
               `}
             >
               <Home className="h-4 w-4" />

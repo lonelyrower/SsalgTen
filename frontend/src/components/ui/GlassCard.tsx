@@ -1,79 +1,173 @@
 import React, { memo } from "react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: "default" | "subtle" | "strong" | "tech" | "gradient";
+  variant?: "base" | "tech" | "stats" | "content" | "success" | "warning" | "danger" | "info";
+  size?: "sm" | "md" | "lg" | "xl";
   animated?: boolean;
   glow?: boolean;
-  hoverTransform?: boolean;
+  interactive?: boolean;
+  motionEnabled?: boolean;
 }
 
+/**
+ * 统一的卡片组件 - 基于设计系统令牌
+ *
+ * @param variant - 卡片变体
+ *   布局类型：
+ *   - base: 基础白色卡片
+ *   - tech: 科技感蓝色渐变卡片
+ *   - stats: 统计卡片（适合数据展示）
+ *   - content: 内容卡片（适合长文本）
+ *
+ *   状态类型（统一蓝色系）：
+ *   - success: 成功状态（蓝绿渐变）
+ *   - warning: 警告状态（蓝黄渐变）
+ *   - danger: 危险状态（蓝红渐变）
+ *   - info: 信息状态（纯蓝渐变）
+ *
+ * @param size - 内边距大小
+ *   - sm: 16px (紧凑)
+ *   - md: 20px (标准)
+ *   - lg: 24px (宽松)
+ *   - xl: 32px (超大)
+ *
+ * @param animated - 是否启用悬停动画
+ * @param glow - 是否添加发光效果
+ * @param interactive - 是否为交互式卡片（点击时缩放）
+ * @param motionEnabled - 是否启用 framer-motion 入场动画
+ */
 export const GlassCard = memo(
   ({
     children,
     className = "",
-    variant = "default",
-    animated = false,
+    variant = "base",
+    size = "lg",
+    animated = true,
     glow = false,
-    hoverTransform = true,
+    interactive = false,
+    motionEnabled = false,
   }: GlassCardProps) => {
-    const variants = {
-      // 默认：轻量模糊（桌面10px，移动禁用）
-      default: "glass border-white/20 dark:border-white/10",
+    // 变体样式配置 - 统一使用蓝色科技风
+    const variantConfig = {
+      // 布局类型
+      base: {
+        className: "card-base",
+        glowColor: "from-cyan-400/10 to-blue-500/10",
+      },
+      tech: {
+        className: "tech-card",
+        glowColor: "from-cyan-400/10 to-blue-500/10",
+      },
+      stats: {
+        className: "stats-card",
+        glowColor: "from-sky-400/10 to-blue-500/10",
+      },
+      content: {
+        className: "content-card",
+        glowColor: "from-cyan-400/10 to-blue-500/10",
+      },
 
-      // 微妙：移动优先，无模糊
-      subtle:
-        "bg-white/90 dark:bg-gray-900/90 border-white/10 dark:border-white/5 lg:bg-white/70 lg:dark:bg-gray-900/70 lg:backdrop-blur-[8px]",
-
-      // 强烈：仅桌面使用模糊，移动使用高不透明度
-      strong:
-        "bg-white/95 dark:bg-gray-900/95 border-white/30 dark:border-white/20 lg:bg-white/80 lg:dark:bg-gray-900/80 lg:backdrop-blur-[12px]",
-
-      // 科技：响应式模糊
-      tech: "tech-card border-primary/20",
-
-      // 渐变：桌面模糊，移动纯色 - 纯蓝科技风
-      gradient:
-        "bg-gradient-to-br from-white/95 via-cyan-50/50 to-blue-50/85 dark:from-gray-900/95 dark:via-blue-950/30 dark:to-cyan-950/30 border-white/20 dark:border-cyan-500/10 lg:from-white/80 lg:via-cyan-50/40 lg:to-blue-50/65 lg:dark:from-gray-900/80 lg:backdrop-blur-[12px]",
+      // 状态类型 - 统一蓝色系
+      success: {
+        className: "border-[var(--border-width-thin)] border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
+        glowColor: "from-cyan-400/15 to-blue-500/15",
+      },
+      warning: {
+        className: "border-[var(--border-width-thin)] border-sky-200/60 dark:border-sky-700/60 bg-gradient-to-br from-sky-50 via-white to-cyan-50 dark:from-slate-800 dark:via-sky-950/60 dark:to-cyan-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
+        glowColor: "from-sky-400/15 to-cyan-500/15",
+      },
+      danger: {
+        className: "border-[var(--border-width-thin)] border-blue-200/60 dark:border-blue-700/60 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-800 dark:via-blue-950/60 dark:to-indigo-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
+        glowColor: "from-blue-400/15 to-indigo-500/15",
+      },
+      info: {
+        className: "border-[var(--border-width-thin)] border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-sky-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-sky-950/60 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]",
+        glowColor: "from-cyan-400/15 to-sky-500/15",
+      },
     };
 
+    const config = variantConfig[variant];
+
+    // 内边距大小映射
+    const paddingClasses = {
+      sm: "p-4",
+      md: "p-5",
+      lg: "p-6",
+      xl: "p-8",
+    };
+
+    // 动画类
     const animationClass = animated
-      ? hoverTransform
-        ? "transition-transform duration-500 hover:transform hover:scale-[1.02] hover:-translate-y-1 card-3d"
-        : "transition-shadow duration-500 hover:shadow-xl"
-      : "transition-colors duration-300";
+      ? "transition-all duration-300 ease-out hover:-translate-y-1"
+      : "";
 
+    // 交互式卡片
+    const interactiveClass = interactive
+      ? "cursor-pointer active:scale-[0.98] hover:scale-[1.01]"
+      : "";
+
+    // 发光效果
     const glowClass = glow
-      ? "pulse-glow shadow-2xl shadow-[hsl(var(--primary))]/25"
-      : "shadow-lg";
+      ? "shadow-[0_0_30px_hsl(var(--card-accent-from)/0.3)]"
+      : "";
 
-    return (
-      <Card
-        className={`
-      ${variants[variant]}
-      ${glowClass}
-      ${animationClass}
-      relative overflow-hidden
-      ${className}
-    `}
-      >
-        {/* 顶部装饰线 */}
-        {(variant === "tech" || variant === "gradient") && (
-          <div className="absolute top-0 left-0 right-0 h-px bg-primary/30" />
+    const cardContent = (
+      <>
+        {/* 悬停光晕效果 */}
+        {animated && (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br rounded-[var(--radius-lg)]",
+              config.glowColor
+            )}
+          />
         )}
+
+        {/* 装饰性光点 */}
+        <div
+          className={cn(
+            "absolute -top-12 -right-12 w-32 h-32 rounded-full blur-2xl pointer-events-none",
+            `bg-gradient-to-br ${config.glowColor}`
+          )}
+        />
 
         {/* 内容区域 */}
         <div className="relative z-10">{children}</div>
+      </>
+    );
 
-        {/* 科技感背景效果 */}
-        {variant === "tech" && (
-          <>
-            <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 pointer-events-none" />
-          </>
-        )}
+    const baseClasses = cn(
+      config.className,
+      paddingClasses[size],
+      animationClass,
+      interactiveClass,
+      glowClass,
+      "relative overflow-hidden group",
+      className
+    );
+
+    // 使用 framer-motion 或普通 Card
+    if (motionEnabled) {
+      return (
+        <motion.div
+          className={baseClasses}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {cardContent}
+        </motion.div>
+      );
+    }
+
+    return (
+      <Card className={baseClasses}>
+        {cardContent}
       </Card>
     );
   },

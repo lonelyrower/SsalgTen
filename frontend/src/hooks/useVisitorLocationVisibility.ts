@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from "@/utils/logger";
 
 const STORAGE_KEY = 'visitor_location_visible';
 const STORAGE_EVENT = 'visitor_location_visibility_changed';
@@ -15,7 +16,7 @@ export function useVisitorLocationVisibility() {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored === null ? true : stored === 'true';
     } catch (error) {
-      console.warn('Failed to read visitor location visibility from localStorage', error);
+      logger.warn('Failed to read visitor location visibility from localStorage', error);
       return true;
     }
   });
@@ -45,7 +46,7 @@ export function useVisitorLocationVisibility() {
     try {
       localStorage.setItem(STORAGE_KEY, String(isVisible));
     } catch (error) {
-      console.warn('Failed to save visitor location visibility to localStorage', error);
+      logger.warn('Failed to save visitor location visibility to localStorage', error);
     }
   }, [isVisible]);
 

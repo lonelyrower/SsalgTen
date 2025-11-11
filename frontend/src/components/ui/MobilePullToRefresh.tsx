@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
+import { logger } from "@/utils/logger";
 import { RefreshCw } from "lucide-react";
 import { useMobile } from "@/hooks/useMobile";
 
@@ -74,7 +75,7 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
       try {
         await onRefresh();
       } catch (error) {
-        console.error("Refresh failed:", error);
+        logger.error("Refresh failed:", error);
       } finally {
         setIsRefreshing(false);
       }

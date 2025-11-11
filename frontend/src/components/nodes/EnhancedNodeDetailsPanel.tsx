@@ -155,9 +155,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
       <motion.div
         className={`group relative ${
           isModalLayout
-            ? "max-h-[60vh] w-full rounded-2xl p-6"
-            : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
-        } overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 flex flex-col`}
+            ? "max-h-[60vh] w-full  p-6"
+            : "sticky top-24 lg:h-[800px]  p-8 hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)]"
+        } overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-[var(--shadow-lg)] transition-all duration-300 flex flex-col`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -195,10 +195,10 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
   return (
     <motion.div
-      className={`group relative w-full overflow-y-auto overflow-x-hidden border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 flex flex-col ${
+      className={`group relative w-full overflow-y-auto overflow-x-hidden border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-[var(--shadow-lg)] transition-all duration-300 flex flex-col ${
         isModalLayout
           ? "max-h-[85vh] rounded-t-3xl p-6"
-          : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
+          : "sticky top-24 lg:h-[800px]  p-8 hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)]"
       }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -240,12 +240,12 @@ export const EnhancedNodeDetailsPanel: React.FC<
       </div>
 
       {/* Tabs */}
-      <div className="relative flex gap-2 mb-6 p-1 bg-slate-200/70 dark:bg-slate-800/50 rounded-lg">
+      <div className="relative flex gap-2 mb-6 p-1 bg-slate-200/70 dark:bg-slate-800/50 ">
         <button
           onClick={() => setActiveTab("info")}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+          className={`flex-1 px-4 py-2  text-sm font-semibold transition-colors ${
             activeTab === "info"
-              ? "bg-cyan-600 text-white shadow-md"
+              ? "bg-cyan-600 text-white shadow-[var(--shadow-md)]"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
           }`}
         >
@@ -254,9 +254,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
         </button>
         <button
           onClick={() => setActiveTab("resources")}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+          className={`flex-1 px-4 py-2  text-sm font-semibold transition-colors ${
             activeTab === "resources"
-              ? "bg-cyan-600 text-white shadow-md"
+              ? "bg-cyan-600 text-white shadow-[var(--shadow-md)]"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
           }`}
         >
@@ -522,7 +522,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             onClick={onShowDetails}
-            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-lg"
+            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-[var(--shadow-lg)]"
           >
             <Zap className="h-4 w-4 mr-2" />
             查看详情

@@ -79,7 +79,7 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
 
   return (
     <Card
-      className={`p-3 transition-all shadow-md hover:shadow-lg ${colorScheme.gradient} ${colorScheme.border}`}
+      className={`p-3 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] ${colorScheme.gradient} ${colorScheme.border}`}
     >
       <div className="space-y-2.5">
         {/* 节点信息 */}
@@ -113,7 +113,7 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
             {overview.services.map((service) => (
               <div
                 key={service.id}
-                className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:shadow-sm transition-shadow"
+                className="py-2 px-3  border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:shadow-[var(--shadow-sm)] transition-shadow"
               >
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100 text-center truncate">
                   {service.name}

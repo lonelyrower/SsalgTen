@@ -26,29 +26,29 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const colorClasses = {
     blue: {
-      bg: "bg-blue-50 dark:bg-blue-900/20",
-      icon: "text-blue-600 dark:text-blue-400",
-      accent: "border-blue-200 dark:border-blue-800",
+      bg: "bg-blue-50 dark:bg-blue-900/30",
+      icon: "text-blue-600 dark:text-blue-300",
+      accent: "border-blue-200 dark:border-blue-600/50",
     },
     green: {
-      bg: "bg-green-50 dark:bg-green-900/20",
-      icon: "text-green-600 dark:text-green-400",
-      accent: "border-green-200 dark:border-green-800",
+      bg: "bg-green-50 dark:bg-green-900/30",
+      icon: "text-green-600 dark:text-green-300",
+      accent: "border-green-200 dark:border-green-600/50",
     },
     yellow: {
-      bg: "bg-yellow-50 dark:bg-yellow-900/20",
-      icon: "text-yellow-600 dark:text-yellow-400",
-      accent: "border-yellow-200 dark:border-yellow-800",
+      bg: "bg-yellow-50 dark:bg-yellow-900/30",
+      icon: "text-yellow-600 dark:text-yellow-300",
+      accent: "border-yellow-200 dark:border-yellow-600/50",
     },
     red: {
-      bg: "bg-red-50 dark:bg-red-900/20",
-      icon: "text-red-600 dark:text-red-400",
-      accent: "border-red-200 dark:border-red-800",
+      bg: "bg-red-50 dark:bg-red-900/30",
+      icon: "text-red-600 dark:text-red-300",
+      accent: "border-red-200 dark:border-red-600/50",
     },
     cyan: {
-      bg: "bg-cyan-50 dark:bg-cyan-900/20",
-      icon: "text-cyan-600 dark:text-cyan-400",
-      accent: "border-cyan-200 dark:border-cyan-800",
+      bg: "bg-cyan-50 dark:bg-cyan-900/30",
+      icon: "text-cyan-600 dark:text-cyan-300",
+      accent: "border-cyan-200 dark:border-cyan-600/50",
     },
   };
 
@@ -56,12 +56,13 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <Card
-      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
+      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all duration-300 group`}
     >
       <div className="p-6">
         <div className="flex items-center">
           <div
-            className={`flex-shrink-0 p-3 rounded-xl ${colors.bg} group-hover:scale-110 transition-transform duration-300`}
+            className={`flex-shrink-0 p-3 ${colors.bg} group-hover:scale-110 transition-transform duration-300`}
+            style={{ borderRadius: 'var(--radius-xl)' }}
           >
             <div className={`${colors.icon}`}>{icon}</div>
           </div>
@@ -73,7 +74,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
               {value}
             </p>
             {subValue && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
                 {subValue}
               </p>
             )}
@@ -83,7 +84,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
       {/* 装饰性渐变 */}
       <div
-        className={`absolute top-0 right-0 w-16 h-16 ${colors.bg} rounded-bl-full opacity-20`}
+        className={`absolute top-0 right-0 w-16 h-16 ${colors.bg} opacity-20`}
+        style={{ borderBottomLeftRadius: 'var(--radius-2xl)' }}
       ></div>
     </Card>
   );

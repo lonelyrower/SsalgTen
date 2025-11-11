@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef } from "react";
+import { logger } from "@/utils/logger";
 import { apiService } from "@/services/api";
+import { logger } from "@/utils/logger";
 import type { ClientLatencyData, LatencyStats } from "@/services/api";
 
 interface ClientLatencyState {
@@ -48,7 +50,7 @@ export function useClientLatency() {
         clientIP: parsed.clientIP || null,
       }));
     } catch (error) {
-      console.warn("恢复客户端延迟状态失败:", error);
+      logger.warn("恢复客户端延迟状态失败:", error);
     }
   }, [STORAGE_TTL_MS]);
 
@@ -64,7 +66,7 @@ export function useClientLatency() {
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (error) {
-      console.warn("保存客户端延迟状态失败:", error);
+      logger.warn("保存客户端延迟状态失败:", error);
     }
   }, [state.results, state.stats, state.lastUpdated, state.clientIP]);
 
@@ -141,7 +143,7 @@ export function useClientLatency() {
             }
           }
         } catch (error) {
-          console.error("Failed to poll latency results:", error);
+          logger.error("Failed to poll latency results:", error);
           // 继续轮询，不中断
         }
       };
@@ -214,7 +216,7 @@ export function useClientLatency() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.warn("清除客户端延迟缓存失败:", error);
+      logger.warn("清除客户端延迟缓存失败:", error);
     }
   }, [clearTimers]);
 

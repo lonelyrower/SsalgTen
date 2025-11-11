@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { apiService } from "@/services/api";
 import type { ApiKeyInfo } from "@/services/api";
 import { Card } from "@/components/ui/card";
@@ -42,7 +43,7 @@ export const ApiKeyManagement: React.FC = () => {
         setError(response.error || "获取API密钥信息失败");
       }
     } catch (err) {
-      console.error("Failed to fetch API key info:", err);
+      logger.error("Failed to fetch API key info:", err);
       setError("网络错误，无法获取API密钥信息");
     } finally {
       setLoading(false);
@@ -75,7 +76,7 @@ export const ApiKeyManagement: React.FC = () => {
         setError(response.error || "API密钥重新生成失败");
       }
     } catch (err) {
-      console.error("Failed to regenerate API key:", err);
+      logger.error("Failed to regenerate API key:", err);
       setError("API密钥重新生成失败");
     } finally {
       setRegenerating(false);
@@ -101,7 +102,7 @@ export const ApiKeyManagement: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      console.error("复制失败:", e);
+      logger.error("复制失败:", e);
       alert("复制失败，请手动选择并复制");
     }
   };
@@ -228,10 +229,10 @@ export const ApiKeyManagement: React.FC = () => {
         {apiKeyInfo && (
           <div className="space-y-6">
             {/* 密钥信息卡片 */}
-            <div className={`p-4 rounded-lg border-2 ${getSecurityColor()}`}>
+            <div className={`p-4  border-2 ${getSecurityColor()}`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-white/50">
+                  <div className="p-2  bg-white/50">
                     {getSecurityStatus() === "secure" ? (
                       <Shield className="h-6 w-6" />
                     ) : (

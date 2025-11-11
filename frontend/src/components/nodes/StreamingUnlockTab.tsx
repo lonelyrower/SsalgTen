@@ -22,8 +22,10 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
   const [loading, setLoading] = React.useState(false);
   const [lastTested, setLastTested] = React.useState<string | null>(null);
 
-  // TODO: 从后端API获取流媒体数据
-  // 临时模拟数据
+  /**
+   * @note 流媒体数据获取
+   * 当前使用模拟数据，待后端 API 实现后替换为真实数据
+   */
   const streamingData: StreamingServiceResult[] = STREAMING_SERVICE_ORDER.map(
     (service) => {
       return {
@@ -38,7 +40,10 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
 
   const handleRetest = async () => {
     setLoading(true);
-    // TODO: 调用后端API触发重新检测
+    /**
+     * @note 待实现：调用后端 API 触发流媒体解锁重新检测
+     * 当前使用 setTimeout 模拟异步请求
+     */
     setTimeout(() => {
       setLoading(false);
       setLastTested(new Date().toISOString());
@@ -76,15 +81,17 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
           disabled={loading}
           size="sm"
           variant="outline"
+          aria-label={loading ? "正在检测流媒体解锁状态" : "重新检测流媒体解锁"}
+          aria-busy={loading}
         >
           {loading ? (
             <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
               检测中...
             </>
           ) : (
             <>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
               重新检测
             </>
           )}
@@ -92,9 +99,13 @@ export const StreamingUnlockTab: React.FC<StreamingUnlockTabProps> = () => {
       </div>
 
       {/* 提示信息 */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div
+        className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800  p-4"
+        role="alert"
+        aria-live="polite"
+      >
         <div className="flex items-start space-x-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium mb-1">提示</p>
             <p className="text-blue-700 dark:text-blue-200">
@@ -159,7 +170,7 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${getStatusBg()}`}>
+    <div className={`border  p-4 ${getStatusBg()}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-2">
           <span className="text-2xl">{service.icon}</span>

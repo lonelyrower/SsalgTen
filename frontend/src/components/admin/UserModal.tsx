@@ -32,6 +32,10 @@ interface FormData {
   active: boolean;
 }
 
+// 统一圆角样式
+const formInputStyle = { borderRadius: 'var(--radius-md)' };
+const modalStyle = { borderRadius: 'var(--radius-lg)' };
+
 export const UserModal: React.FC<UserModalProps> = ({
   isOpen,
   onClose,
@@ -207,16 +211,21 @@ export const UserModal: React.FC<UserModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="user-modal-title"
+    >
+      <Card className="bg-white dark:bg-gray-800 shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary/15 rounded-lg">
-              <UserIcon className="h-5 w-5 text-primary" />
+            <div className="p-2 bg-primary/15">
+              <UserIcon className="h-5 w-5 text-primary" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 id="user-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
                 {isEditing ? "编辑用户" : "添加用户"}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -229,8 +238,9 @@ export const UserModal: React.FC<UserModalProps> = ({
             size="sm"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="关闭对话框"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 
@@ -238,7 +248,7 @@ export const UserModal: React.FC<UserModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* 全局错误 */}
           {errors.submit && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center">
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
               <span className="text-red-700 dark:text-red-400">
                 {errors.submit}
@@ -258,7 +268,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-4 py-3 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.username
                     ? "border-red-300 dark:border-red-600"
                     : "border-gray-300 dark:border-gray-600"
@@ -286,7 +296,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-4 py-3 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.email
                     ? "border-red-300 dark:border-red-600"
                     : "border-gray-300 dark:border-gray-600"
@@ -312,7 +322,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="请输入显示名称（可选）"
               disabled={loading}
             />
@@ -330,7 +340,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-12 py-3 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.password
                     ? "border-red-300 dark:border-red-600"
                     : "border-gray-300 dark:border-gray-600"
@@ -371,7 +381,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                  className={`w-full pl-10 pr-12 py-3 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                     errors.confirmPassword
                       ? "border-red-300 dark:border-red-600"
                       : "border-gray-300 dark:border-gray-600"
@@ -412,7 +422,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 aria-label="用户角色"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={loading}
               >
                 <option value="VIEWER">查看者 - 只读权限</option>

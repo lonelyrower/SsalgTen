@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import { apiService, type User } from "@/services/api";
+import { logger } from "@/utils/logger";
 import { useApiNotifications } from "@/hooks/useApiNotifications";
 import { AuthContext, type AuthContextValue } from "./auth-context";
 
@@ -27,11 +29,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await apiService.logout();
           }
         } catch (error) {
-          console.error("Failed to get current user:", error);
+          logger.error("Failed to get current user:", error);
           try {
             await apiService.logout();
           } catch (logoutError) {
-            console.warn("Failed to logout:", logoutError);
+            logger.warn("Failed to logout:", logoutError);
           }
         }
       }
@@ -39,7 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkAuth().catch((error) => {
-      console.error("Auth check failed:", error);
+      logger.error("Auth check failed:", error);
       setIsLoading(false);
     });
   }, []);
@@ -54,11 +56,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(response.data.user);
         return true;
       } else {
-        console.error("Login failed:", response.error);
+        logger.error("Login failed:", response.error);
         return false;
       }
     } catch (error) {
-      console.error("Login error:", error);
+      logger.error("Login error:", error);
       return false;
     }
   };
@@ -67,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await apiService.logout();
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error:", error);
     } finally {
       setUser(null);
     }

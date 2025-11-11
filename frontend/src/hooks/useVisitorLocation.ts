@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from "@/utils/logger";
 import { ipService, type IPLocationData } from '../services/ipService';
 import type { NodeData } from '../services/api';
 
@@ -36,7 +37,7 @@ export function useVisitorLocation(nodes: NodeData[] = []) {
         error: null,
       }));
     } catch (error) {
-      console.error('Failed to get visitor location:', error);
+      logger.error('Failed to get visitor location:', error);
       setState(prev => ({
         ...prev,
         loading: false,

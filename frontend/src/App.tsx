@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
+import { logger } from "@/utils/logger";
 import {
   BrowserRouter as Router,
   Routes,
@@ -57,7 +58,7 @@ function App() {
         }
       } catch (error) {
         // 加载失败时保持默认标题
-        console.debug("Failed to load system name:", error);
+        logger.debug("Failed to load system name:", error);
       }
     };
 
@@ -72,7 +73,7 @@ function App() {
         await apiService.getVisitorInfo();
       } catch (error) {
         // 记录失败不影响应用运行
-        console.debug("Failed to record visitor info:", error);
+        logger.debug("Failed to record visitor info:", error);
       }
     };
 

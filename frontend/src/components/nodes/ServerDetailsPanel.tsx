@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { memo } from "react";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from "@/components/ui/badge";
 import {
   Cpu,
@@ -155,7 +155,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             <GlassCard variant="info">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                  <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 ">
                     <Server className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
                   </div>
                   <span>系统概览</span>
@@ -212,7 +212,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             <GlassCard variant="orange">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/30 ">
                     <Cpu className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                   </div>
                   <span>CPU</span>
@@ -275,7 +275,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             <GlassCard variant="purple">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 ">
                     <MemoryStick className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <span>内存</span>
@@ -354,7 +354,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             <GlassCard variant="warning">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 ">
                     <HardDrive className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                   </div>
                   <span>磁盘</span>
@@ -450,7 +450,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             <GlassCard variant="success">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 ">
                     <Network className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                   <span>网络</span>
@@ -503,7 +503,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                       <div className="pt-3 border-t border-green-200/30 dark:border-green-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">流量统计</p>
                         {/* 总吞吐量显示 */}
-                        <div className="flex items-center justify-between mb-3 p-2 bg-green-50/50 dark:bg-green-900/10 rounded-lg">
+                        <div className="flex items-center justify-between mb-3 p-2 bg-green-50/50 dark:bg-green-900/10 ">
                           <div className="flex items-center space-x-3 text-xs">
                             <div>
                               <span className="text-gray-600 dark:text-gray-400">接收 ↓</span>
@@ -527,7 +527,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                           {heartbeatData.networkInfo.map((net, index) => (
                             <div
                               key={index}
-                              className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 p-3 rounded-lg border border-green-200/30 dark:border-green-700/30"
+                              className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 p-3  border border-green-200/30 dark:border-green-700/30"
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <span className="font-medium text-sm text-gray-900 dark:text-white">
@@ -572,7 +572,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
             <GlassCard variant="danger">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <div className="p-2 bg-red-100 dark:bg-red-900/30 ">
                     <Activity className="h-5 w-5 text-red-600 dark:text-red-400" />
                   </div>
                   <span>进程和服务</span>
@@ -592,19 +592,19 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                   <div>
                     <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">进程统计</p>
                     <div className="grid grid-cols-3 gap-3 text-sm">
-                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">运行中</p>
                         <p className="font-bold text-green-600 dark:text-green-400 text-lg">
                           {heartbeatData.processInfo.running}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">睡眠</p>
                         <p className="font-bold text-gray-900 dark:text-white text-lg">
                           {heartbeatData.processInfo.sleeping}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                      <div className="text-center p-3 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                         <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">僵尸</p>
                         <p
                           className={`font-bold text-lg ${heartbeatData.processInfo.zombie > 0 ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}
@@ -634,7 +634,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                             {activeServices.map(([service]) => (
                               <div
                                 key={service}
-                                className="flex items-center space-x-2 p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30"
+                                className="flex items-center space-x-2 p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30"
                               >
                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                                 <span className="text-xs capitalize text-gray-900 dark:text-white font-medium">
@@ -655,7 +655,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                 Xray 自检
                               </p>
                               <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">进程</p>
                                   <Badge
                                     variant={
@@ -666,7 +666,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                     {detail.running ? "存在" : "未检测到"}
                                   </Badge>
                                 </div>
-                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">TCP连通</p>
                                   <Badge
                                     variant={
@@ -677,14 +677,14 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                     {detail.tcpOk ? "正常" : "失败"}
                                   </Badge>
                                 </div>
-                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                                <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">监听地址</p>
                                   <p className="font-medium font-mono text-xs text-gray-900 dark:text-white">
                                     {detail.host}:{detail.port}
                                   </p>
                                 </div>
                                 {detail.tls !== undefined && (
-                                  <div className="p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                                  <div className="p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                                     <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">TLS握手</p>
                                     <Badge
                                       variant={
@@ -697,7 +697,7 @@ export const ServerDetailsPanel: React.FC<ServerDetailsPanelProps> = memo(
                                   </div>
                                 )}
                                 {detail.sni && (
-                                  <div className="col-span-2 p-2 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-200/30 dark:border-red-700/30">
+                                  <div className="col-span-2 p-2 bg-red-50/50 dark:bg-red-900/10  border border-red-200/30 dark:border-red-700/30">
                                     <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">SNI</p>
                                     <p className="font-medium font-mono text-xs text-gray-900 dark:text-white break-all">
                                       {detail.sni}

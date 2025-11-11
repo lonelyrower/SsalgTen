@@ -13,13 +13,13 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
   showNetworkInfo = false,
 }) => {
   return (
-    <GlassCard variant="tech" animated={false} glow={false} className="p-6">
+    <GlassCard variant="tech" size="lg" animated={true} glow={false}>
       <div>
         <div className="flex-1">
           {/* 节点头部信息 */}
           <div className="flex items-center space-x-4 mb-6">
             <div className="relative">
-              <div className="p-3 bg-primary/15 rounded-xl border border-white/10">
+              <div className="p-3 bg-primary/15  border border-white/10">
                 <Activity className="h-8 w-8 text-primary" />
               </div>
               {/* 只为在线节点保留脉冲动画 */}
@@ -44,7 +44,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
                 基础信息
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div className="glass rounded-lg p-4 border border-white/10">
+                <div className="glass  p-4 border border-white/10">
                   <div className="text-xs text-muted-foreground/70 mb-1.5">
                     地理位置
                   </div>
@@ -56,7 +56,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
                   </div>
                 </div>
 
-                <div className="glass rounded-lg p-4 border border-white/10">
+                <div className="glass  p-4 border border-white/10">
                   <div className="text-xs text-muted-foreground/70 mb-1.5">
                     服务提供商
                   </div>
@@ -65,13 +65,13 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
                   </div>
                 </div>
 
-                <div className="glass rounded-lg p-4 border border-white/10">
+                <div className="glass  p-4 border border-white/10">
                   <div className="text-xs text-muted-foreground/70 mb-1.5">
                     运行状态
                   </div>
                   <div className="flex justify-center">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      className={`inline-flex items-center px-2.5 py-1  text-xs font-semibold ${
                         node.status === "online"
                           ? "status-badge-online"
                           : "status-badge-offline"
@@ -93,7 +93,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {node.ipv4 && (
-                      <div className="glass rounded-lg p-4 border border-white/10">
+                      <div className="glass  p-4 border border-white/10">
                         <div className="text-xs text-muted-foreground/70 mb-1.5">
                           IPv4 地址
                         </div>
@@ -104,7 +104,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
                     )}
 
                     {node.ipv6 && node.ipv6.includes(":") && (
-                      <div className="glass rounded-lg p-4 border border-white/10">
+                      <div className="glass  p-4 border border-white/10">
                         <div className="text-xs text-muted-foreground/70 mb-1.5">
                           IPv6 地址
                         </div>
@@ -123,7 +123,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   状态记录
                 </h4>
-                <div className="glass rounded-lg p-4 border border-white/10">
+                <div className="glass  p-4 border border-white/10">
                   <div className="text-xs text-muted-foreground/70 mb-1.5">
                     最后在线时间
                   </div>

@@ -1,4 +1,5 @@
 // API服务 - 与后端通信的统一接口
+import { logger } from "@/utils/logger";
 
 declare global {
   interface Window {
@@ -479,7 +480,7 @@ class ApiService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error("API request failed:", error);
+      logger.error("API request failed:", error);
       if (error instanceof Error && error.name === "AbortError") {
         return {
           success: false,
@@ -558,7 +559,7 @@ class ApiService {
 
       return { success: true, data: blob, fileName };
     } catch (error) {
-      console.error("API download failed:", error);
+      logger.error("API download failed:", error);
       return {
         success: false,
         error:
@@ -688,7 +689,7 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
-      console.error("Agent diagnostic request failed:", error);
+      logger.error("Agent diagnostic request failed:", error);
       throw error;
     }
   }
@@ -830,7 +831,7 @@ class ApiService {
         return response.data;
       }
     } catch (error) {
-      console.error("Token refresh failed:", error);
+      logger.error("Token refresh failed:", error);
     }
 
     return null;

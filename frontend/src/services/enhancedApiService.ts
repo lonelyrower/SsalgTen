@@ -1,4 +1,5 @@
 import { apiService, type ApiResponse, type User, type NodeData } from "./api";
+import { logger } from "@/utils/logger";
 
 // Enhanced API service with user feedback
 class EnhancedApiService {
@@ -23,7 +24,7 @@ class EnhancedApiService {
   }
 
   private handleError(operation: string, error: string) {
-    console.error(`${operation} failed:`, error);
+    logger.error(`${operation} failed:`, error);
 
     if (this.notificationCallbacks.showError) {
       let userMessage = error;
@@ -186,7 +187,11 @@ class EnhancedApiService {
   getNodeById = apiService.getNodeById.bind(apiService);
   getStats = apiService.getStats.bind(apiService);
   getNodeDiagnostics = apiService.getNodeDiagnostics.bind(apiService);
-  // TODO: These methods need to be implemented in apiService
+
+  /**
+   * @note 以下方法需要在 apiService 中实现后再启用
+   * getNodeDetails, getUserById 等方法
+   */
   // getNodeDetails = apiService.getNodeDetails?.bind(apiService);
   getUsers = apiService.getUsers.bind(apiService);
   // getUserById = apiService.getUserById?.bind(apiService);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GlassCard } from "@/components/admin/GlassCard";
+import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -196,7 +196,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       <GlassCard variant="info" className="space-y-5 text-left">
         {/* 标题 - 统一靠左对齐 */}
         <div className="flex items-center gap-2 pb-3 border-b border-cyan-200/30 dark:border-cyan-700/30">
-          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+          <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 ">
             <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
           </div>
           <div className="flex-1">
@@ -251,7 +251,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {/* 测试站点预览 */}
-        <div className="p-4 bg-cyan-50/30 dark:bg-cyan-900/10 rounded-lg border border-cyan-200/40 dark:border-cyan-700/40">
+        <div className="p-4 bg-cyan-50/30 dark:bg-cyan-900/10  border border-cyan-200/40 dark:border-cyan-700/40">
           <div className="flex items-center gap-2 mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
             <Target className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
             将测试以下站点：
@@ -270,7 +270,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
+          <div className="border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
             {error}
           </div>
         )}
@@ -287,25 +287,25 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
               </Badge>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-slate-900 dark:text-white">
                   {testResult.summary.successful}/{testResult.summary.total}
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">成功站点</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300">
                   {testResult.summary.averageLatency.toFixed(1)}ms
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">平均延迟</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
                   {testResult.summary.excellentCount}
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">优秀连接</div>
               </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
+              <div className="border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
                 <div className="text-2xl font-semibold text-amber-600 dark:text-amber-300">
                   {(testResult.duration / 1000).toFixed(1)}s
                 </div>

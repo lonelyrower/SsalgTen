@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { logger } from "@/utils/logger";
 import { apiService } from "@/services/api";
+import { logger } from "@/utils/logger";
 import { compareNodes, compareStats } from "@/utils/deepCompare";
 import type { NodeData, NodeStats } from "@/services/api";
 
@@ -75,7 +77,7 @@ export const useNodes = (): UseNodesResult => {
           setStats(statsResponse.data);
         }
       } else {
-        console.warn("Failed to fetch stats:", statsResponse.error);
+        logger.warn("Failed to fetch stats:", statsResponse.error);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

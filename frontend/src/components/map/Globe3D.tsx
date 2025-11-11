@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState, useMemo } from "react";
+import { logger } from "@/utils/logger";
 import * as Cesium from "cesium";
 import type { NodeData } from "@/services/api";
 import { useVisitorLocation } from "@/hooks/useVisitorLocation";
@@ -107,7 +108,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
       // 配置 Cesium Ion（如果有token则启用，否则使用免费tiles）
       if (cesiumIonToken) {
         Cesium.Ion.defaultAccessToken = cesiumIonToken;
-        console.log("✓ Cesium Ion已启用（高质量3D渲染）");
+        logger.log("✓ Cesium Ion已启用（高质量3D渲染）");
       } else {
         // 禁用 Cesium Ion，使用免费地图源
         Cesium.Ion.defaultAccessToken = "";
@@ -117,7 +118,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
         } catch {
           // 忽略错误
         }
-        console.log(
+        logger.log(
           "ℹ Cesium Ion未配置，使用免费地图源（可在设置中添加API key以获得更好的3D效果）",
         );
       }
@@ -161,7 +162,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
 
         viewerRef.current = viewer;
 
-        console.log("✓ Cesium Viewer 初始化成功");
+        logger.log("✓ Cesium Viewer 初始化成功");
 
         // === 视觉增强配置（优化晨昏线效果）===
         const scene = viewer.scene;
@@ -328,7 +329,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
         setIsLoading(false);
         initializingRef.current = false;
       } catch (error) {
-        console.error("Cesium initialization error:", error);
+        logger.error("Cesium initialization error:", error);
         setIsLoading(false);
         initializingRef.current = false;
       }
@@ -590,7 +591,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           viewer.imageryLayers.addImageryProvider(imageryProvider);
         }
       } catch (error) {
-        console.error("图层加载失败:", error);
+        logger.error("图层加载失败:", error);
         // 失败时回退到 OpenStreetMap
         const fallbackProvider = new Cesium.OpenStreetMapImageryProvider({
           url: "https://tile.openstreetmap.org/",
@@ -720,7 +721,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           {/* 图层选择菜单（简化列表样式，每个选项使用不同主题色） */}
           {showLayerMenu && (
             <div
-              className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+              className="absolute top-14 right-0 bg-white dark:bg-gray-800  shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
               role="menu"
             >
               <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">

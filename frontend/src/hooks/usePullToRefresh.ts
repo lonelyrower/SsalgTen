@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { logger } from "@/utils/logger";
 import { useMobile } from "./useMobile";
 
 interface UsePullToRefreshOptions {
@@ -26,7 +27,7 @@ export const usePullToRefresh = (
     try {
       await onRefresh();
     } catch (error) {
-      console.error("Refresh failed:", error);
+      logger.error("Refresh failed:", error);
     } finally {
       setIsRefreshing(false);
     }
