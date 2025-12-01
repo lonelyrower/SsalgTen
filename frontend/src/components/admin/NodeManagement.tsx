@@ -335,7 +335,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                 导出节点
               </Button>
               {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] z-10">
                   <button
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleExportNodes("json")}
@@ -387,7 +387,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
             <input
               type="text"
               placeholder="搜索节点名称、国家、服务商或ASN..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-9 pr-4 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -397,7 +397,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
           </label>
           <select
             id="node-status-filter"
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -431,7 +431,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       {/* 导入过期VPS（占位节点）对话框 */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-2xl w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+          <Card className="bg-white dark:bg-gray-800 p-0 rounded-[var(--radius-2xl)] shadow-[var(--shadow-2xl)] max-w-2xl w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 导入过期 VPS
@@ -481,7 +481,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     placeholder={
                       '示例:\n203.0.113.10\n2001:db8::1234\n或 JSON:\n[{"ip":"203.0.113.10","name":"Expired-1"}]'
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                    className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                   />
                 </div>
 
@@ -807,7 +807,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+          <Card className="bg-white dark:bg-gray-800 p-0 rounded-[var(--radius-2xl)] shadow-[var(--shadow-2xl)] max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
             <div className="p-6">
               <div className="flex items-start mb-6">
                 <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mr-4">
@@ -846,7 +846,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
       {/* 重命名节点对话框 */}
       {showRenameModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-white dark:bg-gray-800 p-0 rounded-2xl shadow-2xl max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+          <Card className="bg-white dark:bg-gray-800 p-0 rounded-[var(--radius-2xl)] shadow-[var(--shadow-2xl)] max-w-md w-full border-0 ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
             <div className="p-6">
               <div className="flex items-start mb-6">
                 <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-4">
@@ -863,7 +863,7 @@ export const NodeManagement: React.FC<NodeManagementProps> = ({
                     type="text"
                     value={newNodeName}
                     onChange={(e) => setNewNodeName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-[var(--duration-normal)]"
                     placeholder="输入节点名称"
                     autoFocus
                     onKeyDown={(e) => {

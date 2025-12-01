@@ -13,7 +13,7 @@ export const StreamingPlatformMatrix: React.FC<StreamingPlatformMatrixProps> = (
   onSelect,
 }) => {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+    <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-white dark:bg-slate-900 shadow-[var(--shadow-sm)]">
       <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
         <thead className="bg-slate-50 dark:bg-slate-900/60">
           <tr>

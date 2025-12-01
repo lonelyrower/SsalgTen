@@ -13,7 +13,7 @@ const CustomTooltip = ({ active, payload, total }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+      <div className="bg-white dark:bg-gray-800 p-3 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
         <p className="font-medium text-gray-900 dark:text-white">{data.name}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           数量: {data.value} (
@@ -52,7 +52,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6 ${className}`}
     >
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">

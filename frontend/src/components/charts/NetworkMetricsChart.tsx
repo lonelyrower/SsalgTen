@@ -314,7 +314,7 @@ export const NetworkMetricsChart = memo(
 
         {/* 时间范围选择器 */}
         {type !== "pie" && (
-          <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
             {["1h", "24h", "7d", "30d"].map((range) => (
               <Button
                 key={range}

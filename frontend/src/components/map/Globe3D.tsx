@@ -720,10 +720,10 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           {/* 图层选择菜单（简化列表样式，每个选项使用不同主题色） */}
           {showLayerMenu && (
             <div
-              className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+              className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-[var(--duration-normal)]"
               role="menu"
             >
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              <div className="p-2 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gray-50 dark:bg-gray-900">
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
                   选择地图图层
                 </p>

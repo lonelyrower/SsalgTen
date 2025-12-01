@@ -234,7 +234,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                       e.target.value as typeof diagnosticFilter,
                     )
                   }
-                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-3 py-1.5 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="ALL">全部类型</option>
                   <option value="PING">PING</option>

@@ -172,7 +172,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
           value={currentValue}
           onChange={(e) => handleChange(config.key, e.target.value)}
           placeholder={info.placeholder}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full px-4 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
         />
       );
     }
@@ -183,7 +183,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
         value={currentValue}
         onChange={(e) => handleChange(config.key, e.target.value)}
         placeholder={info.placeholder}
-        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+        className="w-full px-4 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
       />
     );
   };
@@ -316,7 +316,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
               <div>
                 <div className="flex items-start gap-4">
                   <div
-                    className={`flex-shrink-0 w-12 h-12 rounded-xl ${configStyle.bg} flex items-center justify-center text-2xl`}
+                    className={`flex-shrink-0 w-12 h-12 rounded-[var(--radius-xl)] ${configStyle.bg} flex items-center justify-center text-2xl`}
                   >
                     {configStyle.icon}
                   </div>
@@ -352,7 +352,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
 
       {/* 保存按钮 */}
       {changedConfigs.size > 0 && (
-        <div className="mt-8 flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="mt-8 flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-[var(--radius-lg)]">
           <div className="flex items-center">
             <AlertCircle className="h-5 w-5 text-blue-500 mr-3" />
             <span className="text-sm text-blue-800 dark:text-blue-200">

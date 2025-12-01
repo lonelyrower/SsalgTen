@@ -226,20 +226,20 @@ export const NodesPageNew: React.FC = () => {
       <div ref={containerRef} className="relative flex-1 overflow-y-auto">
         <main className="max-w-7xl mx-auto px-4 py-8 w-full flex flex-col gap-6 min-h-full">
         {/* Search and Filters - Enhanced Design */}
-        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-lg p-4">
+        <div className="relative bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] backdrop-blur-[var(--blur-md)] rounded-[var(--radius-2xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] shadow-[var(--shadow-lg)] p-4">
           {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 rounded-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 rounded-[var(--radius-2xl)] pointer-events-none" />
 
           <div className="relative flex flex-col sm:flex-row gap-4">
             {/* Search input with enhanced styling */}
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-primary transition-colors duration-[var(--duration-normal)]" />
               <input
                 type="text"
                 placeholder="搜索节点名称、位置、IP、ASN、服务商..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -250,14 +250,14 @@ export const NodesPageNew: React.FC = () => {
                 onClick={handleRefresh}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))]"
               >
                 <RefreshCw className="h-4 w-4" />
                 <span className="hidden sm:inline">刷新</span>
               </Button>
 
               {/* Status filter with icon */}
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] px-3 py-2">
                 <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <select
                   value={statusFilter}
@@ -280,7 +280,7 @@ export const NodesPageNew: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start flex-1">
           {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
           <div className="lg:col-span-2 h-full">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full lg:h-[800px]">
+            <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6 flex flex-col h-full lg:h-[800px]">
               {viewMode === "list" ? (
                 /* List View */
                 <div className="space-y-4 flex-1 overflow-y-auto pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">

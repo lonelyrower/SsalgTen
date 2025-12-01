@@ -366,7 +366,7 @@ export const SystemOverview: React.FC = () => {
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
-                className="min-w-[180px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="min-w-[180px] px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-md)] bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
                 value={retainHours}
                 onChange={(e) => setRetainHours(Number(e.target.value))}
                 disabled={cleanupLoading}

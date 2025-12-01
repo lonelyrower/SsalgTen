@@ -228,10 +228,10 @@ export const ApiKeyManagement: React.FC = () => {
         {apiKeyInfo && (
           <div className="space-y-6">
             {/* 密钥信息卡片 */}
-            <div className={`p-4 rounded-lg border-2 ${getSecurityColor()}`}>
+            <div className={`p-4 rounded-[var(--radius-lg)] border-2 ${getSecurityColor()}`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-white/50">
+                  <div className="p-2 rounded-[var(--radius-lg)] bg-white/50">
                     {getSecurityStatus() === "secure" ? (
                       <Shield className="h-6 w-6" />
                     ) : (
@@ -274,7 +274,7 @@ export const ApiKeyManagement: React.FC = () => {
                   </Button>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <code className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 rounded font-mono text-sm">
+                  <code className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius-md)] font-mono text-sm">
                     {showKey
                       ? apiKeyInfo.key
                       : `${apiKeyInfo.key.slice(0, 8)}${"*".repeat(32)}`}
@@ -369,7 +369,7 @@ export const ApiKeyManagement: React.FC = () => {
                     <p>
                       如果您重新生成了API密钥，需要更新所有Agent节点的配置：
                     </p>
-                    <div className="bg-primary/15 p-3 rounded font-mono text-xs">
+                    <div className="bg-primary/15 p-3 rounded-[var(--radius-md)] font-mono text-xs">
                       # 1. 编辑Agent配置文件
                       <br />
                       nano /etc/ssalgten-agent/.env

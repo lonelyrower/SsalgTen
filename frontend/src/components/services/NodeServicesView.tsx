@@ -113,7 +113,7 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
             {overview.services.map((service) => (
               <div
                 key={service.id}
-                className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:shadow-sm transition-shadow"
+                className="py-2 px-3 rounded-[var(--radius-lg)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-white/50 dark:bg-gray-800/50 hover:shadow-sm transition-shadow"
               >
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100 text-center truncate">
                   {service.name}
@@ -133,7 +133,7 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
         )}
 
         {/* 底部信息 */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
             <Clock className="h-3.5 w-3.5" />
             <span>{timeAgo}</span>

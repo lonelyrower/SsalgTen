@@ -120,7 +120,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
   return (
     <Card
-      className={`p-3 transition-all shadow-md hover:shadow-lg ${colorScheme.gradient} ${colorScheme.border}`}
+      className={`p-3 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] ${colorScheme.gradient} ${colorScheme.border}`}
     >
       <div className="space-y-2.5">
         {/* 服务类型图标和名称 */}
@@ -150,7 +150,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
 
         {/* 节点信息 */}
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-gray-900/30">
+        <div className="flex items-center gap-2 p-2 rounded-[var(--radius-lg)] bg-white/50 dark:bg-gray-900/30">
           {service.nodeCountry && (
             <CountryFlagSvg country={service.nodeCountry} className="w-5 h-5 flex-shrink-0" />
           )}
@@ -164,7 +164,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <ServiceDetails service={service} />
 
         {/* 底部信息 */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between pt-2 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
             <Clock className="h-3 w-3" />
             <span>{timeAgo}</span>

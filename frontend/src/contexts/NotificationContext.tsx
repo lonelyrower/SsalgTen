@@ -160,7 +160,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <div
-      className={`${getBorderColor()} ${getBackgroundColor()} border rounded-lg shadow-lg p-4 animate-in slide-in-from-right-full duration-300`}
+      className={`${getBorderColor()} ${getBackgroundColor()} border rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-4 animate-in slide-in-from-right-full duration-[var(--duration-normal)]`}
       role="alert"
       aria-live="polite"
     >

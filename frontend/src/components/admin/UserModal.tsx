@@ -208,11 +208,11 @@ export const UserModal: React.FC<UserModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <Card className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-2xl)] max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 标题栏 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary/15 rounded-lg">
+            <div className="p-2 bg-primary/15 rounded-[var(--radius-lg)]">
               <UserIcon className="h-5 w-5 text-primary" />
             </div>
             <div>
@@ -238,7 +238,7 @@ export const UserModal: React.FC<UserModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* 全局错误 */}
           {errors.submit && (
-            <div className="p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))] rounded-lg flex items-center">
+            <div className="p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))] rounded-[var(--radius-lg)] flex items-center">
               <AlertCircle className="h-5 w-5 text-[hsl(var(--status-error-500))] mr-3" />
               <span className="text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-400))]">
                 {errors.submit}
@@ -258,10 +258,10 @@ export const UserModal: React.FC<UserModalProps> = ({
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.username
                     ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
-                    : "border-gray-300 dark:border-gray-600"
+                    : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                 }`}
                 placeholder="请输入用户名"
                 disabled={loading}
@@ -286,10 +286,10 @@ export const UserModal: React.FC<UserModalProps> = ({
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.email
                     ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
-                    : "border-gray-300 dark:border-gray-600"
+                    : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                 }`}
                 placeholder="请输入邮箱地址"
                 disabled={loading}
@@ -312,7 +312,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-3 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="请输入显示名称（可选）"
               disabled={loading}
             />
@@ -330,10 +330,10 @@ export const UserModal: React.FC<UserModalProps> = ({
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.password
                     ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
-                    : "border-gray-300 dark:border-gray-600"
+                    : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                 }`}
                 placeholder={isEditing ? "留空表示不修改密码" : "请输入密码"}
                 disabled={loading}
@@ -371,10 +371,10 @@ export const UserModal: React.FC<UserModalProps> = ({
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                  className={`w-full pl-10 pr-12 py-3 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                     errors.confirmPassword
                       ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
-                      : "border-gray-300 dark:border-gray-600"
+                      : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                   }`}
                   placeholder="请再次输入密码"
                   disabled={loading}
@@ -412,7 +412,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 aria-label="用户角色"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-3 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={loading}
               >
                 <option value="VIEWER">查看者 - 只读权限</option>
@@ -430,7 +430,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               name="active"
               checked={formData.active}
               onChange={handleInputChange}
-              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              className="h-4 w-4 text-primary focus:ring-primary border-[hsl(var(--border-muted))] rounded-[var(--radius-sm)]"
               disabled={loading}
             />
             <label
@@ -442,7 +442,7 @@ export const UserModal: React.FC<UserModalProps> = ({
           </div>
 
           {/* 按钮组 */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
             <Button
               type="button"
               variant="outline"

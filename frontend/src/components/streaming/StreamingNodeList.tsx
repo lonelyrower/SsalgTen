@@ -114,7 +114,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
 
   return (
     <Card
-      className={`p-3 transition-all shadow-md hover:shadow-lg ${colorScheme.gradient} ${colorScheme.border}`}
+      className={`p-3 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] ${colorScheme.gradient} ${colorScheme.border}`}
     >
       <div className="space-y-2.5">
         {/* 节点信息 */}
@@ -146,7 +146,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
             return (
               <div
                 key={service.service}
-                className="flex flex-col items-center justify-between gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 px-2 py-2 min-h-[88px]"
+                className="flex flex-col items-center justify-between gap-1 rounded-[var(--radius-lg)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 px-2 py-2 min-h-[88px]"
               >
                 <StreamingIcon service={service.service} size="md" />
 
@@ -178,7 +178,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
         </div>
 
         {/* 底部信息 */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <Clock className="h-4 w-4" />
             <span>{timeAgo}</span>

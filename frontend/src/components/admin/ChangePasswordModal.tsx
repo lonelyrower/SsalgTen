@@ -103,9 +103,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+      <Card className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] max-w-md w-full">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center space-x-3">
             <Lock className="h-6 w-6 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -135,10 +135,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] focus:outline-none focus:ring-2 focus:ring-primary ${
                     errors.currentPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
+                      : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                   } dark:bg-gray-700 dark:text-white`}
                   placeholder="请输入当前密码"
                 />
@@ -172,10 +172,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] focus:outline-none focus:ring-2 focus:ring-primary ${
                     errors.newPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
+                      : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                   } dark:bg-gray-700 dark:text-white`}
                   placeholder="请输入新密码（至少6个字符）"
                 />
@@ -209,10 +209,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] focus:outline-none focus:ring-2 focus:ring-primary ${
                     errors.confirmPassword
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
+                      : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                   } dark:bg-gray-700 dark:text-white`}
                   placeholder="请再次输入新密码"
                 />
@@ -237,7 +237,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             </div>
 
             {/* 密码强度提示 */}
-            <div className="bg-primary/10 p-3 rounded-lg">
+            <div className="bg-primary/10 p-3 rounded-[var(--radius-lg)]">
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-primary">

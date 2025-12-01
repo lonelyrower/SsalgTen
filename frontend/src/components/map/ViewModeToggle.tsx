@@ -15,8 +15,8 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/90 p-1",
-        "shadow-sm overflow-hidden",
+        "relative inline-flex items-center rounded-[var(--radius-xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gray-100 dark:bg-gray-800/90 p-1",
+        "shadow-[var(--shadow-sm)] overflow-hidden",
         className,
       )}
       role="tablist"

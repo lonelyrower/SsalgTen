@@ -86,7 +86,7 @@ export const LoginPage: React.FC = () => {
 
       <div className="relative z-10 w-full max-w-md">
         {/* 登录卡片 */}
-        <div className="relative overflow-hidden rounded-3xl border-2 border-cyan-200/70 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-[0_25px_45px_-20px_rgba(14,116,144,0.35)] backdrop-blur-xl dark:border-cyan-900/40 dark:from-slate-950/90 dark:via-sky-950/30 dark:to-cyan-950/25">
+        <div className="relative overflow-hidden rounded-[var(--radius-3xl)] border-2 border-cyan-200/70 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-[var(--shadow-2xl)] backdrop-blur-[var(--blur-xl)] dark:border-cyan-900/40 dark:from-slate-950/90 dark:via-sky-950/30 dark:to-cyan-950/25">
           <div className="pointer-events-none absolute inset-0 opacity-60 mix-blend-screen dark:mix-blend-normal bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.25),transparent_55%),radial-gradient(circle_at_bottom_right,rgba(6,182,212,0.25),transparent_45%)]" />
           <div className="absolute -top-24 -right-16 h-40 w-40 rounded-full bg-cyan-200/40 blur-3xl dark:bg-cyan-500/20" />
           <div className="absolute -bottom-24 -left-20 h-44 w-44 rounded-full bg-blue-200/40 blur-3xl dark:bg-blue-500/20" />
@@ -94,7 +94,7 @@ export const LoginPage: React.FC = () => {
             {/* Logo 和标题 */}
             <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-6">
-                <div className="p-4 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-sky-500/40">
+                <div className="p-4 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 rounded-[var(--radius-2xl)] shadow-[var(--shadow-lg)] shadow-sky-500/40">
                   <Shield className="h-12 w-12 text-white" />
                 </div>
               </div>
@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80 rounded-xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-all duration-200 bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
+                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80 rounded-[var(--radius-xl)] focus:ring-4 focus:ring-primary/20 focus:border-primary dark:bg-slate-900/40 dark:text-white transition-all duration-[var(--duration-normal)] bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
                   placeholder="请输入用户名"
                   autoComplete="username"
                   disabled={isSubmitting}
@@ -148,7 +148,7 @@ export const LoginPage: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:bg-slate-900/40 dark:text-white transition-colors"
+                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80 rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary dark:bg-slate-900/40 dark:text-white transition-colors duration-[var(--duration-normal)]"
                   placeholder="请输入密码"
                   autoComplete="current-password"
                   disabled={isSubmitting}
@@ -167,7 +167,7 @@ export const LoginPage: React.FC = () => {
 
             {/* 错误信息 */}
             {error && (
-              <div className="p-3 border border-[hsl(var(--status-error-300)/0.8)] bg-[hsl(var(--status-error-50)/0.8)] dark:border-[hsl(var(--status-error-800)/0.6)] dark:bg-[hsl(var(--status-error-900)/0.3)] rounded-lg shadow-inner shadow-[hsl(var(--status-error-500)/0.1)]">
+              <div className="p-3 border border-[hsl(var(--status-error-300)/0.8)] bg-[hsl(var(--status-error-50)/0.8)] dark:border-[hsl(var(--status-error-800)/0.6)] dark:bg-[hsl(var(--status-error-900)/0.3)] rounded-[var(--radius-lg)] shadow-[var(--shadow-inner)]">
                 <p className="text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-300))]">
                   {error}
                 </p>
@@ -177,7 +177,7 @@ export const LoginPage: React.FC = () => {
             {/* 登录按钮 */}
             <Button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 hover:from-cyan-400 hover:via-blue-400 hover:to-indigo-400 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40"
+              className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 hover:from-cyan-400 hover:via-blue-400 hover:to-indigo-400 text-white shadow-[var(--shadow-lg)] shadow-cyan-500/30 hover:shadow-cyan-500/40"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -192,7 +192,7 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* 默认账户提示 */}
-          <div className="mt-8 rounded-xl border border-cyan-200/70 bg-cyan-50/70 p-4 text-cyan-700 shadow-inner shadow-cyan-500/10 dark:border-cyan-900/50 dark:bg-sky-900/20 dark:text-cyan-200">
+          <div className="mt-8 rounded-[var(--radius-xl)] border border-cyan-200/70 bg-cyan-50/70 p-4 text-cyan-700 shadow-[var(--shadow-inner)] shadow-cyan-500/10 dark:border-cyan-900/50 dark:bg-sky-900/20 dark:text-cyan-200">
             <p className="text-sm text-center font-semibold">
               <strong>默认管理员账户：</strong>
             </p>

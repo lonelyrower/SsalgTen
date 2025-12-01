@@ -123,7 +123,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
             placeholder="搜索服务名称、域名、端口..."
             value={localKeyword}
             onChange={(e) => setLocalKeyword(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -136,7 +136,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
               onChange={(e) =>
                 handleFilterChange("nodeId", e.target.value || undefined)
               }
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">全部节点</option>
               {availableNodes.map((node) => (
@@ -156,7 +156,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                 parseServiceType(e.target.value),
               )
             }
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部类型</option>
             {Object.entries(SERVICE_TYPE_CONFIG).map(([type, config]) => (
@@ -172,7 +172,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
             onChange={(e) =>
               handleFilterChange("status", parseStatus(e.target.value))
             }
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部状态</option>
             {Object.entries(SERVICE_STATUS_CONFIG).map(([status, config]) => (
@@ -191,7 +191,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                 parseDeploymentType(e.target.value),
               )
             }
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">全部部署方式</option>
             {Object.entries(DEPLOYMENT_TYPE_CONFIG).map(([type, config]) => (
@@ -206,7 +206,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
           >
             <Filter className="h-4 w-4" />
             <span>{showAdvanced ? "隐藏" : "显示"}高级筛选</span>
@@ -215,7 +215,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] text-sm hover:bg-[hsl(var(--status-error-50))] dark:hover:bg-[hsl(var(--status-error-900)/0.2)] transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] text-sm hover:bg-[hsl(var(--status-error-50))] dark:hover:bg-[hsl(var(--status-error-900)/0.2)] transition-colors flex items-center gap-1.5"
             >
               <X className="h-4 w-4" />
               <span>清除筛选</span>
@@ -225,7 +225,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
 
         {/* 高级筛选选项 */}
         {showAdvanced && (
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="pt-4 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] space-y-3">
             {/* 优先级筛选 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -239,7 +239,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                     e.target.value ? Number(e.target.value) : undefined,
                   )
                 }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">全部优先级</option>
                 <option value="5">P5 - 最高</option>
@@ -292,7 +292,7 @@ export const ServicesFilters: React.FC<ServicesFiltersProps> = ({
                 onChange={(e) =>
                   handleFilterChange("showExpired", e.target.checked)
                 }
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[hsl(var(--border-muted))] rounded-[var(--radius-sm)]"
               />
               <label
                 htmlFor="showExpired"

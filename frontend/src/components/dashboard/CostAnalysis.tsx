@@ -68,8 +68,8 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
     .slice(0, 8);
 
   return (
-    <div className={`group relative h-full overflow-hidden rounded-2xl border-2 border-orange-200/60 dark:border-orange-700/60 bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-slate-800 dark:via-orange-950/60 dark:to-amber-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col ${className}`}>
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-orange-400/15 via-transparent to-amber-500/15" />
+    <div className={`group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-orange-200/60 dark:border-orange-700/60 bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-slate-800 dark:via-orange-950/60 dark:to-amber-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col ${className}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-orange-400/15 via-transparent to-amber-500/15" />
       <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-orange-300/20 blur-3xl" />
 
       {/* 标题 */}

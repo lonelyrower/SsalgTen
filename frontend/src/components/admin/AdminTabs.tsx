@@ -22,9 +22,9 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-xl border-2 border-gray-200/60 dark:border-gray-700/60",
-        "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-1.5",
-        "shadow-lg dark:shadow-xl overflow-hidden",
+        "relative inline-flex items-center rounded-[var(--radius-xl)] border-2 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]",
+        "bg-white/80 dark:bg-gray-800/80 backdrop-blur-[var(--blur-sm)] p-1.5",
+        "shadow-[var(--shadow-lg)] dark:shadow-[var(--shadow-xl)] overflow-hidden",
         className,
       )}
       role="tablist"
@@ -33,8 +33,8 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
       {/* Sliding indicator */}
       <div
         className={cn(
-          "absolute top-1.5 bottom-1.5 rounded-lg transition-all duration-300 ease-out",
-          "bg-gradient-to-br from-cyan-500 to-blue-500 shadow-md",
+          "absolute top-1.5 bottom-1.5 rounded-[var(--radius-lg)] transition-all duration-[var(--duration-normal)] ease-out",
+          "bg-gradient-to-br from-cyan-500 to-blue-500 shadow-[var(--shadow-md)]",
         )}
         style={{
           width: `calc(${tabWidth}% - 0.375rem)`,
@@ -55,8 +55,8 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "relative z-10 flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg",
-              "flex items-center justify-center gap-2 transition-colors duration-200",
+              "relative z-10 flex-1 px-4 py-2.5 text-sm font-semibold rounded-[var(--radius-lg)]",
+              "flex items-center justify-center gap-2 transition-colors duration-[var(--duration-fast)]",
               "min-w-[100px] sm:min-w-[120px]",
               isActive
                 ? "text-white"

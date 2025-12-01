@@ -56,7 +56,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
   return (
     <motion.div
-      className={`relative rounded-xl border-2 p-4 cursor-pointer transition-all duration-300 ${
+      className={`relative rounded-[var(--radius-xl)] border-2 p-4 cursor-pointer transition-all duration-[var(--duration-normal)] ${
         isSelected
           ? isOnline
             ? "border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:from-cyan-900/20 dark:to-blue-900/20"

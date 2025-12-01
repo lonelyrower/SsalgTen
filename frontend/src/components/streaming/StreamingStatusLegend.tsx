@@ -28,7 +28,7 @@ const unlockTypeOrder: Array<keyof typeof UNLOCK_TYPE_LABELS> = [
 
 export const StreamingStatusLegend: React.FC = () => {
   return (
-    <div className="grid gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 rounded-[var(--radius-xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-white dark:bg-slate-900/60 p-4 md:grid-cols-2 lg:grid-cols-3">
       <div>
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
           流媒体状态说明

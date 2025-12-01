@@ -151,7 +151,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: 8.8.8.8)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
 
@@ -163,7 +163,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value={1}>1 次</option>
               <option value={4}>4 次</option>

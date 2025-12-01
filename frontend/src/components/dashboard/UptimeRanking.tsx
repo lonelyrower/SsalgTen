@@ -57,8 +57,8 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-emerald-200/60 dark:border-emerald-700/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-emerald-400/15 via-transparent to-teal-500/15" />
+    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-emerald-200/60 dark:border-emerald-700/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-emerald-400/15 via-transparent to-teal-500/15" />
       <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-emerald-300/20 blur-3xl" />
       <div className="relative mb-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">

@@ -56,12 +56,12 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <Card
-      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-lg hover:shadow-xl transition-all duration-300 group`}
+      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all duration-[var(--duration-normal)] group`}
     >
       <div className="p-6">
         <div className="flex items-center">
           <div
-            className={`flex-shrink-0 p-3 rounded-xl ${colors.bg} group-hover:scale-110 transition-transform duration-300`}
+            className={`flex-shrink-0 p-3 rounded-[var(--radius-xl)] ${colors.bg} group-hover:scale-110 transition-transform duration-[var(--duration-normal)]`}
           >
             <div className={`${colors.icon}`}>{icon}</div>
           </div>

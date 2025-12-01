@@ -98,10 +98,10 @@ export const MobileNav: React.FC = () => {
             />
 
             {/* 侧边菜单 */}
-            <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-[9999] shadow-xl transform transition-transform duration-300">
+            <div className="fixed top-0 left-0 w-80 max-w-[80vw] h-full bg-white dark:bg-gray-800 z-[9999] shadow-[var(--shadow-xl)] transform transition-transform duration-[var(--duration-normal)]">
               <div className="flex flex-col h-full">
                 {/* 用户信息区域 */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
                   {isAuthenticated ? (
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 h-12 w-12">
@@ -166,7 +166,7 @@ export const MobileNav: React.FC = () => {
                 </nav>
 
                 {/* 底部操作区域 */}
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="p-4 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
                   {isAuthenticated ? (
                     <Button
                       onClick={handleLogout}

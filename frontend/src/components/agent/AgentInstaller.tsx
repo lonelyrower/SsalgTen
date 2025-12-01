@@ -37,7 +37,7 @@ export const AgentInstaller: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
         <div className="flex items-center space-x-3 mb-4">
           <Download className="h-8 w-8 text-primary" />
           <div>
@@ -55,7 +55,7 @@ export const AgentInstaller: React.FC = () => {
       <AgentInstallCommands />
 
       {/* 卸载说明 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
         <div className="flex items-center space-x-3 mb-4">
           <AlertTriangle className="h-6 w-6 text-orange-600" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -68,7 +68,7 @@ export const AgentInstaller: React.FC = () => {
         </p>
 
         <div className="relative">
-          <pre className="bg-[hsl(var(--status-error-900))] text-[hsl(var(--status-error-200))] p-4 rounded-lg overflow-x-auto text-sm font-mono">
+          <pre className="bg-[hsl(var(--status-error-900))] text-[hsl(var(--status-error-200))] p-4 rounded-[var(--radius-lg)] overflow-x-auto text-sm font-mono">
             <code>{uninstallCommand}</code>
           </pre>
           <Button
@@ -99,7 +99,7 @@ export const AgentInstaller: React.FC = () => {
           </Button>
         </div>
 
-        <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+        <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-[var(--radius-lg)]">
           <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">
             卸载操作将：
           </h4>
@@ -113,7 +113,7 @@ export const AgentInstaller: React.FC = () => {
       </div>
 
       {/* 安装要求 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           系统要求
         </h2>
@@ -144,7 +144,7 @@ export const AgentInstaller: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] rounded-lg">
+        <div className="mt-6 p-4 bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] rounded-[var(--radius-lg)]">
           <h4 className="font-medium text-[hsl(var(--status-success-900))] dark:text-[hsl(var(--status-success-100))] mb-2">
             安装过程会自动：
           </h4>
@@ -159,7 +159,7 @@ export const AgentInstaller: React.FC = () => {
       </div>
 
       {/* 故障排除 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           故障排除
         </h2>

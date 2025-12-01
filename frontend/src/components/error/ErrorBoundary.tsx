@@ -81,7 +81,7 @@ class ErrorBoundary extends Component<Props, State> {
       // 默认错误UI
       return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6">
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="rounded-full bg-[hsl(var(--status-error-100))] dark:bg-[hsl(var(--status-error-900)/0.2)] p-3">
@@ -156,7 +156,7 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* 联系信息 */}
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-4 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   如果问题持续出现，请联系技术支持
                 </p>

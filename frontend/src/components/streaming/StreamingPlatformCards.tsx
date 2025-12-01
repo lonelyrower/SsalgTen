@@ -107,7 +107,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               className={`
                 flex-shrink-0 w-[220px] relative overflow-hidden
                 bg-white dark:bg-gray-800 border ${colors.accent}
-                shadow-md hover:shadow-lg transition-all duration-300
+                shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)]
                 ${onSelect ? "cursor-pointer" : ""}
                 ${isSelected ? colors.ring : ""}
               `}

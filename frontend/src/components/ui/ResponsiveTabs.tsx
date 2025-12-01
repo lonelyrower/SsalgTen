@@ -152,7 +152,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
     <div className={className}>
       {/* 桌面端标签页 */}
       <div className="hidden md:block">
-        <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <nav
             className="-mb-px flex space-x-6"
             role="tablist"

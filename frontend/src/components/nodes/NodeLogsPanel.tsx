@@ -64,13 +64,13 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
+        className="bg-white dark:bg-gray-800 rounded-[var(--radius-2xl)] shadow-[var(--shadow-2xl)] max-w-4xl w-full max-h-[80vh] flex flex-col"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">节点日志</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{node.name}</p>

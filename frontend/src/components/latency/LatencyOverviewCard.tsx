@@ -270,7 +270,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
           )}
 
           {/* 最后更新时间 */}
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="pt-2 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
             <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
               <Clock className="h-3 w-3" />
               <span>最后更新: {formatLastUpdate(lastUpdated)}</span>

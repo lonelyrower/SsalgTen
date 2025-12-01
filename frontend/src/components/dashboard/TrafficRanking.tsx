@@ -40,8 +40,8 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl border-2 border-sky-200/60 dark:border-sky-700/60 bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-slate-800 dark:via-sky-950/60 dark:to-blue-950/60 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-sky-400/15 via-transparent to-blue-500/15" />
+    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-sky-200/60 dark:border-sky-700/60 bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-slate-800 dark:via-sky-950/60 dark:to-blue-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-sky-400/15 via-transparent to-blue-500/15" />
       <div className="absolute -top-12 -right-16 h-28 w-28 rounded-full bg-sky-300/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">

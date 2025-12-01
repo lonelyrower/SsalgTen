@@ -187,7 +187,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <input
                 type="text"
                 placeholder="搜索用户名、邮箱或姓名..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -196,7 +196,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <Filter className="h-4 w-4 text-gray-500" />
               <select
                 aria-label="筛选用户角色"
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
               >
@@ -231,8 +231,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       )}
 
       {/* 用户表格 */}
-      <Card className="bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-800 shadow-[var(--shadow-lg)] overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
               用户列表
@@ -356,7 +356,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           {filteredUsers.map((user) => (
             <div
               key={user.id}
-              className="p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+              className="p-4 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] last:border-b-0"
             >
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 h-12 w-12">
@@ -469,7 +469,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+          <Card className="bg-white dark:bg-gray-800 p-6 rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0 w-10 h-10 mx-auto bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
                 <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />

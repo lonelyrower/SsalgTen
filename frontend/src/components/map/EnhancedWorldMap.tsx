@@ -1145,7 +1145,7 @@ export const EnhancedWorldMap = memo(
     const isFullscreen = layout === "fullscreen";
     const mapWrapperClasses = isFullscreen
       ? "fullscreen-map flex-1 min-h-full w-full"
-      : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800";
+      : "flex-1 min-h-[300px] md:min-h-[480px] w-full rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]";
     const mapContainerClassName = isFullscreen
       ? "z-0 rounded-none border-none shadow-none"
       : "z-0";
@@ -1174,8 +1174,8 @@ export const EnhancedWorldMap = memo(
 
             {/* 图层选择菜单 */}
             {showLayerMenu && (
-              <div className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-200 layer-menu-container">
-                <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              <div className="absolute top-14 right-0 bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] overflow-hidden min-w-[280px] z-50 animate-in fade-in slide-in-from-top-2 duration-[var(--duration-normal)] layer-menu-container">
+                <div className="p-2 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gray-50 dark:bg-gray-900">
                   <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide px-2">
                     选择地图图层
                   </p>
@@ -1376,8 +1376,8 @@ export const EnhancedWorldMap = memo(
         {/* 聚合节点详情模态框 */}
         {showClusterModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-2xl)] max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     聚合节点详情 ({clusterNodes.length} 个节点)
@@ -1416,7 +1416,7 @@ export const EnhancedWorldMap = memo(
                         onNodeClick?.(node);
                         setShowClusterModal(false);
                       }}
-                      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                      className="p-4 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm">
@@ -1468,7 +1468,7 @@ export const EnhancedWorldMap = memo(
                 </div>
               </div>
 
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+              <div className="p-4 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gray-50 dark:bg-gray-700">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-4">
                     <span className="text-[hsl(var(--status-success-600))]">

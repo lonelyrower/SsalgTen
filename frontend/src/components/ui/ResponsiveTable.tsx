@@ -219,7 +219,7 @@ export function SimpleResponsiveTable<T>({
     <div className="mobile-table">
       <table className={`w-full ${className}`}>
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700">
+          <tr className="border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
             {columns.map((column) => (
               <th
                 key={String(column.key)}

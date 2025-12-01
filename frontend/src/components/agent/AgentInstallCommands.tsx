@@ -34,7 +34,7 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({
 
   const copyButtonClasses = (isCopied: boolean) =>
     cn(
-      "absolute top-3 right-3 z-10 h-9 w-9 min-h-0 min-w-0 p-0 rounded-md shadow-sm transition-colors",
+      "absolute top-3 right-3 z-10 h-9 w-9 min-h-0 min-w-0 p-0 rounded-[var(--radius-md)] shadow-sm transition-colors",
       "border bg-white/95 text-primary hover:bg-primary/10 dark:bg-slate-900/80 dark:text-primary",
       isCopied
         ? "border-emerald-300 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400"
@@ -248,7 +248,7 @@ sudo systemctl reset-failed`,
       <div className="space-y-4">
         {/* 安全警告 (紧凑模式) */}
         {!installData.security.isSecure && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-[var(--radius-lg)] p-3">
             <div className="flex items-center space-x-2">
               <ShieldAlert className="h-4 w-4 text-yellow-600" />
               <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
@@ -259,7 +259,7 @@ sudo systemctl reset-failed`,
         )}
 
         {/* 快速安装命令 (紧凑版) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg border p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] border p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-gray-900 dark:text-white">
               快速安装命令
@@ -301,7 +301,7 @@ sudo systemctl reset-failed`,
     <div className="space-y-6">
       {/* 服务器信息 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-[var(--radius-lg)]">
           <div className="flex items-center space-x-3">
             <Server className="h-5 w-5 text-primary" />
             <div>
@@ -325,7 +325,7 @@ sudo systemctl reset-failed`,
             )}
           </Button>
         </div>
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-[var(--radius-lg)]">
           <div className="flex items-center space-x-3">
             <Key
               className={`h-5 w-5 ${installData.security.isSecure ? "text-green-600" : "text-yellow-600"}`}
@@ -356,7 +356,7 @@ sudo systemctl reset-failed`,
 
       {/* 安全警告 */}
       {!installData.security.isSecure && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-[var(--radius-lg)] p-4">
           <div className="flex items-start space-x-3">
             <ShieldAlert className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div className="flex-1">
@@ -391,7 +391,7 @@ sudo systemctl reset-failed`,
 
       {/* 安全确认 */}
       {installData.security.isSecure && (
-        <div className="bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] border border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800))] rounded-lg p-4">
+        <div className="bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] border border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800))] rounded-[var(--radius-lg)] p-4">
           <div className="flex items-center space-x-3">
             <Shield className="h-5 w-5 text-[hsl(var(--status-success-600))]" />
             <div>
@@ -407,7 +407,7 @@ sudo systemctl reset-failed`,
       )}
 
       {/* 快速安装命令 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
         <div className="flex items-center space-x-3 mb-4">
           <Terminal className="h-6 w-6 text-[hsl(var(--status-success-600))]" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -420,7 +420,7 @@ sudo systemctl reset-failed`,
         </p>
 
         <div className="relative group">
-          <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
+          <pre className="bg-gray-900 text-green-400 p-4 rounded-[var(--radius-lg)] overflow-x-auto text-sm font-mono pr-14">
             <code>{installData.quickCommand}</code>
           </pre>
           <Button
@@ -443,7 +443,7 @@ sudo systemctl reset-failed`,
           </Button>
         </div>
 
-        <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+        <div className="mt-4 p-4 bg-primary/10 rounded-[var(--radius-lg)]">
           <h4 className="font-medium text-primary mb-2">安装完成后：</h4>
           <ul className="text-sm text-primary space-y-1">
             <li>• 节点将自动注册到当前主服务器</li>
@@ -456,7 +456,7 @@ sudo systemctl reset-failed`,
 
       {/* 交互式安装命令 */}
       {installData.interactiveCommand && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
           <div className="flex items-center space-x-3 mb-4">
             <Terminal className="h-6 w-6 text-primary" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -469,7 +469,7 @@ sudo systemctl reset-failed`,
           </p>
 
           <div className="relative group">
-            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
+            <pre className="bg-gray-900 text-green-400 p-4 rounded-[var(--radius-lg)] overflow-x-auto text-sm font-mono pr-14">
               <code>{installData.interactiveCommand}</code>
             </pre>
             <Button
@@ -494,7 +494,7 @@ sudo systemctl reset-failed`,
             </Button>
           </div>
 
-          <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+          <div className="mt-4 p-4 bg-primary/10 rounded-[var(--radius-lg)]">
             <h4 className="font-medium text-primary mb-2">使用说明：</h4>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <li>• 运行命令后将显示安装选项菜单</li>
@@ -508,7 +508,7 @@ sudo systemctl reset-failed`,
 
       {/* 卸载命令 */}
       {installData.quickUninstallCommand && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6">
           <div className="flex items-center space-x-3 mb-4">
             <Terminal className="h-6 w-6 text-[hsl(var(--status-error-600))]" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -521,7 +521,7 @@ sudo systemctl reset-failed`,
           </p>
 
           <div className="relative group">
-            <pre className="bg-gray-900 text-[hsl(var(--status-error-400))] p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
+            <pre className="bg-gray-900 text-[hsl(var(--status-error-400))] p-4 rounded-[var(--radius-lg)] overflow-x-auto text-sm font-mono pr-14">
               <code>{installData.quickUninstallCommand}</code>
             </pre>
             <Button
@@ -546,7 +546,7 @@ sudo systemctl reset-failed`,
             </Button>
           </div>
 
-          <div className="mt-4 p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-lg">
+          <div className="mt-4 p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-[var(--radius-lg)]">
             <h4 className="font-medium text-[hsl(var(--status-error-900))] dark:text-[hsl(var(--status-error-100))] mb-2 flex items-center">
               <AlertCircle className="h-4 w-4 mr-2" />
               卸载注意事项：

@@ -110,16 +110,16 @@ const StatsCardsComponent = ({
       {stats.map((stat, index) => (
         <div
           key={index}
-          className={`group relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl ${stat.accent.border} ${stat.accent.bg}`}
+          className={`group relative overflow-hidden rounded-[var(--radius-2xl)] border-2 bg-gradient-to-br shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] ${stat.accent.border} ${stat.accent.bg}`}
         >
           <div
-            className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${stat.accent.glow}`}
+            className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br ${stat.accent.glow}`}
           />
           <div className="relative flex flex-col gap-4 p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className={`rounded-xl p-3 shadow-sm ${stat.accent.iconWrapper}`}
+                  className={`rounded-[var(--radius-xl)] p-3 shadow-[var(--shadow-sm)] ${stat.accent.iconWrapper}`}
                 >
                   <stat.Icon className="h-6 w-6" />
                 </div>

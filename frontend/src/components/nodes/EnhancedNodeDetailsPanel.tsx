@@ -155,9 +155,9 @@ export const EnhancedNodeDetailsPanel: React.FC<
       <motion.div
         className={`group relative ${
           isModalLayout
-            ? "max-h-[60vh] w-full rounded-2xl p-6"
-            : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
-        } overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-lg transition-all duration-300 flex flex-col`}
+            ? "max-h-[60vh] w-full rounded-[var(--radius-2xl)] p-6"
+            : "sticky top-24 lg:h-[800px] rounded-[var(--radius-2xl)] p-8 hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)]"
+        } overflow-hidden border-2 border-violet-200/60 dark:border-violet-700/60 bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-800 dark:via-violet-950/60 dark:to-indigo-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] flex flex-col`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -195,10 +195,10 @@ export const EnhancedNodeDetailsPanel: React.FC<
 
   return (
     <motion.div
-      className={`group relative w-full overflow-y-auto overflow-x-hidden border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-lg transition-all duration-300 flex flex-col ${
+      className={`group relative w-full overflow-y-auto overflow-x-hidden border-2 ${themeColors.border} bg-gradient-to-br ${themeColors.bg} shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] flex flex-col ${
         isModalLayout
-          ? "max-h-[85vh] rounded-t-3xl p-6"
-          : "sticky top-24 lg:h-[800px] rounded-2xl p-8 hover:-translate-y-0.5 hover:shadow-xl"
+          ? "max-h-[85vh] rounded-t-[var(--radius-3xl)] p-6"
+          : "sticky top-24 lg:h-[800px] rounded-[var(--radius-2xl)] p-8 hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)]"
       }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}

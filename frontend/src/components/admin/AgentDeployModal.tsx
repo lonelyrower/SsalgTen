@@ -24,9 +24,9 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center space-x-3">
             <Server className="h-6 w-6 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -120,7 +120,7 @@ export const AgentDeployModal: React.FC<AgentDeployModalProps> = ({
         </div>
 
         {/* 底部帮助链接 */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="px-6 py-4 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
             <span>需要帮助？</span>
             <Button

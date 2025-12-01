@@ -49,7 +49,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       case "minimal":
         return (
           <div
-            className={`${sizeClasses[size]} border-4 border-gray-200 dark:border-gray-700 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin`}
+            className={`${sizeClasses[size]} border-4 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin`}
           ></div>
         );
       default:

@@ -216,7 +216,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: google.com)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -228,7 +228,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value={5}>5 次</option>
               <option value={10}>10 次 (默认)</option>

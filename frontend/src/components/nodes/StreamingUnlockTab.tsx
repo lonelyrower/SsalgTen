@@ -129,7 +129,7 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
       case "pending":
         return "bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)/0.1)] border-[hsl(var(--status-warning-200))] dark:border-[hsl(var(--status-warning-800))]";
       default:
-        return "bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-700";
+        return "bg-gray-50 dark:bg-gray-900/10 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]";
     }
   };
 

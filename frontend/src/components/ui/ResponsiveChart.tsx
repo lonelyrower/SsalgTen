@@ -58,7 +58,7 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
     return (
       <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col">
         {/* 全屏模式头部 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {title || "图表"}
           </h3>
@@ -96,7 +96,7 @@ export const ResponsiveChart: React.FC<ResponsiveChartProps> = ({
     >
       {/* 图表头部 */}
       {(title || allowFullscreen) && (
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           {title && (
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mobile-text-readable">
               {title}

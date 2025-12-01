@@ -60,13 +60,13 @@ export function GlassCard({
   };
 
   const colors = variantStyles[variant];
-  const hoverClasses = hover ? "group hover:-translate-y-0.5 hover:shadow-xl" : "";
+  const hoverClasses = hover ? "group hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)]" : "";
 
   return (
     <motion.div
       className={cn(
-        "relative rounded-2xl border-2 p-6 overflow-hidden",
-        "bg-gradient-to-br shadow-lg transition-all duration-300",
+        "relative rounded-[var(--radius-2xl)] border-2 p-6 overflow-hidden",
+        "bg-gradient-to-br shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)]",
         colors.border,
         colors.bg,
         hoverClasses,
@@ -80,8 +80,8 @@ export function GlassCard({
       {hover && (
         <div
           className={cn(
-            "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-            "bg-gradient-to-br rounded-2xl",
+            "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100",
+            "bg-gradient-to-br rounded-[var(--radius-2xl)]",
             colors.glow,
           )}
         />

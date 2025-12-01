@@ -41,7 +41,7 @@ const errorConfig = {
     icon: AlertCircle,
     color: "text-gray-500 dark:text-gray-400",
     bgColor: "bg-gray-50 dark:bg-gray-800",
-    borderColor: "border-gray-200 dark:border-gray-700",
+    borderColor: "border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]",
     defaultTitle: "页面未找到",
     defaultMessage: "抱歉，您访问的页面不存在。",
   },
@@ -105,7 +105,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     <div className={`flex items-center justify-center min-h-64 ${className}`}>
       <div
         className={`
-        max-w-md w-full text-center rounded-2xl border shadow-lg
+        max-w-md w-full text-center rounded-[var(--radius-2xl)] border shadow-[var(--shadow-lg)]
         ${config.bgColor} ${config.borderColor} ${sizeStyles.container}
       `}
       >
@@ -146,7 +146,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
                 
-                shadow-lg hover:shadow-xl transform hover:scale-105
+                shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transform hover:scale-105
               `}
             >
               <RefreshCw className="h-4 w-4 text-primary" />
@@ -161,7 +161,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               size="sm"
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
-                border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300
+                border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] text-gray-700 dark:text-gray-300
                 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200
               `}
             >

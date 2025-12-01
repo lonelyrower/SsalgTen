@@ -207,9 +207,9 @@ export const NodeModal: React.FC<NodeModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
           <div className="flex items-center space-x-3">
             <Server className="h-6 w-6 text-primary" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -229,7 +229,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
         {/* 内容区域 */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-[var(--radius-lg)]">
               <div className="flex items-center">
                 <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
                 <p className="text-red-800 dark:text-red-200">{error}</p>
@@ -254,10 +254,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.name
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="输入节点名称"
                   />
@@ -279,10 +279,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       onChange={(e) =>
                         handleInputChange("country", e.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                      className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                         validationErrors.country
                           ? "border-red-300 dark:border-red-600"
-                          : "border-gray-300 dark:border-gray-600"
+                          : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                       }`}
                       placeholder="中国"
                     />
@@ -303,10 +303,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       onChange={(e) =>
                         handleInputChange("city", e.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                      className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                         validationErrors.city
                           ? "border-red-300 dark:border-red-600"
-                          : "border-gray-300 dark:border-gray-600"
+                          : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                       }`}
                       placeholder="北京"
                     />
@@ -328,10 +328,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     onChange={(e) =>
                       handleInputChange("provider", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.provider
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="阿里云"
                   />
@@ -352,7 +352,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                       handleInputChange("description", e.target.value)
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="节点描述信息"
                   />
                 </div>
@@ -373,10 +373,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.ipv4}
                     onChange={(e) => handleInputChange("ipv4", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.ipv4
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="192.168.1.1"
                   />
@@ -395,10 +395,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     type="text"
                     value={formData.ipv6}
                     onChange={(e) => handleInputChange("ipv6", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.ipv6
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="2001:db8::1"
                   />
@@ -421,10 +421,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     }
                     min="1"
                     max="65535"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.port
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="3002"
                   />
@@ -445,10 +445,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     onChange={(e) =>
                       handleInputChange("apiKey", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-mono ${
                       validationErrors.apiKey
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="agent-api-key-here"
                   />
@@ -462,7 +462,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             </div>
 
             {/* 地理位置 */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div className="border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] pt-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
                 <MapPin className="h-5 w-5 mr-2 text-orange-600" />
                 地理位置
@@ -485,10 +485,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     step="0.000001"
                     min="-90"
                     max="90"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.latitude
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="39.904211"
                   />
@@ -515,10 +515,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                     step="0.000001"
                     min="-180"
                     max="180"
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
+                    className={`w-full px-3 py-2 border rounded-[var(--radius-lg)] bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                       validationErrors.longitude
                         ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))]"
                     }`}
                     placeholder="116.407395"
                   />
@@ -532,7 +532,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
             </div>
 
             {/* 状态设置 */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div className="border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] pt-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
                 <Activity className="h-5 w-5 mr-2 text-purple-600" />
                 状态设置
@@ -563,7 +563,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
         </div>
 
         {/* 底部按钮 */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gray-50 dark:bg-gray-900">
           <Button
             type="button"
             variant="outline"
