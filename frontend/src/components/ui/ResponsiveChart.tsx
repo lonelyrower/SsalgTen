@@ -228,8 +228,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <span
             className={`font-medium ${
               trend.isPositive
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
+                : "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]"
             }`}
           >
             {trend.isPositive ? "+" : ""}

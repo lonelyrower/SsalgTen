@@ -55,7 +55,7 @@ export const NodeDetailsPopover: React.FC<NodeDetailsPopoverProps> = ({
                   <Activity className="h-5 w-5 text-primary" />
                 </div>
                 {node.status === "online" && (
-                  <span className="absolute -top-1 -right-1 status-indicator bg-green-400" />
+                  <span className="absolute -top-1 -right-1 status-indicator bg-[hsl(var(--status-success-400))]" />
                 )}
               </div>
             </div>

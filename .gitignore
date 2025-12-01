@@ -50,6 +50,7 @@ logs
 # Editor directories and files
 .vscode/
 .idea/
+.history/
 *.swp
 *.swo
 *~

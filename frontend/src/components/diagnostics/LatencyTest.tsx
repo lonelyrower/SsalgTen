@@ -78,11 +78,11 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
   const getStatusColor = (status: LatencyResult["status"]): string => {
     switch (status) {
       case "excellent":
-        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+        return "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-700))] dark:bg-[hsl(var(--status-success-900)/0.4)] dark:text-[hsl(var(--status-success-300))]";
       case "good":
-        return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+        return "bg-[hsl(var(--status-warning-100))] text-[hsl(var(--status-warning-700))] dark:bg-[hsl(var(--status-warning-900)/0.4)] dark:text-[hsl(var(--status-warning-300))]";
       case "poor":
-        return "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
+        return "bg-[hsl(var(--status-error-100))] text-[hsl(var(--status-error-700))] dark:bg-[hsl(var(--status-error-900)/0.4)] dark:text-[hsl(var(--status-error-300))]";
       case "failed":
         return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300";
       default:
@@ -280,7 +280,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         <div className="space-y-4">
           <GlassCard variant="default" className="space-y-5">
             <div className="flex flex-wrap items-center gap-2 text-slate-900 dark:text-white">
-              <Clock className="h-5 w-5 text-emerald-500" />
+              <Clock className="h-5 w-5 text-[hsl(var(--status-success-500))]" />
               测试结果概览
               <Badge variant="outline" className="rounded-full px-3 py-1 text-xs">
                 {testResult.testType === "standard" ? "标准测试" : "完整测试"}
@@ -294,19 +294,19 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">成功站点</div>
               </div>
               <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300">
+                <div className="text-2xl font-semibold text-[hsl(var(--status-info-600))] dark:text-[hsl(var(--status-info-300))]">
                   {testResult.summary.averageLatency.toFixed(1)}ms
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">平均延迟</div>
               </div>
               <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
+                <div className="text-2xl font-semibold text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-300))]">
                   {testResult.summary.excellentCount}
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">优秀连接</div>
               </div>
               <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4 text-center dark:border-slate-700/60 dark:bg-slate-900/30">
-                <div className="text-2xl font-semibold text-amber-600 dark:text-amber-300">
+                <div className="text-2xl font-semibold text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-300))]">
                   {(testResult.duration / 1000).toFixed(1)}s
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">测试耗时</div>

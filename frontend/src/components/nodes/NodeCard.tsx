@@ -19,9 +19,9 @@ interface NodeCardProps {
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "online":
-      return "text-green-400 bg-green-400/20 border-green-400/50";
+      return "text-[hsl(var(--status-success-400))] bg-[hsl(var(--status-success-400)/0.2)] border-[hsl(var(--status-success-400)/0.5)]";
     case "offline":
-      return "text-red-400 bg-red-400/20 border-red-400/50";
+      return "text-[hsl(var(--status-error-400))] bg-[hsl(var(--status-error-400)/0.2)] border-[hsl(var(--status-error-400)/0.5)]";
     default:
       return "text-gray-400 bg-gray-400/20 border-gray-400/50";
   }

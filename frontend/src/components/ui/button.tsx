@@ -20,10 +20,11 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
         link: "text-primary underline-offset-4 hover:underline active:text-primary/80",
         success:
-          "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-lg dark:bg-emerald-600 dark:hover:bg-emerald-700",
+          "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] hover:bg-[hsl(var(--success))]/90 shadow-sm hover:shadow-lg",
         warning:
-          "bg-orange-600 text-white hover:bg-orange-700 shadow-sm hover:shadow-lg dark:bg-orange-600 dark:hover:bg-orange-700",
-        info: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-lg dark:bg-blue-600 dark:hover:bg-blue-700",
+          "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] hover:bg-[hsl(var(--warning))]/90 shadow-sm hover:shadow-lg",
+        info:
+          "bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))] hover:bg-[hsl(var(--info))]/90 shadow-sm hover:shadow-lg",
       },
       size: {
         default: "h-11 px-4 py-2 min-h-[44px]",

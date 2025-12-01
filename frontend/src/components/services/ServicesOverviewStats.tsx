@@ -63,7 +63,7 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {stats.expiredNodes > 0 && (
-                <span className="text-yellow-600 dark:text-yellow-400">
+                <span className="text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]">
                   {stats.expiredNodes} 个数据过期
                 </span>
               )}
@@ -99,7 +99,7 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-3xl font-bold text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]">
               {stats.runningServices}
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -129,8 +129,8 @@ export const ServicesOverviewStats: React.FC<ServicesOverviewStatsProps> = ({
               <div
                 className={`text-2xl font-bold ${
                   stats.failedServices === 0
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
+                    ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
+                    : "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]"
                 }`}
               >
                 {stats.failedServices}

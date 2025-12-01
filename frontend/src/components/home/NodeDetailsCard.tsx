@@ -24,7 +24,7 @@ export const NodeDetailsCard: React.FC<NodeDetailsCardProps> = ({
               </div>
               {/* 只为在线节点保留脉冲动画 */}
               {node.status === "online" && (
-                <div className="absolute -top-1 -right-1 status-indicator bg-green-400" />
+                <div className="absolute -top-1 -right-1 status-indicator bg-[hsl(var(--status-success-400))]" />
               )}
             </div>
             <div className="space-y-1">

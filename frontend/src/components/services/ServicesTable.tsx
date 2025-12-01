@@ -385,7 +385,7 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
                   onClick={(e) => handleCopyLink(link, e)}
                   className={`flex-shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
                     copiedLink === link
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
                       : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   }`}
                   title={copiedLink === link ? "已复制" : "复制链接"}

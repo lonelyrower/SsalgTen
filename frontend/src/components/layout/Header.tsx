@@ -161,13 +161,13 @@ export const Header = () => {
               <div
                 className={`hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                   connected
-                    ? "bg-green-500/15 text-green-300 border border-green-500/30 hover:border-green-500/50"
-                    : "bg-red-500/15 text-red-300 border border-red-500/30 hover:border-red-500/50"
+                    ? "bg-[hsl(var(--status-success-500)/0.15)] text-[hsl(var(--status-success-300))] border border-[hsl(var(--status-success-500)/0.3)] hover:border-[hsl(var(--status-success-500)/0.5)]"
+                    : "bg-[hsl(var(--status-error-500)/0.15)] text-[hsl(var(--status-error-300))] border border-[hsl(var(--status-error-500)/0.3)] hover:border-[hsl(var(--status-error-500)/0.5)]"
                 }`}
                 title={connected ? "实时连接正常" : "实时连接断开"}
               >
                 <div
-                  className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-green-400 animate-pulse" : "bg-red-400"}`}
+                  className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-[hsl(var(--status-success-400))] animate-pulse" : "bg-[hsl(var(--status-error-400))]"}`}
                 />
                 <span>{connected ? "已连接" : "断开"}</span>
               </div>

@@ -167,8 +167,8 @@ export const LoginPage: React.FC = () => {
 
             {/* 错误信息 */}
             {error && (
-              <div className="p-3 border border-red-300/80 bg-red-50/80 dark:border-red-800/60 dark:bg-red-900/30 rounded-lg shadow-inner shadow-red-500/10">
-                <p className="text-sm text-red-600 dark:text-red-300">
+              <div className="p-3 border border-[hsl(var(--status-error-300)/0.8)] bg-[hsl(var(--status-error-50)/0.8)] dark:border-[hsl(var(--status-error-800)/0.6)] dark:bg-[hsl(var(--status-error-900)/0.3)] rounded-lg shadow-inner shadow-[hsl(var(--status-error-500)/0.1)]">
+                <p className="text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-300))]">
                   {error}
                 </p>
               </div>

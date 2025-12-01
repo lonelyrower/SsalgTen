@@ -54,13 +54,13 @@ export const StreamingPlatformMatrix: React.FC<StreamingPlatformMatrixProps> = (
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-semibold">
+              <td className="px-4 py-3 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] font-semibold">
                 {platform.unlocked}
                 <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
                   ({STATUS_TEXT.yes})
                 </span>
               </td>
-              <td className="px-4 py-3 text-rose-600 dark:text-rose-400 font-semibold">
+              <td className="px-4 py-3 text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] font-semibold">
                 {platform.restricted}
                 <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
                   ({STATUS_TEXT.no})
@@ -84,10 +84,10 @@ export const StreamingPlatformMatrix: React.FC<StreamingPlatformMatrixProps> = (
                     <div
                       className={`h-full rounded-full ${
                         platform.unlockRate >= 80
-                          ? "bg-emerald-500"
+                          ? "bg-[hsl(var(--status-success-500))]"
                           : platform.unlockRate >= 50
-                            ? "bg-amber-500"
-                            : "bg-rose-500"
+                            ? "bg-[hsl(var(--status-warning-500))]"
+                            : "bg-[hsl(var(--status-error-500))]"
                       }`}
                       style={{ width: `${Math.round(platform.unlockRate)}%` }}
                     />
@@ -95,10 +95,10 @@ export const StreamingPlatformMatrix: React.FC<StreamingPlatformMatrixProps> = (
                   <span
                     className={`w-14 text-right font-semibold ${
                       platform.unlockRate >= 80
-                        ? "text-emerald-600 dark:text-emerald-400"
+                        ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
                         : platform.unlockRate >= 50
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-rose-600 dark:text-rose-400"
+                          ? "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]"
+                          : "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]"
                     }`}
                   >
                     {Math.round(platform.unlockRate)}%

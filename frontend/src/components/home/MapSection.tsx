@@ -66,14 +66,14 @@ export const MapSection: React.FC<MapSectionProps> = ({
         {/* Row 2: Node Statistics & Visitor Location Toggle */}
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs leading-none backdrop-blur-md shadow-lg dark:bg-black/40">
           <div className="flex items-center gap-1.5 text-white">
-            <span className="status-indicator bg-green-400" />
+            <span className="status-indicator bg-[hsl(var(--status-success-400))]" />
             <span className="font-medium">
               {stats?.onlineNodes ?? 0}
             </span>
           </div>
           <span className="h-4 w-px bg-white/30" />
           <div className="flex items-center gap-1.5 text-white">
-            <span className="status-indicator bg-red-400" />
+            <span className="status-indicator bg-[hsl(var(--status-error-400))]" />
             <span className="font-medium">{stats?.offlineNodes ?? 0}</span>
           </div>
           <span className="h-4 w-px bg-white/30" />
