@@ -26,7 +26,7 @@ export const ComponentErrorBoundary: React.FC<{
 }> = ({ children, componentName }) => (
   <ErrorBoundary
     fallback={
-      <div className="p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-lg border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]">
+      <div className="p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)_/_0.2)] rounded-lg border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]">
         <div className="flex items-center space-x-2 text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-400))]">
           <AlertCircle className="h-5 w-5" />
           <span className="text-sm font-medium">

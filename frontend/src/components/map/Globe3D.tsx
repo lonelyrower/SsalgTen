@@ -661,7 +661,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
             isRotating
               ? "bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800"
               : "bg-primary hover:bg-primary/90"
-          } shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)/0.5)] dark:border-[hsl(var(--border-muted)/0.5)]`}
+          } shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)_/_0.5)] dark:border-[hsl(var(--border-muted)_/_0.5)]`}
         >
           {isRotating ? (
             <Pause className="h-4 w-4 text-gray-700 dark:text-gray-200" />
@@ -675,7 +675,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           onClick={zoomIn}
           title="放大"
           aria-label="放大地图"
-          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)/0.5)] dark:border-[hsl(var(--border-muted)/0.5)]"
+          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)_/_0.5)] dark:border-[hsl(var(--border-muted)_/_0.5)]"
         >
           <ZoomIn className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
@@ -685,7 +685,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           onClick={zoomOut}
           title="缩小"
           aria-label="缩小地图"
-          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)/0.5)] dark:border-[hsl(var(--border-muted)/0.5)]"
+          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)_/_0.5)] dark:border-[hsl(var(--border-muted)_/_0.5)]"
         >
           <ZoomOut className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
@@ -695,7 +695,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
           onClick={resetView}
           title="重置视图"
           aria-label="重置地图视图到初始位置"
-          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)/0.5)] dark:border-[hsl(var(--border-muted)/0.5)]"
+          className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)_/_0.5)] dark:border-[hsl(var(--border-muted)_/_0.5)]"
         >
           <Home className="h-4 w-4 text-gray-700 dark:text-gray-200" />
         </Button>
@@ -709,7 +709,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
             variant="secondary"
             size="sm"
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] flex items-center gap-2 border border-[hsl(var(--border-subtle)/0.5)] dark:border-[hsl(var(--border-muted)/0.5)] lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
+            className="bg-white/95 dark:bg-gray-800/95 hover:bg-white dark:hover:bg-gray-800 shadow-[var(--shadow-lg)] flex items-center gap-2 border border-[hsl(var(--border-subtle)_/_0.5)] dark:border-[hsl(var(--border-muted)_/_0.5)] lg:bg-white/90 lg:dark:bg-gray-800/90 lg:backdrop-blur-[10px]"
           >
             <Layers className="h-4 w-4 text-gray-700 dark:text-gray-200" />
             <span className="hidden sm:inline text-gray-700 dark:text-gray-200">

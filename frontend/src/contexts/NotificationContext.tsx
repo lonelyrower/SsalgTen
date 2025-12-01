@@ -147,11 +147,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getBackgroundColor = () => {
     switch (notification.type) {
       case "success":
-        return "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)]";
+        return "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)_/_0.2)]";
       case "error":
-        return "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)]";
+        return "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)_/_0.2)]";
       case "warning":
-        return "bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)/0.2)]";
+        return "bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)_/_0.2)]";
       case "info":
       default:
         return "bg-primary/10";

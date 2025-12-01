@@ -1162,7 +1162,7 @@ export const EnhancedWorldMap = memo(
               variant="secondary"
               size="sm"
               onClick={() => setShowLayerMenu(!showLayerMenu)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)/0.6)] lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-gray-800/95 dark:hover:bg-gray-700/95 dark:text-white dark:border-[hsl(var(--border-muted))]"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)_/_0.6)] lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-gray-800/95 dark:hover:bg-gray-700/95 dark:text-white dark:border-[hsl(var(--border-muted))]"
               aria-expanded={showLayerMenu}
               aria-haspopup="menu"
             >
