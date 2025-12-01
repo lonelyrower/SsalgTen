@@ -238,9 +238,9 @@ export const UserModal: React.FC<UserModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* 全局错误 */}
           {errors.submit && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
-              <span className="text-red-700 dark:text-red-400">
+            <div className="p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))] rounded-lg flex items-center">
+              <AlertCircle className="h-5 w-5 text-[hsl(var(--status-error-500))] mr-3" />
+              <span className="text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-400))]">
                 {errors.submit}
               </span>
             </div>
@@ -260,7 +260,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.username
-                    ? "border-red-300 dark:border-red-600"
+                    ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
                     : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder="请输入用户名"
@@ -268,7 +268,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               />
             </div>
             {errors.username && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]">
                 {errors.username}
               </p>
             )}
@@ -288,7 +288,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.email
-                    ? "border-red-300 dark:border-red-600"
+                    ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
                     : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder="请输入邮箱地址"
@@ -296,7 +296,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               />
             </div>
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]">
                 {errors.email}
               </p>
             )}
@@ -332,7 +332,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                   errors.password
-                    ? "border-red-300 dark:border-red-600"
+                    ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
                     : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder={isEditing ? "留空表示不修改密码" : "请输入密码"}
@@ -352,7 +352,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]">
                 {errors.password}
               </p>
             )}
@@ -373,7 +373,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary ${
                     errors.confirmPassword
-                      ? "border-red-300 dark:border-red-600"
+                      ? "border-[hsl(var(--status-error-300))] dark:border-[hsl(var(--status-error-600))]"
                       : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="请再次输入密码"
@@ -393,7 +393,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                <p className="mt-1 text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]">
                   {errors.confirmPassword}
                 </p>
               )}

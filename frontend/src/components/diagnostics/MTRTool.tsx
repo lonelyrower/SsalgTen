@@ -208,7 +208,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
-              目标地址 <span className="text-red-500">*</span>
+              目标地址 <span className="text-[hsl(var(--status-error-500))]">*</span>
             </label>
             <input
               type="text"
@@ -266,8 +266,8 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="p-3 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))] rounded-lg">
+            <p className="text-sm text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-300))]">{error}</p>
           </div>
         )}
 

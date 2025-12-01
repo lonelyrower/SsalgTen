@@ -104,9 +104,9 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
     <GlassCard variant="success">
       <div className="space-y-4 text-left">
         {/* 标题 */}
-        <div className="flex items-center gap-2 pb-3 border-b border-green-200/30 dark:border-green-700/30">
-          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-            <Wifi className="h-5 w-5 text-green-600 dark:text-green-400" />
+        <div className="flex items-center gap-2 pb-3 border-b border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)]">
+          <div className="p-2 bg-[hsl(var(--status-success-100))] dark:bg-[hsl(var(--status-success-900)/0.3)] rounded-lg">
+            <Wifi className="h-5 w-5 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
           </div>
           <div className="flex-1">
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">
@@ -143,7 +143,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
-              目标地址 <span className="text-red-500">*</span>
+              目标地址 <span className="text-[hsl(var(--status-error-500))]">*</span>
             </label>
             <input
               type="text"
@@ -177,7 +177,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
         <Button
           onClick={runPing}
           disabled={loading || !target.trim()}
-          className="w-full bg-green-600 hover:bg-green-500 text-white"
+          className="w-full bg-[hsl(var(--status-success-600))] hover:bg-[hsl(var(--status-success-500))] text-white"
         >
           {loading ? (
             <>
@@ -194,8 +194,8 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="p-3 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))] rounded-lg">
+            <p className="text-sm text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-300))]">{error}</p>
           </div>
         )}
 
@@ -208,7 +208,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
               </Badge>
               <button
                 onClick={copyResult}
-                className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 hover:underline"
+                className="flex items-center gap-1 text-xs text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] hover:underline"
               >
                 {copied ? (
                   <>
@@ -225,18 +225,18 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
+              <div className="p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-emerald-50 dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-emerald-900/20 rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)]">
                 <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
-                  <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <Activity className="h-4 w-4 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
                   平均延迟
                 </div>
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
                   {formatLatency(result.avg ?? result.time)}
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50">
+              <div className="p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-emerald-50 dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-emerald-900/20 rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)]">
                 <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
-                  <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <Activity className="h-4 w-4 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
                   丢包率
                 </div>
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -246,13 +246,13 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
-              <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30">
+              <div className="p-3 bg-[hsl(var(--status-success-50)/0.5)] dark:bg-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)]">
                 <p>最小延迟</p>
                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
                   {formatLatency(result.min)}
                 </p>
               </div>
-              <div className="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30">
+              <div className="p-3 bg-[hsl(var(--status-success-50)/0.5)] dark:bg-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)]">
                 <p>最大延迟</p>
                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
                   {formatLatency(result.max)}
@@ -271,10 +271,10 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             {/* 原始结果 */}
             {result.output && (
               <details className="mt-2">
-                <summary className="cursor-pointer text-xs text-green-600 dark:text-green-400 hover:underline">
+                <summary className="cursor-pointer text-xs text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] hover:underline">
                   查看原始输出
                 </summary>
-                <div className="mt-2 p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-200/30 dark:border-green-700/30 max-h-60 overflow-y-auto">
+                <div className="mt-2 p-3 bg-[hsl(var(--status-success-50)/0.5)] dark:bg-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)] max-h-60 overflow-y-auto">
                   <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
                     {result.output}
                   </pre>

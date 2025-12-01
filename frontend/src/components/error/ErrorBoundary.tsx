@@ -84,8 +84,8 @@ class ErrorBoundary extends Component<Props, State> {
           <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <div className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
-                  <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                <div className="rounded-full bg-[hsl(var(--status-error-100))] dark:bg-[hsl(var(--status-error-900)/0.2)] p-3">
+                  <AlertCircle className="h-8 w-8 text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]" />
                 </div>
               </div>
 
@@ -107,7 +107,7 @@ class ErrorBoundary extends Component<Props, State> {
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
                     <div>
                       <strong>错误:</strong>
-                      <pre className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded text-red-700 dark:text-red-400 overflow-x-auto whitespace-pre-wrap">
+                      <pre className="mt-1 p-2 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-400))] overflow-x-auto whitespace-pre-wrap">
                         {this.state.error.toString()}
                       </pre>
                     </div>

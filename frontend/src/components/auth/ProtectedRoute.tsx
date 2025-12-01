@@ -39,7 +39,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="mb-6">
-            <div className="mx-auto h-24 w-24 text-red-500 mb-4">
+            <div className="mx-auto h-24 w-24 text-[hsl(var(--status-error-500))] mb-4">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"

@@ -160,10 +160,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <span
                   className={`font-bold text-sm ${
                     latency < 50
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
                       : latency < 150
-                        ? "text-yellow-600 dark:text-yellow-400"
-                        : "text-red-600 dark:text-red-400"
+                        ? "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]"
+                        : "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]"
                   }`}
                 >
                   {latency}ms
@@ -189,10 +189,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <motion.div
                   className={`h-full rounded-full ${
                     cpuUsage > 80
-                      ? "bg-red-500"
+                      ? "bg-[hsl(var(--status-error-500))]"
                       : cpuUsage > 60
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
+                        ? "bg-[hsl(var(--status-warning-500))]"
+                        : "bg-[hsl(var(--status-success-500))]"
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(cpuUsage, 100)}%` }}
@@ -216,9 +216,9 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <motion.div
                   className={`h-full rounded-full ${
                     memoryUsage > 80
-                      ? "bg-red-500"
+                      ? "bg-[hsl(var(--status-error-500))]"
                       : memoryUsage > 60
-                        ? "bg-yellow-500"
+                        ? "bg-[hsl(var(--status-warning-500))]"
                         : "bg-purple-500"
                   }`}
                   initial={{ width: 0 }}

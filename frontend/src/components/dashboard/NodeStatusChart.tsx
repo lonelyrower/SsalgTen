@@ -91,35 +91,35 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
           {/* 图例和统计 */}
           <div className="flex-1 space-y-4">
             <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                  <div className="w-3 h-3 rounded-full bg-[hsl(var(--status-success-500))]"></div>
+                  <span className="text-sm font-medium text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
                     在线节点
                   </span>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-green-600">
+                  <div className="text-lg font-bold text-[hsl(var(--status-success-600))]">
                     {onlineNodes}
                   </div>
-                  <div className="text-xs text-green-600">
+                  <div className="text-xs text-[hsl(var(--status-success-600))]">
                     {total > 0 ? Math.round((onlineNodes / total) * 100) : 0}%
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                  <div className="w-3 h-3 rounded-full bg-[hsl(var(--status-error-500))]"></div>
+                  <span className="text-sm font-medium text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-300))]">
                     离线节点
                   </span>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-red-600">
+                  <div className="text-lg font-bold text-[hsl(var(--status-error-600))]">
                     {offlineNodes}
                   </div>
-                  <div className="text-xs text-red-600">
+                  <div className="text-xs text-[hsl(var(--status-error-600))]">
                     {total > 0 ? Math.round((offlineNodes / total) * 100) : 0}%
                   </div>
                 </div>
@@ -139,7 +139,7 @@ export const NodeStatusChart: React.FC<NodeStatusChartProps> = ({
               <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                 <div
                   ref={progressRef}
-                  className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-[hsl(var(--status-success-500))] to-[hsl(var(--status-success-600))] h-2 rounded-full transition-all duration-500"
                 ></div>
               </div>
             </div>

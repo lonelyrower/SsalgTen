@@ -112,9 +112,9 @@ const ResourceBar = ({
   const colorMap = {
     cyan: "bg-cyan-500",
     purple: "bg-purple-500",
-    green: "bg-green-500",
-    yellow: "bg-yellow-500",
-    red: "bg-red-500",
+    green: "bg-[hsl(var(--status-success-500))]",
+    yellow: "bg-[hsl(var(--status-warning-500))]",
+    red: "bg-[hsl(var(--status-error-500))]",
   };
 
   return (
@@ -218,8 +218,8 @@ export const EnhancedNodeDetailsPanel: React.FC<
             <Badge
               variant={node.status === "online" ? "success" : "destructive"}
               className={node.status === "online"
-                ? "bg-green-500/20 text-green-700 dark:text-green-200 border border-green-500/30"
-                : "bg-red-500/20 text-red-700 dark:text-red-200 border border-red-500/30"
+                ? "bg-[hsl(var(--status-success-500)/0.2)] text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-200))] border border-[hsl(var(--status-success-500)/0.3)]"
+                : "bg-[hsl(var(--status-error-500)/0.2)] text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-200))] border border-[hsl(var(--status-error-500)/0.3)]"
               }
             >
               {node.status.toUpperCase()}
@@ -412,7 +412,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
                 {heartbeatData?.diskInfo && (
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <HardDrive className="h-4 w-4 text-yellow-400" />
+                      <HardDrive className="h-4 w-4 text-[hsl(var(--status-warning-400))]" />
                       磁盘使用
                     </h4>
                     <ResourceBar
@@ -475,7 +475,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
                             <>
                               <div className="flex justify-between">
                                 <span className="text-slate-500 dark:text-slate-400">速率 ↓:</span>
-                                <span className="text-green-600 dark:text-green-400 font-medium">
+                                <span className="text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] font-medium">
                                   {totalRxBps > 0 ? `${(totalRxBps / 1024 / 1024).toFixed(2)} MB/s` : '-'}
                                 </span>
                               </div>
@@ -497,7 +497,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
                   <div className="pt-4 border-t border-slate-200/70 dark:border-slate-700/30">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400 flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-green-400" />
+                        <Activity className="h-4 w-4 text-[hsl(var(--status-success-400))]" />
                         运行时间
                       </span>
                       <span className="text-slate-900 dark:text-white font-semibold">

@@ -17,16 +17,16 @@ const ResourceBar: React.FC<ResourceBarProps> = ({ label, value, color }) => {
   const colorMap = {
     cyan: "bg-cyan-500",
     purple: "bg-purple-500",
-    green: "bg-green-500",
-    yellow: "bg-yellow-500",
+    green: "bg-[hsl(var(--status-success-500))]",
+    yellow: "bg-[hsl(var(--status-warning-500))]",
     orange: "bg-orange-500",
   };
 
   const textColorMap = {
     cyan: "text-cyan-600 dark:text-cyan-300",
     purple: "text-purple-600 dark:text-purple-300",
-    green: "text-green-600 dark:text-green-300",
-    yellow: "text-yellow-600 dark:text-yellow-300",
+    green: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-300))]",
+    yellow: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-300))]",
     orange: "text-orange-600 dark:text-orange-300",
   };
 
@@ -234,7 +234,7 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-500">
+              <div className="text-2xl font-bold text-[hsl(var(--status-success-500))]">
                 {metrics.avgLoad.toFixed(2)}
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">

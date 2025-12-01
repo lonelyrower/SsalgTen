@@ -51,11 +51,11 @@ export const MobileNav: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return <Settings className="h-4 w-4 text-red-500" />;
+        return <Settings className="h-4 w-4 text-[hsl(var(--status-error-500))]" />;
       case "OPERATOR":
         return <Settings className="h-4 w-4 text-primary" />;
       case "VIEWER":
-        return <Users className="h-4 w-4 text-green-500" />;
+        return <Users className="h-4 w-4 text-[hsl(var(--status-success-500))]" />;
       default:
         return <Users className="h-4 w-4 text-gray-500" />;
     }
@@ -171,7 +171,7 @@ export const MobileNav: React.FC = () => {
                     <Button
                       onClick={handleLogout}
                       variant="ghost"
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                      className="w-full justify-start text-[hsl(var(--status-error-600))] hover:text-[hsl(var(--status-error-700))] hover:bg-[hsl(var(--status-error-50))] dark:text-[hsl(var(--status-error-400))] dark:hover:bg-[hsl(var(--status-error-900)/0.2)]"
                     >
                       <LogOut className="h-4 w-4 mr-3" />
                       退出登录

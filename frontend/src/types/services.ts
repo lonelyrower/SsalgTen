@@ -134,9 +134,9 @@ export const SERVICE_STATUS_CONFIG: Record<
 > = {
   running: {
     name: "Running",
-    color: "green",
+    color: "success",
     className:
-      "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30",
+      "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] bg-[hsl(var(--status-success-100))] dark:bg-[hsl(var(--status-success-900)/0.3)]",
   },
   stopped: {
     name: "Stopped",
@@ -146,21 +146,21 @@ export const SERVICE_STATUS_CONFIG: Record<
   },
   failed: {
     name: "Error",
-    color: "orange",
+    color: "warning",
     className:
-      "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30",
+      "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))] bg-[hsl(var(--status-warning-100))] dark:bg-[hsl(var(--status-warning-900)/0.3)]",
   },
   unknown: {
     name: "Unknown",
-    color: "orange",
+    color: "warning",
     className:
-      "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30",
+      "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))] bg-[hsl(var(--status-warning-100))] dark:bg-[hsl(var(--status-warning-900)/0.3)]",
   },
   expired: {
     name: "Expired",
-    color: "yellow",
+    color: "warning",
     className:
-      "text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30",
+      "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))] bg-[hsl(var(--status-warning-100))] dark:bg-[hsl(var(--status-warning-900)/0.3)]",
   },
 };
 

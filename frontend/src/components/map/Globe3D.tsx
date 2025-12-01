@@ -764,8 +764,8 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
                     currentLayer === "terrain"
-                      ? "bg-green-600/10 dark:bg-green-900/30 border-l-2 border-green-600 text-green-800 dark:text-green-200"
-                      : "bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
+                      ? "bg-[hsl(var(--status-success-600)/0.1)] dark:bg-[hsl(var(--status-success-900)/0.3)] border-l-2 border-[hsl(var(--status-success-600))] text-[hsl(var(--status-success-800))] dark:text-[hsl(var(--status-success-200))]"
+                      : "bg-white dark:bg-gray-800 hover:bg-[hsl(var(--status-success-50))] dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100"
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -773,7 +773,7 @@ export function Globe3D({ nodes, onNodeClick, onReady, showVisitorLocation = fal
                     立体地形
                   </span>
                   {currentLayer === "terrain" && (
-                    <div className="w-1.5 h-1.5 bg-green-600 dark:bg-green-300 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-[hsl(var(--status-success-600))] dark:bg-[hsl(var(--status-success-300))] rounded-full"></div>
                   )}
                 </button>
 

@@ -63,15 +63,15 @@ export const STATUS_TEXT: Record<StreamingStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<StreamingStatus, string> = {
-  yes: "text-emerald-600 dark:text-emerald-400",
-  no: "text-rose-600 dark:text-rose-400",
-  org: "text-amber-600 dark:text-amber-400",
-  noprem: "text-rose-600 dark:text-rose-400",
-  pending: "text-amber-600 dark:text-amber-400",
-  cn: "text-rose-600 dark:text-rose-400",
-  app: "text-amber-600 dark:text-amber-400",
-  web: "text-amber-600 dark:text-amber-400",
-  idc: "text-amber-600 dark:text-amber-400",
+  yes: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]",
+  no: "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]",
+  org: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
+  noprem: "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]",
+  pending: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
+  cn: "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]",
+  app: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
+  web: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
+  idc: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
   failed: "text-gray-600 dark:text-gray-400",
   unknown: "text-gray-600 dark:text-gray-400",
 };
@@ -84,8 +84,8 @@ export const UNLOCK_TYPE_LABELS: Record<UnlockType, string> = {
 };
 
 export const UNLOCK_TYPE_COLORS: Record<UnlockType, string> = {
-  native: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  dns: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  native: "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-700))] dark:bg-[hsl(var(--status-success-900)/0.4)] dark:text-[hsl(var(--status-success-300))]",
+  dns: "bg-[hsl(var(--status-warning-100))] text-[hsl(var(--status-warning-700))] dark:bg-[hsl(var(--status-warning-900)/0.4)] dark:text-[hsl(var(--status-warning-300))]",
   unknown: "bg-gray-100 text-gray-600 dark:bg-gray-800/60 dark:text-gray-300",
 };
 

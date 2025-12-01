@@ -154,11 +154,11 @@ export const SystemOverview: React.FC = () => {
   if (error) {
     return (
       <GlassCard variant="danger" hover={false} className="text-center">
-        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+        <AlertCircle className="h-12 w-12 text-[hsl(var(--status-error-500))] mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-[hsl(var(--status-error-800))] dark:text-[hsl(var(--status-error-200))] mb-2">
           数据加载失败
         </h3>
-        <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+        <p className="text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-300))] mb-4">{error}</p>
         <Button variant="outline" size="sm" onClick={fetchStats}>
           <RefreshCw className="h-4 w-4 mr-2" />
           重新加载

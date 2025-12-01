@@ -167,7 +167,7 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
           <RefreshCw
             className={`h-5 w-5 text-primary ${
               isRefreshing ? "animate-spin" : ""
-            } ${pullDistance >= threshold && !isRefreshing ? "text-green-500" : ""}`}
+            } ${pullDistance >= threshold && !isRefreshing ? "text-[hsl(var(--status-success-500))]" : ""}`}
           />
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 whitespace-nowrap">
             {isRefreshing

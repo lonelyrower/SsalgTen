@@ -151,7 +151,7 @@ export const StreamingFilters: React.FC<StreamingFiltersProps> = ({
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] text-sm hover:bg-[hsl(var(--status-error-50))] dark:hover:bg-[hsl(var(--status-error-900)/0.2)] transition-colors flex items-center gap-1.5"
             >
               <X className="h-4 w-4" />
               <span>清除筛选</span>

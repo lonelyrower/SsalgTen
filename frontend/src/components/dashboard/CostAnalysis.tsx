@@ -133,12 +133,12 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
               {/* 最高成本节点 */}
               <div className="rounded-xl border border-orange-100/70 dark:border-orange-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                  <span className="text-xs text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] font-medium">
                     最高成本
                   </span>
-                  <TrendingUp className="h-3 w-3 text-red-500" />
+                  <TrendingUp className="h-3 w-3 text-[hsl(var(--status-error-500))]" />
                 </div>
-                <div className="text-xl font-bold text-red-700 dark:text-red-300">
+                <div className="text-xl font-bold text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-300))]">
                   ${maxCost.toFixed(2)}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate" title={maxCostNode?.name}>
@@ -149,12 +149,12 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = memo(({ nodes, classNam
               {/* 最低成本节点 */}
               <div className="rounded-xl border border-orange-100/70 dark:border-orange-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                  <span className="text-xs text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] font-medium">
                     最低成本
                   </span>
-                  <TrendingDown className="h-3 w-3 text-green-500" />
+                  <TrendingDown className="h-3 w-3 text-[hsl(var(--status-success-500))]" />
                 </div>
-                <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                <div className="text-xl font-bold text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
                   ${minCost.toFixed(2)}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate" title={minCostNode?.name}>

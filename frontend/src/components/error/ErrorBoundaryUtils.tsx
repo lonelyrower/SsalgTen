@@ -26,14 +26,14 @@ export const ComponentErrorBoundary: React.FC<{
 }> = ({ children, componentName }) => (
   <ErrorBoundary
     fallback={
-      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-        <div className="flex items-center space-x-2 text-red-700 dark:text-red-400">
+      <div className="p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-lg border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]">
+        <div className="flex items-center space-x-2 text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-400))]">
           <AlertCircle className="h-5 w-5" />
           <span className="text-sm font-medium">
             {componentName ? `${componentName} 组件` : "组件"}加载失败
           </span>
         </div>
-        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+        <p className="text-xs text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] mt-1">
           请刷新页面重试
         </p>
       </div>

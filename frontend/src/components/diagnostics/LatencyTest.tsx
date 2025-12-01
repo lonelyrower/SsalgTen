@@ -270,7 +270,7 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
+          <div className="rounded-xl border border-[hsl(var(--status-error-200)/0.6)] bg-[hsl(var(--status-error-50)/0.8)] px-4 py-3 text-sm text-[hsl(var(--status-error-600))] dark:border-[hsl(var(--status-error-800)/0.6)] dark:bg-[hsl(var(--status-error-900)/0.2)] dark:text-[hsl(var(--status-error-300))]">
             {error}
           </div>
         )}

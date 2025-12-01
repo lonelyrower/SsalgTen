@@ -176,7 +176,7 @@ export const GeographicDistribution: React.FC<GeographicDistributionProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-semibold text-green-600">
+                  <span className="text-xs font-semibold text-[hsl(var(--status-success-600))]">
                     {item.online}
                   </span>
                   <span className="text-xs text-slate-400">/</span>

@@ -246,14 +246,14 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
       {error && (
         <GlassCard variant="danger" hover={false} className="mb-6 p-4">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-[hsl(var(--status-error-500))] mr-3 mt-0.5" />
             <div className="flex-1">
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-[hsl(var(--status-error-800))] dark:text-[hsl(var(--status-error-200))]">{error}</p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setError("")}
-                className="text-red-600 hover:text-red-700 mt-2 h-auto p-0"
+                className="text-[hsl(var(--status-error-600))] hover:text-[hsl(var(--status-error-700))] mt-2 h-auto p-0"
               >
                 关闭
               </Button>
@@ -265,8 +265,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
       {success && (
         <GlassCard variant="success" hover={false} className="mb-6 p-4">
           <div className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-            <p className="text-green-800 dark:text-green-200">{success}</p>
+            <CheckCircle className="h-5 w-5 text-[hsl(var(--status-success-500))] mr-3" />
+            <p className="text-[hsl(var(--status-success-800))] dark:text-[hsl(var(--status-success-200))]">{success}</p>
           </div>
         </GlassCard>
       )}

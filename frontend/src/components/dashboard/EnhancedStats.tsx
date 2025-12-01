@@ -37,19 +37,19 @@ const StatsCard: React.FC<StatsCardProps> = ({
       accent: "border-blue-200 dark:border-blue-800",
     },
     green: {
-      bg: "bg-green-50 dark:bg-green-900/20",
-      icon: "text-green-600 dark:text-green-400",
-      accent: "border-green-200 dark:border-green-800",
+      bg: "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)]",
+      icon: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]",
+      accent: "border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800))]",
     },
     yellow: {
-      bg: "bg-yellow-50 dark:bg-yellow-900/20",
-      icon: "text-yellow-600 dark:text-yellow-400",
-      accent: "border-yellow-200 dark:border-yellow-800",
+      bg: "bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)/0.2)]",
+      icon: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
+      accent: "border-[hsl(var(--status-warning-200))] dark:border-[hsl(var(--status-warning-800))]",
     },
     red: {
-      bg: "bg-red-50 dark:bg-red-900/20",
-      icon: "text-red-600 dark:text-red-400",
-      accent: "border-red-200 dark:border-red-800",
+      bg: "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)]",
+      icon: "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]",
+      accent: "border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]",
     },
     cyan: {
       bg: "bg-cyan-50 dark:bg-cyan-900/20",
@@ -98,9 +98,9 @@ const StatsCard: React.FC<StatsCardProps> = ({
                 <div
                   className={`flex items-center space-x-1 ${
                     change > 0
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
                       : change < 0
-                        ? "text-red-600 dark:text-red-400"
+                        ? "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]"
                         : "text-gray-500 dark:text-gray-400"
                   }`}
                 >

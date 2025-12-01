@@ -29,15 +29,15 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
 
   return (
     <div
-      className={`rounded-lg border p-4 mb-6 ${healthy ? "border-green-200 bg-green-50 dark:bg-green-900/20" : "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20"}`}
+      className={`rounded-lg border p-4 mb-6 ${healthy ? "border-[hsl(var(--status-success-200))] bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)]" : "border-[hsl(var(--status-warning-200))] bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)/0.2)]"}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">
           <div className="mt-0.5">
             {healthy ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-[hsl(var(--status-success-600))]" />
             ) : (
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <AlertTriangle className="h-5 w-5 text-[hsl(var(--status-warning-600))]" />
             )}
           </div>
           <div>
@@ -50,17 +50,17 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
             <div className="mt-1 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex flex-wrap gap-3 mb-2">
                 <span
-                  className={`px-2 py-0.5 rounded text-xs ${apiReachable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                  className={`px-2 py-0.5 rounded text-xs ${apiReachable ? "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-800))]" : "bg-[hsl(var(--status-error-100))] text-[hsl(var(--status-error-800))]"}`}
                 >
                   API {apiReachable ? "可达" : "不可达"}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-xs ${socketConnected ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                  className={`px-2 py-0.5 rounded text-xs ${socketConnected ? "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-800))]" : "bg-[hsl(var(--status-error-100))] text-[hsl(var(--status-error-800))]"}`}
                 >
                   Socket {socketConnected ? "已连接" : "未连接"}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-xs ${authOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                  className={`px-2 py-0.5 rounded text-xs ${authOk ? "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-800))]" : "bg-[hsl(var(--status-error-100))] text-[hsl(var(--status-error-800))]"}`}
                 >
                   认证 {authOk ? "正常" : "异常"}
                 </span>
@@ -77,10 +77,10 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
                   ))}
                 </ul>
               ) : (
-                <div className="text-green-700 dark:text-green-300">
+                <div className="text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
                   系统连接状态良好。
                 </div>
-              )}
+              )}}
               {lastCheckedAt && (
                 <div className="text-xs text-gray-500 mt-2">
                   上次检查：{new Date(lastCheckedAt).toLocaleString()}
@@ -117,7 +117,7 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
                 查看密钥
               </Button>
               <Button
-                className="bg-amber-600 hover:bg-amber-700 text-white"
+                className="bg-[hsl(var(--status-warning-600))] hover:bg-[hsl(var(--status-warning-700))] text-white"
                 onClick={async () => {
                   if (
                     !confirm(

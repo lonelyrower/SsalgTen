@@ -52,28 +52,28 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
   const getLatencyLevel = (average: number) => {
     if (average < 50)
       return {
-        color: "text-green-600",
-        bg: "bg-green-100 dark:bg-green-900/20",
+        color: "text-[hsl(var(--status-success-600))]",
+        bg: "bg-[hsl(var(--status-success-100))] dark:bg-[hsl(var(--status-success-900)/0.2)]",
         level: "优秀",
         icon: <TrendingDown className="h-4 w-4" />,
       };
     if (average < 100)
       return {
-        color: "text-yellow-600",
-        bg: "bg-yellow-100 dark:bg-yellow-900/20",
+        color: "text-[hsl(var(--status-warning-600))]",
+        bg: "bg-[hsl(var(--status-warning-100))] dark:bg-[hsl(var(--status-warning-900)/0.2)]",
         level: "良好",
         icon: <Activity className="h-4 w-4" />,
       };
     if (average < 200)
       return {
-        color: "text-orange-600",
-        bg: "bg-orange-100 dark:bg-orange-900/20",
+        color: "text-[hsl(var(--status-warning-600))]",
+        bg: "bg-[hsl(var(--status-warning-100))] dark:bg-[hsl(var(--status-warning-900)/0.2)]",
         level: "一般",
         icon: <TrendingUp className="h-4 w-4" />,
       };
     return {
-      color: "text-red-600",
-      bg: "bg-red-100 dark:bg-red-900/20",
+      color: "text-[hsl(var(--status-error-600))]",
+      bg: "bg-[hsl(var(--status-error-100))] dark:bg-[hsl(var(--status-error-900)/0.2)]",
       level: "需要关注",
       icon: <TrendingUp className="h-4 w-4" />,
     };
@@ -134,8 +134,8 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
 
       {/* 错误状态 */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <div className="flex items-center space-x-2 text-red-700 dark:text-red-300">
+        <div className="mb-4 p-3 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-lg border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]">
+          <div className="flex items-center space-x-2 text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-300))]">
             <Activity className="h-4 w-4" />
             <span className="text-sm">{error}</span>
           </div>
@@ -187,7 +187,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-green-600 mb-1">
+              <div className="text-lg font-semibold text-[hsl(var(--status-success-600))] mb-1">
                 {stats.min}ms
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -196,7 +196,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-semibold text-red-600 mb-1">
+              <div className="text-lg font-semibold text-[hsl(var(--status-error-600))] mb-1">
                 {stats.max}ms
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -247,7 +247,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                     className="flex items-center justify-between text-sm"
                   >
                     <div className="flex items-center space-x-2">
-                      <span className="w-4 h-4 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">
+                      <span className="w-4 h-4 rounded-full bg-[hsl(var(--status-success-500))] text-white text-xs flex items-center justify-center">
                         {index + 1}
                       </span>
                       <span className="text-gray-700 dark:text-gray-300">
@@ -260,7 +260,7 @@ export const LatencyOverviewCard: React.FC<LatencyOverviewCardProps> = ({
                         </span>
                       </span>
                     </div>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-[hsl(var(--status-success-600))]">
                       {node.latency}ms
                     </span>
                   </div>

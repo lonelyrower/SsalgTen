@@ -242,7 +242,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
                 e.stopPropagation();
                 handleCopyLink(link);
               }}
-              className={`opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded ${copiedLink === link ? "opacity-100 text-green-600 dark:text-green-400" : ""}`}
+              className={`opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded ${copiedLink === link ? "opacity-100 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" : ""}`}
               title={copiedLink === link ? "已复制" : "复制链接"}
             >
               {copiedLink === link ? (
@@ -329,7 +329,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
             <Globe className="h-3 w-3 flex-shrink-0" />
             <span className="truncate font-medium">{primaryDomain}</span>
             {service.sslEnabled && (
-              <Shield className="h-3 w-3 text-green-600 dark:text-green-400 ml-1" />
+              <Shield className="h-3 w-3 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))] ml-1" />
             )}
           </div>
         )}

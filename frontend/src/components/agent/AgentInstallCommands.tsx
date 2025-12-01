@@ -391,14 +391,14 @@ sudo systemctl reset-failed`,
 
       {/* 安全确认 */}
       {installData.security.isSecure && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+        <div className="bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] border border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800))] rounded-lg p-4">
           <div className="flex items-center space-x-3">
-            <Shield className="h-5 w-5 text-green-600" />
+            <Shield className="h-5 w-5 text-[hsl(var(--status-success-600))]" />
             <div>
-              <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
+              <h3 className="text-sm font-medium text-[hsl(var(--status-success-800))] dark:text-[hsl(var(--status-success-200))]">
                 API密钥安全检查通过
               </h3>
-              <p className="text-sm text-green-700 dark:text-green-300">
+              <p className="text-sm text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
                 您的系统使用了安全的API密钥，可以放心部署节点。
               </p>
             </div>
@@ -409,7 +409,7 @@ sudo systemctl reset-failed`,
       {/* 快速安装命令 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex items-center space-x-3 mb-4">
-          <Terminal className="h-6 w-6 text-green-600" />
+          <Terminal className="h-6 w-6 text-[hsl(var(--status-success-600))]" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             快速安装（推荐）
           </h2>
@@ -510,7 +510,7 @@ sudo systemctl reset-failed`,
       {installData.quickUninstallCommand && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Terminal className="h-6 w-6 text-red-600" />
+            <Terminal className="h-6 w-6 text-[hsl(var(--status-error-600))]" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               快速卸载
             </h2>
@@ -521,7 +521,7 @@ sudo systemctl reset-failed`,
           </p>
 
           <div className="relative group">
-            <pre className="bg-gray-900 text-red-400 p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
+            <pre className="bg-gray-900 text-[hsl(var(--status-error-400))] p-4 rounded-lg overflow-x-auto text-sm font-mono pr-14">
               <code>{installData.quickUninstallCommand}</code>
             </pre>
             <Button
@@ -546,12 +546,12 @@ sudo systemctl reset-failed`,
             </Button>
           </div>
 
-          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-            <h4 className="font-medium text-red-900 dark:text-red-100 mb-2 flex items-center">
+          <div className="mt-4 p-4 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] rounded-lg">
+            <h4 className="font-medium text-[hsl(var(--status-error-900))] dark:text-[hsl(var(--status-error-100))] mb-2 flex items-center">
               <AlertCircle className="h-4 w-4 mr-2" />
               卸载注意事项：
             </h4>
-            <ul className="text-sm text-red-800 dark:text-red-200 space-y-1">
+            <ul className="text-sm text-[hsl(var(--status-error-800))] dark:text-[hsl(var(--status-error-200))] space-y-1">
               <li>• 卸载将停止监控服务并删除所有相关文件</li>
               <li>• 节点将从监控界面中自动移除</li>
               <li>• 历史监控数据将保留在主服务器上</li>

@@ -122,12 +122,12 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
   const getStatusBg = () => {
     switch (service.status) {
       case "yes":
-        return "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800";
+        return "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.1)] border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800))]";
       case "no":
-        return "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800";
+        return "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.1)] border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]";
       case "org":
       case "pending":
-        return "bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800";
+        return "bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)/0.1)] border-[hsl(var(--status-warning-200))] dark:border-[hsl(var(--status-warning-800))]";
       default:
         return "bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-700";
     }
@@ -140,11 +140,11 @@ const ServiceCard: React.FC<{ service: StreamingServiceResult }> = ({
       native: {
         text: "Native 原生IP",
         color:
-          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-800))] dark:bg-[hsl(var(--status-success-900))] dark:text-[hsl(var(--status-success-200))]",
       },
       dns: {
         text: "DNS 解锁",
-        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+        color: "bg-[hsl(var(--status-info-100))] text-[hsl(var(--status-info-800))] dark:bg-[hsl(var(--status-info-900))] dark:text-[hsl(var(--status-info-200))]",
       },
     };
 

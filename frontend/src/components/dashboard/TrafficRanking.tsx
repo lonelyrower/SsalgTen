@@ -91,7 +91,7 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
                 </p>
                 <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-slate-500 dark:text-slate-300">
                   <span className="flex items-center">
-                    <ArrowUp className="h-3 w-3 mr-0.5 text-green-500" />
+                    <ArrowUp className="h-3 w-3 mr-0.5 text-[hsl(var(--status-success-500))]" />
                     {formatBytes(node.upload)}
                   </span>
                   <span className="flex items-center">

@@ -119,11 +119,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getIcon = () => {
     switch (notification.type) {
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-[hsl(var(--status-success-500))]" />;
       case "error":
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-[hsl(var(--status-error-500))]" />;
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+        return <AlertCircle className="h-5 w-5 text-[hsl(var(--status-warning-500))]" />;
       case "info":
       default:
         return <Info className="h-5 w-5 text-primary" />;
@@ -133,11 +133,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getBorderColor = () => {
     switch (notification.type) {
       case "success":
-        return "border-green-200 dark:border-green-800";
+        return "border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800))]";
       case "error":
-        return "border-red-200 dark:border-red-800";
+        return "border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]";
       case "warning":
-        return "border-yellow-200 dark:border-yellow-800";
+        return "border-[hsl(var(--status-warning-200))] dark:border-[hsl(var(--status-warning-800))]";
       case "info":
       default:
         return "border-primary/30";
@@ -147,11 +147,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getBackgroundColor = () => {
     switch (notification.type) {
       case "success":
-        return "bg-green-50 dark:bg-green-900/20";
+        return "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)]";
       case "error":
-        return "bg-red-50 dark:bg-red-900/20";
+        return "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)]";
       case "warning":
-        return "bg-yellow-50 dark:bg-yellow-900/20";
+        return "bg-[hsl(var(--status-warning-50))] dark:bg-[hsl(var(--status-warning-900)/0.2)]";
       case "info":
       default:
         return "bg-primary/10";

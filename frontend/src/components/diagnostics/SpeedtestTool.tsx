@@ -202,9 +202,9 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
 
           {/* 速度指标 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className={`p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200/50 dark:border-green-700/50 transition-opacity ${!result ? 'opacity-50' : ''}`}>
+            <div className={`p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-emerald-50 dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-emerald-900/20 rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)] transition-opacity ${!result ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingDown className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <TrendingDown className="h-4 w-4 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
                 <span className="text-xs text-gray-600 dark:text-gray-400">
                   下载速度
                 </span>
@@ -284,8 +284,8 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="p-3 bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.2)] border border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))] rounded-lg">
+            <p className="text-sm text-[hsl(var(--status-error-700))] dark:text-[hsl(var(--status-error-300))]">{error}</p>
           </div>
         )}
 

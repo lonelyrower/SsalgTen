@@ -104,8 +104,8 @@ export const NodeLogsPanel: React.FC<NodeLogsPanelProps> = ({ node, onClose }) =
           ) : error ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-                <p className="text-red-600 dark:text-red-400">{error}</p>
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-[hsl(var(--status-error-500))]" />
+                <p className="text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]">{error}</p>
                 <Button variant="outline" size="sm" onClick={fetchEvents} className="mt-4">
                   重试
                 </Button>

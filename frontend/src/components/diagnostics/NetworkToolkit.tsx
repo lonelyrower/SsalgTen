@@ -97,9 +97,9 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
 
   const getStatusIcon = (success: boolean) => {
     return success ? (
-      <CheckCircle className="h-4 w-4 text-green-600" />
+      <CheckCircle className="h-4 w-4 text-[hsl(var(--status-success-600))]" />
     ) : (
-      <XCircle className="h-4 w-4 text-red-600" />
+      <XCircle className="h-4 w-4 text-[hsl(var(--status-error-600))]" />
     );
   };
 
@@ -148,13 +148,13 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
   const getTypeColor = (type: string) => {
     const lowerType = type.toLowerCase();
     if (lowerType.includes("error") || lowerType.includes("fail")) {
-      return "text-red-600 dark:text-red-400";
+      return "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]";
     }
     if (lowerType.includes("warning") || lowerType.includes("warn")) {
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]";
     }
     if (lowerType.includes("success") || lowerType.includes("complete")) {
-      return "text-green-600 dark:text-green-400";
+      return "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]";
     }
     return "text-blue-600 dark:text-blue-400";
   };
@@ -301,7 +301,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                           )}
 
                           {record.error && (
-                            <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+                            <p className="text-sm text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))] mb-2">
                               {record.error}
                             </p>
                           )}
@@ -388,11 +388,11 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                             <Badge
                               className={
                                 event.type.toLowerCase().includes("error") || event.type.toLowerCase().includes("fail")
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                  ? "bg-[hsl(var(--status-error-100))] text-[hsl(var(--status-error-800))] dark:bg-[hsl(var(--status-error-900)/0.3)] dark:text-[hsl(var(--status-error-400))]"
                                   : event.type.toLowerCase().includes("warning")
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                  ? "bg-[hsl(var(--status-warning-100))] text-[hsl(var(--status-warning-800))] dark:bg-[hsl(var(--status-warning-900)/0.3)] dark:text-[hsl(var(--status-warning-400))]"
                                   : event.type.toLowerCase().includes("success")
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  ? "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-800))] dark:bg-[hsl(var(--status-success-900)/0.3)] dark:text-[hsl(var(--status-success-400))]"
                                   : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
                               }
                             >

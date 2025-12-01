@@ -68,7 +68,7 @@ export const AgentInstaller: React.FC = () => {
         </p>
 
         <div className="relative">
-          <pre className="bg-red-900 text-red-200 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+          <pre className="bg-[hsl(var(--status-error-900))] text-[hsl(var(--status-error-200))] p-4 rounded-lg overflow-x-auto text-sm font-mono">
             <code>{uninstallCommand}</code>
           </pre>
           <Button
@@ -76,8 +76,8 @@ export const AgentInstaller: React.FC = () => {
             variant="outline"
             className={`absolute top-2 right-2 transition-all duration-200 ${
               copied
-                ? "bg-green-600 border-green-500 hover:bg-green-700 text-white"
-                : "bg-red-800 border-red-600 hover:bg-red-700 text-red-200"
+                ? "bg-[hsl(var(--status-success-600))] border-[hsl(var(--status-success-500))] hover:bg-[hsl(var(--status-success-700))] text-white"
+                : "bg-[hsl(var(--status-error-800))] border-[hsl(var(--status-error-600))] hover:bg-[hsl(var(--status-error-700))] text-[hsl(var(--status-error-200))]"
             }`}
             onClick={() => copyToClipboard(uninstallCommand)}
             aria-label={
@@ -144,11 +144,11 @@ export const AgentInstaller: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
+        <div className="mt-6 p-4 bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.2)] rounded-lg">
+          <h4 className="font-medium text-[hsl(var(--status-success-900))] dark:text-[hsl(var(--status-success-100))] mb-2">
             安装过程会自动：
           </h4>
-          <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+          <ul className="text-sm text-[hsl(var(--status-success-800))] dark:text-[hsl(var(--status-success-200))] space-y-1">
             <li>• 检测并安装Docker环境</li>
             <li>• 下载监控程序代码</li>
             <li>• 配置网络监控工具</li>
