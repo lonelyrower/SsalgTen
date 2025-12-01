@@ -18,21 +18,48 @@
   --radius-lg: 0.75rem;     /* 12px - 标准卡片 */
   --radius-xl: 1rem;        /* 16px - 大卡片、模态框 */
   --radius-2xl: 1.5rem;     /* 24px - 特大容器 */
+  --radius-3xl: 2rem;       /* 32px - 英雄区域 */
+  --radius-full: 9999px;    /* 圆形 */
   --radius: 0.75rem;        /* 默认圆角 */
 
-  /* 阴影系统 */
+  /* 阴影系统 - 亮色模式 */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.04);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
   --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
 
   /* 间距系统 - 卡片专用 */
   --spacing-card-sm: 1rem;      /* 16px */
   --spacing-card-md: 1.25rem;   /* 20px */
   --spacing-card-lg: 1.5rem;    /* 24px */
   --spacing-card-xl: 2rem;      /* 32px */
+
+  /* 透明度系统 */
+  --opacity-muted: 0.6;
+  --opacity-subtle: 0.8;
+  --opacity-overlay: 0.5;
+
+  /* 模糊系统 */
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 12px;
+  --blur-xl: 16px;
+  --blur-2xl: 24px;
+
+  /* 过渡时间 */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  /* 缓动函数 */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @layer base {
@@ -69,9 +96,28 @@
     /* 简化背景渐变变量 - 纯蓝科技风 */
     --bg-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
     --bg-pattern: radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+    
+    /* ===== 玻璃效果系统 ===== */
     --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-bg-subtle: rgba(255, 255, 255, 0.6);
+    --glass-bg-strong: rgba(255, 255, 255, 0.9);
     --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-border-subtle: rgba(255, 255, 255, 0.1);
+    --glass-border-strong: rgba(255, 255, 255, 0.3);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    
+    /* ===== 边框系统 ===== */
+    --border-subtle: 220 13% 91%;          /* 浅灰边框 */
+    --border-muted: 214 32% 85%;           /* 中灰边框 */
+    --border-strong: 214 32% 75%;          /* 深灰边框 */
+    --border-opacity-subtle: 0.5;
+    --border-opacity-muted: 0.6;
+    --border-opacity-strong: 0.8;
+    
+    /* ===== 背景透明度系统 ===== */
+    --bg-opacity-subtle: 0.5;
+    --bg-opacity-muted: 0.7;
+    --bg-opacity-strong: 0.9;
     
     /* 状态色彩 - 语义化颜色系统 */
     --success: 142 76% 36%;           /* 绿色 - 成功/在线 */
@@ -168,9 +214,28 @@
     
     /* 深色模式背景 - 纯蓝科技风 */
     --bg-pattern: radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+    
+    /* ===== 深色玻璃效果系统 ===== */
     --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-bg-subtle: rgba(255, 255, 255, 0.05);
+    --glass-bg-strong: rgba(255, 255, 255, 0.15);
     --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-subtle: rgba(255, 255, 255, 0.05);
+    --glass-border-strong: rgba(255, 255, 255, 0.2);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    
+    /* ===== 深色边框系统 ===== */
+    --border-subtle: 217 33% 20%;          /* 深色浅灰边框 */
+    --border-muted: 217 33% 25%;           /* 深色中灰边框 */
+    --border-strong: 217 33% 35%;          /* 深色深灰边框 */
+    --border-opacity-subtle: 0.4;
+    --border-opacity-muted: 0.5;
+    --border-opacity-strong: 0.7;
+    
+    /* ===== 深色背景透明度系统 ===== */
+    --bg-opacity-subtle: 0.3;
+    --bg-opacity-muted: 0.5;
+    --bg-opacity-strong: 0.8;
     
     /* 深色模式状态色 */
     --success: 142 76% 46%;

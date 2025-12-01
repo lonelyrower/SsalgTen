@@ -80,8 +80,8 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         className={`min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center ${className}`}
       >
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl blur-xl opacity-60 transform -rotate-6 scale-110"></div>
-          <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-gray-200/50 dark:border-gray-700/50">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-[var(--radius-2xl)] blur-xl opacity-60 transform -rotate-6 scale-110"></div>
+          <div className="relative bg-[var(--glass-bg)] dark:bg-[var(--glass-bg)] backdrop-blur-[var(--blur-md)] rounded-[var(--radius-2xl)] p-8 shadow-[var(--shadow-2xl)] border border-[var(--glass-border)] dark:border-[var(--glass-border)]">
             {content}
           </div>
         </div>

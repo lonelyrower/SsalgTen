@@ -34,18 +34,18 @@ const TabButton: React.FC<TabButtonProps> = ({
   // 桌面端样式
   const desktopStyles = `
     flex items-center space-x-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap
-    transition-all duration-200 rounded-t-lg transform
+    transition-all duration-[var(--duration-normal)] rounded-t-[var(--radius-lg)] transform
     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900
     ${
       isActive
-        ? "border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-sm font-semibold scale-105"
-        : "border-transparent text-gray-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 dark:text-gray-400 dark:hover:text-primary hover:scale-105 hover:-translate-y-0.5 hover:shadow-sm"
+        ? "border-primary text-primary bg-primary/10 dark:bg-primary/20 shadow-[var(--shadow-sm)] font-semibold scale-105"
+        : "border-transparent text-gray-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 dark:text-gray-400 dark:hover:text-primary hover:scale-105 hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]"
     }
   `;
 
   // 移动端样式
   const mobileStyles = `
-    w-full flex items-center space-x-3 p-3 text-left transition-all duration-200 transform
+    w-full flex items-center space-x-3 p-3 text-left transition-all duration-[var(--duration-normal)] transform
     focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary
     ${
       isActive
@@ -180,7 +180,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
           aria-expanded={dropdownOpen ? "true" : "false"}
           aria-haspopup="listbox"
           aria-label="选择标签页"
-          className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
         >
           <div className="flex items-center space-x-3">
             {activeTabInfo?.icon && (
@@ -191,7 +191,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
             </span>
           </div>
           <ChevronDown
-            className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+            className={`h-5 w-5 text-gray-400 transition-transform duration-[var(--duration-normal)] ${
               dropdownOpen ? "rotate-180" : ""
             }`}
           />
@@ -207,7 +207,7 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
 
             {/* 下拉菜单 */}
             <div
-              className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden"
+              className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] z-20 overflow-hidden"
               role="listbox"
               aria-label="选择标签页"
             >

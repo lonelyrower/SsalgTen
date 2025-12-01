@@ -57,10 +57,10 @@ export const SelectTrigger: React.FC<SelectTriggerProps> = ({ className = "", ch
     <button
       type="button"
       onClick={() => setIsOpen(!isOpen)}
-      className={`flex items-center justify-between px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${className}`}
+      className={`flex items-center justify-between px-3 py-2 rounded-[var(--radius-lg)] border text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] ${className}`}
     >
       {children}
-      <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-[var(--duration-normal)] ${isOpen ? "rotate-180" : ""}`} />
     </button>
   );
 };
@@ -102,7 +102,7 @@ export const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   return (
     <div
       ref={contentRef}
-      className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto"
+      className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] max-h-60 overflow-auto"
     >
       {children}
     </div>
@@ -126,8 +126,8 @@ export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
     <button
       type="button"
       onClick={handleClick}
-      className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-        isSelected ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium" : ""
+      className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-[var(--duration-fast)] ${
+        isSelected ? "bg-primary/10 dark:bg-primary/20 text-primary font-medium" : ""
       }`}
     >
       {children}
