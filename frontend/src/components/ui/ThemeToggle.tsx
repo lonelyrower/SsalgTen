@@ -18,7 +18,7 @@ export const ThemeToggle: React.FC = () => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="p-2 rounded-lg hover:bg-white/10 transition-all group"
+      className="p-2 rounded-[var(--radius-lg)] hover:bg-white/10 transition-all group"
       aria-label={isDark ? "切换到浅色模式" : "切换到深色模式"}
     >
       {isDark ? (

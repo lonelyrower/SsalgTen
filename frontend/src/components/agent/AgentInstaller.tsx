@@ -74,7 +74,7 @@ export const AgentInstaller: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            className={`absolute top-2 right-2 transition-all duration-200 ${
+            className={`absolute top-2 right-2 transition-all duration-[var(--duration-normal)] ${
               copied
                 ? "bg-[hsl(var(--status-success-600))] border-[hsl(var(--status-success-500))] hover:bg-[hsl(var(--status-success-700))] text-white"
                 : "bg-[hsl(var(--status-error-800))] border-[hsl(var(--status-error-600))] hover:bg-[hsl(var(--status-error-700))] text-[hsl(var(--status-error-200))]"

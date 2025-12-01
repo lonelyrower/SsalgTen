@@ -366,7 +366,7 @@ export const StreamingPage: React.FC = () => {
                 size="sm"
                 onClick={handleTriggerAll}
                 disabled={bulkTriggering || filteredNodes.length === 0}
-                className="gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                className="gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]"
               >
                 <Film className={`h-4 w-4 ${bulkTriggering ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">{bulkTriggering ? "检测中..." : "批量检测"}</span>

@@ -546,7 +546,7 @@ export const NodeModal: React.FC<NodeModalProps> = ({
                   onChange={(e) =>
                     handleInputChange("enabled", e.target.checked)
                   }
-                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  className="h-4 w-4 text-primary border-[hsl(var(--border-subtle))] rounded focus:ring-primary"
                 />
                 <label
                   htmlFor="enabled"

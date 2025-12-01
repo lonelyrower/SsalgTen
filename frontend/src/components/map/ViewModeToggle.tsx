@@ -25,8 +25,8 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
       {/* sliding indicator */}
       <div
         className={cn(
-          "absolute top-1 bottom-1 w-1/2 rounded-lg transition-all duration-200 ease-out",
-          "bg-white dark:bg-gray-600 shadow-md dark:shadow-gray-900/50",
+          "absolute top-1 bottom-1 w-1/2 rounded-[var(--radius-lg)] transition-all duration-[var(--duration-normal)] ease-out",
+          "bg-white dark:bg-gray-600 shadow-[var(--shadow-md)] dark:shadow-gray-900/50",
           value === "2d" ? "left-1" : "left-1/2",
         )}
         aria-hidden
@@ -37,7 +37,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
         aria-selected={value === "2d"}
         onClick={() => onChange("2d")}
         className={cn(
-          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium rounded-[var(--radius-lg)]",
           "flex items-center justify-center gap-2 transition-colors",
           value === "2d"
             ? "text-gray-900 dark:text-gray-100"
@@ -55,7 +55,7 @@ export function ViewModeToggle({ value, onChange, className }: Props) {
         aria-selected={value === "3d"}
         onClick={() => onChange("3d")}
         className={cn(
-          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-28 md:w-32 px-3 py-2 text-sm font-medium rounded-[var(--radius-lg)]",
           "flex items-center justify-center gap-2 transition-colors",
           value === "3d"
             ? "text-gray-900 dark:text-gray-100"

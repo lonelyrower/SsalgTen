@@ -79,7 +79,7 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
 
   return (
     <Card
-      className={`p-3 transition-all shadow-md hover:shadow-lg ${colorScheme.gradient} ${colorScheme.border}`}
+      className={`p-3 transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] ${colorScheme.gradient} ${colorScheme.border}`}
     >
       <div className="space-y-2.5">
         {/* 节点信息 */}

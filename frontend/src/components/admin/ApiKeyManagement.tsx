@@ -136,7 +136,7 @@ export const ApiKeyManagement: React.FC = () => {
       case "warning":
         return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800";
+        return "text-gray-600 bg-gray-50 border-[hsl(var(--border-subtle))] dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-800";
     }
   };
 

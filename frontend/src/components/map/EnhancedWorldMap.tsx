@@ -1162,7 +1162,7 @@ export const EnhancedWorldMap = memo(
               variant="secondary"
               size="sm"
               onClick={() => setShowLayerMenu(!showLayerMenu)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-lg border border-gray-200/60 lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-gray-800/95 dark:hover:bg-gray-700/95 dark:text-white dark:border-gray-600"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/95 text-gray-800 hover:bg-white shadow-[var(--shadow-lg)] border border-[hsl(var(--border-subtle)/0.6)] lg:bg-white/90 lg:backdrop-blur-[10px] dark:bg-gray-800/95 dark:hover:bg-gray-700/95 dark:text-white dark:border-[hsl(var(--border-muted))]"
               aria-expanded={showLayerMenu}
               aria-haspopup="menu"
             >
@@ -1182,7 +1182,7 @@ export const EnhancedWorldMap = memo(
                 </div>
                 <div className="p-2 space-y-3 max-h-[500px] overflow-y-auto">
                   {/* Carto 提供商组 */}
-                  <div className="rounded-lg border border-purple-200 dark:border-purple-700/40 overflow-hidden">
+                  <div className="rounded-[var(--radius-lg)] border border-purple-200 dark:border-purple-700/40 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/50">
                       <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                       <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
@@ -1220,7 +1220,7 @@ export const EnhancedWorldMap = memo(
                   </div>
 
                   {/* OpenStreetMap 提供商组 */}
-                  <div className="rounded-lg border border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-700)/0.4)] overflow-hidden">
+                  <div className="rounded-[var(--radius-lg)] border border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-700)/0.4)] overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-950)/0.3)] border-b border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-800)/0.5)]">
                       <MapIcon className="h-3.5 w-3.5 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
                       <span className="text-xs font-bold text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
@@ -1258,7 +1258,7 @@ export const EnhancedWorldMap = memo(
                   </div>
 
                   {/* Mapbox 提供商组 */}
-                  <div className="rounded-lg border border-blue-200 dark:border-blue-700/40 overflow-hidden">
+                  <div className="rounded-[var(--radius-lg)] border border-blue-200 dark:border-blue-700/40 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
                       <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       <span className="text-xs font-bold text-blue-700 dark:text-blue-300">

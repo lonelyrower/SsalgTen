@@ -116,7 +116,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               <div className="p-4">
                 {/* 图标和名称 */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-lg ${colors.bg}`}>
+                  <div className={`p-2 rounded-[var(--radius-lg)] ${colors.bg}`}>
                     <StreamingIcon service={platform.service} size="lg" />
                   </div>
                   <div className="flex-1 min-w-0">

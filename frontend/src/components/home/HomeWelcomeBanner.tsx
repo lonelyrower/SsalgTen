@@ -8,7 +8,7 @@ export const HomeWelcomeBanner: React.FC<HomeWelcomeBannerProps> = ({
   userName,
 }) => {
   return (
-    <div className="relative overflow-hidden rounded-[var(--radius-2xl)] bg-white dark:bg-gray-800 shadow-[var(--shadow-xl)] border border-gray-200/50 dark:border-gray-700/50 p-6">
+    <div className="relative overflow-hidden rounded-[var(--radius-2xl)] bg-white dark:bg-gray-800 shadow-[var(--shadow-xl)] border border-[hsl(var(--border-subtle)/0.5)] dark:border-[hsl(var(--border-muted)/0.5)] p-6">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5 dark:from-blue-400/5 dark:via-cyan-400/5 dark:to-blue-400/5"></div>
       <div className="relative z-10 flex items-center space-x-4">
         <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">

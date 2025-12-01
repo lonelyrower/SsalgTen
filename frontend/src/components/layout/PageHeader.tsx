@@ -36,7 +36,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-3">
             {Icon && (
-              <div className="p-2.5 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30">
+              <div className="p-2.5 rounded-[var(--radius-lg)] bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30">
                 <Icon className="h-6 w-6 text-cyan-400" strokeWidth={2.5} />
               </div>
             )}

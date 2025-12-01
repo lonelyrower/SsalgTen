@@ -161,7 +161,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-indigo-400/15 via-transparent to-violet-500/15" />
+        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-indigo-400/15 via-transparent to-violet-500/15" />
         <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-indigo-400/15 blur-3xl" />
         <div className="relative text-center py-12">
           <motion.div
@@ -205,7 +205,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
       transition={{ duration: 0.3 }}
       key={node.id}
     >
-      <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${themeColors.glow}`} />
+      <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br ${themeColors.glow}`} />
       <div className={`absolute -top-12 -right-16 h-32 w-32 rounded-full ${themeColors.glowCircle} blur-3xl`} />
       {/* Header */}
       <div className="relative flex items-start gap-4 mb-6">
@@ -240,12 +240,12 @@ export const EnhancedNodeDetailsPanel: React.FC<
       </div>
 
       {/* Tabs */}
-      <div className="relative flex gap-2 mb-6 p-1 bg-slate-200/70 dark:bg-slate-800/50 rounded-lg">
+      <div className="relative flex gap-2 mb-6 p-1 bg-slate-200/70 dark:bg-slate-800/50 rounded-[var(--radius-lg)]">
         <button
           onClick={() => setActiveTab("info")}
           className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
             activeTab === "info"
-              ? "bg-cyan-600 text-white shadow-md"
+              ? "bg-cyan-600 text-white shadow-[var(--shadow-md)]"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
           }`}
         >
@@ -256,7 +256,7 @@ export const EnhancedNodeDetailsPanel: React.FC<
           onClick={() => setActiveTab("resources")}
           className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
             activeTab === "resources"
-              ? "bg-cyan-600 text-white shadow-md"
+              ? "bg-cyan-600 text-white shadow-[var(--shadow-md)]"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
           }`}
         >

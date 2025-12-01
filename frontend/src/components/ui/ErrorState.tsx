@@ -162,7 +162,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               className={`
                 ${sizeStyles.button} inline-flex items-center space-x-2
                 border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] text-gray-700 dark:text-gray-300
-                hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200
+                hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-[var(--duration-normal)]
               `}
             >
               <Home className="h-4 w-4" />

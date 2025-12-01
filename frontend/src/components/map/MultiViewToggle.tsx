@@ -23,8 +23,8 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
       {/* sliding indicator */}
       <div
         className={cn(
-          "absolute top-1 bottom-1 w-1/3 rounded-lg transition-all duration-200 ease-out",
-          "bg-white dark:bg-gradient-to-br dark:from-gray-600 dark:to-gray-500 shadow-md dark:shadow-lg dark:shadow-cyan-500/20",
+          "absolute top-1 bottom-1 w-1/3 rounded-[var(--radius-lg)] transition-all duration-[var(--duration-normal)] ease-out",
+          "bg-white dark:bg-gradient-to-br dark:from-gray-600 dark:to-gray-500 shadow-[var(--shadow-md)] dark:shadow-[var(--shadow-lg)] dark:shadow-cyan-500/20",
           value === "list"
             ? "left-1"
             : value === "2d"
@@ -39,7 +39,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
         aria-selected={value === "list"}
         onClick={() => onChange("list")}
         className={cn(
-          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-[var(--radius-lg)]",
           "flex items-center justify-center gap-2 transition-colors",
           value === "list"
             ? "text-gray-900 dark:text-gray-100"
@@ -57,7 +57,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
         aria-selected={value === "2d"}
         onClick={() => onChange("2d")}
         className={cn(
-          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-[var(--radius-lg)]",
           "flex items-center justify-center gap-2 transition-colors",
           value === "2d"
             ? "text-gray-900 dark:text-gray-100"
@@ -75,7 +75,7 @@ export function MultiViewToggle({ value, onChange, className }: Props) {
         aria-selected={value === "3d"}
         onClick={() => onChange("3d")}
         className={cn(
-          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-lg",
+          "relative z-10 w-24 md:w-28 px-3 py-2 text-sm font-medium rounded-[var(--radius-lg)]",
           "flex items-center justify-center gap-2 transition-colors",
           value === "3d"
             ? "text-gray-900 dark:text-gray-100"
