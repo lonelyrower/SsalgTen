@@ -80,7 +80,7 @@ export const ConnectivityDiagnostics: React.FC<Props> = ({
                 <div className="text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
                   系统连接状态良好。
                 </div>
-              )}}
+              )}
               {lastCheckedAt && (
                 <div className="text-xs text-gray-500 mt-2">
                   上次检查：{new Date(lastCheckedAt).toLocaleString()}
