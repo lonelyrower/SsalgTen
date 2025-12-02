@@ -4,7 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://github.com/lonelyrower/SsalgTen)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
 [![Auth](https://img.shields.io/badge/Auth-JWT-orange.svg)](https://jwt.io/)
 [![Deployment](https://img.shields.io/badge/Deploy-Docker%20Compose-2496ED.svg)](https://docs.docker.com/compose/)
@@ -14,6 +14,7 @@
 ## 🌟 核心特性
 
 ### 🚀 全面网络监控
+
 - **🌍 全球节点部署** - 支持全球无限节点，实时网络可视化监控
 - **📊 多维度诊断** - Ping、Traceroute、MTR、速度测试等专业网络工具
 - **🗺️ 智能地图展示** - 交互式世界地图，实时显示节点状态和网络拓扑
@@ -25,6 +26,7 @@
 - **📦 资产占位节点** - 未安装/已过期 VPS 也可纳入清单并显示为离线（自动按 IP 填充地理/ASN，后续安装 Agent 会自动"升级"为正式节点）
 
 ### 🛡️ 企业级安全管理
+
 - **🔐 完整权限体系** - 基于 JWT 的三级权限管理 (Admin/Operator/Viewer)
 - **👥 用户生命周期** - 完整的用户增删改查，密码安全策略
 - **🔑 API 密钥管理** - 安全的代理认证，支持密钥轮换和批量管理
@@ -32,6 +34,7 @@
 - **🚨 安全防护** - CORS、Helmet、输入验证等多重安全保障
 
 ### 🎛️ 智能运维管理
+
 - **📱 现代化界面** - React + TypeScript + TailwindCSS，响应式设计
 - **📊 数据分析中心** - 实时统计、历史趋势、性能指标分析
 - **⚙️ 25+ 系统配置** - 灵活的参数配置，数据库持久化存储
@@ -39,6 +42,7 @@
 - **📡 心跳监控** - 30秒间隔状态上报，异常自动检测
 
 ### 🔄 零停机更新系统
+
 - **🚀 一键更新** - Web界面一键更新，支持Git和归档包双模式
 - **💾 自动备份** - 更新前自动备份数据库和配置文件
 - **🔙 智能回滚** - 失败自动回滚，手动回滚到任意版本
@@ -89,6 +93,7 @@ graph TB
 ```
 
 ### 🎨 前端 (React + TypeScript)
+
 - **现代化框架**: React 19 + TypeScript + Vite 热重载
 - **响应式设计**: TailwindCSS 4 + shadcn/ui 组件库
 - **2D 地图可视化**: Leaflet + Supercluster 智能聚合，支持多地图供应商
@@ -97,6 +102,7 @@ graph TB
 - **状态管理**: Context + Hooks 架构，优化渲染性能
 
 ### ⚙️ 后端 (Node.js + Express)
+
 - **现代化 API**: RESTful 设计，完整的接口规范
 - **数据库**: Prisma ORM + PostgreSQL，自动迁移和种子数据
 - **认证授权**: JWT + Refresh Token 机制，安全会话管理
@@ -105,6 +111,7 @@ graph TB
 - **监控日志**: 结构化日志记录和健康检查
 
 ### 🤖 代理系统 (Node.js)
+
 - **跨平台兼容**: Linux/Windows/macOS 统一部署
 - **网络诊断**: 原生系统命令集成，结果格式化处理
 - **系统监控**: CPU、内存、磁盘、网络资源实时采集
@@ -112,6 +119,7 @@ graph TB
 - **容错机制**: 自动重连、错误重试、优雅降级
 
 ### 🔄 更新服务 (Zero-Downtime)
+
 - **双模式更新**: Git 仓库和归档包，适应不同部署环境
 - **原子操作**: 数据库事务，配置文件版本控制
 - **健康检查**: 自动服务验证，异常自动回滚
@@ -120,6 +128,7 @@ graph TB
 ## 🛠️ 技术栈详情
 
 ### 前端技术栈
+
 ```typescript
 {
   "framework": "React 19 + TypeScript + Vite 7",
@@ -154,6 +163,7 @@ graph TB
 ```
 
 ### 运维技术栈
+
 ```bash
 # 容器化部署
 Docker 24+ + Docker Compose v2
@@ -174,31 +184,34 @@ Redis 7+ + 持久化 + 集群支持
 ### 系统要求
 
 **开发环境:**
+
 - Node.js 24.0.0+ (推荐 24+ LTS)
 - npm 10.0.0+
 - Git 2.25+
 - 8GB RAM 推荐
 
 **生产环境:**
+
 - Ubuntu 20.04+ / CentOS 8+ / Debian 11+
 - Docker 24.0+ + Docker Compose v2.20+
 - 4 CPU 核心 / 8GB RAM / 100GB SSD
 - 域名和 SSL 证书 (推荐)
 
 > **⚠️ WSL2 用户特别提示:**
-> 
+>
 > 如果在 Windows WSL2 环境中部署，需要先配置 **Docker Desktop WSL2 集成**：
-> 
+>
 > 1. 确保 Docker Desktop 已在 Windows 上安装并启动
 > 2. Docker Desktop → Settings → Resources → WSL Integration
 > 3. 启用你的 WSL 发行版（如 Ubuntu）
 > 4. Apply & Restart
-> 
+>
 > **快速检查工具：**
+>
 > ```bash
 > curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/check-wsl2-docker.sh | bash
 > ```
-> 
+>
 > 详细说明: [WSL2 Docker 配置指南](docs/WSL2_DOCKER_FIX.md)
 
 ### 🎯 一键部署 (推荐)
@@ -206,6 +219,7 @@ Redis 7+ + 持久化 + 集群支持
 #### 生产环境部署
 
 **智能部署模式（推荐）**
+
 ```bash
 # 远程一键部署
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/ssalgten.sh | bash -s -- deploy
@@ -217,6 +231,7 @@ cd SsalgTen
 ```
 
 部署过程会自动进行：
+
 1. **统一的系统环境准备**
    - 检查用户权限（推荐非root用户）
    - 检查系统要求（内存、磁盘、端口）
@@ -244,6 +259,7 @@ cd SsalgTen
    - • 适合：需要自定义修改源码的场景
 
 **直接指定构建模式（高级）**
+
 ```bash
 # 镜像快速构建
 ./scripts/ssalgten.sh deploy --image
@@ -253,6 +269,7 @@ cd SsalgTen
 ```
 
 #### 开发环境启动
+
 ```bash
 # 克隆项目
 git clone https://github.com/lonelyrower/SsalgTen.git
@@ -289,6 +306,7 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/s
 ```
 
 **系统管理功能:**
+
 - 🚀 一键部署（镜像/源码双模式）
 - ⚡ 极速更新（镜像拉取1-3分钟）
 - 🔄 启动/停止/重启服务
@@ -303,19 +321,20 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/s
 
 部署完成后，访问以下地址：
 
-- **🖥️ 主界面**: http://localhost:3000 - 实时监控地图
-- **🛡️ 管理后台**: http://localhost:3000/admin - 系统管理
-- **📊 API 接口**: http://localhost:3001/api - RESTful API  
-- **⚙️ 代理接口**: http://localhost:3002 - 代理节点状态
+- **🖥️ 主界面**: <http://localhost:3000> - 实时监控地图
+- **🛡️ 管理后台**: <http://localhost:3000/admin> - 系统管理
+- **📊 API 接口**: <http://localhost:3001/api> - RESTful API
+- **⚙️ 代理接口**: <http://localhost:3002> - 代理节点状态
 
 **默认管理员账号:**
+
 - 用户名: `admin`
 - 密码: `admin123`
 - ⚠️ **生产环境请立即修改密码！**
 
 ## 📁 项目结构
 
-```
+```text
 SsalgTen/
 ├── 📦 frontend/                 # React 前端应用
 │   ├── src/
@@ -364,8 +383,6 @@ SsalgTen/
 │   ├── docker-compose.dev.yml # 开发环境编排
 │   ├── Dockerfile.*           # 多阶段构建文件
 │   └── docker/                # Docker 配置目录
-├── 🚀 scripts/                  # 部署和管理脚本
-│   └── ... (续上)
 └── 📋 配置文件
     ├── package.json           # 根工作空间配置
     ├── .env.example           # 环境变量模板
@@ -379,6 +396,7 @@ SsalgTen/
 ### 🗺️ 智能地图系统
 
 **2D 平面地图**
+
 - **多层级聚合**: Supercluster 算法，智能节点聚合和展开
 - **同位置处理**: 坐标微调技术，解决节点重叠显示
 - **多地图供应商**: 支持 OpenStreetMap、Mapbox、Carto 切换
@@ -386,6 +404,7 @@ SsalgTen/
 - **交互体验**: 点击展开、弹窗详情、状态筛选
 
 **3D 地球视图**
+
 - **Cesium 引擎**: 专业级 3D 地球可视化引擎
 - **多种图层**: 卫星图、地形图、街道地图、自然地理图
 - **流畅交互**: 缩放、旋转、倾斜视角自由切换
@@ -393,11 +412,13 @@ SsalgTen/
 - **性能优化**: 大规模节点高性能渲染
 
 **通用特性**
+
 - **ASN 信息**: 自动显示节点的 ASN 和网络运营商
 - **自适应**: 响应式设计，移动端完美适配
 - **实时更新**: 节点状态实时同步
 
 ### 📊 网络诊断工具
+
 ```bash
 # 支持的诊断类型
 ✅ Ping - 延迟和丢包测试
@@ -412,6 +433,7 @@ SsalgTen/
 ### 🎬 流媒体解锁检测
 
 **支持的平台**
+
 - 🎥 **Netflix** - 区域解锁和原生支持检测
 - 📺 **YouTube** - Premium访问和区域支持检测
 - 🏰 **Disney+** - 区域解锁状态检测
@@ -421,15 +443,21 @@ SsalgTen/
 - 🤖 **ChatGPT** - APP/Web访问检测
 
 **检测类型**
-- ✅ **原生解锁 (Native)** - 完整支持，最佳体验
-- 🔧 **DNS解锁** - 通过DNS实现的解锁
-- 🌐 **仅Web访问** - 仅支持Web端访问
-- 📱 **仅APP访问** - 仅支持移动应用访问
-- ⚠️ **原创内容** - 仅支持平台原创内容
-- ❌ **不支持** - 无法访问该服务
-- 🔄 **检测中** - 正在进行检测
+
+- ✅ **解锁 (Yes)** - 完整支持，最佳体验
+- 🎦 **仅原创 (Org)** - 仅支持平台原创内容
+- ⏳ **待支持 (Pending)** - 地区即将开放
+- ❌ **屏蔽 (No)** - 无法访问该服务
+- 📱 **仅APP (App)** - 仅支持移动应用访问
+- 🌐 **仅Web (Web)** - 仅支持Web端访问
+- 🇨🇳 **中国区 (CN)** - 中国区版本
+- 🏢 **机房 (IDC)** - 机房 IP 受限
+- 🚫 **禁会员 (NoPrem)** - 不支持付费会员
+- ⚠️ **检测失败 (Failed)** - 检测过程出错
+- ❓ **未测试 (Unknown)** - 尚未进行检测
 
 **特色功能**
+
 - 🎯 **智能检测** - 自动识别最佳检测方式
 - ⚡ **实时推送** - WebSocket 实时更新检测结果
 - 🔄 **批量检测** - 支持多节点同时检测
@@ -440,6 +468,7 @@ SsalgTen/
 ### 🔍 服务发现与管理
 
 **自动检测服务**
+
 ```bash
 ✅ Xray - 代理服务配置自动解析（VMess/VLESS/Trojan/Shadowsocks）
 ✅ Nginx - Web服务器配置检测和端口监听
@@ -450,6 +479,7 @@ SsalgTen/
 ```
 
 **分享链接生成**
+
 - 📋 **支持协议**: VMess、VLESS、Trojan、Shadowsocks、SOCKS、HTTP
 - 🔗 **一键复制** - 生成标准格式分享链接
 - 🌐 **智能替换** - 自动替换内网IP为公网IP
@@ -458,6 +488,7 @@ SsalgTen/
 - 🎨 **友好显示** - 端口、协议、加密方式清晰展示
 
 **配置解析能力**
+
 - 📄 **Xray配置** - 自动解析JSON配置，提取Inbound信息
 - 🔧 **Nginx配置** - 分析server配置和监听端口
 - 🔍 **进程检测** - 扫描系统运行的服务进程
@@ -466,6 +497,7 @@ SsalgTen/
 ### 💰 成本管理与分析
 
 **功能特性**
+
 - 📊 **节点成本追踪** - 记录每个节点的月度成本
 - 💵 **总成本统计** - 实时汇总所有节点总成本
 - 📈 **成本分布分析** - 按价格区间统计节点分布
@@ -478,12 +510,14 @@ SsalgTen/
 - 📝 **备注管理** - 为每个节点添加成本备注
 
 **使用场景**
+
 - 💼 **预算管理** - VPS成本追踪和预算控制
 - 📊 **资源分析** - 分析成本与性能的关系
 - 🎯 **优化决策** - 识别高成本低效节点
 - 📉 **趋势追踪** - 长期成本变化监控
 
 ### 🛡️ 企业级安全
+
 - **三级权限**: Admin (全权限) / Operator (操作权限) / Viewer (查看权限)
 - **JWT 安全**: Access Token + Refresh Token 机制
 - **密码策略**: bcrypt 加密，强密码验证
@@ -491,6 +525,7 @@ SsalgTen/
 - **审计日志**: 完整操作记录，安全事件追踪
 
 ### 🔄 零停机更新
+
 - **Web 界面**: 管理员可通过 Web 界面一键更新
 - **双重模式**: 支持 Git 仓库和归档包更新方式
 - **智能备份**: 自动备份数据库、配置文件和关键数据
@@ -499,6 +534,7 @@ SsalgTen/
 - **进度跟踪**: 实时显示更新进度和详细日志
 
 ### 🌐 IPv6 全面支持
+
 - **🔍 双栈检测** - 自动检测节点的IPv4和IPv6地址
 - **📊 双栈显示** - 节点列表和详情页同时显示IPv4/IPv6
 - **🗺️ 地图支持** - 地图上支持IPv6节点标注
@@ -511,18 +547,21 @@ SsalgTen/
 ### 🖥️ 管理界面功能
 
 #### 系统概览
+
 - **实时监控**: 节点状态、系统负载、网络质量
 - **统计仪表盘**: 在线率、响应时间、地理分布
 - **告警中心**: 故障节点、异常事件、性能警告
 - **快速操作**: 批量重启、配置刷新、缓存清理
 
-#### 节点管理  
+#### 节点管理
+
 - **生命周期**: 添加、编辑、删除、启用/禁用节点
 - **批量操作**: 批量导入、导出、状态变更
 - **配置管理**: 节点参数、监控间隔、告警规则
 - **性能分析**: 历史趋势、对比分析、异常检测
 
 #### 用户管理
+
 - **角色权限**: 精细化权限控制，资源访问限制
 - **会话管理**: 在线用户、会话超时、强制下线
 - **操作审计**: 登录日志、操作记录、安全事件
@@ -533,11 +572,13 @@ SsalgTen/
 #### 部署模式选择
 
 **🐳 Docker模式（推荐）**
+
 - ✅ 隔离性好，易于管理
 - ✅ 自动更新支持
 - ✅ 适合：大多数部署场景
 
 **💻 宿主机模式**
+
 - ✅ 直接在系统上运行
 - ✅ 更好的网络性能
 - ✅ 服务发现功能更强大
@@ -615,6 +656,7 @@ docker run -d --name ssalgten-agent \
 ## 📊 API 接口文档
 
 ### 🔐 认证接口
+
 ```http
 POST   /api/auth/login      # 用户登录
 POST   /api/auth/logout     # 用户登出  
@@ -625,6 +667,7 @@ POST   /api/auth/change-password  # 修改密码
 ```
 
 ### 🌐 节点管理
+
 ```http
 GET    /api/nodes          # 获取节点列表
 POST   /api/nodes          # 创建新节点
@@ -634,7 +677,8 @@ DELETE /api/nodes/:id      # 删除节点
 POST   /api/nodes/batch    # 批量操作
 ```
 
-### 🔍 诊断接口  
+### 🔍 诊断接口
+
 ```http
 POST   /api/diagnostics/ping       # Ping 测试
 POST   /api/diagnostics/traceroute # 路由跟踪
@@ -645,6 +689,7 @@ GET    /api/diagnostics/statistics # 统计数据
 ```
 
 ### 👥 用户管理
+
 ```http
 GET    /api/admin/users     # 用户列表 (Admin)
 POST   /api/admin/users     # 创建用户 (Admin)  
@@ -654,6 +699,7 @@ GET    /api/admin/logs      # 操作日志 (Admin)
 ```
 
 ### 🔑 API 密钥管理
+
 ```http
 GET    /api/admin/api-keys  # 密钥列表 (Admin)
 POST   /api/admin/api-keys  # 生成密钥 (Admin)  
@@ -666,7 +712,8 @@ POST   /api/admin/nodes/placeholders/import  # 批量导入占位节点（Admin�
 ```
 
 ### 📈 统计接口
-```http  
+
+```http
 GET    /api/statistics/overview   # 系统概览
 GET    /api/statistics/nodes      # 节点统计
 GET    /api/statistics/performance # 性能指标
@@ -696,6 +743,7 @@ Content-Type: application/json
 ```
 
 说明：
+
 - `neverAdopt=true` 表示“冻结占位”，即使未来该 IP 上有新的 Agent 上报，也不会自动合并升级为正式节点。
 - 未设置 `neverAdopt` 时默认保持可被收编（便于先占位、后安装的场景）。
 
@@ -706,35 +754,43 @@ SsalgTen 支持多种地图供应商和 3D 地球可视化，可通过系统设�
 #### 2D 地图供应商
 
 **1. OpenStreetMap (默认，免费)**
+
 ```bash
 VITE_MAP_PROVIDER="openstreetmap"
 ```
+
 - 无需 API 密钥
 - 免费开源
 - 适合大多数使用场景
 
 **2. Mapbox (需要 API 密钥)**
+
 ```bash
 VITE_MAP_PROVIDER="mapbox"
 VITE_MAPBOX_TOKEN="your-mapbox-token"
 ```
+
 - 注册地址: <https://www.mapbox.com/>
 - 提供更精美的地图样式
 - 免费额度: 50,000 次地图加载/月
 
 **3. Carto (免费)**
+
 ```bash
 VITE_MAP_PROVIDER="carto"
 ```
+
 - 无需 API 密钥
 - 简洁轻量的地图样式
 
 #### 3D 地球配置
 
 **Cesium Ion Token (可选)**
+
 ```bash
 VITE_CESIUM_ION_TOKEN="your-cesium-ion-token"
 ```
+
 - 注册地址: <https://cesium.com/ion/>
 - 用于加载高精度地形和影像数据
 - 免费额度: 5GB 存储 + 50,000 次请求/月
@@ -743,6 +799,7 @@ VITE_CESIUM_ION_TOKEN="your-cesium-ion-token"
 #### 系统设置界面配置
 
 管理员可以通过 Web 界面进行地图配置:
+
 1. 登录管理后台
 2. 进入"系统设置"
 3. 找到"地图配置"选项卡
@@ -1004,6 +1061,7 @@ GET /ready       # 就绪检查
 ### 🚨 常见问题及解决方案
 
 #### 数据库连接问题
+
 ```bash
 # 检查数据库状态
 docker compose logs database
@@ -1018,6 +1076,7 @@ npx prisma db seed
 ```
 
 #### Redis 缓存问题
+
 ```bash
 # 检查 Redis 状态
 docker compose logs redis
@@ -1031,6 +1090,7 @@ docker compose restart redis
 ```
 
 #### 节点离线问题
+
 ```bash
 # 检查代理状态
 curl http://agent-ip:3002/health
@@ -1048,6 +1108,7 @@ systemctl restart ssalgten-agent
 ```
 
 #### 前端白屏问题
+
 ```bash
 # 检查前端构建
 npm run build:frontend
@@ -1061,6 +1122,7 @@ curl http://localhost:3001/api/health
 ```
 
 #### 更新系统问题
+
 ```bash
 # 测试更新系统
 ./scripts/test-update-system.sh
@@ -1078,6 +1140,7 @@ docker compose restart updater
 ### 📋 性能优化建议
 
 #### 数据库优化
+
 ```sql
 -- 创建必要索引
 CREATE INDEX idx_nodes_status ON nodes(status);
@@ -1090,6 +1153,7 @@ DELETE FROM visitor_logs WHERE timestamp < NOW() - INTERVAL '7 days';
 ```
 
 #### Redis 缓存策略
+
 ```javascript
 // 缓存配置优化
 const cacheConfig = {
@@ -1101,6 +1165,7 @@ const cacheConfig = {
 ```
 
 #### 前端性能优化
+
 ```typescript
 // 组件懒加载
 const AdminPage = lazy(() => import('./pages/AdminPage'));
@@ -1131,7 +1196,7 @@ const mapConfig = {
 3. **创建分支** - `git checkout -b feature/amazing-feature`
 4. **开发功能** - 遵循代码规范，添加测试
 5. **提交代码** - `git commit -m 'feat: add amazing feature'`
-6. **推送分支** - `git push origin feature/amazing-feature` 
+6. **推送分支** - `git push origin feature/amazing-feature`
 7. **创建 PR** - 提交 Pull Request，详细描述修改内容
 
 ### 📝 代码规范
@@ -1224,6 +1289,7 @@ ci: CI/CD 相关
 ```
 
 示例：
+
 ```bash
 feat(map): 添加节点聚合功能
 fix(auth): 修复 JWT token 过期问题  
@@ -1254,9 +1320,9 @@ perf(database): 优化节点查询性能
 
 ### 🔗 相关链接
 
-- 🏠 **项目主页**: https://github.com/lonelyrower/SsalgTen
+- 🏠 **项目主页**: <https://github.com/lonelyrower/SsalgTen>
 - 📊 **在线演示**: (即将推出)
-- 📚 **API 文档**: http://localhost:3001/api (本地部署后访问)
+- 📚 **API 文档**: <http://localhost:3001/api> (本地部署后访问)
 - 🐳 **Docker Hub**: (即将推出)
 
 ---
