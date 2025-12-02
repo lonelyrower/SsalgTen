@@ -328,7 +328,7 @@ export const ServicesPage: React.FC = () => {
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded-[var(--radius-md)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "list"
-                      ? "bg-primary text-white shadow-sm"
+                      ? "bg-blue-500 text-white shadow-sm"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="列表视图"
@@ -341,7 +341,7 @@ export const ServicesPage: React.FC = () => {
                   onClick={() => setViewMode("node")}
                   className={`p-2 rounded-[var(--radius-md)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "node"
-                      ? "bg-primary text-white shadow-sm"
+                      ? "bg-blue-500 text-white shadow-sm"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="节点视图"

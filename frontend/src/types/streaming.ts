@@ -138,8 +138,8 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
   ],
   tiktok: [
     { status: "yes", label: STATUS_TEXT.yes, color: STATUS_COLORS.yes },
-    { status: "no", label: STATUS_TEXT.no, color: STATUS_COLORS.no },
     { status: "idc", label: STATUS_TEXT.idc, color: STATUS_COLORS.idc },
+    { status: "no", label: STATUS_TEXT.no, color: STATUS_COLORS.no },
     { status: "failed", label: STATUS_TEXT.failed, color: STATUS_COLORS.failed },
   ],
   amazon_prime: [
