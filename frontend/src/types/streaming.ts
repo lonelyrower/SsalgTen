@@ -122,6 +122,7 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
     { status: "yes", label: STATUS_TEXT.yes, color: STATUS_COLORS.yes },
     { status: "org", label: STATUS_TEXT.org, color: STATUS_COLORS.org },
     { status: "no", label: STATUS_TEXT.no, color: STATUS_COLORS.no },
+    { status: "failed", label: STATUS_TEXT.failed, color: STATUS_COLORS.failed },
   ],
   youtube: [
     { status: "yes", label: STATUS_TEXT.yes, color: STATUS_COLORS.yes },
@@ -137,6 +138,7 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
   ],
   tiktok: [
     { status: "yes", label: STATUS_TEXT.yes, color: STATUS_COLORS.yes },
+    { status: "no", label: STATUS_TEXT.no, color: STATUS_COLORS.no },
     { status: "idc", label: STATUS_TEXT.idc, color: STATUS_COLORS.idc },
     { status: "failed", label: STATUS_TEXT.failed, color: STATUS_COLORS.failed },
   ],
