@@ -7,6 +7,7 @@
 
 @theme {
   /* Container configuration */
+  --breakpoint-xs: 360px;   /* 超小屏幕断点 */
   --breakpoint-2xl: 1400px;
 
   /* ===== 设计系统令牌 ===== */

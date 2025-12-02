@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80 rounded-[var(--radius-xl)] focus:ring-4 focus:ring-primary/20 focus:border-primary dark:bg-slate-900/40 dark:text-white transition-all duration-[var(--duration-normal)] bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
+                  className="w-full pl-12 pr-4 py-4 border-2 border-slate-200/80 dark:border-slate-700/80 rounded-[var(--radius-xl)] focus:ring-4 focus:ring-primary/20 focus:border-primary dark:bg-slate-900/40 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-[var(--duration-normal)] bg-white/60 hover:bg-white/80 dark:hover:bg-slate-900/60"
                   placeholder="请输入用户名"
                   autoComplete="username"
                   disabled={isSubmitting}
@@ -148,7 +148,7 @@ export const LoginPage: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80 rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary dark:bg-slate-900/40 dark:text-white transition-colors duration-[var(--duration-normal)]"
+                  className="w-full pl-10 pr-12 py-3 border border-slate-200/80 dark:border-slate-700/80 rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary bg-white/60 dark:bg-slate-900/40 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors duration-[var(--duration-normal)]"
                   placeholder="请输入密码"
                   autoComplete="current-password"
                   disabled={isSubmitting}

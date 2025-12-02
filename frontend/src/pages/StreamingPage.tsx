@@ -385,14 +385,14 @@ export const StreamingPage: React.FC = () => {
               </Button>
 
               {/* View mode toggle */}
-              <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] p-1">
+              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[var(--radius-xl)] p-1 shadow-sm">
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded-[var(--radius-lg)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "list"
-                      ? "bg-primary text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="列表视图"
                   aria-label="切换到列表视图"
@@ -404,8 +404,8 @@ export const StreamingPage: React.FC = () => {
                   onClick={() => setViewMode("grid")}
                   className={`p-2 rounded-[var(--radius-lg)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "grid"
-                      ? "bg-primary text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="卡片视图"
                   aria-label="切换到卡片视图"

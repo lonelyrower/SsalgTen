@@ -551,15 +551,19 @@ export class StreamingController {
       });
 
       const expiredThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      // 只统计在线节点中有最近测试记录的节点数
       const recentNodeRows = await prisma.$queryRaw<Array<{ node_id: string }>>(
         Prisma.sql`
-          SELECT DISTINCT "nodeId" AS node_id
-          FROM "streaming_tests"
-          WHERE "testedAt" >= ${expiredThreshold}
+          SELECT DISTINCT st."nodeId" AS node_id
+          FROM "streaming_tests" st
+          INNER JOIN "nodes" n ON n.id = st."nodeId"
+          WHERE st."testedAt" >= ${expiredThreshold}
+            AND n.status = 'ONLINE'
         `,
       );
       const expiredNodes = Math.max(0, totalNodes - recentNodeRows.length);
 
+      // 只统计在线节点的流媒体测试结果
       const latestStatsRows = await prisma.$queryRaw<
         Array<{
           service: StreamingService;
@@ -567,13 +571,17 @@ export class StreamingController {
           count: bigint;
         }>
       >(Prisma.sql`
-        WITH latest AS (
+        WITH online_nodes AS (
+          SELECT id FROM "nodes" WHERE status = 'ONLINE'
+        ),
+        latest AS (
           SELECT
-            "nodeId",
-            "service",
-            MAX("testedAt") AS "latestTestedAt"
-          FROM "streaming_tests"
-          GROUP BY "nodeId", "service"
+            st."nodeId",
+            st."service",
+            MAX(st."testedAt") AS "latestTestedAt"
+          FROM "streaming_tests" st
+          INNER JOIN online_nodes n ON n.id = st."nodeId"
+          GROUP BY st."nodeId", st."service"
         )
         SELECT
           st."service",

@@ -157,7 +157,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
                   </div>
 
                   {/* 区域信息 */}
-                  <div className="text-[10px] text-gray-600 dark:text-gray-400 min-h-[14px]">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 min-h-[14px]">
                     {showRegion ? service.region?.toUpperCase() : ""}
                   </div>
 
@@ -165,7 +165,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
                   <div className="min-h-[20px] flex items-center">
                     {showUnlock && service.unlockType && (
                       <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${UNLOCK_TYPE_COLORS[unlockType]}`}
                       >
                         {UNLOCK_TYPE_LABELS[unlockType]}
                       </span>

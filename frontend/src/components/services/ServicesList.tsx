@@ -231,7 +231,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
         {processedShareLinks.slice(0, 2).map((link, index) => (
           <div
             key={index}
-            className="flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-400 group"
+            className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 group"
           >
             <LinkIcon className="h-3 w-3 flex-shrink-0" />
             <span className="truncate font-mono flex-1" title={link}>
@@ -254,7 +254,7 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
           </div>
         ))}
         {processedShareLinks.length > 2 && (
-          <div className="text-[11px] text-gray-500 dark:text-gray-500">
+          <div className="text-xs text-gray-500 dark:text-gray-500">
             +{processedShareLinks.length - 2} 条更多链接
           </div>
         )}

@@ -112,8 +112,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             </Badge>
           </div>
 
-          {/* 信息网格 - 数据在标签同一行 */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          {/* 信息网格 - 数据在标签同一行，超小屏单列 */}
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-4 gap-y-2 text-sm">
             {/* ASN */}
             {node.asnNumber && (
               <div className="flex items-center gap-2">

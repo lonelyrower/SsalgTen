@@ -265,7 +265,7 @@ export const ServicesPage: React.FC = () => {
                 placeholder="搜索服务名称、域名、端口..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -322,14 +322,14 @@ export const ServicesPage: React.FC = () => {
               </Button>
 
               {/* View mode toggle */}
-              <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] p-1">
+              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[var(--radius-lg)] p-1 shadow-sm">
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded-[var(--radius-md)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "list"
-                      ? "bg-primary text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="列表视图"
                   aria-label="切换到列表视图"
@@ -341,8 +341,8 @@ export const ServicesPage: React.FC = () => {
                   onClick={() => setViewMode("node")}
                   className={`p-2 rounded-[var(--radius-md)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "node"
-                      ? "bg-primary text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   title="节点视图"
                   aria-label="切换到节点视图"
