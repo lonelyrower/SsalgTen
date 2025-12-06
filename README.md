@@ -1307,6 +1307,7 @@ perf(database): 优化节点查询性能
 - 🛠️ 技术栈: React, Node.js, TypeScript, PostgreSQL 等开源项目
 - 🎨 UI 设计: TailwindCSS, shadcn/ui, Lucide Icons
 - 🗺️ 地图服务: OpenStreetMap, Mapbox, Leaflet, Cesium
+- 🎬 流媒体检测: [IPQuality](https://github.com/xykt/IPQuality) - 流媒体解锁检测逻辑参考
 - 🤝 社区贡献者和 Issue 反馈者们
 
 ## 📞 支持与联系
