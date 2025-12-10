@@ -59,11 +59,11 @@ export const NodeCard: React.FC<NodeCardProps> = ({
       className={`relative rounded-[var(--radius-xl)] border-2 p-4 cursor-pointer transition-all duration-[var(--duration-normal)] ${
         isSelected
           ? isOnline
-            ? "border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:from-cyan-900/20 dark:to-blue-900/20"
+            ? "border-[hsl(var(--secondary))] shadow-lg shadow-[hsl(var(--secondary))]/20 ring-2 ring-[hsl(var(--secondary))]/30 bg-gradient-to-br from-[hsl(var(--secondary))]/10 to-[hsl(var(--status-info-50))]/80 dark:from-[hsl(var(--secondary))]/20 dark:to-[hsl(var(--status-info-900))]/20"
             : "border-purple-500 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/30 bg-gradient-to-br from-purple-50/80 to-pink-50/80 dark:from-purple-900/20 dark:to-pink-900/20"
           : isOnline
-            ? "border-green-200 dark:border-green-900/30 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 hover:shadow-lg hover:-translate-y-0.5"
-            : "border-red-200 dark:border-red-900/30 bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-900/10 dark:to-rose-900/10 hover:shadow-lg hover:-translate-y-0.5"
+            ? "border-[hsl(var(--status-success-200))] dark:border-[hsl(var(--status-success-900))]/30 bg-gradient-to-br from-[hsl(var(--status-success-50))]/50 to-[hsl(var(--status-success-100))]/50 dark:from-[hsl(var(--status-success-900))]/10 dark:to-[hsl(var(--status-success-900))]/10 hover:shadow-lg hover:-translate-y-0.5"
+            : "border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-900))]/30 bg-gradient-to-br from-[hsl(var(--status-error-50))]/50 to-[hsl(var(--status-error-100))]/50 dark:from-[hsl(var(--status-error-900))]/10 dark:to-[hsl(var(--status-error-900))]/10 hover:shadow-lg hover:-translate-y-0.5"
       }`}
       initial={{ opacity: 0, x: -50 }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -82,7 +82,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
               {getStatusIcon(node.status)}
             </motion.div>
             {index < 50 && (
-              <div className="w-0.5 h-12 bg-gradient-to-b from-cyan-500 to-transparent mt-2" />
+              <div className="w-0.5 h-12 bg-gradient-to-b from-[hsl(var(--secondary))] to-transparent mt-2" />
             )}
           </div>
         )}
@@ -95,10 +95,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
                 <CountryFlagSvg country={node.country} className="w-7 h-7" />
               )}
               <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
+                <h3 className="text-lg font-bold text-[hsl(var(--foreground))] mb-0.5">
                   {node.name}
                 </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                <p className="text-xs text-[hsl(var(--muted-foreground))] flex items-center gap-1">
                   <Globe className="h-3 w-3" />
                   {node.city}, {node.country}
                 </p>
@@ -117,8 +117,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* ASN */}
             {node.asnNumber && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">ASN:</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">ASN:</span>
+                <span className="text-sm font-semibold text-[hsl(var(--foreground))]">
                   {node.asnNumber}
                 </span>
               </div>
@@ -127,8 +127,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* IPv4 */}
             {node.ipv4 && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">IPv4:</span>
-                <span className="text-xs font-mono font-semibold text-cyan-600 dark:text-cyan-400">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">IPv4:</span>
+                <span className="text-xs font-mono font-semibold text-[hsl(var(--secondary))]">
                   {node.ipv4}
                 </span>
               </div>
@@ -136,8 +136,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
             {/* 服务商 */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">服务商:</span>
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+              <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap">服务商:</span>
+              <span className="text-sm font-semibold text-[hsl(var(--foreground))] truncate">
                 {node.provider}
               </span>
             </div>
@@ -145,7 +145,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* IPv6 */}
             {node.ipv6 && node.ipv6.includes(":") && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">IPv6:</span>
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">IPv6:</span>
                 <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 truncate">
                   {node.ipv6}
                 </span>
@@ -155,8 +155,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
             {/* 延迟 */}
             {latency !== null && latency !== undefined && (
               <div className="flex items-center gap-2 col-span-2">
-                <Activity className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">延迟:</span>
+                <Activity className="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">延迟:</span>
                 <span
                   className={`font-bold text-sm ${
                     latency < 50
@@ -176,16 +176,16 @@ export const NodeCard: React.FC<NodeCardProps> = ({
           <div className="mt-3 space-y-2">
             {/* CPU */}
             <div>
-              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+              <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))] mb-1">
                 <div className="flex items-center gap-1.5">
                   <Cpu className="h-3 w-3" />
                   <span>CPU</span>
                 </div>
-                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                <span className="font-semibold text-[hsl(var(--foreground))]">
                   {cpuUsage > 0 ? `${cpuUsage.toFixed(1)}%` : '—'}
                 </span>
               </div>
-              <div className="h-1.5 bg-gray-200/70 dark:bg-gray-700/70 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[hsl(var(--muted))] rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${
                     cpuUsage > 80
@@ -203,16 +203,16 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
             {/* 内存 */}
             <div>
-              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+              <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))] mb-1">
                 <div className="flex items-center gap-1.5">
                   <MemoryStick className="h-3 w-3" />
                   <span>内存</span>
                 </div>
-                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                <span className="font-semibold text-[hsl(var(--foreground))]">
                   {memoryUsage > 0 ? `${memoryUsage.toFixed(1)}%` : '—'}
                 </span>
               </div>
-              <div className="h-1.5 bg-gray-200/70 dark:bg-gray-700/70 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[hsl(var(--muted))] rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${
                     memoryUsage > 80

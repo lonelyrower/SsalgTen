@@ -109,10 +109,10 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             <Wifi className="h-5 w-5 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">
               Ping 测试
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
               测试网络连通性和延迟
             </p>
           </div>
@@ -120,7 +120,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
 
         {/* 快捷目标 */}
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+          <label className="text-xs text-[hsl(var(--muted-foreground))] mb-2 block">
             快捷目标
           </label>
           <div className="flex flex-wrap gap-2">
@@ -142,7 +142,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
         {/* 输入区域 */}
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+            <label className="text-xs text-[hsl(var(--muted-foreground))] mb-2 block">
               目标地址 <span className="text-[hsl(var(--status-error-500))]">*</span>
             </label>
             <input
@@ -151,19 +151,19 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: 8.8.8.8)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-[hsl(var(--card))] focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
 
           <div>
-            <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+            <label className="text-xs text-[hsl(var(--muted-foreground))] mb-2 block">
               Ping 次数
             </label>
             <select
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-[hsl(var(--card))] focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value={1}>1 次</option>
               <option value={4}>4 次</option>
@@ -225,42 +225,42 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-emerald-50 dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-emerald-900/20 rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)]">
-                <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
+              <div className="p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-[hsl(var(--status-success-100))] dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)]">
+                <div className="flex items-center gap-2 mb-1 text-xs text-[hsl(var(--muted-foreground))]">
                   <Activity className="h-4 w-4 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
                   平均延迟
                 </div>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                <p className="text-xl font-semibold text-[hsl(var(--foreground))]">
                   {formatLatency(result.avg ?? result.time)}
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-emerald-50 dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-emerald-900/20 rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)]">
-                <div className="flex items-center gap-2 mb-1 text-xs text-gray-600 dark:text-gray-400">
+              <div className="p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-[hsl(var(--status-success-100))] dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)]">
+                <div className="flex items-center gap-2 mb-1 text-xs text-[hsl(var(--muted-foreground))]">
                   <Activity className="h-4 w-4 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
                   丢包率
                 </div>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                <p className="text-xl font-semibold text-[hsl(var(--foreground))]">
                   {formatLoss(result.packetLoss)}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
+            <div className="grid grid-cols-2 gap-3 text-xs text-[hsl(var(--muted-foreground))]">
               <div className="p-3 bg-[hsl(var(--status-success-50)/0.5)] dark:bg-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)]">
                 <p>最小延迟</p>
-                <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                <p className="mt-1 text-base font-semibold text-[hsl(var(--foreground))]">
                   {formatLatency(result.min)}
                 </p>
               </div>
               <div className="p-3 bg-[hsl(var(--status-success-50)/0.5)] dark:bg-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)]">
                 <p>最大延迟</p>
-                <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                <p className="mt-1 text-base font-semibold text-[hsl(var(--foreground))]">
                   {formatLatency(result.max)}
                 </p>
               </div>
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div className="text-xs text-[hsl(var(--muted-foreground))] space-y-1">
               {result.host && <p>目标主机：{result.host}</p>}
               {typeof result.duration === "number" && (
                 <p>诊断耗时：{(result.duration / 1000).toFixed(2)} 秒</p>
@@ -275,7 +275,7 @@ export const PingTool: React.FC<PingToolProps> = ({ nodeId }) => {
                   查看原始输出
                 </summary>
                 <div className="mt-2 p-3 bg-[hsl(var(--status-success-50)/0.5)] dark:bg-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.3)] dark:border-[hsl(var(--status-success-700)/0.3)] max-h-60 overflow-y-auto">
-                  <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                  <pre className="text-xs font-mono whitespace-pre-wrap text-[hsl(var(--foreground))]">
                     {result.output}
                   </pre>
                 </div>

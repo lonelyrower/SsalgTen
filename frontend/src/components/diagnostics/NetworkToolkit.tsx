@@ -114,7 +114,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
       case "SPEEDTEST":
         return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] dark:bg-[hsl(var(--muted))]/30 dark:text-[hsl(var(--muted-foreground))]";
     }
   };
 
@@ -222,7 +222,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
           {/* 诊断记录控制面板 */}
           <GlassCard variant="default" hover={false}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
                 <History className="h-4 w-4" />
                 <span>诊断历史记录</span>
               </h3>
@@ -234,7 +234,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                       e.target.value as typeof diagnosticFilter,
                     )
                   }
-                  className="px-3 py-1.5 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-3 py-1.5 border border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-[hsl(var(--card))] focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="ALL">全部类型</option>
                   <option value="PING">PING</option>
@@ -262,7 +262,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                 <LoadingSpinner text="加载诊断记录..." />
               </div>
             ) : filteredDiagnostics.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-[hsl(var(--muted-foreground))]">
                 <History className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>
                   {diagnosticFilter === "ALL"
@@ -286,15 +286,15 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                             <Badge className={getDiagnosticTypeColor(record.type)}>
                               {record.type}
                             </Badge>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-xs text-[hsl(var(--muted-foreground))]">
                               {record.success ? "成功" : "失败"}
                             </span>
                           </div>
 
                           {record.target && (
                             <div className="flex items-center gap-2 mb-2">
-                              <Target className="h-3 w-3 text-gray-500" />
-                              <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
+                              <Target className="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
+                              <span className="text-sm font-mono text-[hsl(var(--muted-foreground))]">
                                 {record.target}
                               </span>
                             </div>
@@ -321,7 +321,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-col items-end gap-1 text-xs text-[hsl(var(--muted-foreground))]">
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           <span>{formatDuration(record.duration)}</span>
@@ -347,7 +347,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
           {/* 运行日志 */}
           <GlassCard variant="default" hover={false}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-[hsl(var(--foreground))]">
                 <FileText className="h-4 w-4" />
                 <span>节点运行日志</span>
               </h3>
@@ -370,7 +370,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                 <LoadingSpinner text="加载日志..." />
               </div>
             ) : events.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-[hsl(var(--muted-foreground))]">
                 <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>暂无运行日志</p>
               </div>
@@ -401,7 +401,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                           </div>
 
                           {event.message && (
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                            <p className="text-sm text-[hsl(var(--foreground))] mb-2">
                               {event.message}
                             </p>
                           )}
@@ -421,7 +421,7 @@ export const NetworkToolkit: React.FC<NetworkToolkitProps> = ({ selectedNode, he
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-col items-end gap-1 text-xs text-[hsl(var(--muted-foreground))]">
                         <Clock className="h-3 w-3" />
                         <span className="text-right">
                           {new Date(event.timestamp).toLocaleString("zh-CN", {

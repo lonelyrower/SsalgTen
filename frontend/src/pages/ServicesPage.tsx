@@ -221,7 +221,7 @@ export const ServicesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-[hsl(var(--background))]">
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-8 w-full">
@@ -234,7 +234,7 @@ export const ServicesPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-[hsl(var(--background))]">
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-8 w-full">
@@ -249,23 +249,23 @@ export const ServicesPage: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-[hsl(var(--background))]">
       <Header />
 
       <div className="flex-1 overflow-y-auto">
         <main className="max-w-7xl mx-auto px-4 py-8 space-y-6 w-full">
         {/* Search and Filters - Simplified */}
-        <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-xl)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] shadow-[var(--shadow-sm)] p-4">
+        <div className="bg-[hsl(var(--card))] rounded-[var(--radius-xl)] border border-[hsl(var(--border-subtle))] shadow-[var(--shadow-sm)] p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <input
                 type="text"
                 placeholder="搜索服务名称、域名、端口..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-[hsl(var(--muted))] border border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
               />
             </div>
 
@@ -273,8 +273,8 @@ export const ServicesPage: React.FC = () => {
             <div className="flex items-center gap-2 flex-wrap">
               {/* Node filter - only show in list view or when there are multiple nodes */}
               {viewMode === "list" && availableNodes.length > 1 && (
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] px-3 py-2">
-                  <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <div className="flex items-center gap-2 bg-[hsl(var(--muted))] border border-[hsl(var(--border-subtle))] rounded-[var(--radius-lg)] px-3 py-2">
+                  <Filter className="h-4 w-4 text-[hsl(var(--muted-foreground))] flex-shrink-0" />
                   <select
                     value={filters.nodeId || "all"}
                     onChange={(e) =>
@@ -283,7 +283,7 @@ export const ServicesPage: React.FC = () => {
                         nodeId: e.target.value === "all" ? undefined : e.target.value,
                       }))
                     }
-                    className="bg-transparent focus:outline-none text-sm text-gray-900 dark:text-gray-100 cursor-pointer"
+                    className="bg-transparent focus:outline-none text-sm text-[hsl(var(--foreground))] cursor-pointer"
                     aria-label="筛选节点"
                   >
                     <option value="all">全部节点</option>
@@ -322,14 +322,14 @@ export const ServicesPage: React.FC = () => {
               </Button>
 
               {/* View mode toggle */}
-              <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[var(--radius-lg)] p-1 shadow-sm">
+              <div className="flex items-center bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-[var(--radius-lg)] p-1 shadow-sm">
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded-[var(--radius-md)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "list"
-                      ? "bg-blue-500 text-white shadow-sm"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]"
                   }`}
                   title="列表视图"
                   aria-label="切换到列表视图"
@@ -341,8 +341,8 @@ export const ServicesPage: React.FC = () => {
                   onClick={() => setViewMode("node")}
                   className={`p-2 rounded-[var(--radius-md)] transition-colors duration-[var(--duration-fast)] ${
                     viewMode === "node"
-                      ? "bg-blue-500 text-white shadow-sm"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]"
                   }`}
                   title="节点视图"
                   aria-label="切换到节点视图"
@@ -361,7 +361,7 @@ export const ServicesPage: React.FC = () => {
             filteredServices.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-[hsl(var(--muted-foreground))]">
                     没有找到符合条件的服务
                   </p>
                 </CardContent>
@@ -374,7 +374,7 @@ export const ServicesPage: React.FC = () => {
           ) : filteredNodeOverviews.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-gray-500 dark:text-gray-400">
+                <p className="text-[hsl(var(--muted-foreground))]">
                   没有找到符合条件的节点
                 </p>
               </CardContent>

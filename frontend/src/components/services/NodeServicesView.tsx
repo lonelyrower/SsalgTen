@@ -89,10 +89,10 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
               <CountryFlagSvg country={overview.nodeCountry} className="w-7 h-7 flex-shrink-0" />
             )}
             <div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="text-base font-semibold text-[hsl(var(--foreground))] truncate">
                 {overview.nodeName}
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <p className="text-xs text-[hsl(var(--muted-foreground))] flex items-center gap-1">
                 <Globe className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">
                   {overview.nodeCity ? `${overview.nodeCity}, ${overview.nodeCountry}` : overview.nodeCountry}
@@ -113,12 +113,12 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
             {overview.services.map((service) => (
               <div
                 key={service.id}
-                className="py-2 px-3 rounded-[var(--radius-lg)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-white/50 dark:bg-gray-800/50 hover:shadow-sm transition-shadow"
+                className="py-2 px-3 rounded-[var(--radius-lg)] border border-[hsl(var(--border-subtle))] bg-[hsl(var(--card))]/50 hover:shadow-sm transition-shadow"
               >
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 text-center truncate">
+                <div className="text-sm font-medium text-[hsl(var(--foreground))] text-center truncate">
                   {service.name}
                   {service.version && (
-                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="ml-2 text-xs text-[hsl(var(--muted-foreground))]">
                       v{service.version}
                     </span>
                   )}
@@ -127,14 +127,14 @@ const NodeServiceCard: React.FC<NodeServiceCardProps> = ({
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center py-8 text-sm text-[hsl(var(--muted-foreground))]">
             该节点暂无服务
           </div>
         )}
 
         {/* 底部信息 */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[hsl(var(--border-subtle))]">
+          <div className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
             <Clock className="h-3.5 w-3.5" />
             <span>{timeAgo}</span>
           </div>

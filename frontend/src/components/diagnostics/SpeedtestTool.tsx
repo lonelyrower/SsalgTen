@@ -175,10 +175,10 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
             <Gauge className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">
               Speedtest
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
               测试节点的上传和下载速度
             </p>
           </div>
@@ -193,7 +193,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                 测试完成
               </Badge>
               {result.timestamp && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
                   {new Date(result.timestamp).toLocaleString()}
                 </span>
               )}
@@ -202,30 +202,30 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
 
           {/* 速度指标 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className={`p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-emerald-50 dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-emerald-900/20 rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)] transition-opacity ${!result ? 'opacity-50' : ''}`}>
+            <div className={`p-4 bg-gradient-to-br from-[hsl(var(--status-success-50))] to-[hsl(var(--status-success-100))] dark:from-[hsl(var(--status-success-900)/0.2)] dark:to-[hsl(var(--status-success-900)/0.1)] rounded-lg border border-[hsl(var(--status-success-200)/0.5)] dark:border-[hsl(var(--status-success-700)/0.5)] transition-opacity ${!result ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-2 mb-2">
                 <TrendingDown className="h-4 w-4 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
                   下载速度
                 </span>
               </div>
-              <p className={`text-2xl font-bold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+              <p className={`text-2xl font-bold ${result ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]'}`}>
                 {result ? renderMbps(result.downloadMbps) : '--'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">Mbps</p>
             </div>
 
             <div className={`p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50 transition-opacity ${!result ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
                   上传速度
                 </span>
               </div>
-              <p className={`text-2xl font-bold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+              <p className={`text-2xl font-bold ${result ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]'}`}>
                 {result ? renderMbps(result.uploadMbps) : '--'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Mbps</p>
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">Mbps</p>
             </div>
           </div>
 
@@ -234,22 +234,22 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
             <div className={`p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30 transition-opacity ${!result ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-2 mb-1">
                 <Radio className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
                   Ping 延迟
                 </span>
               </div>
-              <p className={`text-lg font-semibold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+              <p className={`text-lg font-semibold ${result ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]'}`}>
                 {result ? renderLatency(result.pingMs) : '--'}
               </p>
             </div>
             <div className={`p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30 transition-opacity ${!result ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-2 mb-1">
                 <Gauge className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
                   抖动
                 </span>
               </div>
-              <p className={`text-lg font-semibold ${result ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+              <p className={`text-lg font-semibold ${result ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]'}`}>
                 {result ? renderLatency(result.jitterMs) : '--'}
               </p>
             </div>
@@ -277,7 +277,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
 
         {/* 说明 */}
         <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
-          <p className="text-xs text-gray-600 dark:text-gray-400">
+          <p className="text-xs text-[hsl(var(--muted-foreground))]">
             <strong>提示：</strong>速度测试会连接 Speedtest.net 或备用服务器，过程可能需要 30-90 秒
           </p>
         </div>
@@ -300,11 +300,11 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
               <div className="p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Radio className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                  <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                  <span className="text-xs font-semibold text-[hsl(var(--foreground))]">
                     测试服务器
                   </span>
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                <div className="text-xs text-[hsl(var(--muted-foreground))] space-y-1">
                   {result.serverName && (
                     <p>
                       <strong>名称:</strong> {result.serverName}
@@ -329,7 +329,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
               </div>
             )}
 
-            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div className="text-xs text-[hsl(var(--muted-foreground))] space-y-1">
               {result.executedAt && <p>执行节点：{result.executedAt}</p>}
               {typeof result.duration === "number" && (
                 <p>测试耗时：{(result.duration / 1000).toFixed(2)} 秒</p>
@@ -342,7 +342,7 @@ export const SpeedtestTool: React.FC<SpeedtestToolProps> = ({ nodeId }) => {
                 查看完整结果
               </summary>
               <div className="mt-2 p-3 bg-yellow-50/50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200/30 dark:border-yellow-700/30">
-                <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                <pre className="text-xs font-mono whitespace-pre-wrap text-[hsl(var(--foreground))]">
                   {JSON.stringify(rawResult ?? result, null, 2)}
                 </pre>
               </div>

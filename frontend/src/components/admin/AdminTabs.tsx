@@ -22,9 +22,9 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
   return (
     <div
       className={cn(
-        "relative inline-flex items-center rounded-[var(--radius-xl)] border-2 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]",
-        "bg-white/80 dark:bg-gray-800/80 backdrop-blur-[var(--blur-sm)] p-1.5",
-        "shadow-[var(--shadow-lg)] dark:shadow-[var(--shadow-xl)] overflow-hidden",
+        "relative inline-flex items-center rounded-[var(--radius-xl)] border-2 border-[hsl(var(--border-subtle))]",
+        "bg-[hsl(var(--card))]/80 backdrop-blur-[var(--blur-sm)] p-1.5",
+        "shadow-[var(--shadow-lg)] overflow-hidden",
         className,
       )}
       role="tablist"
@@ -60,7 +60,7 @@ export function AdminTabs({ tabs, value, onChange, className }: AdminTabsProps) 
               "min-w-[100px] sm:min-w-[120px]",
               isActive
                 ? "text-white"
-                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
+                : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]",
             )}
           >
             <Icon className={cn("h-4 w-4", isActive ? "text-white" : "")} />

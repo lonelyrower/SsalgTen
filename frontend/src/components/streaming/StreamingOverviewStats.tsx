@@ -46,9 +46,9 @@ const StatsCard: React.FC<StatsCardProps> = ({
       accent: "border-[hsl(var(--status-error-200))] dark:border-[hsl(var(--status-error-800))]",
     },
     cyan: {
-      bg: "bg-cyan-50 dark:bg-cyan-900/20",
-      icon: "text-cyan-600 dark:text-cyan-400",
-      accent: "border-cyan-200 dark:border-cyan-800",
+      bg: "bg-[hsl(var(--secondary))]/10",
+      icon: "text-[hsl(var(--secondary))]",
+      accent: "border-[hsl(var(--secondary))]/30",
     },
   };
 
@@ -56,7 +56,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <Card
-      className={`relative overflow-hidden bg-white dark:bg-gray-800 border ${colors.accent} shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all duration-[var(--duration-normal)] group`}
+      className={`relative overflow-hidden bg-[hsl(var(--card))] border ${colors.accent} shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all duration-[var(--duration-normal)] group`}
     >
       <div className="p-6">
         <div className="flex items-center">
@@ -66,14 +66,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
             <div className={`${colors.icon}`}>{icon}</div>
           </div>
           <div className="ml-4 flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            <p className="text-sm font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
               {title}
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            <p className="text-2xl font-bold text-[hsl(var(--foreground))] mt-1">
               {value}
             </p>
             {subValue && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
                 {subValue}
               </p>
             )}

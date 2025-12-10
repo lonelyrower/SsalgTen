@@ -15,35 +15,35 @@ interface StreamingPlatformCardsProps {
 const colorClasses = {
   // Netflix 官方红色 #E50914
   netflixRed: {
-    bg: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-600 dark:text-red-400",
-    accent: "border-red-500 dark:border-red-600",
-    ring: "ring-2 ring-inset ring-red-500",
-    progressBg: "bg-red-600",
+    bg: "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.4)]",
+    icon: "text-[hsl(var(--status-error-600))] dark:text-[hsl(var(--status-error-400))]",
+    accent: "border-[hsl(var(--status-error-500))] dark:border-[hsl(var(--status-error-600))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--status-error-500))]",
+    progressBg: "bg-[hsl(var(--status-error-600))]",
   },
   // YouTube 官方红色 #FF0000
   youtubeRed: {
-    bg: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-500 dark:text-red-400",
-    accent: "border-red-400 dark:border-red-500",
-    ring: "ring-2 ring-inset ring-red-500",
-    progressBg: "bg-red-500",
+    bg: "bg-[hsl(var(--status-error-50))] dark:bg-[hsl(var(--status-error-900)/0.4)]",
+    icon: "text-[hsl(var(--status-error-500))] dark:text-[hsl(var(--status-error-400))]",
+    accent: "border-[hsl(var(--status-error-400))] dark:border-[hsl(var(--status-error-500))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--status-error-500))]",
+    progressBg: "bg-[hsl(var(--status-error-500))]",
   },
   // Disney+ 官方蓝色 #113CCF
   disneyBlue: {
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    icon: "text-blue-700 dark:text-blue-400",
-    accent: "border-blue-600 dark:border-blue-500",
-    ring: "ring-2 ring-inset ring-blue-600",
-    progressBg: "bg-blue-600",
+    bg: "bg-[hsl(var(--status-info-50))] dark:bg-[hsl(var(--status-info-900)/0.4)]",
+    icon: "text-[hsl(var(--status-info-700))] dark:text-[hsl(var(--status-info-400))]",
+    accent: "border-[hsl(var(--status-info-600))] dark:border-[hsl(var(--status-info-500))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--status-info-600))]",
+    progressBg: "bg-[hsl(var(--status-info-600))]",
   },
   // Amazon Prime 官方青色 #00A8E1
   amazonCyan: {
-    bg: "bg-cyan-50 dark:bg-cyan-950/40",
-    icon: "text-cyan-600 dark:text-cyan-400",
-    accent: "border-cyan-500 dark:border-cyan-500",
-    ring: "ring-2 ring-inset ring-cyan-500",
-    progressBg: "bg-cyan-500",
+    bg: "bg-[hsl(var(--secondary))]/10 dark:bg-[hsl(var(--secondary))]/20",
+    icon: "text-[hsl(var(--secondary))] dark:text-[hsl(var(--secondary))]",
+    accent: "border-[hsl(var(--secondary))] dark:border-[hsl(var(--secondary))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--secondary))]",
+    progressBg: "bg-[hsl(var(--secondary))]",
   },
   // TikTok 官方颜色 #FE2C55 + #00F2EA (使用粉红色)
   tiktokPink: {
@@ -55,11 +55,11 @@ const colorClasses = {
   },
   // Spotify 官方绿色 #1DB954
   spotifyGreen: {
-    bg: "bg-green-50 dark:bg-green-950/40",
-    icon: "text-green-600 dark:text-green-400",
-    accent: "border-green-500 dark:border-green-500",
-    ring: "ring-2 ring-inset ring-green-500",
-    progressBg: "bg-green-500",
+    bg: "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.4)]",
+    icon: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]",
+    accent: "border-[hsl(var(--status-success-500))] dark:border-[hsl(var(--status-success-500))]",
+    ring: "ring-2 ring-inset ring-[hsl(var(--status-success-500))]",
+    progressBg: "bg-[hsl(var(--status-success-500))]",
   },
   // ChatGPT 官方绿色 #10A37F
   chatgptTeal: {
@@ -106,7 +106,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
               key={platform.service}
               className={`
                 flex-shrink-0 w-[220px] relative overflow-hidden
-                bg-white dark:bg-gray-800 border ${colors.accent}
+                bg-[hsl(var(--card))] border ${colors.accent}
                 shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)]
                 ${onSelect ? "cursor-pointer" : ""}
                 ${isSelected ? colors.ring : ""}
@@ -120,7 +120,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     <StreamingIcon service={platform.service} size="lg" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                    <h4 className="font-semibold text-[hsl(var(--foreground))] truncate">
                       {platform.name}
                     </h4>
                   </div>
@@ -129,7 +129,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                 {/* 解锁率 */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <span className="text-xs text-[hsl(var(--muted-foreground))] flex items-center gap-1">
                       <TrendingUp className="h-3 w-3" />
                       解锁率
                     </span>
@@ -137,7 +137,7 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                       {Math.round(platform.unlockRate)}%
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                  <div className="h-2 rounded-full bg-[hsl(var(--muted))] overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${colors.progressBg}`}
                       style={{ width: `${Math.round(platform.unlockRate)}%` }}
@@ -152,9 +152,9 @@ export const StreamingPlatformCards: React.FC<StreamingPlatformCardsProps> = mem
                     return (
                       <div
                         key={statusDef.status}
-                        className="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-900/50"
+                        className="flex items-center justify-between px-2 py-1 rounded bg-[hsl(var(--muted))]"
                       >
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-[hsl(var(--muted-foreground))]">
                           {statusDef.label}
                         </span>
                         <span className={`font-semibold ${statusDef.color}`}>

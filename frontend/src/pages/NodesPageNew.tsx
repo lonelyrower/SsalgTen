@@ -173,7 +173,7 @@ export const NodesPageNew: React.FC = () => {
   // 如果显示详情页面（包含诊断工具、系统详情、日志等）
   if (showDetails && selectedNode) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="fixed inset-0 flex flex-col bg-[hsl(var(--background))]">
         <Header />
         <div className="flex-1 overflow-y-auto">
           <main className="max-w-7xl mx-auto px-4 py-6 w-full">
@@ -183,16 +183,16 @@ export const NodesPageNew: React.FC = () => {
                 onClick={() => setShowDetails(false)}
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                className="gap-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
               >
                 ← 返回
               </Button>
-              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+              <div className="h-6 w-px bg-[hsl(var(--border))]" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
                   节点详情
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">
                   {selectedNode.name} ({selectedNode.city}, {selectedNode.country})
                 </p>
               </div>
@@ -211,14 +211,14 @@ export const NodesPageNew: React.FC = () => {
 
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-[hsl(var(--background))]">
       <Header />
 
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[hsl(var(--secondary))]/5 rounded-full blur-3xl animate-pulse" />
         <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"
           style={{ animationDelay: "1s" }}
         />
       </div>
@@ -233,13 +233,13 @@ export const NodesPageNew: React.FC = () => {
           <div className="relative flex flex-col sm:flex-row gap-4">
             {/* Search input with enhanced styling */}
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-primary transition-colors duration-[var(--duration-normal)]" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[hsl(var(--muted-foreground))] group-focus-within:text-primary transition-colors duration-[var(--duration-normal)]" />
               <input
                 type="text"
                 placeholder="搜索节点名称、位置、IP、ASN、服务商..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-3 bg-[hsl(var(--muted))] border border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-normal)] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
               />
             </div>
 
@@ -250,19 +250,19 @@ export const NodesPageNew: React.FC = () => {
                 onClick={handleRefresh}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))]"
+                className="flex items-center gap-2 bg-[hsl(var(--card))] hover:bg-[hsl(var(--muted))] border-[hsl(var(--border-subtle))]"
               >
                 <RefreshCw className="h-4 w-4" />
                 <span className="hidden sm:inline">刷新</span>
               </Button>
 
               {/* Status filter with icon */}
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] px-3 py-2">
-                <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <div className="flex items-center gap-2 bg-[hsl(var(--muted))] border border-[hsl(var(--border-subtle))] rounded-[var(--radius-xl)] px-3 py-2">
+                <Filter className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="bg-transparent focus:outline-none text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                  className="bg-transparent focus:outline-none text-sm font-medium text-[hsl(var(--foreground))] cursor-pointer"
                 >
                   <option value="all">全部状态</option>
                   <option value="online">在线</option>
@@ -280,12 +280,12 @@ export const NodesPageNew: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start flex-1">
           {/* Left Panel - Multi View (List/2D Map/3D Globe) */}
           <div className="lg:col-span-2 h-full">
-            <div className="bg-white dark:bg-gray-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6 flex flex-col h-full lg:h-[800px]">
+            <div className="bg-[hsl(var(--card))] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6 flex flex-col h-full lg:h-[800px]">
               {viewMode === "list" ? (
                 /* List View */
                 <div className="space-y-4 flex-1 overflow-y-auto pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                   {filteredNodes.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-[hsl(var(--muted-foreground))]">
                       <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
                       <p>未找到匹配的节点</p>
                     </div>

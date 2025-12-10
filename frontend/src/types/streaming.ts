@@ -72,8 +72,8 @@ export const STATUS_COLORS: Record<StreamingStatus, string> = {
   app: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
   web: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
   idc: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-400))]",
-  failed: "text-gray-600 dark:text-gray-400",
-  unknown: "text-gray-600 dark:text-gray-400",
+  failed: "text-[hsl(var(--muted-foreground))]",
+  unknown: "text-[hsl(var(--muted-foreground))]",
 };
 
 // 解锁类型标签与颜色
@@ -86,7 +86,7 @@ export const UNLOCK_TYPE_LABELS: Record<UnlockType, string> = {
 export const UNLOCK_TYPE_COLORS: Record<UnlockType, string> = {
   native: "bg-[hsl(var(--status-success-100))] text-[hsl(var(--status-success-700))] dark:bg-[hsl(var(--status-success-900)/0.4)] dark:text-[hsl(var(--status-success-300))]",
   dns: "bg-[hsl(var(--status-warning-100))] text-[hsl(var(--status-warning-700))] dark:bg-[hsl(var(--status-warning-900)/0.4)] dark:text-[hsl(var(--status-warning-300))]",
-  unknown: "bg-gray-100 text-gray-600 dark:bg-gray-800/60 dark:text-gray-300",
+  unknown: "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]",
 };
 
 // 流媒体服务展示配置

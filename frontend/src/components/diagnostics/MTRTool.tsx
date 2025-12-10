@@ -174,10 +174,10 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
             <Activity className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">
               MTR 测试
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
               综合网络诊断 (Ping + Traceroute)
             </p>
           </div>
@@ -185,7 +185,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
         {/* 快捷目标 */}
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+          <label className="text-xs text-[hsl(var(--muted-foreground))] mb-2 block">
             快捷目标
           </label>
           <div className="flex flex-wrap gap-2">
@@ -207,7 +207,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
         {/* 输入区域 */}
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+            <label className="text-xs text-[hsl(var(--muted-foreground))] mb-2 block">
               目标地址 <span className="text-[hsl(var(--status-error-500))]">*</span>
             </label>
             <input
@@ -216,19 +216,19 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               onChange={(e) => setTarget(e.target.value)}
               placeholder="IP地址或域名 (例如: google.com)"
               disabled={loading}
-              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-[hsl(var(--card))] focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
           <div>
-            <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+            <label className="text-xs text-[hsl(var(--muted-foreground))] mb-2 block">
               测试循环次数
             </label>
             <select
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               disabled={loading}
-              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] dark:border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-[hsl(var(--border-muted))] rounded-[var(--radius-lg)] text-sm bg-[hsl(var(--card))] focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value={5}>5 次</option>
               <option value={10}>10 次 (默认)</option>
@@ -259,7 +259,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
         {/* 提示信息 */}
         <div className="p-3 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-200/30 dark:border-orange-700/30">
-          <p className="text-xs text-gray-600 dark:text-gray-400">
+          <p className="text-xs text-[hsl(var(--muted-foreground))]">
             <strong>提示：</strong>MTR 结合 Ping 与 Traceroute，可展示各跳延迟与丢包情况
           </p>
         </div>
@@ -298,20 +298,20 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg border border-orange-200/50 dark:border-orange-700/50">
-                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                <div className="text-xs text-[hsl(var(--muted-foreground))] mb-1">
                   平均延迟
                 </div>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                <p className="text-xl font-semibold text-[hsl(var(--foreground))]">
                   {resolveLatency(
                     result.summary?.avgLatency ?? result.ping?.avg ?? null,
                   )}
                 </p>
               </div>
               <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg border border-orange-200/50 dark:border-orange-700/50">
-                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                <div className="text-xs text-[hsl(var(--muted-foreground))] mb-1">
                   丢包率
                 </div>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                <p className="text-xl font-semibold text-[hsl(var(--foreground))]">
                   {resolveLoss(
                     result.summary?.packetLoss ?? result.ping?.packetLoss ?? null,
                   )}
@@ -321,7 +321,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
 
             <div className="overflow-x-auto rounded-lg border border-orange-200/30 dark:border-orange-700/30">
               <table className="min-w-full divide-y divide-orange-200/40 dark:divide-orange-900/30 text-xs">
-                <thead className="bg-orange-50/70 dark:bg-orange-900/20 text-gray-600 dark:text-gray-300">
+                <thead className="bg-orange-50/70 dark:bg-orange-900/20 text-[hsl(var(--muted-foreground))]">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">跳数</th>
                     <th className="px-3 py-2 text-left font-medium">节点</th>
@@ -337,13 +337,13 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
                 <tbody className="divide-y divide-orange-100 dark:divide-orange-900/30">
                   {hops.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={9} className="px-3 py-4 text-center text-[hsl(var(--muted-foreground))]">
                         未获取到有效的 MTR 数据
                       </td>
                     </tr>
                   ) : (
                     hops.map((hop) => (
-                      <tr key={`${hop.hop}-${hop.address}`} className="text-gray-700 dark:text-gray-200">
+                      <tr key={`${hop.hop}-${hop.address}`} className="text-[hsl(var(--foreground))]">
                         <td className="px-3 py-2 font-mono">{hop.hop}</td>
                         <td className="px-3 py-2 break-all">{hop.address}</td>
                         <td className="px-3 py-2">
@@ -384,7 +384,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
               </table>
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div className="text-xs text-[hsl(var(--muted-foreground))] space-y-1">
               {result.target && <p>目标：{result.target}</p>}
               {result.executedAt && <p>执行节点：{result.executedAt}</p>}
               {typeof result.cycles === "number" && (
@@ -401,7 +401,7 @@ export const MTRTool: React.FC<MTRToolProps> = ({ nodeId }) => {
                   查看原始输出
                 </summary>
                 <div className="mt-2 p-3 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-200/30 dark:border-orange-700/30 max-h-60 overflow-y-auto">
-                  <pre className="text-xs font-mono whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                  <pre className="text-xs font-mono whitespace-pre-wrap text-[hsl(var(--foreground))]">
                     {result.output}
                   </pre>
                 </div>

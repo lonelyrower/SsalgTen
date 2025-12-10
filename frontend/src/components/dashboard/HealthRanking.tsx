@@ -52,11 +52,11 @@ const getHealthColor = (score: number): string => {
 };
 
 const getHealthGradient = (score: number): string => {
-  if (score >= 90) return "from-green-500 to-emerald-500";
-  if (score >= 70) return "from-blue-500 to-cyan-500";
-  if (score >= 50) return "from-yellow-500 to-amber-500";
-  if (score >= 30) return "from-orange-500 to-red-500";
-  return "from-red-500 to-rose-500";
+  if (score >= 90) return "from-[hsl(var(--status-success-500))] to-[hsl(var(--status-success-600))]";
+  if (score >= 70) return "from-[hsl(var(--status-info-500))] to-[hsl(var(--secondary))]";
+  if (score >= 50) return "from-[hsl(var(--status-warning-400))] to-[hsl(var(--status-warning-500))]";
+  if (score >= 30) return "from-[hsl(var(--status-warning-600))] to-[hsl(var(--status-error-500))]";
+  return "from-[hsl(var(--status-error-500))] to-[hsl(var(--status-error-600))]";
 };
 
 const getHealthLabel = (score: number): string => {
@@ -80,17 +80,17 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-rose-200/60 dark:border-rose-700/60 bg-gradient-to-br from-rose-50 via-white to-pink-50 dark:from-slate-800 dark:via-rose-950/60 dark:to-pink-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-rose-400/15 via-transparent to-pink-500/15" />
-      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-rose-300/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-[hsl(var(--status-error-200))]/60 dark:border-[hsl(var(--status-error-700))]/60 bg-gradient-to-br from-[hsl(var(--status-error-50))] via-[hsl(var(--card))] to-pink-50 dark:from-[hsl(var(--card))] dark:via-[hsl(var(--status-error-900))]/60 dark:to-pink-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--status-error-400))]/15 via-transparent to-pink-500/15" />
+      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-[hsl(var(--status-error-300))]/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-200">
+        <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--status-error-500))]/15 text-[hsl(var(--status-error-600))] dark:bg-[hsl(var(--status-error-500))]/20 dark:text-[hsl(var(--status-error-200))]">
             <Heart className="h-5 w-5" />
           </span>
           节点健康度排行
         </h3>
-        <div className="text-sm text-slate-500 dark:text-slate-300">
+        <div className="text-sm text-[hsl(var(--muted-foreground))]">
           Top {rankedNodes.length}
         </div>
       </div>
@@ -100,7 +100,7 @@ export const HealthRanking: React.FC<HealthRankingProps> = ({ nodes }) => {
           rankedNodes.map((node, index) => (
             <div
               key={node.id}
-              className="flex items-center justify-between rounded-xl border border-rose-100/70 dark:border-rose-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-rose-200 dark:hover:border-rose-400/40"
+              className="flex items-center justify-between rounded-xl border border-[hsl(var(--status-error-100))]/70 dark:border-[hsl(var(--status-error-900))]/40 bg-[hsl(var(--card))]/80 dark:bg-[hsl(var(--card))]/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-[hsl(var(--status-error-200))] dark:hover:border-[hsl(var(--status-error-400))]/40"
             >
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <div className="flex items-center space-x-2">

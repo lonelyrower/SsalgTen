@@ -123,10 +123,10 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
             <CountryFlagSvg country={node.country} className="w-7 h-7 flex-shrink-0" />
           )}
           <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+            <h3 className="text-base font-semibold text-[hsl(var(--foreground))] truncate">
               {node.nodeName}
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+            <p className="text-xs text-[hsl(var(--muted-foreground))] flex items-center gap-1">
               <Globe className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">
                 {node.city ? `${node.city}, ${node.country}` : node.country}
@@ -146,7 +146,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
             return (
               <div
                 key={service.service}
-                className="flex flex-col items-center justify-between gap-1 rounded-[var(--radius-lg)] border border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 px-2 py-2 min-h-[88px]"
+                className="flex flex-col items-center justify-between gap-1 rounded-[var(--radius-lg)] border border-[hsl(var(--border-subtle))] bg-gradient-to-br from-[hsl(var(--muted))]/50 to-[hsl(var(--muted))] dark:from-[hsl(var(--card))]/50 dark:to-[hsl(var(--card))]/80 px-2 py-2 min-h-[88px]"
               >
                 <StreamingIcon service={service.service} size="md" />
 
@@ -157,7 +157,7 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
                   </div>
 
                   {/* 区域信息 */}
-                  <div className="text-xs text-gray-600 dark:text-gray-400 min-h-[14px]">
+                  <div className="text-xs text-[hsl(var(--muted-foreground))] min-h-[14px]">
                     {showRegion ? service.region?.toUpperCase() : ""}
                   </div>
 
@@ -178,8 +178,8 @@ const NodeStreamingCard: React.FC<NodeStreamingCardProps> = ({
         </div>
 
         {/* 底部信息 */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[hsl(var(--border-subtle))] dark:border-[hsl(var(--border-muted))]">
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[hsl(var(--border-subtle))]">
+          <div className="flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]">
             <Clock className="h-4 w-4" />
             <span>{timeAgo}</span>
           </div>

@@ -142,7 +142,7 @@ export const SERVICE_STATUS_CONFIG: Record<
     name: "Stopped",
     color: "gray",
     className:
-      "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30",
+      "text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]",
   },
   failed: {
     name: "Error",
