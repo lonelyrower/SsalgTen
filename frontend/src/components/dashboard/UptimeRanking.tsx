@@ -57,18 +57,18 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-emerald-200/60 dark:border-emerald-700/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-emerald-950/60 dark:to-teal-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-emerald-400/15 via-transparent to-teal-500/15" />
-      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-emerald-300/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-[hsl(var(--status-success-200))]/60 dark:border-[hsl(var(--status-success-400))]/60 bg-gradient-to-br from-[hsl(var(--status-success-50))] via-[hsl(var(--card))] to-[hsl(var(--status-success-100))] dark:from-[hsl(var(--card))] dark:via-[hsl(var(--status-success-50))]/60 dark:to-[hsl(var(--status-success-100))]/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--status-success-400))]/15 via-transparent to-[hsl(var(--status-success-300))]/15" />
+      <div className="absolute -top-12 -right-14 h-28 w-28 rounded-full bg-[hsl(var(--status-success-300))]/20 blur-3xl" />
       <div className="relative mb-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
+          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] flex items-center gap-2">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--status-success-500))]/15 text-[hsl(var(--status-success-600))] dark:bg-[hsl(var(--status-success-400))]/20 dark:text-[hsl(var(--status-success-600))]">
               <Clock className="h-5 w-5" />
             </span>
             正常运行时间排行
           </h3>
-          <div className="text-sm text-slate-500 dark:text-slate-300">
+          <div className="text-sm text-[hsl(var(--muted-foreground))]">
             Top {topNodes.length}
           </div>
         </div>
@@ -80,7 +80,7 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
             topNodes.map((node, index) => (
               <div
                 key={node.id}
-                className="flex items-center justify-between rounded-xl border border-emerald-100/70 dark:border-emerald-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-emerald-200 dark:hover:border-emerald-400/40"
+                className="flex items-center justify-between rounded-xl border border-[hsl(var(--status-success-200))]/70 dark:border-[hsl(var(--status-success-200))]/40 bg-[hsl(var(--card))]/80 dark:bg-[hsl(var(--card))]/50 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-[hsl(var(--status-success-300))] dark:hover:border-[hsl(var(--status-success-400))]/40"
               >
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
@@ -88,55 +88,55 @@ export const UptimeRanking: React.FC<UptimeRankingProps> = ({ nodes }) => {
                       <Award
                         className={`h-5 w-5 ${
                           index === 0
-                            ? "text-yellow-500"
+                            ? "text-[hsl(var(--status-warning-500))]"
                             : index === 1
-                              ? "text-gray-400"
-                              : "text-orange-600"
+                              ? "text-[hsl(var(--muted-foreground))]"
+                              : "text-[hsl(var(--status-warning-600))]"
                         }`}
                       />
                     ) : (
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-5">
+                      <span className="text-sm font-medium text-[hsl(var(--muted-foreground))] w-5">
                         #{index + 1}
                       </span>
                     )}
                   </div>
                   <CountryFlagSvg country={node.country} className="w-6 h-6" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                    <p className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
                       {node.name}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <div className="flex-1 h-2 bg-emerald-100/80 dark:bg-emerald-900/30 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-[hsl(var(--status-success-100))]/80 dark:bg-[hsl(var(--status-success-100))]/30 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
+                          className="h-full bg-gradient-to-r from-[hsl(var(--status-success-500))] to-[hsl(var(--status-success-600))]"
                           style={{
                             width: `${node.uptimePercent}%`,
                           }}
                         />
                       </div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 w-12 text-right">
+                      <span className="text-xs text-[hsl(var(--muted-foreground))] w-12 text-right">
                         {node.uptimePercent.toFixed(1)}%
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300 text-right">
+                  <p className="text-sm font-bold text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-600))] text-right">
                     {formatUptime(node.uptime || 0)}
                   </p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-              <Clock className="h-12 w-12 mx-auto mb-2 text-emerald-400/60" />
+            <div className="text-center py-8 text-[hsl(var(--muted-foreground))]">
+              <Clock className="h-12 w-12 mx-auto mb-2 text-[hsl(var(--status-success-400))]/60" />
               <p>暂无正常运行时间数据</p>
             </div>
           )}
         </div>
-        <div className="pt-3 border-t border-emerald-100/50 dark:border-emerald-900/30">
-          <div className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span className="text-emerald-400">💡</span>
+        <div className="pt-3 border-t border-[hsl(var(--status-success-200))]/50 dark:border-[hsl(var(--status-success-200))]/30">
+          <div className="flex items-start gap-2 text-xs text-[hsl(var(--muted-foreground))]">
+            <span className="text-[hsl(var(--status-success-400))]">💡</span>
             <p>显示节点从创建以来的在线时间占比</p>
           </div>
         </div>

@@ -40,31 +40,31 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-sky-200/60 dark:border-sky-700/60 bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-slate-800 dark:via-sky-950/60 dark:to-blue-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-sky-400/15 via-transparent to-blue-500/15" />
-      <div className="absolute -top-12 -right-16 h-28 w-28 rounded-full bg-sky-300/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-[hsl(var(--status-info-200))]/60 dark:border-[hsl(var(--status-info-400))]/60 bg-gradient-to-br from-[hsl(var(--status-info-50))] via-[hsl(var(--card))] to-[hsl(var(--status-info-100))] dark:from-[hsl(var(--card))] dark:via-[hsl(var(--status-info-50))]/60 dark:to-[hsl(var(--status-info-100))]/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--status-info-400))]/15 via-transparent to-[hsl(var(--status-info-300))]/15" />
+      <div className="absolute -top-12 -right-16 h-28 w-28 rounded-full bg-[hsl(var(--status-info-300))]/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-200">
+        <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--status-info-500))]/15 text-[hsl(var(--status-info-600))] dark:bg-[hsl(var(--status-info-400))]/20 dark:text-[hsl(var(--status-info-600))]">
             <TrendingUp className="h-5 w-5" />
           </span>
           流量排行
         </h3>
-        <div className="text-sm text-slate-500 dark:text-slate-300">
+        <div className="text-sm text-[hsl(var(--muted-foreground))]">
           Top {topNodes.length}
         </div>
       </div>
 
       <div className="relative space-y-3 flex-1 overflow-y-auto pr-1">
         {topNodes.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-center h-full text-[hsl(var(--muted-foreground))]">
             <p className="text-sm">暂无流量数据</p>
           </div>
         ) : (
           topNodes.map((node, index) => (
           <div
             key={node.id}
-            className="flex items-center justify-between rounded-xl border border-sky-100/70 dark:border-sky-900/40 bg-white/80 dark:bg-white/10 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-sky-200 dark:hover:border-sky-400/40"
+            className="flex items-center justify-between rounded-xl border border-[hsl(var(--status-info-200))]/70 dark:border-[hsl(var(--status-info-200))]/40 bg-[hsl(var(--card))]/80 dark:bg-[hsl(var(--card))]/50 px-3.5 py-3 backdrop-blur-sm transition-all hover:border-[hsl(var(--status-info-300))] dark:hover:border-[hsl(var(--status-info-400))]/40"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className="flex items-center space-x-2">
@@ -72,37 +72,37 @@ export const TrafficRanking: React.FC<TrafficRankingProps> = ({ nodes }) => {
                   <Award
                     className={`h-5 w-5 ${
                       index === 0
-                        ? "text-yellow-500"
+                        ? "text-[hsl(var(--status-warning-500))]"
                         : index === 1
-                          ? "text-gray-400"
-                            : "text-orange-600"
+                          ? "text-[hsl(var(--muted-foreground))]"
+                            : "text-[hsl(var(--status-warning-600))]"
                     }`}
                   />
                 ) : (
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-5">
+                  <span className="text-sm font-medium text-[hsl(var(--muted-foreground))] w-5">
                     #{index + 1}
                   </span>
                 )}
               </div>
               <CountryFlagSvg country={node.country} className="w-6 h-6" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
                   {node.name}
                 </p>
-                <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-slate-500 dark:text-slate-300">
+                <div className="flex items-center justify-center space-x-2 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
                   <span className="flex items-center">
                     <ArrowUp className="h-3 w-3 mr-0.5 text-[hsl(var(--status-success-500))]" />
                     {formatBytes(node.upload)}
                   </span>
                   <span className="flex items-center">
-                    <ArrowDown className="h-3 w-3 mr-0.5 text-blue-500" />
+                    <ArrowDown className="h-3 w-3 mr-0.5 text-[hsl(var(--status-info-500))]" />
                     {formatBytes(node.download)}
                   </span>
                 </div>
               </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-bold text-blue-600 dark:text-blue-300">
+              <p className="text-sm font-bold text-[hsl(var(--status-info-600))] dark:text-[hsl(var(--status-info-600))]">
                 {formatBytes(node.totalTraffic)}
               </p>
             </div>

@@ -15,30 +15,30 @@ interface ResourceBarProps {
 
 const ResourceBar: React.FC<ResourceBarProps> = ({ label, value, color }) => {
   const colorMap = {
-    cyan: "bg-cyan-500",
-    purple: "bg-purple-500",
+    cyan: "bg-[hsl(var(--status-info-500))]",
+    purple: "bg-[hsl(var(--primary))]",
     green: "bg-[hsl(var(--status-success-500))]",
     yellow: "bg-[hsl(var(--status-warning-500))]",
-    orange: "bg-orange-500",
+    orange: "bg-[hsl(var(--status-warning-600))]",
   };
 
   const textColorMap = {
-    cyan: "text-cyan-600 dark:text-cyan-300",
-    purple: "text-purple-600 dark:text-purple-300",
-    green: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-300))]",
-    yellow: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-300))]",
-    orange: "text-orange-600 dark:text-orange-300",
+    cyan: "text-[hsl(var(--status-info-600))] dark:text-[hsl(var(--status-info-600))]",
+    purple: "text-[hsl(var(--primary))] dark:text-[hsl(var(--primary))]",
+    green: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-600))]",
+    yellow: "text-[hsl(var(--status-warning-600))] dark:text-[hsl(var(--status-warning-600))]",
+    orange: "text-[hsl(var(--status-warning-700))] dark:text-[hsl(var(--status-warning-600))]",
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2 text-sm">
-        <span className="text-slate-500 dark:text-slate-300">{label}</span>
+        <span className="text-[hsl(var(--muted-foreground))]">{label}</span>
         <span className={`font-semibold ${textColorMap[color]}`}>
           {value.toFixed(1)}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-slate-200/70 dark:bg-slate-800/70 overflow-hidden">
+      <div className="h-2 rounded-full bg-[hsl(var(--muted))]/70 dark:bg-[hsl(var(--muted))]/30 overflow-hidden">
         <motion.div
           className={`h-full ${colorMap[color]} rounded-full`}
           initial={{ width: 0 }}
@@ -179,17 +179,17 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-cyan-200/60 dark:border-cyan-700/60 bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-slate-800 dark:via-cyan-950/60 dark:to-blue-950/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-cyan-400/15 via-transparent to-blue-500/15" />
-      <div className="absolute -top-12 -right-16 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl" />
+    <div className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border-2 border-[hsl(var(--status-info-200))]/60 dark:border-[hsl(var(--status-info-400))]/60 bg-gradient-to-br from-[hsl(var(--status-info-50))] via-[hsl(var(--card))] to-[hsl(var(--status-info-100))] dark:from-[hsl(var(--card))] dark:via-[hsl(var(--status-info-50))]/60 dark:to-[hsl(var(--status-info-100))]/60 shadow-[var(--shadow-lg)] transition-all duration-[var(--duration-normal)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-xl)] p-6 flex flex-col">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--duration-normal)] group-hover:opacity-100 bg-gradient-to-br from-[hsl(var(--status-info-400))]/15 via-transparent to-[hsl(var(--status-info-300))]/15" />
+      <div className="absolute -top-12 -right-16 h-32 w-32 rounded-full bg-[hsl(var(--status-info-300))]/20 blur-3xl" />
       <div className="relative flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-200">
+        <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--status-info-500))]/15 text-[hsl(var(--status-info-600))] dark:bg-[hsl(var(--status-info-400))]/20 dark:text-[hsl(var(--status-info-600))]">
             <Zap className="h-5 w-5" />
           </span>
           系统资源概览
         </h3>
-        <div className="text-sm text-slate-500 dark:text-slate-300">
+        <div className="text-sm text-[hsl(var(--muted-foreground))]">
           {metrics.nodesWithData > 0 ? `${metrics.nodesWithData} 节点` : "无数据"}
         </div>
       </div>
@@ -223,13 +223,13 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
         />
 
         {/* 额外的统计信息 */}
-        <div className="pt-4 mt-4 border-t border-slate-200/70 dark:border-slate-700/60">
+        <div className="pt-4 mt-4 border-t border-[hsl(var(--border))]/70">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold text-[hsl(var(--primary))]">
                 {metrics.avgUptimeDays.toFixed(1)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
                 平均运行天数
               </div>
             </div>
@@ -237,7 +237,7 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ nodes }) => {
               <div className="text-2xl font-bold text-[hsl(var(--status-success-500))]">
                 {metrics.avgLoad.toFixed(2)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
                 系统负载
               </div>
             </div>
