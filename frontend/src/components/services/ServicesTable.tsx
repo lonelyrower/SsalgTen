@@ -3,16 +3,14 @@ import type { NodeService } from "@/types/services";
 import { SERVICE_TYPE_CONFIG } from "@/types/services";
 import { Badge } from "../ui/badge";
 import CountryFlagSvg from "../ui/CountryFlagSvg";
-import { Clock, Copy, Check } from "lucide-react";
+import { Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import {
   getServiceProtocols,
   getAllServicePorts,
-  getServiceShareLinks,
   getServiceDomains,
 } from "./service-utils";
-import { useNotification } from "@/hooks/useNotification";
 
 interface ServicesTableProps {
   services: NodeService[];
@@ -25,13 +23,6 @@ const SERVICE_TYPE_ICONS: Record<string, string> = {
   database: "💾",
   container: "📦",
   other: "⚙️",
-};
-
-const SHARE_LINK_SCHEME_REGEX = /^([a-z0-9+.-]+):\/\//i;
-
-const extractProtocolFromLink = (link: string): string | undefined => {
-  const match = link.trim().match(SHARE_LINK_SCHEME_REGEX);
-  return match ? match[1] : undefined;
 };
 
 const normalizeProtocolLabel = (value?: string): string | undefined => {
@@ -152,7 +143,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
   );
 };
 
-// Proxy 服务表格 - 显示:名称、节点、协议、分享链接、更新时间
+// Proxy 服务表格 - 显示:名称、节点、协议、更新时间
 const ProxyServicesTable: React.FC<{ services: NodeService[] }> = ({ services }) => {
   return (
     <table className="min-w-full divide-y divide-[hsl(var(--border-subtle))]">
@@ -166,9 +157,6 @@ const ProxyServicesTable: React.FC<{ services: NodeService[] }> = ({ services })
           </th>
           <th className="px-6 py-3 text-center text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
             协议
-          </th>
-          <th className="px-6 py-3 text-center text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-            分享链接
           </th>
           <th className="px-6 py-3 text-center text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
             更新时间
@@ -258,7 +246,6 @@ const ROW_COLOR_SCHEMES = [
 
 // Proxy 服务行组件
 const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = ({ service, colorIndex }) => {
-  const { showSuccess } = useNotification();
   const typeIcon = SERVICE_TYPE_ICONS[service.type] ?? SERVICE_TYPE_ICONS.other;
 
   const timeAgo = (() => {
@@ -272,46 +259,10 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
     }
   })();
 
-  const domains = getServiceDomains(service);
-  const primaryDomain = domains[0];
   const protocols = getServiceProtocols(service);
-  const shareLinks = getServiceShareLinks(service);
-  const [copiedLink, setCopiedLink] = useState<string | null>(null);
-
-  const replacementHost = primaryDomain || service.nodeIp;
-  const processedShareLinks = shareLinks.map((link) => {
-    if (!replacementHost) return link;
-    return link.replace(/your_server_ip/gi, replacementHost);
-  });
-
-  const displayedShareLinks = processedShareLinks;
-  let protocolLines = displayedShareLinks
-    .map((link, index) => {
-      const protocolFromLink = normalizeProtocolLabel(extractProtocolFromLink(link));
-      if (protocolFromLink) {
-        return protocolFromLink;
-      }
-      return normalizeProtocolLabel(protocols[index]);
-    })
+  const protocolLines = protocols
+    .map((value) => normalizeProtocolLabel(value))
     .filter((item): item is string => Boolean(item));
-
-  if (protocolLines.length === 0) {
-    protocolLines = protocols
-      .map((value) => normalizeProtocolLabel(value))
-      .filter((item): item is string => Boolean(item));
-  }
-
-  const handleCopyLink = async (link: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopiedLink(link);
-      showSuccess("已复制到剪贴板");
-      setTimeout(() => setCopiedLink(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy link:", err);
-    }
-  };
 
   return (
     <tr className={`transition-colors ${ROW_COLOR_SCHEMES[colorIndex]}`}>
@@ -364,44 +315,6 @@ const ProxyServiceRow: React.FC<{ service: NodeService; colorIndex: number }> = 
         ) : (
           <span className="text-xs text-[hsl(var(--muted-foreground))]">-</span>
         )}
-      </td>
-
-      {/* 分享链接 */}
-      <td className="px-6 py-4">
-        <div className="max-w-md space-y-1 mx-auto text-center">
-          {processedShareLinks.length > 0 ? (
-            displayedShareLinks.map((link, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-center gap-2 group"
-              >
-                <code
-                  className="block text-xs text-[hsl(var(--muted-foreground))] font-mono truncate max-w-xs text-center"
-                  title={link}
-                >
-                  {link}
-                </code>
-                <button
-                  onClick={(e) => handleCopyLink(link, e)}
-                  className={`flex-shrink-0 p-1 rounded hover:bg-[hsl(var(--muted))] transition-colors ${
-                    copiedLink === link
-                      ? "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]"
-                      : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                  }`}
-                  title={copiedLink === link ? "已复制" : "复制链接"}
-                >
-                  {copiedLink === link ? (
-                    <Check className="h-3.5 w-3.5" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" />
-                  )}
-                </button>
-              </div>
-            ))
-          ) : (
-            <div className="text-center text-xs text-[hsl(var(--muted-foreground))]">-</div>
-          )}
-        </div>
       </td>
 
       {/* 更新时间 */}

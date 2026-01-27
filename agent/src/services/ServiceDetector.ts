@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { URLSearchParams } from 'url';
 import { logger } from '../utils/logger';
 import type { DetectedService, ServiceType, ServiceStatus } from '../types';
+import { serviceDetectionConfig } from '../config';
 import { XrayConfigParser } from './parsers/XrayConfigParser';
 import { NginxConfigParser } from './parsers/NginxConfigParser';
 
@@ -47,6 +48,7 @@ export class ServiceDetector {
 
   private nodeIp?: string;
   private primaryIpCache?: string;
+  private readonly shareLinksEnabled = serviceDetectionConfig.shareLinksEnabled;
   /**
    * 检测所有服务
    */
@@ -98,6 +100,7 @@ export class ServiceDetector {
   private async populateXrayConfigInfo(configPath: string, service: DetectedService): Promise<void> {
     try {
       const stats = await fs.stat(configPath);
+      const includeShareLinks = this.shareLinksEnabled;
       const aggregatedProtocols = new Set<string>();
       const aggregatedPorts = new Set<number>();
       const aggregatedDomains = new Set<string>();
@@ -112,7 +115,7 @@ export class ServiceDetector {
 
       const handleConfig = async (fullPath: string, displayedName: string) => {
         logger.info(`[ServiceDetector] Parsing Xray config: ${fullPath}`);
-        const configInfo = await XrayConfigParser.parse(fullPath);
+        const configInfo = await XrayConfigParser.parse(fullPath, { includeShareLinks });
         if (!configInfo) {
           logger.warn(`[ServiceDetector] Xray config parsing returned null for ${fullPath}`);
           return;
@@ -123,13 +126,15 @@ export class ServiceDetector {
           protocols: configInfo.protocols,
           ports: configInfo.ports,
           domains: configInfo.domains,
-          shareLinks: configInfo.shareLinks,
+          shareLinks: includeShareLinks ? configInfo.shareLinks : [],
         });
 
         configInfo.protocols.forEach((p) => aggregatedProtocols.add(p));
         configInfo.ports.forEach((p) => aggregatedPorts.add(p));
         configInfo.domains.forEach((d) => aggregatedDomains.add(d));
-        aggregatedLinks.push(...configInfo.shareLinks);
+        if (includeShareLinks) {
+          aggregatedLinks.push(...configInfo.shareLinks);
+        }
       };
 
       if (stats.isDirectory()) {
@@ -172,14 +177,16 @@ export class ServiceDetector {
       }
 
       // 替换分享链接中的 YOUR_SERVER_IP 占位符并更新标签
-      const processedLinks = await this.processXrayShareLinks(aggregatedLinks);
+      const processedLinks = includeShareLinks
+        ? await this.processXrayShareLinks(aggregatedLinks)
+        : [];
 
       service.details = {
         ...service.details,
         protocols: Array.from(aggregatedProtocols),
         ports: Array.from(aggregatedPorts),
         domains: Array.from(aggregatedDomains),
-        shareLinks: processedLinks,
+        ...(includeShareLinks ? { shareLinks: processedLinks } : {}),
         xrayConfigs: configEntries,
       };
     } catch (error) {
@@ -1509,16 +1516,20 @@ export class ServiceDetector {
         await this.populateXrayConfigInfo(configPath, service);
       } else if (serviceName === 'V2Ray') {
         logger.info(`[ServiceDetector] Parsing ${serviceName} config: ${configPath}`);
-        const configInfo = await XrayConfigParser.parse(configPath);
+        const configInfo = await XrayConfigParser.parse(configPath, {
+          includeShareLinks: this.shareLinksEnabled,
+        });
         if (configInfo) {
-          logger.info(`[ServiceDetector] ${serviceName} parsed - Protocols: ${configInfo.protocols.join(',')}, Domains: ${configInfo.domains.length}, Links: ${configInfo.shareLinks.length}`);
+          logger.info(
+            `[ServiceDetector] ${serviceName} parsed - Protocols: ${configInfo.protocols.join(',')}, Domains: ${configInfo.domains.length}, Links: ${this.shareLinksEnabled ? configInfo.shareLinks.length : 0}`
+          );
 
           service.details = {
             ...service.details,
             protocols: configInfo.protocols,
             ports: configInfo.ports,
             domains: configInfo.domains,
-            shareLinks: configInfo.shareLinks,
+            ...(this.shareLinksEnabled ? { shareLinks: configInfo.shareLinks } : {}),
           };
 
           // 如果有端口信息，使用第一个端口
@@ -1594,16 +1605,20 @@ export class ServiceDetector {
     service: DetectedService
   ): Promise<void> {
     try {
+      const shareLinksEnabled = this.shareLinksEnabled;
       const shareLinkSet = new Set<string>();
-      const existingLinks = Array.isArray(service.details?.shareLinks)
-        ? service.details!.shareLinks
-        : [];
-      existingLinks.forEach((link) => {
-        if (typeof link === 'string' && link.trim()) {
-          const normalizedLink = this.normalizeHysteriaShareLinkScheme(link.trim());
-          shareLinkSet.add(normalizedLink);
-        }
-      });
+      const existingLinks =
+        shareLinksEnabled && Array.isArray(service.details?.shareLinks)
+          ? service.details!.shareLinks
+          : [];
+      if (shareLinksEnabled) {
+        existingLinks.forEach((link) => {
+          if (typeof link === 'string' && link.trim()) {
+            const normalizedLink = this.normalizeHysteriaShareLinkScheme(link.trim());
+            shareLinkSet.add(normalizedLink);
+          }
+        });
+      }
       const primaryDomain = Array.isArray(service.domains) ? service.domains[0] : undefined;
       const nodeIp = this.nodeIp;
 
@@ -1617,27 +1632,29 @@ export class ServiceDetector {
       const availableLinkFiles: string[] = [];
       let hasCompleteLinks = false;
 
-      for (const filePath of linkFiles) {
-        const lines = await this.readLinesIfExists(filePath);
-        if (lines.length > 0) {
-          availableLinkFiles.push(filePath);
-          const validLinks = lines
-            .map((line) => line.trim())
-            .filter((line) => line.includes('://'));
+      if (shareLinksEnabled) {
+        for (const filePath of linkFiles) {
+          const lines = await this.readLinesIfExists(filePath);
+          if (lines.length > 0) {
+            availableLinkFiles.push(filePath);
+            const validLinks = lines
+              .map((line) => line.trim())
+              .filter((line) => line.includes('://'));
 
-          validLinks.forEach((line) => {
-            const normalizedLink = this.normalizeHysteriaShareLinkScheme(line);
-            shareLinkSet.add(normalizedLink);
-            // ������Ӱ��������Ĳ�����sni��insecure�ȣ�����Ϊ����������
-            if (normalizedLink.includes('sni=') && normalizedLink.includes('#')) {
-              hasCompleteLinks = true;
-            }
-          });
+            validLinks.forEach((line) => {
+              const normalizedLink = this.normalizeHysteriaShareLinkScheme(line);
+              shareLinkSet.add(normalizedLink);
+              // ������Ӱ��������Ĳ�����sni��insecure�ȣ�����Ϊ����������
+              if (normalizedLink.includes('sni=') && normalizedLink.includes('#')) {
+                hasCompleteLinks = true;
+              }
+            });
+          }
         }
       }
 
       // 如果已经有完整的链接，确保它们包含正确的 SNI 并更新标签
-      if (hasCompleteLinks) {
+      if (shareLinksEnabled && hasCompleteLinks) {
         logger.info('[ServiceDetector] Found complete Hysteria share links from url files, processing them');
 
         // 读取客户端配置获取正确的 SNI
@@ -1752,7 +1769,9 @@ export class ServiceDetector {
 
       const hysteriaDetails: Record<string, unknown> = {
         configPath,
-        shareLinkFiles: availableLinkFiles,
+        ...(shareLinksEnabled && availableLinkFiles.length > 0
+          ? { shareLinkFiles: availableLinkFiles }
+          : {}),
       };
 
       const domainSet = new Set<string>(service.domains || []);
@@ -1873,7 +1892,7 @@ export class ServiceDetector {
       // SNI 优先级：客户端配置的 SNI > 已有链接中的 SNI > 域名列表第一个
       // 注意：masquerade 不应该用作 SNI！
       let fallbackSni = clientSni;
-      if (!fallbackSni && shareLinkSet.size > 0) {
+      if (!fallbackSni && shareLinksEnabled && shareLinkSet.size > 0) {
         // 尝试从已有链接中提取 SNI
         const firstLink = Array.from(shareLinkSet)[0];
         const parsed = this.parseHysteriaShareLink(firstLink);
@@ -1887,90 +1906,113 @@ export class ServiceDetector {
 
       logger.debug(`[ServiceDetector] Final SNI selected: ${fallbackSni}`);
 
-      const normalizedMasquerade = masqueradeHost?.toLowerCase();
-      let normalizedSni = fallbackSni?.toLowerCase();
-
       service.serviceName = effectiveServiceName;
 
-      const hostCandidates = new Set<string>();
-      const addHostCandidate = (host?: string) => {
-        const trimmed = host?.trim();
-        if (!trimmed) return;
-        const lower = trimmed.toLowerCase();
-        if (lower === normalizedMasquerade || lower === normalizedSni) return;
-        if (this.isReservedHost(trimmed)) return;
-        hostCandidates.add(trimmed);
-      };
+      let shareLinks: string[] = [];
+      if (shareLinksEnabled) {
+        const normalizedMasquerade = masqueradeHost?.toLowerCase();
+        let normalizedSni = fallbackSni?.toLowerCase();
 
-      addHostCandidate(clientEndpointHost);
-      domainList.forEach((domain) => addHostCandidate(domain));
-      addHostCandidate(listenHost);
-      const primaryIpCandidate =
-        (!this.isReservedHost(this.nodeIp) && this.nodeIp) ||
-        (await this.resolvePrimaryIp()) ||
-        (await this.resolveExternalIp());
-      addHostCandidate(primaryIpCandidate);
+        const hostCandidates = new Set<string>();
+        const addHostCandidate = (host?: string) => {
+          const trimmed = host?.trim();
+          if (!trimmed) return;
+          const lower = trimmed.toLowerCase();
+          if (lower === normalizedMasquerade || lower === normalizedSni) return;
+          if (this.isReservedHost(trimmed)) return;
+          hostCandidates.add(trimmed);
+        };
 
-      const addShareLinkForHost = (host?: string) => {
-        if (!host || !fallbackPort || !fallbackPassword || this.isReservedHost(host)) {
-          return;
-        }
-        const link = this.buildHysteriaShareLink(effectiveServiceName, clientConfig, {
-          host,
-          port: fallbackPort,
-          password: fallbackPassword,
-          insecure: clientInsecure,
-          sni: fallbackSni,
-        });
-        if (link) {
-          shareLinkSet.add(link);
-        }
-      };
+        addHostCandidate(clientEndpointHost);
+        domainList.forEach((domain) => addHostCandidate(domain));
+        addHostCandidate(listenHost);
+        const primaryIpCandidate =
+          (!this.isReservedHost(this.nodeIp) && this.nodeIp) ||
+          (await this.resolvePrimaryIp()) ||
+          (await this.resolveExternalIp());
+        addHostCandidate(primaryIpCandidate);
 
-      const existingShareLinks = Array.from(shareLinkSet);
-      if (existingShareLinks.length > 0) {
-        for (const link of existingShareLinks) {
-          const parsed = this.parseHysteriaShareLink(link);
-          if (parsed.host) {
-            addHostCandidate(parsed.host);
+        const addShareLinkForHost = (host?: string) => {
+          if (!host || !fallbackPort || !fallbackPassword || this.isReservedHost(host)) {
+            return;
           }
-          if (parsed.sni) {
-            fallbackSni = parsed.sni;
-            normalizedSni = fallbackSni.toLowerCase();
+          const link = this.buildHysteriaShareLink(effectiveServiceName, clientConfig, {
+            host,
+            port: fallbackPort,
+            password: fallbackPassword,
+            insecure: clientInsecure,
+            sni: fallbackSni,
+          });
+          if (link) {
+            shareLinkSet.add(link);
           }
-        }
-      }
-      if (shareLinkSet.size === 0) {
-        if (hostCandidates.size === 0) {
-          addShareLinkForHost(
-            primaryIpCandidate || clientEndpointHost || listenHost || nodeIp
-          );
-        } else {
-          for (const host of hostCandidates) {
-            addShareLinkForHost(host);
+        };
+
+        const existingShareLinks = Array.from(shareLinkSet);
+        if (existingShareLinks.length > 0) {
+          for (const link of existingShareLinks) {
+            const parsed = this.parseHysteriaShareLink(link);
+            if (parsed.host) {
+              addHostCandidate(parsed.host);
+            }
+            if (parsed.sni) {
+              fallbackSni = parsed.sni;
+              normalizedSni = fallbackSni.toLowerCase();
+            }
           }
         }
         if (shareLinkSet.size === 0) {
-          logger.warn(
-            `[ServiceDetector] Unable to build hysteria share link automatically (missing host/port/password)`
-          );
-        }
-      } else {
-        const ensureHostPresent = (host?: string) => {
-          if (!host || this.isReservedHost(host)) return;
-          const exists = Array.from(shareLinkSet).some((link) =>
-            this.shareLinkContainsHost(link, host)
-          );
-          if (!exists) {
-            addShareLinkForHost(host);
+          if (hostCandidates.size === 0) {
+            addShareLinkForHost(
+              primaryIpCandidate || clientEndpointHost || listenHost || nodeIp
+            );
+          } else {
+            for (const host of hostCandidates) {
+              addShareLinkForHost(host);
+            }
           }
-        };
-        const primaryHostCandidate = clientEndpointHost || listenHost;
-        if (primaryHostCandidate) {
-          ensureHostPresent(primaryHostCandidate);
+          if (shareLinkSet.size === 0) {
+            logger.warn(
+              `[ServiceDetector] Unable to build hysteria share link automatically (missing host/port/password)`
+            );
+          }
+        } else {
+          const ensureHostPresent = (host?: string) => {
+            if (!host || this.isReservedHost(host)) return;
+            const exists = Array.from(shareLinkSet).some((link) =>
+              this.shareLinkContainsHost(link, host)
+            );
+            if (!exists) {
+              addShareLinkForHost(host);
+            }
+          };
+          const primaryHostCandidate = clientEndpointHost || listenHost;
+          if (primaryHostCandidate) {
+            ensureHostPresent(primaryHostCandidate);
+          }
+          if (primaryIpCandidate) {
+            ensureHostPresent(primaryIpCandidate);
+          }
         }
-        if (primaryIpCandidate) {
-          ensureHostPresent(primaryIpCandidate);
+
+        // 确保链接包含 SNI 并更新标签为 SsalgTen-Hysteria-{host} 格式
+        shareLinks = Array.from(shareLinkSet).map((link) => {
+          // 确保链接使用统一的协议并包含正确的 SNI
+          let processedLink = this.normalizeHysteriaShareLinkScheme(link);
+          if (fallbackSni) {
+            processedLink = this.ensureHysteriaLinkHasSni(processedLink, fallbackSni);
+          }
+          // 然后更新标签
+          return this.updateHysteriaLinkLabel(processedLink, effectiveServiceName);
+        });
+        if (shareLinks.length > 0) {
+          logger.info(
+            `[ServiceDetector] Hysteria share links for ${effectiveServiceName}: ${shareLinks.join(', ')}`
+          );
+        } else {
+          logger.info(
+            `[ServiceDetector] No Hysteria share links resolved for ${effectiveServiceName}`
+          );
         }
       }
 
@@ -1981,23 +2023,6 @@ export class ServiceDetector {
         masqueradeHost,
       };
 
-      // 确保链接包含 SNI 并更新标签为 SsalgTen-Hysteria-{host} 格式
-      const shareLinks = Array.from(shareLinkSet).map((link) => {
-        // 确保链接使用统一的协议并包含正确的 SNI
-        let processedLink = this.normalizeHysteriaShareLinkScheme(link);
-        if (fallbackSni) {
-          processedLink = this.ensureHysteriaLinkHasSni(processedLink, fallbackSni);
-        }
-        // 然后更新标签
-        return this.updateHysteriaLinkLabel(processedLink, effectiveServiceName);
-      });
-      if (shareLinks.length > 0) {
-        logger.info(
-          `[ServiceDetector] Hysteria share links for ${effectiveServiceName}: ${shareLinks.join(', ')}`
-        );
-      } else {
-        logger.info(`[ServiceDetector] No Hysteria share links resolved for ${effectiveServiceName}`);
-      }
       service.protocol = 'hysteria';
 
       if (domainSet.size > 0) {
@@ -2006,7 +2031,7 @@ export class ServiceDetector {
 
       service.details = {
         ...service.details,
-        ...(shareLinks.length > 0 ? { shareLinks } : {}),
+        ...(shareLinksEnabled && shareLinks.length > 0 ? { shareLinks } : {}),
         hysteria: hysteriaDetails,
       };
     } catch (error) {

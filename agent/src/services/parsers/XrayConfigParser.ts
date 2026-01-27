@@ -9,12 +9,16 @@ export class XrayConfigParser {
   /**
    * 解析 Xray 配置文件
    */
-  static async parse(configPath: string): Promise<XrayConfigInfo | null> {
+  static async parse(
+    configPath: string,
+    options: { includeShareLinks?: boolean } = {}
+  ): Promise<XrayConfigInfo | null> {
     try {
       logger.debug(`[XrayConfigParser] Reading config from: ${configPath}`);
       const content = await fs.readFile(configPath, 'utf-8');
       const config = JSON.parse(content);
 
+      const includeShareLinks = options.includeShareLinks === true;
       const inbounds = config.inbounds || [];
       logger.debug(`[XrayConfigParser] Found ${inbounds.length} inbounds`);
 
@@ -75,14 +79,16 @@ export class XrayConfigParser {
           }
         }
 
-        // 尝试生成分享链接
-        try {
-          const shareLink = this.generateShareLink(inbound);
-          if (shareLink) {
-            shareLinks.push(shareLink);
+        if (includeShareLinks) {
+          // 尝试生成分享链接
+          try {
+            const shareLink = this.generateShareLink(inbound);
+            if (shareLink) {
+              shareLinks.push(shareLink);
+            }
+          } catch (error) {
+            logger.debug('[XrayConfigParser] Failed to generate share link:', error);
           }
-        } catch (error) {
-          logger.debug('[XrayConfigParser] Failed to generate share link:', error);
         }
       }
 
@@ -90,7 +96,7 @@ export class XrayConfigParser {
         protocols: [...new Set(protocols)],
         ports: [...new Set(ports)],
         domains: [...new Set(domains)],
-        shareLinks,
+        shareLinks: includeShareLinks ? shareLinks : [],
       };
     } catch (error) {
       logger.error('[XrayConfigParser] Failed to parse config:', error);

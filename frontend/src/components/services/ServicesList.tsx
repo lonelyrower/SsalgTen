@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import type { NodeService } from "@/types/services";
 import {
   SERVICE_TYPE_CONFIG,
@@ -16,10 +16,7 @@ import {
   Network,
   Shield,
   Activity,
-  Link as LinkIcon,
   Box,
-  Copy,
-  Check,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
@@ -27,7 +24,6 @@ import {
   getServiceProtocol,
   getServicePort,
   getAllServicePorts,
-  getServiceShareLinks,
   getServiceDomains,
 } from "./service-utils";
 
@@ -190,77 +186,6 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   const port = getServicePort(service);
   const allPorts = getAllServicePorts(service);
   const protocol = getServiceProtocol(service);
-  const shareLinks = getServiceShareLinks(service);
-  const [copiedLink, setCopiedLink] = useState<string | null>(null);
-  const copyResetTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (copyResetTimer.current) {
-        window.clearTimeout(copyResetTimer.current);
-      }
-    };
-  }, []);
-
-  const replacementHost = primaryDomain || service.nodeIp;
-
-  // 替换分享链接中的 your_server_ip 为实际可用的域名或节点IP
-  const processedShareLinks = shareLinks.map((link) => {
-    if (!replacementHost) return link;
-    return link.replace(/your_server_ip/gi, replacementHost);
-  });
-
-  const handleCopyLink = async (link: string) => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopiedLink(link);
-      if (copyResetTimer.current) {
-        window.clearTimeout(copyResetTimer.current);
-      }
-      copyResetTimer.current = window.setTimeout(() => {
-        setCopiedLink(null);
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy link:', err);
-    }
-  };
-
-  const shareLinkSection =
-    processedShareLinks.length > 0 ? (
-      <div className="space-y-1">
-        {processedShareLinks.slice(0, 2).map((link, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))] group"
-          >
-            <LinkIcon className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate font-mono flex-1" title={link}>
-              {link}
-            </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopyLink(link);
-              }}
-              className={`opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-[hsl(var(--muted))] rounded ${copiedLink === link ? "opacity-100 text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]" : ""}`}
-              title={copiedLink === link ? "已复制" : "复制链接"}
-            >
-              {copiedLink === link ? (
-                <Check className="h-3 w-3" />
-              ) : (
-                <Copy className="h-3 w-3" />
-              )}
-            </button>
-          </div>
-        ))}
-        {processedShareLinks.length > 2 && (
-          <div className="text-xs text-[hsl(var(--muted-foreground))]">
-            +{processedShareLinks.length - 2} 条更多链接
-          </div>
-        )}
-      </div>
-    ) : null;
-
   // Xray / V2Ray / 代理类服务
   if (
     service.type === "proxy" ||
@@ -304,7 +229,6 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
             <span className="truncate">{primaryDomain}</span>
           </div>
         )}
-        {shareLinkSection}
       </div>
     );
   }
@@ -349,7 +273,6 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
             +{extraDomainsCount} 个额外域名
           </div>
         )}
-        {shareLinkSection}
       </div>
     );
   }
@@ -399,7 +322,6 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
             </span>
           </div>
         )}
-        {shareLinkSection}
       </div>
     );
   }
@@ -416,8 +338,8 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
     );
   }
 
-  // 默认展示 - 尽量提供域名、端口和分享链接
-  if (primaryDomain || port || shareLinkSection) {
+  // 默认展示 - 尽量提供域名和端口
+  if (primaryDomain || port) {
     return (
       <div className="space-y-1.5 p-2 rounded-[var(--radius-lg)] bg-[hsl(var(--card))]/30 dark:bg-[hsl(var(--card))]/20">
         {primaryDomain && (
@@ -432,7 +354,6 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
             <span>端口: {port}</span>
           </div>
         )}
-        {shareLinkSection}
       </div>
     );
   }
@@ -440,3 +361,6 @@ const ServiceDetails: React.FC<{ service: NodeService }> = ({ service }) => {
   // 没有任何可展示的信息时返回 null
   return null;
 };
+
+
+

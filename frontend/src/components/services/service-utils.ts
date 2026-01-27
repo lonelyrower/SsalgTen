@@ -3,58 +3,12 @@ import type { NodeService } from "@/types/services";
 const BASIC_SERVICE_EXACT = ["docker", "containerd"];
 const BASIC_SERVICE_CONTAINS = ["ssalgten agent", "ssalgten-agent", "ssalgten_agent"];
 
-const SHARE_LINK_PREFIXES = [
-  "vmess://",
-  "vless://",
-  "trojan://",
-  "ss://",
-  "ssr://",
-  "socks://",
-  "hy://",
-  "hysteria://",
-  "http://",
-  "https://",
-];
-
-const SHARE_LINK_CANDIDATE_KEYS = [
-  "shareLink",
-  "sharelink",
-  "share_link",
-  "shareLinks",
-  "links",
-  "link",
-  "url",
-  "urls",
-  "subscription",
-  "subscribe",
-];
-
 const PROTOCOL_SEPARATOR_REGEX = /[,\s|/，]+/;
-const SHARE_LINK_SCHEME_REGEX = /^([a-z0-9+.-]+):\/\//i;
 
 type DetailsRecord = Record<string, unknown>;
 
 const asRecord = (value?: Record<string, unknown>): DetailsRecord | undefined =>
   value && typeof value === "object" ? value : undefined;
-
-const collectStrings = (value: unknown, target: Set<string>) => {
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (trimmed.length > 0) {
-      target.add(trimmed);
-    }
-    return;
-  }
-
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectStrings(item, target));
-  }
-};
-
-const looksLikeShareLink = (value: string): boolean => {
-  const lower = value.toLowerCase();
-  return SHARE_LINK_PREFIXES.some((prefix) => lower.startsWith(prefix)) || lower.includes("://");
-};
 
 const addProtocolCandidate = (value: string, target: Set<string>) => {
   value
@@ -63,25 +17,6 @@ const addProtocolCandidate = (value: string, target: Set<string>) => {
     .filter(Boolean)
     .forEach((item) => target.add(item.toLowerCase()));
 };
-
-function collectShareLinks(service: NodeService): string[] {
-  const details = asRecord(service.details);
-  if (!details) {
-    return [];
-  }
-
-  const values = new Set<string>();
-
-  SHARE_LINK_CANDIDATE_KEYS.forEach((key) => {
-    if (key in details) {
-      collectStrings(details[key], values);
-    }
-  });
-
-  Object.values(details).forEach((value) => collectStrings(value, values));
-
-  return Array.from(values).filter(looksLikeShareLink);
-}
 
 export const isBaseService = (service: NodeService): boolean => {
   const name = (service.name || "").toLowerCase().trim();
@@ -152,13 +87,6 @@ export const getServiceProtocols = (service: NodeService): string[] => {
       }
     }
   }
-
-  collectShareLinks(service).forEach((link) => {
-    const match = SHARE_LINK_SCHEME_REGEX.exec(link.trim());
-    if (match && match[1]) {
-      addProtocolCandidate(match[1], candidates);
-    }
-  });
 
   return Array.from(candidates);
 };
@@ -237,6 +165,3 @@ export const getPrimaryDomain = (service: NodeService): string | undefined => {
   const [primary] = getServiceDomains(service);
   return primary;
 };
-
-export const getServiceShareLinks = (service: NodeService): string[] =>
-  collectShareLinks(service);

@@ -59,4 +59,6 @@ export const securityConfig = {
 export const serviceDetectionConfig = {
   enabled: (process.env.SERVICE_DETECTION_ENABLED || 'true').toLowerCase() === 'true',
   scanIntervalHours: parseInt(process.env.SERVICE_SCAN_INTERVAL_HOURS || '12'),
+  // Disable share link extraction by default to avoid exposing proxy links
+  shareLinksEnabled: (process.env.SERVICE_SHARE_LINKS_ENABLED || 'false').toLowerCase() === 'true',
 };

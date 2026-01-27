@@ -12,6 +12,31 @@ const SERVICE_DATA_EXPIRY_THRESHOLD_MS =
     ? parsedExpiryMs
     : DEFAULT_SERVICE_DATA_EXPIRY_MS;
 
+const SHARE_LINK_KEYS = new Set([
+  "shareLinks",
+  "shareLink",
+  "share_link",
+  "sharelink",
+]);
+
+const stripShareLinks = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(stripShareLinks);
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const sanitized: Record<string, unknown> = {};
+    Object.entries(record).forEach(([key, entry]) => {
+      if (SHARE_LINK_KEYS.has(key)) {
+        return;
+      }
+      sanitized[key] = stripShareLinks(entry);
+    });
+    return sanitized;
+  }
+  return value;
+};
+
 /**
  * Agent 上报的服务数据接口
  */
@@ -89,7 +114,7 @@ export class ServicesController {
               ? (service.containerInfo as Prisma.InputJsonValue)
               : undefined,
             details: service.details
-              ? (service.details as Prisma.InputJsonValue)
+              ? (stripShareLinks(service.details) as Prisma.InputJsonValue)
               : undefined,
           };
 
