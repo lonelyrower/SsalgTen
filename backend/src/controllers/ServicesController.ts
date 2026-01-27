@@ -11,6 +11,8 @@ const SERVICE_DATA_EXPIRY_THRESHOLD_MS =
   Number.isFinite(parsedExpiryMs) && parsedExpiryMs > 0
     ? parsedExpiryMs
     : DEFAULT_SERVICE_DATA_EXPIRY_MS;
+const SERVICE_DETAILS_ENABLED =
+  (process.env.SERVICE_DETAILS_ENABLED || "false").toLowerCase() === "true";
 
 const SHARE_LINK_KEYS = new Set([
   "shareLinks",
@@ -104,8 +106,8 @@ export class ServicesController {
             status: service.status.toUpperCase() as ServiceStatus,
             port: service.port,
             protocol: service.protocol,
-            configPath: service.configPath,
-            configHash: service.configHash,
+            configPath: SERVICE_DETAILS_ENABLED ? service.configPath : undefined,
+            configHash: SERVICE_DETAILS_ENABLED ? service.configHash : undefined,
             domains: service.domains
               ? (service.domains as Prisma.InputJsonValue)
               : undefined,
@@ -113,7 +115,7 @@ export class ServicesController {
             containerInfo: service.containerInfo
               ? (service.containerInfo as Prisma.InputJsonValue)
               : undefined,
-            details: service.details
+            details: SERVICE_DETAILS_ENABLED && service.details
               ? (stripShareLinks(service.details) as Prisma.InputJsonValue)
               : undefined,
           };

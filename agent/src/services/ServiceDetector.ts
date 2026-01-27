@@ -49,6 +49,7 @@ export class ServiceDetector {
   private nodeIp?: string;
   private primaryIpCache?: string;
   private readonly shareLinksEnabled = serviceDetectionConfig.shareLinksEnabled;
+  private readonly detailsEnabled = serviceDetectionConfig.detailsEnabled;
   /**
    * 检测所有服务
    */
@@ -88,6 +89,14 @@ export class ServiceDetector {
 
       // 去重：优先保留更详细的信息
       const uniqueServices = this.deduplicateServices(services);
+
+      if (!this.detailsEnabled) {
+        uniqueServices.forEach((service) => {
+          service.details = undefined;
+          service.configPath = undefined;
+          service.configHash = undefined;
+        });
+      }
 
       logger.info(`[ServiceDetector] Detection completed: ${uniqueServices.length} services found`);
       return uniqueServices;
@@ -2562,9 +2571,11 @@ export class ServiceDetector {
           ...existing,
           ...service,
           version: service.version || existing.version,
-          configPath: service.configPath || existing.configPath,
-          configHash: service.configHash || existing.configHash,
-          details: { ...existing.details, ...service.details },
+          configPath: this.detailsEnabled ? service.configPath || existing.configPath : undefined,
+          configHash: this.detailsEnabled ? service.configHash || existing.configHash : undefined,
+          details: this.detailsEnabled
+            ? { ...existing.details, ...service.details }
+            : undefined,
         };
         serviceMap.set(key, merged);
       }

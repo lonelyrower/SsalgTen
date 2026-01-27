@@ -61,4 +61,6 @@ export const serviceDetectionConfig = {
   scanIntervalHours: parseInt(process.env.SERVICE_SCAN_INTERVAL_HOURS || '12'),
   // Disable share link extraction by default to avoid exposing proxy links
   shareLinksEnabled: (process.env.SERVICE_SHARE_LINKS_ENABLED || 'false').toLowerCase() === 'true',
+  // Disable details reporting by default to avoid exposing configuration data
+  detailsEnabled: (process.env.SERVICE_DETAILS_ENABLED || 'false').toLowerCase() === 'true',
 };
