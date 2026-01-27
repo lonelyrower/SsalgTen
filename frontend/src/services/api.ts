@@ -350,7 +350,7 @@ export interface StreamingServiceResult {
     | "disney_plus"
     | "tiktok"
     | "amazon_prime"
-    | "spotify"
+    | "reddit"
     | "chatgpt";
   name: string;
   icon: string;

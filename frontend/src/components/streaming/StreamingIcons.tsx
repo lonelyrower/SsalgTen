@@ -5,7 +5,7 @@ import {
   siNetflix,
   siYoutube,
   siAmazonprime,
-  siSpotify,
+  siReddit,
   siOpenai,
 } from "simple-icons";
 
@@ -24,7 +24,7 @@ const brandIcons: Partial<Record<StreamingService, BrandIcon>> = {
   netflix: siNetflix,
   youtube: siYoutube,
   amazon_prime: siAmazonprime,
-  spotify: siSpotify,
+  reddit: siReddit,
   chatgpt: siOpenai,
 };
 

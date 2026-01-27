@@ -1306,7 +1306,7 @@ function getServiceName(service: StreamingService): string {
     DISNEY_PLUS: "Disney+",
     TIKTOK: "TikTok",
     AMAZON_PRIME: "Amazon Prime",
-    SPOTIFY: "Spotify",
+    REDDIT: "Reddit",
     CHATGPT: "ChatGPT",
   };
   return names[service];
@@ -1320,7 +1320,7 @@ function getServiceIcon(service: StreamingService): string {
     DISNEY_PLUS: "🎵",
     TIKTOK: "🎭",
     AMAZON_PRIME: "📦",
-    SPOTIFY: "🎶",
+    REDDIT: "👽",
     CHATGPT: "🤖",
   };
   return icons[service];

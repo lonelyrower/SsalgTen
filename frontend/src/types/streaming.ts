@@ -9,7 +9,7 @@ export type StreamingService =
   | "netflix"
   | "youtube"
   | "amazon_prime"
-  | "spotify"
+  | "reddit"
   | "chatgpt";
 
 // 流媒体检测状态
@@ -99,7 +99,7 @@ export const STREAMING_SERVICES: Record<
   netflix: { name: "Netflix", icon: "🎬" },
   youtube: { name: "YouTube", icon: "▶️" },
   amazon_prime: { name: "Amazon Prime Video", icon: "📦" },
-  spotify: { name: "Spotify", icon: "🎧" },
+  reddit: { name: "Reddit", icon: "👽" },
   chatgpt: { name: "ChatGPT", icon: "🤖" },
 };
 
@@ -109,7 +109,7 @@ export const STREAMING_SERVICE_ORDER: StreamingService[] = [
   "netflix",
   "youtube",
   "amazon_prime",
-  "spotify",
+  "reddit",
   "chatgpt",
 ];
 
@@ -147,7 +147,7 @@ export const PLATFORM_SUPPORTED_STATUSES: Record<
     { status: "no", label: STATUS_TEXT.no, color: STATUS_COLORS.no },
     { status: "failed", label: STATUS_TEXT.failed, color: STATUS_COLORS.failed },
   ],
-  spotify: [
+  reddit: [
     { status: "yes", label: STATUS_TEXT.yes, color: STATUS_COLORS.yes },
     { status: "no", label: STATUS_TEXT.no, color: STATUS_COLORS.no },
     { status: "failed", label: STATUS_TEXT.failed, color: STATUS_COLORS.failed },
@@ -257,4 +257,3 @@ export type StreamingBulkAction = "retest" | "export" | "ignore";
 
 // 导出格式
 export type StreamingExportFormat = "json" | "csv" | "markdown";
-

@@ -12,7 +12,7 @@ CREATE TYPE "StreamingService" AS ENUM (
   'DISNEY_PLUS',
   'TIKTOK',
   'AMAZON_PRIME',
-  'SPOTIFY',
+  'REDDIT',
   'CHATGPT'
 );
 

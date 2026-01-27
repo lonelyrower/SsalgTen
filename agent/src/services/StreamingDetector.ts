@@ -15,7 +15,7 @@ export type StreamingService =
   | 'amazon_prime'
   | 'youtube'
   | 'tiktok'
-  | 'spotify'
+  | 'reddit'
   | 'chatgpt';
 
 /**
@@ -84,9 +84,6 @@ export class StreamingDetector {
   private readonly disneyAuthorization =
     'Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84';
 
-  private readonly spotifySignupBody =
-    'birth_day=11&birth_month=11&birth_year=2000&collect_personal_info=undefined&creation_flow=&creation_point=https%3A%2F%2Fwww.spotify.com%2Fhk-en%2F&displayname=Gay%20Lord&gender=male&iagree=1&key=a1e486e2729f46d6bb368d6b2bcda326&platform=www&identifier_token=AgE6YTvEzkReHNfJpO114514&referrer=&send-email=0&thirdpartyemail=0';
-
   private readonly youtubeCookie =
     'YSC=BiCUU3-5Gdk; CONSENT=YES+cb.20220301-11-p0.en+FX+700; GPS=1; VISITOR_INFO1_LIVE=4VwPMkB7W5A; PREF=tz=Asia.Shanghai; _gcl_au=1.1.1809531354.1646633279';
 
@@ -114,7 +111,7 @@ export class StreamingDetector {
       'amazon_prime',
       'youtube',
       'tiktok',
-      'spotify',
+      'reddit',
       'chatgpt',
     ];
 
@@ -152,8 +149,8 @@ export class StreamingDetector {
         return this.detectYouTube();
       case 'tiktok':
         return this.detectTikTok();
-      case 'spotify':
-        return this.detectSpotify();
+      case 'reddit':
+        return this.detectReddit();
       case 'chatgpt':
         return this.detectChatGPT();
       default:
@@ -741,69 +738,55 @@ export class StreamingDetector {
     }
   }
   /**
-   * Spotify 检测
+   * Reddit 检测
+   * 参考 IPQuality 中的 Reddit 判定逻辑
    */
-  private async detectSpotify(): Promise<StreamingResult> {
-    const testedUrls = ['https://spclient.wg.spotify.com/signup/public/v1/account'];
+  private async detectReddit(): Promise<StreamingResult> {
+    const testedUrls = ['https://www.reddit.com/'];
 
     try {
-      const response = await this.axios.post(
-        testedUrls[0],
-        this.spotifySignupBody,
-        {
-          headers: {
-            'User-Agent': 'Spotify/8.6.44 Android/29 (SM-G960F)',
-            'Accept-Language': 'en',
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+      const response = await this.axios.get(testedUrls[0], {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept-Language': 'en-US,en;q=0.9',
         },
-      );
+      });
 
-      const data = typeof response.data === 'object' ? response.data : null;
-      if (!data) {
+      const statusCode = response.status;
+      const html = typeof response.data === 'string' ? response.data : '';
+
+      if (statusCode === 403) {
         return {
-          service: 'spotify',
-          status: 'failed',
-          testedUrls,
-          errorMsg: 'Unexpected Spotify response',
-          testedAt: new Date(),
-        };
-      }
-
-      const statusCode = String(data.status ?? '');
-      const region = typeof data.country === 'string' ? data.country : undefined;
-      const isLaunched = String(data.is_country_launched).toLowerCase() === 'true';
-
-      if (statusCode === '320' || statusCode === '120') {
-        return {
-          service: 'spotify',
+          service: 'reddit',
           status: 'no',
           testedUrls,
           testedAt: new Date(),
         };
       }
 
-      if (statusCode === '311' && isLaunched && region) {
+      if (statusCode === 200) {
+        const regionMatch = html.match(/country="([^"]+)"/i);
+        const region = regionMatch?.[1];
         return {
-          service: 'spotify',
+          service: 'reddit',
           status: 'yes',
           region,
-          unlockType: await this.detectUnlockType(['spclient.wg.spotify.com']),
+          unlockType: await this.detectUnlockType(['reddit.com'], true, false),
           testedUrls,
           testedAt: new Date(),
         };
       }
 
       return {
-        service: 'spotify',
+        service: 'reddit',
         status: 'failed',
         testedUrls,
-        errorMsg: `Unhandled Spotify status ${statusCode}`,
+        errorMsg: `Unhandled Reddit status ${statusCode}`,
         testedAt: new Date(),
       };
     } catch (error) {
       return {
-        service: 'spotify',
+        service: 'reddit',
         status: 'failed',
         testedUrls,
         errorMsg: error instanceof Error ? error.message : 'Unknown error',
@@ -1042,8 +1025,13 @@ export class StreamingDetector {
    *
    * @param domains 要检查的域名列表（可以是单个或多个）
    * @param useCheck2 是否使用 Check_DNS_2（某些服务需要）
+   * @param useCheck3 是否使用 Check_DNS_3（某些服务需要）
    */
-  private async detectUnlockType(domains: string[], useCheck2 = false): Promise<UnlockType> {
+  private async detectUnlockType(
+    domains: string[],
+    useCheck2 = false,
+    useCheck3 = true,
+  ): Promise<UnlockType> {
     try {
       // 对每个域名执行检查
       const checks: Promise<boolean>[] = [];
@@ -1053,7 +1041,9 @@ export class StreamingDetector {
         if (useCheck2) {
           checks.push(this.checkDNS2(domain)); // Check_DNS_2 (可选)
         }
-        checks.push(this.checkDNS3(domain));   // Check_DNS_3
+        if (useCheck3) {
+          checks.push(this.checkDNS3(domain));   // Check_DNS_3
+        }
       }
 
       const results = await Promise.all(checks);

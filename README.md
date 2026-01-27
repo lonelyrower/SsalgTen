@@ -439,7 +439,7 @@ SsalgTen/
 - 🏰 **Disney+** - 区域解锁状态检测
 - 📦 **Amazon Prime Video** - 多区域支持检测
 - 🎵 **TikTok** - 区域解锁检测
-- 🎧 **Spotify** - 音乐库解锁检测
+- 👽 **Reddit** - 访问解锁检测
 - 🤖 **ChatGPT** - APP/Web访问检测
 
 **检测类型**

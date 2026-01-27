@@ -53,13 +53,13 @@ const colorClasses = {
     ring: "ring-2 ring-inset ring-pink-500",
     progressBg: "bg-pink-500",
   },
-  // Spotify 官方绿色 #1DB954
-  spotifyGreen: {
-    bg: "bg-[hsl(var(--status-success-50))] dark:bg-[hsl(var(--status-success-900)/0.4)]",
-    icon: "text-[hsl(var(--status-success-600))] dark:text-[hsl(var(--status-success-400))]",
-    accent: "border-[hsl(var(--status-success-500))] dark:border-[hsl(var(--status-success-500))]",
-    ring: "ring-2 ring-inset ring-[hsl(var(--status-success-500))]",
-    progressBg: "bg-[hsl(var(--status-success-500))]",
+  // Reddit 官方橙色 #FF4500
+  redditOrange: {
+    bg: "bg-orange-50 dark:bg-orange-950/40",
+    icon: "text-orange-600 dark:text-orange-400",
+    accent: "border-orange-500 dark:border-orange-500",
+    ring: "ring-2 ring-inset ring-orange-500",
+    progressBg: "bg-orange-500",
   },
   // ChatGPT 官方绿色 #10A37F
   chatgptTeal: {
@@ -81,7 +81,7 @@ const getPlatformColor = (service: string): ColorKey => {
     disney_plus: "disneyBlue",
     amazon_prime: "amazonCyan",
     tiktok: "tiktokPink",
-    spotify: "spotifyGreen",
+    reddit: "redditOrange",
     chatgpt: "chatgptTeal",
   };
   return platformColors[service] || "netflixRed";
