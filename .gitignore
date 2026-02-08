@@ -80,7 +80,9 @@ temp/
 *.temp
 
 # Docker
-.dockerignore
+# NOTE: Keep `.dockerignore` tracked so Docker builds are reproducible across environments.
+**/.dockerignore
+!/.dockerignore
 
 # MacOS
 .AppleDouble

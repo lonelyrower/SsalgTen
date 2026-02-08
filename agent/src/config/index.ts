@@ -23,7 +23,7 @@ export const config: AgentConfig = {
   },
   provider: process.env.NODE_PROVIDER || 'Unknown Provider',
   masterUrl: process.env.MASTER_URL || 'http://localhost:3001',
-  apiKey: process.env.AGENT_API_KEY || 'default-api-key',
+  apiKey: (process.env.AGENT_API_KEY || 'default-api-key').trim(),
   heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL || '300000'), // 5 minutes default
   // When true, the agent will skip TLS verification for HTTPS requests to the master.
   // Useful as a temporary workaround if the server's certificate chain is misconfigured.

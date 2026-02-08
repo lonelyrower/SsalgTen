@@ -32,7 +32,7 @@
   "author": "Your Name",
   "license": "MIT",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=22.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -41,7 +41,7 @@
     "@types/cookie-parser": "^1.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^24.3.0",
+    "@types/node": "^22.13.0",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
     "concurrently": "^9.2.0",

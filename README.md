@@ -2,7 +2,7 @@
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22+-green.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://github.com/lonelyrower/SsalgTen)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
@@ -150,7 +150,7 @@ graph TB
 
 ```typescript
 {
-  "runtime": "Node.js 24+ + Express.js 5 + TypeScript 5",
+  "runtime": "Node.js 22+ + Express.js 5 + TypeScript 5",
   "database": "PostgreSQL 15+ + Prisma ORM v6",
   "cache": "Redis 7+ 缓存策略",
   "auth": "jsonwebtoken + bcryptjs",
@@ -185,7 +185,7 @@ Redis 7+ + 持久化 + 集群支持
 
 **开发环境:**
 
-- Node.js 24.0.0+ (推荐 24+ LTS)
+- Node.js 22.0.0+ (推荐 22+ LTS)
 - npm 10.0.0+
 - Git 2.25+
 - 8GB RAM 推荐
@@ -807,7 +807,7 @@ VITE_CESIUM_ION_TOKEN="your-cesium-ion-token"
 
 ```bash
 # 1. 系统要求检查
-node --version  # >= 24.0.0
+node --version  # >= 22.0.0
 npm --version   # >= 10.0.0
 docker --version # >= 24.0.0
 

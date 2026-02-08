@@ -1282,7 +1282,7 @@ create_dockerfile() {
     
     cat > Dockerfile << 'EOF'
 # SsalgTen Agent Dockerfile
-FROM node:24-alpine
+FROM node:22-alpine
 
 # Install system dependencies for network tools
 RUN apk add --no-cache \
@@ -1315,7 +1315,7 @@ COPY . .
 RUN npm run build
 
 # Remove dev dependencies after build to reduce image size
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 # Create necessary directories
 RUN mkdir -p /app/logs && chown ssalgten:nodejs /app/logs

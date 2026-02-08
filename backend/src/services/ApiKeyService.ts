@@ -71,8 +71,23 @@ export class ApiKeyService {
       "default-agent-key-change-this-immediately",
       "change-this-api-key",
       "default-agent-api-key-change-this-in-production",
+      "your-agent-api-key-here",
+      "change_me_use_the_generated_keys_above_or_run_the_command",
     ];
-    return unsafeKeys.includes(key);
+    return unsafeKeys.includes(key.toLowerCase());
+  }
+
+  private resolveSecureEnvAgentApiKey(): string | null {
+    const candidates = [
+      process.env.DEFAULT_AGENT_API_KEY,
+      process.env.AGENT_CONTROL_API_KEY,
+    ]
+      .map((v) => (v || "").trim())
+      .filter(Boolean);
+    for (const c of candidates) {
+      if (this.isSecureAgentApiKey(c)) return c;
+    }
+    return null;
   }
 
   public isSecureAgentApiKey(key?: string | null): boolean {
@@ -87,6 +102,8 @@ export class ApiKeyService {
   // 初始化系统API密钥
   async initializeSystemApiKey(): Promise<string> {
     try {
+      const envKey = this.resolveSecureEnvAgentApiKey();
+
       // 检查是否已存在默认系统密钥
       let defaultKey = await prisma.setting.findUnique({
         where: { key: "SYSTEM_AGENT_API_KEY" },
@@ -100,7 +117,7 @@ export class ApiKeyService {
             "System agent API key is empty; generating a new secure key...",
           );
 
-          const newKey = this.generateSecureApiKey();
+          const newKey = envKey || this.generateSecureApiKey();
 
           await prisma.setting.update({
             where: { key: "SYSTEM_AGENT_API_KEY" },
@@ -121,7 +138,7 @@ export class ApiKeyService {
             "Detected an unsafe default system agent API key; rotating to a secure value...",
           );
 
-          const newKey = this.generateSecureApiKey();
+          const newKey = envKey || this.generateSecureApiKey();
 
           await prisma.setting.update({
             where: { key: "SYSTEM_AGENT_API_KEY" },
@@ -140,8 +157,8 @@ export class ApiKeyService {
         );
         return currentValue;
       }
-      // 生成新的系统密钥
-      const newKey = this.generateSecureApiKey();
+      // 生成新的系统密钥（优先使用环境变量中提供的安全值，以便容器化部署可固定密钥）
+      const newKey = envKey || this.generateSecureApiKey();
 
       await prisma.setting.create({
         data: {

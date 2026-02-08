@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Development files
+.git/
+.gitignore
+README.md
+.env.local
+.env.development
+.env.test
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts (will be created during build)
+*/dist/
+*/build/
+
+# Log files
+logs/
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Test files
+coverage/
+*.test.js
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Docker files (exclude from context to avoid recursion)
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Scripts
+scripts/
+!scripts/
+!scripts/updater-server.mjs
+!scripts/update-production.sh
+!scripts/ssalgten.sh
+
+# Environment files (use .env.docker instead)
+.env
+.env.example

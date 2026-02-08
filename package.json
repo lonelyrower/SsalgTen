@@ -22,12 +22,12 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:db": "docker compose -f docker-compose.dev.yml up -d",
     "dev:db:stop": "docker compose -f docker-compose.dev.yml down",
-    "dev:setup": "npm run dev:db && sleep 10 && cd backend && npx prisma migrate dev && npx prisma db seed",
+    "dev:setup": "npm run dev:db && node -e \"setTimeout(()=>{}, 10000)\" && cd backend && npx prisma migrate dev && npx prisma db seed",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build",
     "start": "cd backend && npm start",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../agent && npm install",
+    "install:all": "npm ci && cd frontend && npm ci && cd ../backend && npm ci && cd ../agent && npm ci",
     "clean": "rimraf frontend/dist backend/dist agent/dist",
     "check:encoding": "node scripts/check-encoding.mjs",
     "lint": "npm run check:encoding && npm run lint:frontend && npm run lint:backend",
@@ -43,7 +43,7 @@
     "rimraf": "^6.0.1"
   },
   "engines": {
-    "node": ">=24.0.0",
+    "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "dependencies": {

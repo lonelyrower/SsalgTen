@@ -44,6 +44,19 @@ export interface SpeedtestResult {
 }
 
 export class NetworkService {
+  private clampInt(
+    value: unknown,
+    min: number,
+    max: number,
+    fallback: number,
+  ): number {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    const i = Math.trunc(n);
+    if (i < min) return min;
+    if (i > max) return max;
+    return i;
+  }
   
   // 验证目标地址是否安全
   private validateTarget(target: string): boolean {
@@ -113,7 +126,8 @@ export class NetworkService {
       throw new Error(`Target ${target} is not allowed`);
     }
 
-    const pingCount = count || networkConfig.pingCount;
+    const defaultCount = this.clampInt(networkConfig.pingCount, 1, 20, 4);
+    const pingCount = this.clampInt(count, 1, 20, defaultCount);
     
     try {
       logger.debug(`Starting ping to ${target} with ${pingCount} packets`);
@@ -226,7 +240,8 @@ export class NetworkService {
       throw new Error(`Target ${target} is not allowed`);
     }
 
-    const maxHopsLimit = maxHops || networkConfig.tracerouteMaxHops;
+    const defaultMaxHops = this.clampInt(networkConfig.tracerouteMaxHops, 1, 64, 30);
+    const maxHopsLimit = this.clampInt(maxHops, 1, 64, defaultMaxHops);
     
     try {
       logger.debug(`Starting traceroute to ${target} with max ${maxHopsLimit} hops`);
@@ -310,7 +325,8 @@ export class NetworkService {
       throw new Error(`Target ${target} is not allowed`);
     }
 
-    const mtrCount = count || networkConfig.mtrCount;
+    const defaultCount = this.clampInt(networkConfig.mtrCount, 1, 50, 10);
+    const mtrCount = this.clampInt(count, 1, 50, defaultCount);
     
     try {
       logger.debug(`Starting MTR-like test to ${target} with ${mtrCount} cycles`);

@@ -65,6 +65,31 @@ async function checkDockerAccess(): Promise<void> {
 }
 
 const app = express();
+app.disable('x-powered-by');
+
+const isProduction = serverConfig.nodeEnv === 'production';
+
+const isUnsafeAgentApiKey = (key: string): boolean => {
+  const unsafeKeys = new Set([
+    'default-api-key',
+    'default-agent-api-key',
+    'default-agent-key-change-this',
+    'default-agent-key-change-this-immediately',
+    'default-agent-api-key-change-this-in-production',
+    'change-this-api-key',
+    'changeme',
+  ]);
+  return unsafeKeys.has(key);
+};
+
+const isValidAgentApiKeyFormat = (key: string): boolean => {
+  if (key.startsWith('ssalgten_')) {
+    // ssalgten_ + timestamp + hex
+    return key.length >= 48;
+  }
+  // Back-compat: allow older opaque keys, but require minimum length
+  return key.length >= 16;
+};
 
 // Allow insecure TLS for outbound requests when explicitly enabled.
 // Temporary workaround for environments with incomplete cert chains.
@@ -74,13 +99,106 @@ if ((process.env.AGENT_TLS_INSECURE || '').toLowerCase() === 'true' || process.e
 }
 
 // 启动前安全检查：禁止使用默认API Key
-if (!process.env.AGENT_API_KEY || process.env.AGENT_API_KEY === 'default-api-key') {
-  logger.error('AGENT_API_KEY 未设置或仍为默认值，请设置一个安全的随机密钥后再启动 (env AGENT_API_KEY)');
+const expectedApiKey = (config.apiKey || '').trim();
+if (!expectedApiKey || isUnsafeAgentApiKey(expectedApiKey) || !isValidAgentApiKeyFormat(expectedApiKey)) {
+  logger.error('AGENT_API_KEY 未设置或仍为不安全/无效的值，请设置一个安全的随机密钥后再启动 (env AGENT_API_KEY)');
+  logger.error('建议使用后端生成的 system API key（形如 ssalgten_<...>），并确保所有 Agent 使用同一密钥。');
   process.exit(1);
 }
+if (!expectedApiKey.startsWith('ssalgten_')) {
+  logger.warn('AGENT_API_KEY 未使用推荐的 ssalgten_* 格式（仍允许启动，但建议尽快更换为更强的随机密钥）');
+}
+
+// CORS (agent 通常不需要被浏览器直接调用；生产环境默认禁用 CORS)
+const parseCorsOrigins = (raw: string): string[] => {
+  return raw
+    .split(/[,;|]/)
+    .map((s) => s.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+};
+
+const corsOriginRaw = (process.env.AGENT_CORS_ORIGIN || '').trim();
+if (corsOriginRaw) {
+  const allowed = Array.from(new Set(parseCorsOrigins(corsOriginRaw)));
+  app.use(cors({ origin: allowed, credentials: true }));
+} else if (!isProduction) {
+  app.use(cors());
+} else {
+  app.use(cors({ origin: false }));
+}
+
+// Simple in-memory protections for agent control endpoints
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.AGENT_RATE_LIMIT_WINDOW_MS || '60000'); // 1 min
+const RATE_LIMIT_MAX = parseInt(process.env.AGENT_RATE_LIMIT_MAX || '60');
+const rateBuckets: Map<string, { count: number; resetAt: number }> = new Map();
+
+const getClientKey = (req: Request): string => {
+  return String(req.ip || req.socket.remoteAddress || 'unknown');
+};
+
+const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const key = getClientKey(req);
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || bucket.resetAt <= now) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return next();
+  }
+  if (bucket.count >= RATE_LIMIT_MAX) {
+    res.status(429).json({ success: false, error: 'Too many requests' });
+    return;
+  }
+  bucket.count += 1;
+  // Opportunistic cleanup to avoid unbounded growth
+  if (rateBuckets.size > 10000) {
+    for (const [k, v] of rateBuckets.entries()) {
+      if (v.resetAt <= now) rateBuckets.delete(k);
+    }
+  }
+  next();
+};
+
+let inFlight = 0;
+const concurrencyLimit = Math.max(1, Number(serverConfig.maxConcurrentTests) || 5);
+const concurrencyMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (inFlight >= concurrencyLimit) {
+    res.status(429).json({ success: false, error: 'Too many concurrent tests' });
+    return;
+  }
+  inFlight += 1;
+  let done = false;
+  const dec = () => {
+    if (done) return;
+    done = true;
+    inFlight = Math.max(0, inFlight - 1);
+  };
+  res.on('finish', dec);
+  res.on('close', dec);
+  next();
+};
+
+const readApiKey = (req: Request): string => {
+  const hdr =
+    (req.headers['x-agent-api-key'] as string) ||
+    (req.headers['x-api-key'] as string) ||
+    (req.headers['authorization'] as string) ||
+    '';
+  if (!hdr) return '';
+  const trimmed = String(hdr).trim();
+  if (trimmed.toLowerCase().startsWith('bearer ')) return trimmed.slice(7).trim();
+  return trimmed;
+};
+
+const requireAgentApiKey = (req: Request, res: Response, next: NextFunction) => {
+  const provided = readApiKey(req);
+  if (!provided || provided !== expectedApiKey) {
+    res.status(401).json({ success: false, error: 'Unauthorized' });
+    return;
+  }
+  next();
+};
 
 // 中间件配置
-app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -154,6 +272,9 @@ app.get('/api/health', async (req: Request, res: Response) => {
   }
 });
 
+// Protect all remaining /api endpoints (except /api/health defined above)
+app.use('/api', requireAgentApiKey, rateLimitMiddleware, concurrencyMiddleware);
+
 // Agent 信息
 app.get('/info', (req: Request, res: Response) => {
   res.json({
@@ -201,17 +322,6 @@ app.get('/api/connectivity', diagnosticController.connectivity.bind(diagnosticCo
 
 // 手动触发流媒体检测
 app.post('/api/streaming/test', async (req: Request, res: Response) => {
-  const apiKeyHeader =
-    (req.headers['x-agent-api-key'] as string) || (req.headers['x-api-key'] as string);
-
-  if (!apiKeyHeader || apiKeyHeader !== config.apiKey) {
-    res.status(401).json({
-      success: false,
-      error: 'Unauthorized',
-    });
-    return;
-  }
-
   const result = await streamingTestService.triggerManual();
   if (!result.started) {
     res.status(409).json({
@@ -232,17 +342,6 @@ app.post('/api/streaming/test', async (req: Request, res: Response) => {
 
 // 手动触发服务扫描
 app.post('/api/services/scan', async (req: Request, res: Response) => {
-  const apiKeyHeader =
-    (req.headers['x-agent-api-key'] as string) || (req.headers['x-api-key'] as string);
-
-  if (!apiKeyHeader || apiKeyHeader !== config.apiKey) {
-    res.status(401).json({
-      success: false,
-      error: 'Unauthorized',
-    });
-    return;
-  }
-
   const result = await serviceDetectionService.triggerManual();
   if (!result.started) {
     res.status(409).json({

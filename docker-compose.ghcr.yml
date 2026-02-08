@@ -68,15 +68,18 @@ services:
       DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=100&pool_timeout=60
 
       # JWT Configuration
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      # REQUIRED in production: use a strong random secret (>= 32 chars)
+      JWT_SECRET: ${JWT_SECRET:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-
+      
       # API Security
-      API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
+      # REQUIRED in production: use a strong random secret (>= 32 chars)
+      API_KEY_SECRET: ${API_KEY_SECRET:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-}
-
+      
       # Agent Configuration
-      DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
+      # OPTIONAL: if set, it will be used as the system agent API key (must be secure)
+      DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-}
       AGENT_HEARTBEAT_INTERVAL: ${AGENT_HEARTBEAT_INTERVAL:-300000}
       AGENT_TIMEOUT: ${AGENT_TIMEOUT:-10000}
       AGENT_REQUIRE_SIGNATURE: ${AGENT_REQUIRE_SIGNATURE:-false}
@@ -226,7 +229,8 @@ services:
       # Agent Configuration
       AGENT_ID: ${AGENT_NYC_ID:-agent-nyc-docker}
       MASTER_URL: http://backend:3001
-      AGENT_API_KEY: ${AGENT_NYC_API_KEY:-change-this-api-key}
+      # Use the same key as the backend system agent API key (set DEFAULT_AGENT_API_KEY in .env)
+      AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-}
 
       # Node Information
       NODE_NAME: ${AGENT_NYC_NAME:-New York Node (Docker)}

@@ -1,5 +1,5 @@
 # Multi-stage build for SsalgTen Agent
-FROM node:24-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -8,23 +8,17 @@ WORKDIR /app
 COPY agent/package*.json ./
 
 # Install dependencies (including dev dependencies for build)
-RUN npm ci --verbose
+RUN npm ci
 
 # Copy source code
 COPY agent/src ./src/
 COPY agent/tsconfig.json ./
 
-# Debug: Check files are copied correctly
-RUN ls -la && ls -la src/
-
 # Build the application
 RUN npm run build
 
-# Debug: Check build output
-RUN ls -la dist/
-
 # Production stage
-FROM node:24-alpine AS production
+FROM node:22-alpine AS production
 
 # Install system dependencies for network tools
 RUN apk add --no-cache \

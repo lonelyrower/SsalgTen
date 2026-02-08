@@ -47,16 +47,19 @@ services:
       DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten
       
       # JWT Configuration
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      # REQUIRED in production: use a strong random secret (>= 32 chars)
+      JWT_SECRET: ${JWT_SECRET:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       
       # API Security
-      API_KEY_SECRET: ${API_KEY_SECRET:-your-api-key-secret-change-this}
+      # REQUIRED in production: use a strong random secret (>= 32 chars)
+      API_KEY_SECRET: ${API_KEY_SECRET:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://${DOMAIN:-localhost}}
       FRONTEND_URL: ${FRONTEND_URL:-http://${DOMAIN:-localhost}}
       
       # Agent Configuration
-      DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-default-agent-key-change-this}
+      # OPTIONAL: if set, it will be used as the system agent API key (must be secure)
+      DEFAULT_AGENT_API_KEY: ${DEFAULT_AGENT_API_KEY:-}
       AGENT_HEARTBEAT_INTERVAL: ${AGENT_HEARTBEAT_INTERVAL:-30000}
       AGENT_REQUIRE_SIGNATURE: ${AGENT_REQUIRE_SIGNATURE:-false}
       

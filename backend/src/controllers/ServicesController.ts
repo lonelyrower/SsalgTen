@@ -106,8 +106,12 @@ export class ServicesController {
             status: service.status.toUpperCase() as ServiceStatus,
             port: service.port,
             protocol: service.protocol,
-            configPath: SERVICE_DETAILS_ENABLED ? service.configPath : undefined,
-            configHash: SERVICE_DETAILS_ENABLED ? service.configHash : undefined,
+            configPath: SERVICE_DETAILS_ENABLED
+              ? service.configPath
+              : undefined,
+            configHash: SERVICE_DETAILS_ENABLED
+              ? service.configHash
+              : undefined,
             domains: service.domains
               ? (service.domains as Prisma.InputJsonValue)
               : undefined,
@@ -115,9 +119,10 @@ export class ServicesController {
             containerInfo: service.containerInfo
               ? (service.containerInfo as Prisma.InputJsonValue)
               : undefined,
-            details: SERVICE_DETAILS_ENABLED && service.details
-              ? (stripShareLinks(service.details) as Prisma.InputJsonValue)
-              : undefined,
+            details:
+              SERVICE_DETAILS_ENABLED && service.details
+                ? (stripShareLinks(service.details) as Prisma.InputJsonValue)
+                : undefined,
           };
 
           // 直接创建新记录（因为上面已经删除了所有旧记录）

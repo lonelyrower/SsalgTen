@@ -1,22 +1,30 @@
 import cors from "cors";
+import type { CorsOptions } from "cors";
 
-// 解析多个CORS来源（支持 CORS_ORIGIN 与 FRONTEND_URL）
-const getCorsOrigins = (): string | string[] => {
+type AllowedOrigins = "*" | string[] | null;
+
+const normalizeOrigin = (raw: string): string => raw.replace(/\/$/, "");
+
+// 解析多个CORS来源（支持 CORS_ORIGIN / FRONTEND_URL / DOMAIN / PUBLIC_URL）
+const getExplicitCorsOrigins = (): AllowedOrigins => {
   const sources: string[] = [];
 
   const pushFromEnv = (raw?: string) => {
-    if (!raw) return;
-    const parts = raw
+    const v = (raw || "").trim();
+    if (!v) return;
+    const parts = v
       .split(/[,;|]/)
       .map((s) => s.trim())
       .filter(Boolean);
+
     for (const p of parts) {
       if (p === "*") {
         sources.push("*");
         continue;
       }
-      // 规范化：去除末尾斜杠
-      const cleaned = p.replace(/\/$/, "");
+
+      const cleaned = normalizeOrigin(p);
+
       // 若未包含协议，默认加入 https 与 http 两种形式，提升容错
       if (!/^https?:\/\//i.test(cleaned)) {
         sources.push(`https://${cleaned}`);
@@ -28,113 +36,89 @@ const getCorsOrigins = (): string | string[] => {
   };
 
   pushFromEnv(process.env.CORS_ORIGIN);
-  // 作为补充来源，允许通过 FRONTEND_URL 与 DOMAIN 指定前端地址
   pushFromEnv(process.env.FRONTEND_URL);
   pushFromEnv(process.env.DOMAIN);
+  pushFromEnv(process.env.PUBLIC_URL);
 
-  // 如果没有任何显式来源，返回空字符串，让后续逻辑走智能检测
-  if (sources.length === 0) return "";
-
-  // 若包含通配符，直接返回 "*"
+  if (sources.length === 0) return null;
   if (sources.includes("*")) return "*";
-
-  // 去重
   return Array.from(new Set(sources));
 };
 
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = getCorsOrigins();
+const isPrivateOrLocalHostname = (hostname: string): boolean => {
+  const host = hostname.toLowerCase();
+  if (host === "localhost" || host === "127.0.0.1" || host === "::1")
+    return true;
+  // Private IPv4 ranges
+  return /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(host);
+};
 
-    // 对于非浏览器/无 Origin 的请求（如健康检查、服务间调用），统一允许
-    if (!origin) {
-      return callback(null, true);
+const matchAllowedOrigin = (allowed: string, origin: string): boolean => {
+  if (allowed === "*" || allowed === origin) return true;
+
+  // 支持协议通配符（如 https://*）
+  if (allowed.endsWith("://*")) {
+    try {
+      const originUrl = new URL(origin);
+      const allowedProtocol = allowed.slice(0, -3); // "https"
+      return originUrl.protocol === `${allowedProtocol}:`;
+    } catch {
+      return false;
     }
+  }
 
-    // 通配：显式允许所有来源
-    if (allowedOrigins === "*") {
-      return callback(null, true);
+  // 支持域名通配符（如 *.example.com）
+  if (allowed.startsWith("*.")) {
+    try {
+      const originUrl = new URL(origin);
+      const domain = allowed.substring(2).toLowerCase();
+      const hn = originUrl.hostname.toLowerCase();
+      return hn === domain || hn.endsWith(`.${domain}`);
+    } catch {
+      return false;
     }
+  }
 
-    // 智能同域检测：如果没有配置CORS_ORIGIN，自动允许同域请求
-    if (!process.env.CORS_ORIGIN) {
-      try {
-        const originUrl = new URL(origin);
-        // 生产环境：只允许HTTPS同域 + localhost
-        if (process.env.NODE_ENV === "production") {
-          const host = originUrl.hostname;
-          const isLocal =
-            host === "localhost" || host === "127.0.0.1" || host === "::1";
-          const isPrivateIPv4 =
-            /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(host);
-          if (originUrl.protocol === "https:" || isLocal || isPrivateIPv4) {
-            return callback(null, true);
-          }
-        } else {
-          // 开发环境：允许所有
-          return callback(null, true);
-        }
-      } catch {
-        // URL解析失败，拒绝
-        return callback(new Error(`Invalid origin: ${origin}`));
-      }
+  // 支持协议 + 域名通配符（如 https://*.example.com）
+  if (allowed.includes("://*.")) {
+    try {
+      const [protocol, domainPattern] = allowed.split("://");
+      const domain = domainPattern.substring(2).toLowerCase();
+      const originUrl = new URL(origin);
+      const hn = originUrl.hostname.toLowerCase();
+      return (
+        originUrl.protocol === `${protocol}:` &&
+        (hn === domain || hn.endsWith(`.${domain}`))
+      );
+    } catch {
+      return false;
     }
+  }
 
-    // 用户自定义CORS配置的检查逻辑
-    const origins = Array.isArray(allowedOrigins)
-      ? allowedOrigins
-      : [allowedOrigins];
+  return false;
+};
 
-    for (const allowedOrigin of origins) {
-      if (allowedOrigin === "*" || allowedOrigin === origin) {
-        return callback(null, true);
-      }
+type RequestLike = {
+  headers: Record<string, unknown>;
+  protocol?: string;
+  get?: (name: string) => string | undefined;
+};
 
-      // 支持协议通配符（如 https://*）
-      if (allowedOrigin.endsWith("://*")) {
-        const protocol = allowedOrigin.slice(0, -3);
-        if (origin.startsWith(protocol + "://")) {
-          return callback(null, true);
-        }
-      }
+const resolveServerOrigin = (req: RequestLike): string => {
+  const proto =
+    (req.headers["x-forwarded-proto"] as string) || req.protocol || "http";
+  const forwardedHost = (req.headers["x-forwarded-host"] as string) || "";
+  const hostHeader = (
+    forwardedHost ||
+    (typeof req.get === "function" ? req.get("host") : "") ||
+    ""
+  ).trim();
+  const host = hostHeader.split(",")[0].trim(); // handle "a,b" just in case
+  if (!host) return "";
+  return normalizeOrigin(`${proto}://${host}`);
+};
 
-      // 支持域名通配符（如 *.example.com）
-      if (allowedOrigin.startsWith("*.")) {
-        const domain = allowedOrigin.substring(2);
-        if (
-          origin.endsWith("." + domain) ||
-          origin === domain ||
-          origin.endsWith("://" + domain) ||
-          origin.includes("://" + domain)
-        ) {
-          return callback(null, true);
-        }
-      }
-
-      // 支持协议+域名通配符（如 https://*.example.com）
-      if (allowedOrigin.includes("://*.")) {
-        try {
-          const [protocol, domainPattern] = allowedOrigin.split("://");
-          const domain = domainPattern.substring(2);
-          const originUrl = new URL(origin);
-          if (
-            originUrl.protocol === protocol + ":" &&
-            (originUrl.hostname.endsWith("." + domain) ||
-              originUrl.hostname === domain)
-          ) {
-            return callback(null, true);
-          }
-        } catch {
-          // URL解析失败，跳过此规则
-          continue;
-        }
-      }
-    }
-
-    // 不在允许列表中的源：禁用本次请求的 CORS（不抛错，避免返回500）
-    // 让浏览器基于缺失的CORS响应头自行阻止跨域请求
-    callback(null, false);
-  },
+const baseOptions: Omit<CorsOptions, "origin"> = {
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
@@ -146,4 +130,44 @@ const corsOptions: cors.CorsOptions = {
   optionsSuccessStatus: 200, // IE11支持
 };
 
-export const corsMiddleware = cors(corsOptions);
+// Use delegate so we can safely implement "same-origin" fallback when no explicit origins are configured.
+export const corsMiddleware = cors((req, callback) => {
+  const explicit = getExplicitCorsOrigins();
+  const originHeader = (req.headers.origin as string | undefined) || "";
+
+  // 对于非浏览器/无 Origin 的请求（如健康检查、服务间调用），不启用 CORS
+  if (!originHeader) {
+    return callback(null, { ...baseOptions, origin: false });
+  }
+
+  const origin = normalizeOrigin(originHeader);
+
+  // 显式允许所有来源（不推荐，但尊重配置）
+  if (explicit === "*") {
+    return callback(null, { ...baseOptions, origin: true });
+  }
+
+  // 显式来源列表：只允许匹配项
+  if (Array.isArray(explicit)) {
+    const ok = explicit.some((allowed) => matchAllowedOrigin(allowed, origin));
+    return callback(null, { ...baseOptions, origin: ok });
+  }
+
+  // 未显式配置：开发环境默认放行；生产环境仅允许 same-origin + 本地/内网
+  if (process.env.NODE_ENV !== "production") {
+    return callback(null, { ...baseOptions, origin: true });
+  }
+
+  let ok = false;
+  try {
+    const originUrl = new URL(origin);
+    if (isPrivateOrLocalHostname(originUrl.hostname)) ok = true;
+  } catch {
+    ok = false;
+  }
+
+  const serverOrigin = resolveServerOrigin(req);
+  if (serverOrigin && origin === serverOrigin) ok = true;
+
+  return callback(null, { ...baseOptions, origin: ok });
+});

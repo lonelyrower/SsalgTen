@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import { nodeService } from "../services/NodeService";
+import { apiKeyService } from "../services/ApiKeyService";
 import { logger } from "../utils/logger";
 import { getSystemConfig } from "../utils/initSystemConfig";
 
@@ -63,6 +64,53 @@ const buildAgentEndpoint = (node: {
   return `http://${formattedHost}:3002`;
 };
 
+const clampInt = (
+  value: unknown,
+  min: number,
+  max: number,
+): number | undefined => {
+  if (value === undefined || value === null) return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return undefined;
+  const i = Math.trunc(n);
+  if (i < min) return min;
+  if (i > max) return max;
+  return i;
+};
+
+const resolveAgentControlApiKey = async (): Promise<string | null> => {
+  try {
+    const key = await apiKeyService.getSystemApiKey();
+    const trimmed = (key || "").trim();
+    if (trimmed) return trimmed;
+  } catch (error) {
+    logger.error(
+      "[DiagnosticsProxyController] Failed to resolve system agent API key:",
+      error,
+    );
+  }
+
+  const fallback = (
+    process.env.AGENT_CONTROL_API_KEY ||
+    process.env.DEFAULT_AGENT_API_KEY ||
+    ""
+  ).trim();
+  if (fallback) {
+    if (!apiKeyService.isSecureAgentApiKey(fallback)) {
+      logger.error(
+        "[DiagnosticsProxyController] Environment agent API key is not secure. Refusing to use fallback value.",
+      );
+      return null;
+    }
+    logger.warn(
+      "[DiagnosticsProxyController] Falling back to environment agent API key. Verify system API key configuration if issues persist.",
+    );
+    return fallback;
+  }
+
+  return null;
+};
+
 export class DiagnosticsProxyController {
   async ping(req: Request, res: Response): Promise<void> {
     try {
@@ -88,8 +136,20 @@ export class DiagnosticsProxyController {
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const url = `${endpoint}/api/ping/${encodeURIComponent(String(target))}${count ? `?count=${encodeURIComponent(String(count))}` : ""}`;
-      const r = await axios.get(url, { timeout: 60000 });
+      const agentKey = await resolveAgentControlApiKey();
+      if (!agentKey) {
+        res
+          .status(500)
+          .json({ success: false, error: "Agent API key is not configured" });
+        return;
+      }
+
+      const safeCount = clampInt(count, 1, 20);
+      const url = `${endpoint}/api/ping/${encodeURIComponent(String(target))}${safeCount ? `?count=${encodeURIComponent(String(safeCount))}` : ""}`;
+      const r = await axios.get(url, {
+        timeout: 60000,
+        headers: { "x-agent-api-key": agentKey },
+      });
       res.status(r.status).json(r.data);
     } catch (e) {
       logger.error("Proxy ping failed:", e);
@@ -121,11 +181,23 @@ export class DiagnosticsProxyController {
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const qp = maxHops
-        ? `?maxHops=${encodeURIComponent(String(maxHops))}`
+      const agentKey = await resolveAgentControlApiKey();
+      if (!agentKey) {
+        res
+          .status(500)
+          .json({ success: false, error: "Agent API key is not configured" });
+        return;
+      }
+
+      const safeMaxHops = clampInt(maxHops, 1, 64);
+      const qp = safeMaxHops
+        ? `?maxHops=${encodeURIComponent(String(safeMaxHops))}`
         : "";
       const url = `${endpoint}/api/traceroute/${encodeURIComponent(String(target))}${qp}`;
-      const r = await axios.get(url, { timeout: 60000 });
+      const r = await axios.get(url, {
+        timeout: 60000,
+        headers: { "x-agent-api-key": agentKey },
+      });
       res.status(r.status).json(r.data);
     } catch (e) {
       logger.error("Proxy traceroute failed:", e);
@@ -159,9 +231,23 @@ export class DiagnosticsProxyController {
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const qp = count ? `?count=${encodeURIComponent(String(count))}` : "";
+      const agentKey = await resolveAgentControlApiKey();
+      if (!agentKey) {
+        res
+          .status(500)
+          .json({ success: false, error: "Agent API key is not configured" });
+        return;
+      }
+
+      const safeCount = clampInt(count, 1, 50);
+      const qp = safeCount
+        ? `?count=${encodeURIComponent(String(safeCount))}`
+        : "";
       const url = `${endpoint}/api/mtr/${encodeURIComponent(String(target))}${qp}`;
-      const r = await axios.get(url, { timeout: 120000 });
+      const r = await axios.get(url, {
+        timeout: 120000,
+        headers: { "x-agent-api-key": agentKey },
+      });
       res.status(r.status).json(r.data);
     } catch (e) {
       logger.error("Proxy mtr failed:", e);
@@ -185,8 +271,18 @@ export class DiagnosticsProxyController {
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
+      const agentKey = await resolveAgentControlApiKey();
+      if (!agentKey) {
+        res
+          .status(500)
+          .json({ success: false, error: "Agent API key is not configured" });
+        return;
+      }
       const url = `${endpoint}/api/speedtest`;
-      const r = await axios.get(url, { timeout: 180000 });
+      const r = await axios.get(url, {
+        timeout: 180000,
+        headers: { "x-agent-api-key": agentKey },
+      });
       res.status(r.status).json(r.data);
     } catch (e) {
       logger.error("Proxy speedtest failed:", e);
@@ -211,11 +307,21 @@ export class DiagnosticsProxyController {
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
+      const agentKey = await resolveAgentControlApiKey();
+      if (!agentKey) {
+        res
+          .status(500)
+          .json({ success: false, error: "Agent API key is not configured" });
+        return;
+      }
       const qp = testType
         ? `?testType=${encodeURIComponent(String(testType))}`
         : "";
       const url = `${endpoint}/api/latency-test${qp}`;
-      const r = await axios.get(url, { timeout: 60000 });
+      const r = await axios.get(url, {
+        timeout: 60000,
+        headers: { "x-agent-api-key": agentKey },
+      });
       res.status(r.status).json(r.data);
     } catch (e) {
       logger.error("Proxy latency test failed:", e);

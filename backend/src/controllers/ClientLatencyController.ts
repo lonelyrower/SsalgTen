@@ -4,6 +4,7 @@ import { ApiResponse } from "../types";
 import { logger } from "../utils/logger";
 import { nodeService } from "../services/NodeService";
 import { getIO } from "../sockets/ioRegistry";
+import { apiKeyService } from "../services/ApiKeyService";
 
 interface ClientLatencyData {
   nodeId: string;
@@ -64,6 +65,18 @@ export class ClientLatencyController {
     try {
       const clientIP = this.getClientIP(req);
       logger.info(`Starting latency test for client IP: ${clientIP}`);
+
+      let agentApiKey: string;
+      try {
+        agentApiKey = (await apiKeyService.getSystemApiKey()).trim();
+      } catch (error) {
+        logger.error("Failed to resolve system agent API key:", error);
+        res.status(500).json({
+          success: false,
+          message: "Agent API key is not configured on the server",
+        } satisfies ApiResponse);
+        return;
+      }
 
       // 获取所有在线节点
       const nodes = await nodeService.getAllNodes();
@@ -133,7 +146,10 @@ export class ClientLatencyController {
         }
         try {
           const url = `${endpoint}/api/ping/${encodeURIComponent(clientIP)}?count=4`;
-          const r = await axios.get(url, { timeout: 10000 });
+          const r = await axios.get(url, {
+            timeout: 10000,
+            headers: { "x-agent-api-key": agentApiKey },
+          });
           // 解析 Agent 返回的平均延迟
           const avg = Math.round(Number(r.data?.data?.avg ?? NaN));
           if (Number.isFinite(avg)) {

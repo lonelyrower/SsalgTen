@@ -313,14 +313,31 @@ export const loadEnvConfig = (): EnvConfig => {
     }
 
     // Check for weak/default secrets
-    const weakSecrets = ["default-secret", "secret", "changeme", "test"];
-    if (weakSecrets.includes(config.JWT_SECRET.toLowerCase())) {
+    const weakSecrets = [
+      "default-secret",
+      "secret",
+      "changeme",
+      "test",
+      "your-super-secret-jwt-key-change-this-in-production",
+      "change_me_use_the_generated_keys_above_or_run_the_command",
+    ];
+    const looksPlaceholder = (value: string): boolean =>
+      weakSecrets.includes(value.toLowerCase()) ||
+      /change[-_ ]?me/i.test(value) ||
+      /change-this/i.test(value) ||
+      /your-super-secret/i.test(value) ||
+      /use_the_generated_keys_above/i.test(value);
+
+    if (looksPlaceholder(config.JWT_SECRET)) {
       throw new Error(
         "JWT_SECRET appears to be a weak/default value. Please use a strong random secret in production",
       );
     }
 
-    if (weakSecrets.includes(config.API_KEY_SECRET.toLowerCase())) {
+    if (
+      looksPlaceholder(config.API_KEY_SECRET) ||
+      /your-api-key-secret/i.test(config.API_KEY_SECRET)
+    ) {
       throw new Error(
         "API_KEY_SECRET appears to be a weak/default value. Please use a strong random secret in production",
       );
