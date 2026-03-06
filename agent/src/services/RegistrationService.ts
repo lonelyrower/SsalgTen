@@ -128,7 +128,7 @@ export class RegistrationService {
               headers: {
                 'Content-Type': 'application/json',
                 'User-Agent': `SsalgTen-Agent/${config.id}`,
-                // 简化认证：直接在body中包含apiKey，避免签名验证问题
+                ...buildSignedHeaders(config.apiKey, registrationData),
               }
             }
           );

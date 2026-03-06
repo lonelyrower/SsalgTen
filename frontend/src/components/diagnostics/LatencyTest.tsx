@@ -146,44 +146,11 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
       return;
     }
 
-    // 降级到 agentEndpoint
-    if (!agentEndpoint) {
-      setError("缺少节点配置");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `${agentEndpoint}/api/latency-test?testType=${testType}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || "延迟测试失败");
-      }
-
-      setTestResult(data.data);
-      onTestComplete?.(data.data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "未知错误";
-      setError(`延迟测试失败: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
-    }
+    setError(
+      agentEndpoint
+        ? "出于安全原因，浏览器不能再直接访问 agent。请从已注册节点发起测试。"
+        : "缺少节点配置",
+    );
   };
 
   const formatLatency = (latency: number | null): string => {
@@ -400,3 +367,4 @@ export const LatencyTest: React.FC<LatencyTestProps> = ({
 };
 
 export default LatencyTest;
+

@@ -5,6 +5,10 @@ import { logger } from "../utils/logger";
 import { nodeService } from "../services/NodeService";
 import { getIO } from "../sockets/ioRegistry";
 import { apiKeyService } from "../services/ApiKeyService";
+import {
+  buildAgentBaseUrl,
+  buildSignedAgentHeaders,
+} from "../utils/agentControl";
 
 interface ClientLatencyData {
   nodeId: string;
@@ -120,20 +124,9 @@ export class ClientLatencyController {
       }, 30000);
       this.testTimeouts.set(clientIP, timeout);
 
-      // 优先使用 HTTP 直接调用各 Agent 的 /api/ping 接口（更简单可靠）
-      const buildAgentEndpoint = (node: {
-        ipv4?: string | null;
-        ipv6?: string | null;
-      }): string | null => {
-        const rawHost = (node?.ipv4 || node?.ipv6 || "").toString().trim();
-        if (!rawHost) return null;
-        // 默认 Agent 监听 3002 端口，与 docker-compose 保持一致；
-        const host = rawHost.includes(":") ? `[${rawHost}]` : rawHost;
-        return `http://${host}:3002`;
-      };
-
+            // 优先使用后端到 Agent 的签名请求触发各节点探测
       const httpPromises = onlineNodes.map(async (node) => {
-        const endpoint = buildAgentEndpoint(node);
+        const endpoint = buildAgentBaseUrl(node);
         if (!endpoint) {
           this.updateNodeLatency(
             clientIP,
@@ -148,7 +141,7 @@ export class ClientLatencyController {
           const url = `${endpoint}/api/ping/${encodeURIComponent(clientIP)}?count=4`;
           const r = await axios.get(url, {
             timeout: 10000,
-            headers: { "x-agent-api-key": agentApiKey },
+            headers: buildSignedAgentHeaders(agentApiKey, "GET", url),
           });
           // 解析 Agent 返回的平均延迟
           const avg = Math.round(Number(r.data?.data?.avg ?? NaN));
@@ -419,3 +412,7 @@ export class ClientLatencyController {
 }
 
 export const clientLatencyController = new ClientLatencyController();
+
+
+
+

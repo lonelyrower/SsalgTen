@@ -530,7 +530,7 @@ collect_deployment_info() {
     DB_PASSWORD=$(prompt_input "数据库密码 (留空自动生成)")
     if [[ -z "$DB_PASSWORD" ]]; then
         DB_PASSWORD=$(openssl rand -base64 32 | tr -d '=' | tr '+/' '-_')
-        echo "  自动生成数据库密码: ${DB_PASSWORD:0:8}..."
+        echo "  自动生成数据库密码"
     fi
     
     # JWT密钥
@@ -552,6 +552,13 @@ collect_deployment_info() {
     if [[ -z "$AGENT_KEY" ]]; then
         AGENT_KEY=$(openssl rand -base64 32 | tr -d '=' | tr '+/' '-_')
         echo "  自动生成Agent密钥"
+    fi
+
+    # 管理员初始密码（可由环境变量覆盖，否则自动生成一次性密码）
+    ADMIN_BOOTSTRAP_PASSWORD="${DEFAULT_ADMIN_PASSWORD:-${ADMIN_BOOTSTRAP_PASSWORD:-}}"
+    if [[ -z "$ADMIN_BOOTSTRAP_PASSWORD" ]]; then
+        ADMIN_BOOTSTRAP_PASSWORD=$(openssl rand -base64 24 | tr -d '=' | tr '+/' '-_')
+        echo "  自动生成管理员初始密码"
     fi
     
     # IPInfo Token (可选)
@@ -1984,7 +1991,7 @@ build_and_start_services() {
     
     # 运行数据库种子脚本创建管理员用户
     log_info "创建管理员用户和初始数据..."
-    docker_compose -f $compose_file run --rm backend npm run db:seed
+    docker_compose -f $compose_file run --rm -e DEFAULT_ADMIN_PASSWORD="$ADMIN_BOOTSTRAP_PASSWORD" backend npm run db:seed
     
     # 启动所有服务
     docker_compose -f $compose_file up -d
@@ -2162,14 +2169,12 @@ SsalgTen 部署信息
 
 默认登录信息:
 - 用户名: admin
-- 密码: admin123
+- 初始密码: 已在部署完成时显示；如忘记可运行 ./scripts/reset-admin-password.sh
 - ⚠️ 首次登录后请立即修改密码！
 
 安全信息:
-- 数据库密码: $DB_PASSWORD
-- JWT密钥: $JWT_SECRET
-- API密钥: $API_SECRET
-- Agent密钥: $AGENT_KEY
+- 敏感密钥已写入部署环境文件，不再额外保存到 DEPLOYMENT_INFO.txt
+- 如需重置管理员密码，请运行 ./scripts/reset-admin-password.sh
 
 管理命令:
 - 服务管理: ./manage.sh [start|stop|restart|status|logs|update|backup]
@@ -2193,7 +2198,7 @@ Agent节点安装:
 2. 或手动下载: wget https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh
 
 注意事项:
-- 请妥善保管此文件中的密钥信息
+- 请妥善保管 .env 与部署目录中的环境配置文件
 - 定期备份数据库和配置文件
 - 监控系统资源使用情况
 - 及时更新系统和应用程序
@@ -2225,14 +2230,13 @@ show_deployment_result() {
     echo "  - 生产测试: ./scripts/production-test.sh --url $protocol://$DOMAIN --verbose"
     echo ""
     echo "📱 Agent节点安装:"
-    echo "  在其他VPS上运行: ./scripts/install-agent.sh"
+    echo "  在管理后台复制最新安装命令或短期安装令牌"
     echo "  主服务器地址: $protocol://$DOMAIN"
-    echo "  Agent密钥: $AGENT_KEY"
     echo ""
-    echo "🔑 默认登录信息:"
+    echo "🔑 管理员登录信息:"
     echo "  用户名: admin"
-    echo "  密码: admin123"
-    echo "  ⚠️  首次登录后请立即修改密码！"
+    echo "  初始密码: $ADMIN_BOOTSTRAP_PASSWORD"
+    echo "  ⚠️  该密码仅在本次部署输出中显示，请立即登录后修改！"
     echo ""
     echo "📋 重要信息:"
     echo "  - 部署信息已保存到: $APP_DIR/DEPLOYMENT_INFO.txt"
@@ -2368,3 +2372,5 @@ trap cleanup_on_exit ERR EXIT
 
 # 运行主函数
 main "$@"
+
+

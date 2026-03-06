@@ -96,7 +96,7 @@ const defaultConfig: Partial<EnvConfig> = {
   AGENT_HEARTBEAT_INTERVAL: 30000, // 30 seconds
   AGENT_TIMEOUT: 10000, // 10 seconds
   AGENT_OFFLINE_THRESHOLD: 90000, // 90 seconds (3 missed heartbeats)
-  AGENT_REQUIRE_SIGNATURE: false,
+  AGENT_REQUIRE_SIGNATURE: true,
   AGENT_CONTROL_PROTOCOL: "http",
   AGENT_CONTROL_PORT: 3002,
   AGENT_CONTROL_TIMEOUT: 8000,

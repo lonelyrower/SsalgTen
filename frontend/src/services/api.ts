@@ -398,7 +398,8 @@ export interface ApiKeyInfo {
 
 export interface InstallCommandData {
   masterUrl: string;
-  apiKey: string;
+  installToken: string;
+  tokenExpiresAt: string;
   quickCommand: string;
   interactiveCommand: string;
   quickUninstallCommand: string;
@@ -410,7 +411,6 @@ export interface InstallCommandData {
     recommendations: string[];
   };
 }
-
 class ApiService {
   private refreshPromise: Promise<LoginResponse | null> | null = null;
 
@@ -418,9 +418,11 @@ class ApiService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    requireAuth: boolean = false,
+    authMode: boolean | "optional" = false,
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
+    const requireAuth = authMode === true;
+    const useOptionalAuth = authMode === "optional";
 
     // Build headers, only set Content-Type automatically when sending a body
     const headers: Record<string, string> = {
@@ -431,7 +433,7 @@ class ApiService {
     }
 
     // 添加认证头（不抛异常，统一返回结构化错误，避免被上层当作网络错误处理）
-    if (requireAuth) {
+    if (requireAuth || useOptionalAuth) {
       const token = TokenManager.getToken();
       if (token && !TokenManager.isTokenExpired(token)) {
         headers.Authorization = `Bearer ${token}`;
@@ -440,11 +442,13 @@ class ApiService {
         const refreshed = await this.refreshToken();
         if (refreshed && refreshed.token) {
           headers.Authorization = `Bearer ${refreshed.token}`;
-        } else {
+        } else if (requireAuth) {
           TokenManager.removeTokens();
           return { success: false, error: "Authentication required" };
+        } else {
+          TokenManager.removeTokens();
         }
-      } else {
+      } else if (requireAuth) {
         return { success: false, error: "Authentication required" };
       }
     }
@@ -464,7 +468,9 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (response.status === 401) {
-        TokenManager.removeTokens();
+        if (requireAuth) {
+          TokenManager.removeTokens();
+        }
         // 统一返回而非抛异常，便于上层展示更友好的提示
         return { success: false, error: "Authentication failed" };
       }
@@ -493,7 +499,6 @@ class ApiService {
       };
     }
   }
-
   // 节点管理 API
   private async download(
     endpoint: string,
@@ -568,11 +573,11 @@ class ApiService {
   }
 
   async getNodes(): Promise<ApiResponse<NodeData[]>> {
-    return this.request<NodeData[]>("/nodes");
+    return this.request<NodeData[]>("/nodes", {}, "optional");
   }
 
   async getNodeById(id: string): Promise<ApiResponse<NodeData>> {
-    return this.request<NodeData>(`/nodes/${id}`);
+    return this.request<NodeData>(`/nodes/${id}`, {}, "optional");
   }
 
   async createNode(
@@ -644,12 +649,12 @@ class ApiService {
     const query = queryParams.toString();
     const endpoint = `/nodes/${nodeId}/diagnostics${query ? `?${query}` : ""}`;
 
-    return this.request<DiagnosticRecord[]>(endpoint);
+    return this.request<DiagnosticRecord[]>(endpoint, {}, true);
   }
 
   // 获取节点详细心跳数据 API
   async getNodeHeartbeatData(nodeId: string): Promise<ApiResponse<unknown>> {
-    return this.request<unknown>(`/nodes/${nodeId}/heartbeat`);
+    return this.request<unknown>(`/nodes/${nodeId}/heartbeat`, {}, true);
   }
 
   // 获取节点事件列表
@@ -668,7 +673,7 @@ class ApiService {
     >
   > {
     const query = limit ? `?limit=${limit}` : "";
-    return this.request(`/nodes/${nodeId}/events${query}`);
+    return this.request(`/nodes/${nodeId}/events${query}`, {}, true);
   }
 
   // Agent 诊断请求 API (直接调用Agent)
@@ -1114,7 +1119,7 @@ class ApiService {
     );
   }
 
-  // 获取Agent安装命令（公开接口）
+  // 获取Agent安装命令（管理员接口）
   async getInstallCommand(): Promise<ApiResponse<InstallCommandData>> {
     // 该接口需要管理员权限
     return this.request<InstallCommandData>(
@@ -1147,7 +1152,7 @@ class ApiService {
   async getNodeStreaming(
     nodeId: string,
   ): Promise<ApiResponse<NodeStreamingData>> {
-    return this.request<NodeStreamingData>(`/nodes/${nodeId}/streaming`);
+    return this.request<NodeStreamingData>(`/nodes/${nodeId}/streaming`, {}, true);
   }
 
   async triggerStreamingTest(
@@ -1163,18 +1168,18 @@ class ApiService {
   }
 
   async getNodesByStreaming(service: string): Promise<ApiResponse<NodeData[]>> {
-    return this.request<NodeData[]>(`/nodes/streaming/${service}`);
+    return this.request<NodeData[]>(`/nodes/streaming/${service}`, {}, true);
   }
 
   async getStreamingStats(): Promise<ApiResponse<StreamingStats>> {
-    return this.request<StreamingStats>("/streaming/stats");
+    return this.request<StreamingStats>("/streaming/stats", {}, true);
   }
 
   // 流媒体解锁总览 API
   async getStreamingOverview(): Promise<
     ApiResponse<import("../types/streaming").StreamingOverview>
   > {
-    return this.request("/streaming/overview");
+    return this.request("/streaming/overview", {}, true);
   }
 
   async getStreamingNodeSummaries(
@@ -1190,7 +1195,7 @@ class ApiService {
       params.append("showExpired", String(filters.showExpired));
 
     const query = params.toString();
-    return this.request(`/streaming/nodes${query ? `?${query}` : ""}`);
+    return this.request(`/streaming/nodes${query ? `?${query}` : ""}`, {}, true);
   }
 
   async triggerBulkStreamingTest(nodeIds: string[]): Promise<
@@ -1232,19 +1237,19 @@ class ApiService {
   async getServicesOverview(): Promise<
     ApiResponse<import("../types/services").ServicesOverviewStats>
   > {
-    return this.request("/services/overview");
+    return this.request("/services/overview", {}, true);
   }
 
   async getNodeServices(
     nodeId: string,
   ): Promise<ApiResponse<import("../types/services").NodeService[]>> {
-    return this.request(`/nodes/${nodeId}/services`);
+    return this.request(`/nodes/${nodeId}/services`, {}, true);
   }
 
   async getNodeServicesOverview(
     nodeId: string,
   ): Promise<ApiResponse<import("../types/services").NodeServicesOverview>> {
-    return this.request(`/nodes/${nodeId}/services/overview`);
+    return this.request(`/nodes/${nodeId}/services/overview`, {}, true);
   }
 
   async getAllServices(
@@ -1266,13 +1271,13 @@ class ApiService {
     }
 
     const query = params.toString();
-    return this.request(`/services${query ? `?${query}` : ""}`);
+    return this.request(`/services${query ? `?${query}` : ""}`, {}, true);
   }
 
   async getNodeServicesGrouped(): Promise<
     ApiResponse<import("../types/services").NodeServicesOverview[]>
   > {
-    return this.request("/services/grouped");
+    return this.request("/services/grouped", {}, true);
   }
 
   async updateServiceTags(
@@ -1360,3 +1365,5 @@ class ApiService {
 export const apiService = new ApiService();
 export { TokenManager };
 export default apiService;
+
+

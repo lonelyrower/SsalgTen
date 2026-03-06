@@ -3,6 +3,7 @@ import { NodeStatus } from "@prisma/client";
 import { logger } from "./logger";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { resolveAdminBootstrapPassword } from "./adminCredentials";
 
 // 示例节点数据
 const sampleNodes = [
@@ -146,32 +147,16 @@ export async function seedAdminUser() {
       },
     });
 
-    const hashedPassword = await bcrypt.hash("admin123", 12);
-
     if (existingAdmin) {
-      logger.info("👤 Admin user already exists, updating password...");
-
-      const updatedAdmin = await prisma.user.update({
-        where: { id: existingAdmin.id },
-        data: {
-          username: "admin",
-          email: "admin@ssalgten.local",
-          password: hashedPassword,
-          name: "Administrator",
-          role: "ADMIN",
-          active: true,
-        },
-      });
-
       logger.info(
-        `✅ Updated admin user: ${updatedAdmin.username} (${updatedAdmin.email})`,
+        `👤 Admin user already exists (${existingAdmin.username}), skipping credential bootstrap`,
       );
-      logger.info("🔑 Admin password reset to default:");
-      logger.info("   Username: admin");
-      logger.info("   Password: admin123");
-      logger.info("   ⚠️  Please change the password after first login!");
       return;
     }
+
+    const { password: bootstrapPassword, source } =
+      resolveAdminBootstrapPassword();
+    const hashedPassword = await bcrypt.hash(bootstrapPassword, 12);
 
     // 创建新的管理员用户
     const adminUser = await prisma.user.create({
@@ -188,10 +173,18 @@ export async function seedAdminUser() {
     logger.info(
       `✅ Created admin user: ${adminUser.username} (${adminUser.email})`,
     );
-    logger.info("🔑 Default admin credentials:");
+    logger.info("🔑 Initial admin credentials:");
     logger.info("   Username: admin");
-    logger.info("   Password: admin123");
-    logger.info("   ⚠️  Please change the password after first login!");
+    logger.info(`   Password: ${bootstrapPassword}`);
+    if (source === "generated") {
+      logger.warn(
+        "   ⚠️  This password was generated automatically and is only shown once. Store it now and change it after login.",
+      );
+    } else {
+      logger.info(
+        "   ℹ️  Password came from DEFAULT_ADMIN_PASSWORD / ADMIN_BOOTSTRAP_PASSWORD.",
+      );
+    }
   } catch (error) {
     logger.error("❌ Admin user seed failed:", error);
     throw error;
@@ -203,7 +196,8 @@ export async function forceResetAdminPassword() {
   try {
     logger.info("🔧 Force resetting admin password...");
 
-    const hashedPassword = await bcrypt.hash("admin123", 12);
+    const { password: nextPassword, source } = resolveAdminBootstrapPassword();
+    const hashedPassword = await bcrypt.hash(nextPassword, 12);
 
     // 尝试更新所有ADMIN角色用户的密码
     const updateResult = await prisma.user.updateMany({
@@ -218,7 +212,16 @@ export async function forceResetAdminPassword() {
       logger.info(`✅ Reset password for ${updateResult.count} admin user(s)`);
       logger.info("🔑 Admin password reset to:");
       logger.info("   Username: admin");
-      logger.info("   Password: admin123");
+      logger.info(`   Password: ${nextPassword}`);
+      if (source === "generated") {
+        logger.warn(
+          "   ⚠️  This password was generated automatically and is only shown once. Store it now and change it after login.",
+        );
+      } else {
+        logger.info(
+          "   ℹ️  Password came from DEFAULT_ADMIN_PASSWORD / ADMIN_BOOTSTRAP_PASSWORD.",
+        );
+      }
       return;
     }
 
@@ -302,3 +305,6 @@ export async function runSeed() {
 if (require.main === module) {
   runSeed();
 }
+
+
+

@@ -15,6 +15,13 @@ import {
 import { logger } from "../utils/logger";
 import { env } from "../config/env";
 import { apiKeyService } from "../services/ApiKeyService";
+import {
+  buildAgentBaseUrl,
+  buildSignedAgentHeaders,
+  resolveAgentApiKeyForNode,
+} from "../utils/agentControl";
+
+const AGENT_CONTROL_TIMEOUT = env.AGENT_CONTROL_TIMEOUT || 8000;
 
 /**
  * Agent上报的流媒体检测结果接口
@@ -28,87 +35,6 @@ interface StreamingResultInput {
   errorMsg?: string;
 }
 
-const AGENT_CONTROL_PROTOCOL = env.AGENT_CONTROL_PROTOCOL || "http";
-const AGENT_CONTROL_PORT = env.AGENT_CONTROL_PORT || 3002;
-const AGENT_CONTROL_TIMEOUT = env.AGENT_CONTROL_TIMEOUT || 8000;
-const FALLBACK_AGENT_CONTROL_API_KEY =
-  env.AGENT_CONTROL_API_KEY || env.DEFAULT_AGENT_API_KEY;
-
-const buildAgentBaseUrl = (node: {
-  ipv4?: string | null;
-  ipv6?: string | null;
-}): string | null => {
-  if (node.ipv4 && node.ipv4.trim().length > 0) {
-    return `${AGENT_CONTROL_PROTOCOL}://${node.ipv4}:${AGENT_CONTROL_PORT}`;
-  }
-  if (node.ipv6 && node.ipv6.trim().length > 0) {
-    return `${AGENT_CONTROL_PROTOCOL}://[${node.ipv6}]:${AGENT_CONTROL_PORT}`;
-  }
-  return null;
-};
-
-type AgentApiKeySource = "system" | "fallback" | "node";
-
-const resolveAgentControlApiKey = async (): Promise<{
-  key: string;
-  source: AgentApiKeySource;
-} | null> => {
-  try {
-    const key = await apiKeyService.getSystemApiKey();
-    if (key && key.trim().length > 0) {
-      return { key: key.trim(), source: "system" };
-    }
-  } catch (error) {
-    logger.error(
-      "[StreamingController] Failed to resolve system agent API key:",
-      error,
-    );
-  }
-
-  const fallback = FALLBACK_AGENT_CONTROL_API_KEY?.trim();
-  if (fallback) {
-    if (!apiKeyService.isSecureAgentApiKey(fallback)) {
-      logger.error(
-        "[StreamingController] Environment agent API key is not secure. Refusing to use fallback value.",
-      );
-      return null;
-    }
-    logger.warn(
-      "[StreamingController] Falling back to environment agent API key. Verify system API key configuration if issues persist.",
-    );
-    return {
-      key: fallback,
-      source: "fallback",
-    };
-  }
-
-  return null;
-};
-
-const resolveAgentApiKeyForNode = async (node: {
-  apiKey?: string | null;
-}): Promise<{ key: string; source: AgentApiKeySource } | null> => {
-  const resolved = await resolveAgentControlApiKey();
-  if (resolved) {
-    return resolved;
-  }
-
-  if (node.apiKey && node.apiKey.trim().length > 0) {
-    logger.warn(
-      `[StreamingController] Using node-specific API key as fallback for agent ${node.apiKey.substring(0, 6)}...`,
-    );
-    return { key: node.apiKey.trim(), source: "node" };
-  }
-
-  logger.error(
-    `[StreamingController] Unable to resolve agent API key (system, environment, and node-specific keys missing).`,
-  );
-  return null;
-};
-
-/**
- * 流媒体解锁API控制器
- */
 export class StreamingController {
   /**
    * 获取节点的流媒体解锁状态
@@ -216,18 +142,23 @@ export class StreamingController {
         `[StreamingController] Using ${keySource} agent API key (len=${agentControlApiKey.length}) for node ${nodeId}`,
       );
 
+      const triggerPayload = {
+        services: Array.isArray(services) ? services : undefined,
+        origin: "master",
+        triggeredAt: new Date().toISOString(),
+      };
+
       try {
         await axios.post(
           `${agentBaseUrl}/api/streaming/test`,
+          triggerPayload,
           {
-            services: Array.isArray(services) ? services : undefined,
-            origin: "master",
-            triggeredAt: new Date().toISOString(),
-          },
-          {
-            headers: {
-              "x-agent-api-key": agentControlApiKey,
-            },
+            headers: buildSignedAgentHeaders(
+              agentControlApiKey,
+              "POST",
+              `${agentBaseUrl}/api/streaming/test`,
+              triggerPayload,
+            ),
             timeout: AGENT_CONTROL_TIMEOUT,
           },
         );
@@ -281,6 +212,9 @@ export class StreamingController {
       const headerApiKey = req.headers["x-api-key"] as string;
       const bodyApiKey = req.body.apiKey;
       const apiKey = headerApiKey || bodyApiKey;
+      const ts = (req.headers["x-timestamp"] as string) || undefined;
+      const sig = (req.headers["x-signature"] as string) || undefined;
+      const nonce = (req.headers["x-nonce"] as string) || undefined;
 
       logger.debug(
         `[StreamingController] Received streaming results for node: ${nodeId}`,
@@ -290,7 +224,6 @@ export class StreamingController {
         `[StreamingController] API Key present: ${apiKey ? "Yes (" + apiKey.substring(0, 4) + "...)" : "No"}`,
       );
 
-      // 验证API密钥
       if (!apiKey) {
         logger.warn(
           `[StreamingController] Missing API key for streaming results`,
@@ -301,10 +234,7 @@ export class StreamingController {
         });
       }
 
-      const apiKeyService = await import("../services/ApiKeyService");
-      const isValidApiKey =
-        await apiKeyService.apiKeyService.validateApiKey(apiKey);
-
+      const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
       if (!isValidApiKey) {
         logger.warn(
           `[StreamingController] Invalid API key for streaming results`,
@@ -313,6 +243,28 @@ export class StreamingController {
           success: false,
           error: "Invalid API key",
         });
+      }
+
+      const signCheck = await apiKeyService.validateSignedRequest({
+        providedApiKey: apiKey,
+        timestamp: ts,
+        signature: sig,
+        nonce,
+        body: req.body,
+      });
+      if (!signCheck.ok) {
+        logger.warn(
+          `[StreamingController] Signature validation failed: ${signCheck.reason}`,
+        );
+        if (
+          (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
+          "true"
+        ) {
+          return res.status(401).json({
+            success: false,
+            error: "Invalid signature",
+          });
+        }
       }
 
       if (!nodeId || !results || !Array.isArray(results)) {
@@ -1052,17 +1004,22 @@ export class StreamingController {
           `[StreamingController] Using ${keySource} agent API key (len=${agentControlApiKey.length}) for node ${node.id}`,
         );
 
+        const triggerPayload = {
+          origin: "master",
+          triggeredAt: new Date().toISOString(),
+        };
+
         try {
           await axios.post(
             `${baseUrl}/api/streaming/test`,
+            triggerPayload,
             {
-              origin: "master",
-              triggeredAt: new Date().toISOString(),
-            },
-            {
-              headers: {
-                "x-agent-api-key": agentControlApiKey,
-              },
+              headers: buildSignedAgentHeaders(
+                agentControlApiKey,
+                "POST",
+                `${baseUrl}/api/streaming/test`,
+                triggerPayload,
+              ),
               timeout: AGENT_CONTROL_TIMEOUT,
             },
           );
@@ -1334,3 +1291,7 @@ function isMissingStreamingTableError(
     error.code === "P2021"
   );
 }
+
+
+
+

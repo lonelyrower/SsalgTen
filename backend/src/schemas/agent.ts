@@ -65,3 +65,9 @@ export const AgentDiagnosticSchema = z
     duration: z.number().optional(),
   })
   .strict();
+
+export const InstallTokenExchangeSchema = z
+  .object({
+    token: z.string().min(1),
+  })
+  .strict();

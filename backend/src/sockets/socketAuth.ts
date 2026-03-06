@@ -1,16 +1,15 @@
 import jwt from "jsonwebtoken";
 import { Socket } from "socket.io";
+import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
 import { AuthenticatedSocket } from "./socketHandlers";
 
-export function authenticateSocket(
+export async function authenticateSocket(
   socket: Socket,
   next: (err?: Error) => void,
 ) {
   try {
-    // 从握手认证或查询参数中获取token
-    const token =
-      socket.handshake.auth.token || (socket.handshake.query.token as string);
+    const token = socket.handshake.auth.token as string | undefined;
 
     logger.info("Socket认证尝试:", {
       hasAuthToken: !!socket.handshake.auth.token,
@@ -23,7 +22,6 @@ export function authenticateSocket(
       return next(new Error("未提供认证token"));
     }
 
-    // 验证JWT token
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
       logger.error("JWT_SECRET 环境变量未设置");
@@ -36,14 +34,33 @@ export function authenticateSocket(
       role: string;
     };
 
-    // 将用户信息添加到socket对象
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        active: true,
+      },
+    });
+
+    if (!user) {
+      logger.warn(`Socket认证失败: 用户不存在 (${decoded.userId})`);
+      return next(new Error("用户不存在"));
+    }
+
+    if (!user.active) {
+      logger.warn(`Socket认证失败: 用户已被禁用 (${user.username})`);
+      return next(new Error("用户已被禁用"));
+    }
+
     (socket as AuthenticatedSocket).user = {
-      id: decoded.userId,
-      username: decoded.username,
-      role: decoded.role,
+      id: user.id,
+      username: user.username,
+      role: user.role,
     };
 
-    logger.info(`Socket认证成功: ${decoded.username} (${decoded.role})`);
+    logger.info(`Socket认证成功: ${user.username} (${user.role})`);
     next();
   } catch (error) {
     logger.warn("Socket认证失败:", error);

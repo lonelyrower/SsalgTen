@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ServicesController } from "../controllers/ServicesController";
 import { authenticateToken, requireAdmin } from "../middleware/auth";
-import { publicLimiter, agentLimiter } from "../middleware/rateLimit";
+import { agentLimiter } from "../middleware/rateLimit";
 
 const router = Router();
 
@@ -12,17 +12,17 @@ const router = Router();
  * Express matches routes in order, so /services/overview must be defined before /services/:id
  */
 
-// 获取服务总览统计（公开） - MUST be before /services
+// 获取服务总览统计 - MUST be before /services
 router.get(
   "/services/overview",
-  publicLimiter,
+  authenticateToken,
   ServicesController.getServicesOverview,
 );
 
-// 获取服务按节点分组（公开） - MUST be before /services
+// 获取服务按节点分组 - MUST be before /services
 router.get(
   "/services/grouped",
-  publicLimiter,
+  authenticateToken,
   ServicesController.getNodeServicesGrouped,
 );
 
@@ -33,8 +33,12 @@ router.get(
   ServicesController.exportServices,
 );
 
-// 获取所有服务（公开，支持筛选） - General route, comes after specific ones
-router.get("/services", publicLimiter, ServicesController.getAllServices);
+// 获取所有服务（支持筛选） - General route, comes after specific ones
+router.get(
+  "/services",
+  authenticateToken,
+  ServicesController.getAllServices,
+);
 
 // 更新服务信息（需要管理员权限） - :id route comes last
 router.put(

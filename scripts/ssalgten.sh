@@ -3133,6 +3133,10 @@ collect_deployment_info() {
     JWT_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
     API_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
     AGENT_KEY=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
+    ADMIN_BOOTSTRAP_PASSWORD="${DEFAULT_ADMIN_PASSWORD:-${ADMIN_BOOTSTRAP_PASSWORD:-}}"
+    if [[ -z "$ADMIN_BOOTSTRAP_PASSWORD" ]]; then
+        ADMIN_BOOTSTRAP_PASSWORD=$(random_string 24)
+    fi
     
     # 可选服务配置
     echo ""
@@ -4312,7 +4316,7 @@ build_and_start_services() {
     
     # 运行数据库种子脚本创建管理员用户
     log_info "创建管理员用户和初始数据..."
-    docker_compose -f $compose_file run --rm backend npm run db:seed
+    docker_compose -f $compose_file run --rm -e DEFAULT_ADMIN_PASSWORD="$ADMIN_BOOTSTRAP_PASSWORD" backend npm run db:seed
     
     # 启动所有服务
     docker_compose -f $compose_file up -d
@@ -4347,13 +4351,13 @@ show_deployment_result() {
     echo -e "  📡 API接口:  ${GREEN}$access_url/api${NC}"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo -e "${YELLOW}🔑 默认登录账户${NC}"
+    echo -e "${YELLOW}🔑 管理员登录账户${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "  👤 管理员账户:"
     echo -e "     用户名: ${GREEN}admin${NC}"
-    echo -e "     密码:   ${GREEN}admin123${NC}"
+    echo -e "     初始密码: ${GREEN}$ADMIN_BOOTSTRAP_PASSWORD${NC}"
     echo ""
-    echo -e "  ${RED}⚠️  安全提醒: 首次登录后请立即修改默认密码！${NC}"
+    echo -e "  ${RED}⚠️  安全提醒: 该密码仅在本次输出中显示，请立即登录后修改！${NC}"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${BLUE}📂 系统信息${NC}"
@@ -4778,13 +4782,13 @@ EOF
         echo -e "  📡 API接口:  ${GREEN}$access_url/api${NC}"
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo -e "${YELLOW}🔑 默认登录账户${NC}"
+        echo -e "${YELLOW}🔑 管理员登录账户${NC}"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo -e "  👤 管理员账户:"
         echo -e "     用户名: ${GREEN}admin${NC}"
-        echo -e "     密码:   ${GREEN}admin123${NC}"
+        echo -e "     初始密码: ${GREEN}$ADMIN_BOOTSTRAP_PASSWORD${NC}"
         echo ""
-        echo -e "  ${RED}⚠️  安全提醒: 首次登录后请立即修改默认密码！${NC}"
+        echo -e "  ${RED}⚠️  安全提醒: 该密码仅在本次输出中显示，请立即登录后修改！${NC}"
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo -e "${BLUE}💻 常用管理命令${NC}"
@@ -4866,13 +4870,13 @@ EOF
         echo -e "  📡 API接口:  ${GREEN}$access_url/api${NC}"
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo -e "${YELLOW}🔑 默认登录账户${NC}"
+        echo -e "${YELLOW}🔑 管理员登录账户${NC}"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo -e "  👤 管理员账户:"
         echo -e "     用户名: ${GREEN}admin${NC}"
-        echo -e "     密码:   ${GREEN}admin123${NC}"
+        echo -e "     初始密码: ${GREEN}$ADMIN_BOOTSTRAP_PASSWORD${NC}"
         echo ""
-        echo -e "  ${RED}⚠️  安全提醒: 首次登录后请立即修改默认密码！${NC}"
+        echo -e "  ${RED}⚠️  安全提醒: 该密码仅在本次输出中显示，请立即登录后修改！${NC}"
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo -e "${BLUE}💻 常用管理命令${NC}"
@@ -5542,3 +5546,4 @@ main() {
 
 # 运行主函数
 main "$@"
+

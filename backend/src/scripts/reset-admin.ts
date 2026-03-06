@@ -12,6 +12,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { resolveAdminBootstrapPassword } from "../utils/adminCredentials";
 
 const prisma = new PrismaClient();
 
@@ -20,8 +21,10 @@ async function resetAdminPassword() {
     console.log("🔧 正在重置管理员密码...");
     console.log("");
 
+    const { password: nextPassword, source } = resolveAdminBootstrapPassword();
+
     // 生成新的密码哈希
-    const hashedPassword = await bcrypt.hash("admin123", 12);
+    const hashedPassword = await bcrypt.hash(nextPassword, 12);
 
     // 尝试更新所有ADMIN角色用户的密码
     const updateResult = await prisma.user.updateMany({
@@ -32,54 +35,45 @@ async function resetAdminPassword() {
       },
     });
 
-    if (updateResult.count > 0) {
+    if (updateResult.count === 0) {
+      console.log("🆕 没有找到管理员用户，正在创建管理员账户...");
+      await prisma.user.create({
+        data: {
+          username: "admin",
+          email: "admin@ssalgten.local",
+          password: hashedPassword,
+          name: "Administrator",
+          role: "ADMIN",
+          active: true,
+        },
+      });
+      console.log("✅ 成功创建管理员用户");
+    } else {
       console.log(`✅ 成功重置 ${updateResult.count} 个管理员用户的密码`);
-      console.log("");
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("");
-      console.log("🔑 管理员登录信息:");
-      console.log("   用户名: admin");
-      console.log("   密码:   admin123");
-      console.log("");
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("");
-      console.log("⚠️  安全提醒:");
-      console.log("   • 请立即登录系统");
-      console.log("   • 进入【系统管理】→【用户管理】");
-      console.log("   • 修改 admin 账户密码");
-      console.log("   • 设置强密码（建议 12+ 字符）");
-      console.log("");
-      return;
     }
 
-    // 如果没有ADMIN用户，创建一个默认的
-    console.log("🆕 没有找到管理员用户，正在创建默认账户...");
-    await prisma.user.create({
-      data: {
-        username: "admin",
-        email: "admin@ssalgten.local",
-        password: hashedPassword,
-        name: "Administrator",
-        role: "ADMIN",
-        active: true,
-      },
-    });
-
-    console.log("✅ 成功创建管理员用户");
     console.log("");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("");
     console.log("🔑 管理员登录信息:");
     console.log("   用户名: admin");
-    console.log("   密码:   admin123");
+    console.log(`   密码:   ${nextPassword}`);
     console.log("   邮箱:   admin@ssalgten.local");
     console.log("");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("");
     console.log("⚠️  安全提醒:");
-    console.log("   • 这是首次创建的默认账户");
-    console.log("   • 请立即登录并修改密码");
-    console.log("   • 建议更新邮箱地址");
+    if (source === "generated") {
+      console.log("   • 这是本次临时生成的新密码，只会显示一次");
+    } else {
+      console.log(
+        "   • 本次使用的是 DEFAULT_ADMIN_PASSWORD / ADMIN_BOOTSTRAP_PASSWORD 中配置的密码",
+      );
+    }
+    console.log("   • 请立即登录系统");
+    console.log("   • 进入【系统管理】→【用户管理】");
+    console.log("   • 修改 admin 账户密码");
+    console.log("   • 设置强密码（建议 12+ 字符）");
     console.log("");
   } catch (error) {
     console.error("❌ 密码重置失败:", error);
@@ -98,3 +92,5 @@ resetAdminPassword()
     console.error("❌ 发生错误:", error);
     process.exit(1);
   });
+
+

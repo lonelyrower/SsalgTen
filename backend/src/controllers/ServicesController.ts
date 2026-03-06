@@ -4,6 +4,11 @@ import { prisma } from "../lib/prisma";
 import { logger } from "../utils/logger";
 import { getIO } from "../sockets/ioRegistry";
 import { apiKeyService } from "../services/ApiKeyService";
+import {
+  buildAgentBaseUrl,
+  buildSignedAgentHeaders,
+  resolveAgentControlApiKey,
+} from "../utils/agentControl";
 
 const DEFAULT_SERVICE_DATA_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 const parsedExpiryMs = Number(process.env.SERVICE_DATA_EXPIRY_THRESHOLD_MS);
@@ -68,6 +73,47 @@ export class ServicesController {
   static async reportServices(req: Request, res: Response) {
     try {
       const { nodeId, services, scannedAt } = req.body;
+      const headerApiKey = req.headers["x-api-key"] as string;
+      const bodyApiKey = req.body.apiKey;
+      const apiKey = headerApiKey || bodyApiKey;
+      const ts = (req.headers["x-timestamp"] as string) || undefined;
+      const sig = (req.headers["x-signature"] as string) || undefined;
+      const nonce = (req.headers["x-nonce"] as string) || undefined;
+
+      if (!apiKey) {
+        return res.status(401).json({
+          success: false,
+          error: "API key is required",
+        });
+      }
+
+      const isValidApiKey = await apiKeyService.validateApiKey(apiKey);
+      if (!isValidApiKey) {
+        return res.status(401).json({
+          success: false,
+          error: "Invalid API key",
+        });
+      }
+
+      const signCheck = await apiKeyService.validateSignedRequest({
+        providedApiKey: apiKey,
+        timestamp: ts,
+        signature: sig,
+        nonce,
+        body: req.body,
+      });
+      if (!signCheck.ok) {
+        logger.warn(`[ServicesController] Signature validation failed: ${signCheck.reason}`);
+        if (
+          (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
+          "true"
+        ) {
+          return res.status(401).json({
+            success: false,
+            error: "Invalid signature",
+          });
+        }
+      }
 
       if (!nodeId || !services || !Array.isArray(services)) {
         return res.status(400).json({
@@ -170,6 +216,7 @@ export class ServicesController {
       });
     }
   }
+
   /**
    * 获取服务总览统计
    * GET /api/services/overview
@@ -840,9 +887,10 @@ export class ServicesController {
         });
       }
 
-      const agentControlApiKey = await apiKeyService.getSystemApiKey();
+      const resolvedKey = await resolveAgentControlApiKey();
+      const agentControlApiKey = resolvedKey?.key || "";
 
-      if (!agentControlApiKey) {
+      if (!resolvedKey || !agentControlApiKey) {
         logger.error("Agent control API key is not configured on the server");
         return res.status(500).json({
           success: false,
@@ -855,17 +903,22 @@ export class ServicesController {
         process.env.AGENT_CONTROL_TIMEOUT || "8000",
       );
 
+      const triggerPayload = {
+        origin: "master",
+        triggeredAt: new Date().toISOString(),
+      };
+
       try {
         await axios.post(
           `${agentBaseUrl}/api/services/scan`,
+          triggerPayload,
           {
-            origin: "master",
-            triggeredAt: new Date().toISOString(),
-          },
-          {
-            headers: {
-              "x-agent-api-key": agentControlApiKey,
-            },
+            headers: buildSignedAgentHeaders(
+              agentControlApiKey,
+              "POST",
+              `${agentBaseUrl}/api/services/scan`,
+              triggerPayload,
+            ),
             timeout: AGENT_CONTROL_TIMEOUT,
           },
         );
@@ -922,22 +975,7 @@ export class ServicesController {
   }
 }
 
-// Helper function to build agent base URL
-function buildAgentBaseUrl(node: {
-  ipv4?: string | null;
-  ipv6?: string | null;
-}): string | null {
-  const protocol = process.env.AGENT_CONTROL_PROTOCOL || "http";
-  const port = process.env.AGENT_CONTROL_PORT || 3002;
 
-  if (node.ipv4 && node.ipv4.trim().length > 0) {
-    return `${protocol}://${node.ipv4}:${port}`;
-  }
-  if (node.ipv6 && node.ipv6.trim().length > 0) {
-    return `${protocol}://[${node.ipv6}]:${port}`;
-  }
-  return null;
-}
 
 function isMissingServicesTableError(
   error: unknown,
@@ -1013,3 +1051,8 @@ function buildServiceAccess(service: {
 
   return access;
 }
+
+
+
+
+

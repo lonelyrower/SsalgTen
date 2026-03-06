@@ -57,134 +57,55 @@ export const AgentInstallCommands: React.FC<AgentInstallCommandsProps> = ({
 
     try {
       setLoading(true);
-      // 并行请求 + 超时降级（3s）
-      const installPromise = withTimeout(apiService.getInstallCommand(), 3000);
-      const cfgPromise = apiService.getSystemConfigs();
-      const [installRes, cfgRes] = await Promise.allSettled([
-        installPromise,
-        cfgPromise,
-      ]);
 
-      const okInstall =
-        installRes.status === "fulfilled" &&
-        installRes.value.success &&
-        installRes.value.data;
-      const okCfg =
-        cfgRes.status === "fulfilled" &&
-        cfgRes.value.success &&
-        Array.isArray(cfgRes.value.data);
-
-      const masterUrl = (
-        okInstall
-          ? (installRes as { value: { data: { masterUrl: string } } }).value
-              .data.masterUrl
-          : window.location.origin
-      ) as string;
-      // 生成一个临时的API密钥格式，实际部署时应该从后端API获取
-      const apiKey = `ssalgten_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 8)}`;
-      const base = {
-        masterUrl: masterUrl,
-        apiKey: apiKey,
-        quickCommand: `# SsalgTen 网络监控探针快速安装
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
-  --master-url "${masterUrl}" \\
-  --api-key "${apiKey}"`,
-        command: `# SsalgTen 网络监控探针安装（交互式与手动）
-
-# 方式1：交互式安装（可选择 安装/卸载/退出）
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s
-
-# 方式2：一键安装（自动配置）
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
-  --master-url "${masterUrl}" \\
-  --api-key "${apiKey}"
-
-# 方式3：手动安装
-# 1. 下载安装脚本
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh -o install-agent.sh
-chmod +x install-agent.sh
-
-# 2. 运行安装脚本（自动配置或交互式）
-./install-agent.sh --master-url "${masterUrl}" --api-key "${apiKey}"
-# 或
-./install-agent.sh  # 进入交互式菜单
-
-# 3. 启动服务（如需要）
-sudo systemctl start ssalgten-agent
-sudo systemctl enable ssalgten-agent`,
-        interactiveCommand: `# SsalgTen 网络监控探针交互式安装
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s`,
-        quickUninstallCommand: `# SsalgTen 网络监控探针快速卸载（仅卸载节点，不影响主服务）
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall`,
-        uninstallCommand: `# SsalgTen 网络监控探针卸载（仅卸载节点，不影响主服务）
-
-# 方式1：一键卸载（推荐）
-bash <(curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh) --uninstall
-
-# 方式2：手动卸载
-sudo systemctl stop ssalgten-agent
-sudo systemctl disable ssalgten-agent
-sudo rm -rf /opt/ssalgten-agent
-sudo rm -f /etc/systemd/system/ssalgten-agent.service
-sudo systemctl daemon-reload
-sudo systemctl reset-failed`,
-        security: {
-          isSecure: window.location.protocol === "https:",
-          warnings:
-            window.location.protocol === "http:"
-              ? ["使用HTTP连接，建议启用HTTPS"]
-              : [],
-          recommendations: [
-            "安装前请确认服务器具有sudo权限",
-            "确保服务器能够访问互联网",
-            "建议在测试环境先行验证",
-            "使用真实的API密钥进行生产环境部署",
-          ],
-        },
-      } as InstallCommandData;
-
-      let sshEnabled = false,
-        sshWindow = 10,
-        sshThreshold = 10;
-      if (okCfg) {
-        const cfgs = (
-          cfgRes as { value: { data: Array<{ key: string; value: unknown }> } }
-        ).value.data;
-        const getVal = (k: string) => cfgs.find((c) => c.key === k)?.value;
-        sshEnabled =
-          String(getVal("security.ssh_monitor_default_enabled")) === "true";
-        sshWindow =
-          parseInt(
-            String(getVal("security.ssh_monitor_default_window_min") ?? "10"),
-            10,
-          ) || 10;
-        sshThreshold =
-          parseInt(
-            String(getVal("security.ssh_monitor_default_threshold") ?? "10"),
-            10,
-          ) || 10;
+      const installResponse = await withTimeout(
+        apiService.getInstallCommand(),
+        3000,
+      );
+      if (!installResponse.success || !installResponse.data) {
+        throw new Error(installResponse.error || "获取安装令牌失败");
       }
+
+      let sshEnabled = false;
+      let sshWindow = 10;
+      let sshThreshold = 10;
+
+      try {
+        const cfgRes = await apiService.getSystemConfigs();
+        if (cfgRes.success && Array.isArray(cfgRes.data)) {
+          const cfgs = cfgRes.data;
+          const getVal = (k: string) => cfgs.find((c) => c.key === k)?.value;
+          sshEnabled =
+            String(getVal("security.ssh_monitor_default_enabled")) === "true";
+          sshWindow =
+            parseInt(
+              String(getVal("security.ssh_monitor_default_window_min") ?? "10"),
+              10,
+            ) || 10;
+          sshThreshold =
+            parseInt(
+              String(getVal("security.ssh_monitor_default_threshold") ?? "10"),
+              10,
+            ) || 10;
+        }
+      } catch (configError) {
+        console.warn(
+          "Failed to load system configs for install template:",
+          configError,
+        );
+      }
+
       const tpl = sshEnabled
         ? `\n# 可选：启用 SSH 暴力破解监控（读取 /var/log）\n# SSH_MONITOR_ENABLED=true\n# SSH_MONITOR_WINDOW_MIN=${sshWindow}\n# SSH_MONITOR_THRESHOLD=${sshThreshold}\n`
         : "";
 
-      if (okInstall) {
-        const data = (installRes as { value: { data: InstallCommandData } })
-          .value.data;
-        setInstallData({
-          ...data,
-          quickCommand: data.quickCommand + tpl,
-          command: data.command + tpl,
-          interactiveCommand: data.interactiveCommand + tpl,
-        });
-      } else {
-        setInstallData({
-          ...base,
-          quickCommand: base.quickCommand + tpl,
-          command: base.command + tpl,
-          interactiveCommand: base.interactiveCommand + tpl,
-        });
-      }
+      const data = installResponse.data;
+      setInstallData({
+        ...data,
+        quickCommand: data.quickCommand + tpl,
+        command: data.command + tpl,
+        interactiveCommand: data.interactiveCommand + tpl,
+      });
     } catch (error) {
       console.error("Failed to build install command:", error);
       setInstallData(null);
@@ -192,7 +113,6 @@ sudo systemctl reset-failed`,
       setLoading(false);
     }
   };
-
   const copyToClipboard = async (text: string, type: string) => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -252,7 +172,7 @@ sudo systemctl reset-failed`,
             <div className="flex items-center space-x-2">
               <ShieldAlert className="h-4 w-4 text-yellow-600" />
               <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                API密钥安全警告 - 请在生产环境中更新密钥
+                部署安全提示 - 建议通过 HTTPS 分发安装令牌
               </span>
             </div>
           </div>
@@ -332,20 +252,23 @@ sudo systemctl reset-failed`,
             />
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                API密钥
+                安装令牌
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                {installData.apiKey.substring(0, 8)}...
-                {installData.apiKey.slice(-4)}
+                {installData.installToken.substring(0, 8)}...
+                {installData.installToken.slice(-4)}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                有效期至 {new Date(installData.tokenExpiresAt).toLocaleString()}
               </p>
             </div>
           </div>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => copyToClipboard(installData.apiKey, "apiKey")}
+            onClick={() => copyToClipboard(installData.installToken, "installToken")}
           >
-            {copied === "apiKey" ? (
+            {copied === "installToken" ? (
               <Check className="h-4 w-4" />
             ) : (
               <Copy className="h-4 w-4" />
@@ -361,7 +284,7 @@ sudo systemctl reset-failed`,
             <ShieldAlert className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div className="flex-1">
               <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                API密钥安全警告
+                部署安全警告
               </h3>
               <div className="space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
                 {installData.security.warnings.map((warning, index) => (
@@ -396,10 +319,10 @@ sudo systemctl reset-failed`,
             <Shield className="h-5 w-5 text-[hsl(var(--status-success-600))]" />
             <div>
               <h3 className="text-sm font-medium text-[hsl(var(--status-success-800))] dark:text-[hsl(var(--status-success-200))]">
-                API密钥安全检查通过
+                部署安全检查通过
               </h3>
               <p className="text-sm text-[hsl(var(--status-success-700))] dark:text-[hsl(var(--status-success-300))]">
-                您的系统使用了安全的API密钥，可以放心部署节点。
+                当前安装流程使用短期令牌下发运行凭据。
               </p>
             </div>
           </div>
@@ -563,3 +486,5 @@ sudo systemctl reset-failed`,
     </div>
   );
 };
+
+

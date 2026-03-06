@@ -8,9 +8,9 @@ const DEFAULT_BRANCH = process.env.REPO_BRANCH || "main";
 
 export class UpdateController {
   async getVersion(req: Request, res: Response) {
-    const owner = (req.query.owner as string) || DEFAULT_OWNER;
-    const repo = (req.query.repo as string) || DEFAULT_REPO;
-    const branch = (req.query.branch as string) || DEFAULT_BRANCH;
+    const owner = DEFAULT_OWNER;
+    const repo = DEFAULT_REPO;
+    const branch = DEFAULT_BRANCH;
 
     const localVersion = APP_VERSION;
     let latestCommit: string | null = null;
@@ -161,3 +161,6 @@ export class UpdateController {
 }
 
 export const updateController = new UpdateController();
+
+
+

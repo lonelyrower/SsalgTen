@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { StreamingController } from "../controllers/StreamingController";
 import { authenticateToken, requireAdmin } from "../middleware/auth";
-import { publicLimiter, streamingTestLimiter } from "../middleware/rateLimit";
+import {
+  agentLimiter,
+  streamingTestLimiter,
+} from "../middleware/rateLimit";
 
 const router = Router();
 
@@ -15,22 +18,30 @@ const router = Router();
 // 获取流媒体解锁总览（前端页面） - Specific route first
 router.get(
   "/streaming/overview",
-  publicLimiter,
+  authenticateToken,
   StreamingController.getStreamingOverview,
 );
 
 // 获取流媒体节点摘要列表（前端页面，支持筛选） - Specific route
 router.get(
   "/streaming/nodes",
-  publicLimiter,
+  authenticateToken,
   StreamingController.getStreamingNodeSummaries,
 );
 
 // 获取流媒体解锁统计 - Specific route
-router.get("/streaming/stats", StreamingController.getStreamingStats);
+router.get(
+  "/streaming/stats",
+  authenticateToken,
+  StreamingController.getStreamingStats,
+);
 
 // Agent 上报流媒体检测结果 - Specific route
-router.post("/streaming/results", StreamingController.saveStreamingResults);
+router.post(
+  "/streaming/results",
+  agentLimiter,
+  StreamingController.saveStreamingResults,
+);
 
 // 批量触发流媒体检测（需要认证） - Specific route
 router.post(
@@ -50,11 +61,16 @@ router.get(
 // 根据流媒体服务筛选节点 - Specific route (has :service param)
 router.get(
   "/nodes/streaming/:service",
+  authenticateToken,
   StreamingController.getNodesByStreaming,
 );
 
 // 获取节点的流媒体解锁状态 - :nodeId param route
-router.get("/nodes/:nodeId/streaming", StreamingController.getNodeStreaming);
+router.get(
+  "/nodes/:nodeId/streaming",
+  authenticateToken,
+  StreamingController.getNodeStreaming,
+);
 
 // 触发节点的流媒体检测 - :nodeId param route
 router.post(

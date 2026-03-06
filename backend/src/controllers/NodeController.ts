@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth";
 import {
   nodeService,
   CreateNodeInput,
@@ -14,6 +15,7 @@ import { ipInfoService } from "../services/IPInfoService";
 import { sanitizeNode, sanitizeNodes } from "../utils/serialize";
 import { prisma } from "../lib/prisma";
 import { isIP } from "node:net";
+import { agentInstallTokenService } from "../services/AgentInstallTokenService";
 
 // ---- Broadcast throttling helpers ----
 const BROADCAST_MIN_INTERVAL_MS = parseInt(
@@ -87,6 +89,85 @@ async function scheduleNodeDetailBroadcastByAgent(agentId: string, io: any) {
   }
 }
 
+const buildPublicServerUrl = (req: Request): string => {
+  const backendPort = `${process.env.PORT || "3001"}`;
+  const rawOrigin = (
+    process.env.FRONTEND_URL ||
+    process.env.CORS_ORIGIN ||
+    ""
+  ).replace(/\/$/, "");
+
+  const deriveFromRequest = (): string => {
+    const proto =
+      (req.headers["x-forwarded-proto"] as string) || req.protocol || "http";
+    const hostHdr = (
+      (req.headers["x-forwarded-host"] as string) ||
+      req.get("host") ||
+      ""
+    ).trim();
+    if (!hostHdr) return "";
+
+    const hostname = hostHdr.split(":")[0].toLowerCase();
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1"
+    ) {
+      return "";
+    }
+
+    return `${proto}://${hostHdr}`;
+  };
+
+  const normalizeEnvUrl = (url: string): string => {
+    if (!url) return "";
+    try {
+      const u = new URL(url);
+      const hn = u.hostname.toLowerCase();
+      if (hn === "localhost" || hn === "127.0.0.1" || hn === "::1") {
+        return "";
+      }
+      return `${u.protocol}//${u.host}`;
+    } catch {
+      return "";
+    }
+  };
+
+  return (
+    normalizeEnvUrl(process.env.PUBLIC_URL || "") ||
+    deriveFromRequest() ||
+    normalizeEnvUrl(rawOrigin) ||
+    `http://localhost:${backendPort}`
+  );
+};
+const buildAllowedControlIpsHint = (
+  serverUrl: string,
+): { note: string; flag: string; commandComment: string } | null => {
+  try {
+    const hostname = new URL(serverUrl).hostname.toLowerCase();
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      isIP(hostname) !== 0
+    ) {
+      return null;
+    }
+
+    const flag = '--allowed-control-ips "<主控服务器公网出口IP>"';
+    const note =
+      "检测到主服务器地址使用域名；如果前面挂了 Cloudflare/CDN，请额外指定主控服务器真实出口 IP 白名单。";
+
+    return {
+      note,
+      flag,
+      commandComment: `# ${note}\n# 额外追加参数：${flag}\n`,
+    };
+  } catch {
+    return null;
+  }
+};
+
 export class NodeController {
   // 规范化 IPv6：裁剪空白、去掉 scope id，并确保格式有效
   private normalizeIPv6(v?: unknown): string | undefined {
@@ -102,14 +183,15 @@ export class NodeController {
   }
 
   // 获取所有节点
-  async getAllNodes(req: Request, res: Response): Promise<void> {
+  async getAllNodes(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const nodes = await nodeService.getAllNodes();
+      const visibility = req.user ? "authenticated" : "public";
 
       const response: ApiResponse = {
         success: true,
-        data: sanitizeNodes(nodes as any[]),
-        message: `Found ${nodes.length} nodes`,
+        data: sanitizeNodes(nodes as any[], visibility),
+        message: "Found " + nodes.length + " nodes",
       };
 
       res.json(response);
@@ -124,7 +206,10 @@ export class NodeController {
   }
 
   // 根据ID获取单个节点
-  async getNodeById(req: Request, res: Response): Promise<void> {
+  async getNodeById(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const node = await nodeService.getNodeById(id);
@@ -138,59 +223,58 @@ export class NodeController {
         return;
       }
 
-      // 获取节点最近的安全事件（最近24小时）
-      // 使用EventLog表，筛选type包含SECURITY、SSH、MALWARE、DDOS、INTRUSION、ANOMALY的事件
-      const securityEvents = await prisma.eventLog.findMany({
-        where: {
-          nodeId: id,
-          timestamp: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          },
-          type: {
-            in: [
-              "SSH_BRUTEFORCE",
-              "MALWARE_DETECTED",
-              "DDOS_ATTACK",
-              "INTRUSION_DETECTED",
-              "ANOMALY_DETECTED",
-              "SUSPICIOUS_ACTIVITY",
-            ],
-          },
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
-        take: 20,
-        select: {
-          id: true,
-          type: true,
-          message: true,
-          details: true,
-          timestamp: true,
-        },
-      });
+      const visibility = req.user ? "authenticated" : "public";
+      const data: Record<string, unknown> = sanitizeNode(node, visibility);
 
-      // 格式化安全事件以匹配前端接口
-      const formattedSecurityEvents = securityEvents.map((event) => ({
-        id: event.id,
-        type: event.type,
-        severity:
-          event.type === "MALWARE_DETECTED" ||
-          event.type === "DDOS_ATTACK" ||
-          event.type === "INTRUSION_DETECTED"
-            ? "critical"
-            : "warning",
-        description: event.message || "",
-        timestamp: event.timestamp.toISOString(),
-        metadata: event.details as Record<string, unknown> | undefined,
-      }));
+      if (req.user) {
+        const securityEvents = await prisma.eventLog.findMany({
+          where: {
+            nodeId: id,
+            timestamp: {
+              gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+            },
+            type: {
+              in: [
+                "SSH_BRUTEFORCE",
+                "MALWARE_DETECTED",
+                "DDOS_ATTACK",
+                "INTRUSION_DETECTED",
+                "ANOMALY_DETECTED",
+                "SUSPICIOUS_ACTIVITY",
+              ],
+            },
+          },
+          orderBy: {
+            timestamp: "desc",
+          },
+          take: 20,
+          select: {
+            id: true,
+            type: true,
+            message: true,
+            details: true,
+            timestamp: true,
+          },
+        });
+
+        data.securityEvents = securityEvents.map((event) => ({
+          id: event.id,
+          type: event.type,
+          severity:
+            event.type === "MALWARE_DETECTED" ||
+            event.type === "DDOS_ATTACK" ||
+            event.type === "INTRUSION_DETECTED"
+              ? "critical"
+              : "warning",
+          description: event.message || "",
+          timestamp: event.timestamp.toISOString(),
+          metadata: event.details as Record<string, unknown> | undefined,
+        }));
+      }
 
       const response: ApiResponse = {
         success: true,
-        data: {
-          ...sanitizeNode(node),
-          securityEvents: formattedSecurityEvents,
-        },
+        data,
       };
 
       res.json(response);
@@ -203,7 +287,6 @@ export class NodeController {
       res.status(500).json(response);
     }
   }
-
   // 创建新节点
   async createNode(req: Request, res: Response): Promise<void> {
     try {
@@ -938,108 +1021,44 @@ export class NodeController {
     }
   }
 
-  // 获取Agent安装脚本 - 重定向到GitHub
+  // 获取Agent安装脚本 - 使用短期安装令牌而非长期API密钥
   async getInstallScript(req: Request, res: Response): Promise<void> {
     try {
-      // 获取服务器对外可访问的基础URL
-      const backendPort = `${process.env.PORT || "3001"}`;
-      const rawOrigin = (
-        process.env.FRONTEND_URL ||
-        process.env.CORS_ORIGIN ||
-        ""
-      ).replace(/\/$/, "");
+      const serverUrl = buildPublicServerUrl(req);
+      const { token, expiresAt } = agentInstallTokenService.issueToken();
+      const allowedControlIpsHint = buildAllowedControlIpsHint(serverUrl);
+      const installHintMessage = allowedControlIpsHint
+        ? `echo "ℹ️ ${allowedControlIpsHint.note}"\necho "   ${allowedControlIpsHint.flag}"\necho ""\n`
+        : "";
 
-      // 1) 优先从请求头推断（反向代理会设置 X-Forwarded-*）
-      const deriveFromRequest = (): string => {
-        const proto =
-          (req.headers["x-forwarded-proto"] as string) ||
-          req.protocol ||
-          "http";
-        const hostHdr = (
-          (req.headers["x-forwarded-host"] as string) ||
-          req.get("host") ||
-          ""
-        ).trim();
-        if (!hostHdr) return "";
-        const hostname = hostHdr.split(":")[0].toLowerCase();
-        if (
-          hostname === "localhost" ||
-          hostname === "127.0.0.1" ||
-          hostname === "::1"
-        ) {
-          return "";
-        }
-        // 保留转发的端口（如有），不强加 3001
-        return `${proto}://${hostHdr}`;
-      };
-
-      // 2) 其次使用环境变量（当其不是本地域名时）
-      const normalizeEnvUrl = (url: string): string => {
-        if (!url) return "";
-        try {
-          const u = new URL(url);
-          const hn = u.hostname.toLowerCase();
-          if (hn === "localhost" || hn === "127.0.0.1" || hn === "::1")
-            return "";
-          // 返回规范化的 origin（包含端口如果已指定）
-          return `${u.protocol}//${u.host}`;
-        } catch {
-          return "";
-        }
-      };
-
-      const serverUrl =
-        deriveFromRequest() ||
-        normalizeEnvUrl(rawOrigin) ||
-        `http://localhost:${backendPort}`;
-      let apiKey: string;
-      try {
-        apiKey = await apiKeyService.getSystemApiKey();
-      } catch (error) {
-        logger.error(
-          "Failed to load secure agent API key for install script:",
-          error,
-        );
-        const response: ApiResponse = {
-          success: false,
-          error:
-            "Agent API key is not configured yet. Please contact an administrator.",
-        };
-        res.status(500).json(response);
-        return;
-      }
-
-      // 生成带参数的安装命令脚本
       const installScript = `#!/bin/bash
 # SsalgTen Agent 自动安装脚本
 # 生成时间: ${new Date().toISOString()}
 # 主服务器: ${serverUrl}
+# 令牌有效期至: ${expiresAt}
 
 set -e
 
 echo "🚀 正在从GitHub获取最新安装脚本..."
 echo "📡 主服务器: ${serverUrl}"
+echo "⏱️ 安装令牌有效期至: ${expiresAt}"
 echo ""
 
-# 下载并执行安装脚本，传递服务器参数
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\
-  --master-url "${serverUrl}" \\
-  --api-key "${apiKey}" \\
+${installHintMessage}curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \
+  --master-url "${serverUrl}" \
+  --bootstrap-token "${token}" \
   --auto-config
 
 echo ""
-echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
+echo "✅ 安装命令已执行，安装脚本会自动向主服务器换取运行凭据。"
 `;
 
-      // 设置响应头
       res.setHeader("Content-Type", "application/x-sh");
       res.setHeader(
         "Content-Disposition",
         'attachment; filename="install-agent.sh"',
       );
       res.setHeader("Cache-Control", "no-cache");
-
-      // 发送脚本内容
       res.send(installScript);
 
       logger.info(
@@ -1058,70 +1077,10 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
   // 获取Agent安装命令数据（JSON格式）
   async getInstallCommand(req: Request, res: Response): Promise<void> {
     try {
-      // 获取服务器对外可访问的基础URL
-      const backendPort = `${process.env.PORT || "3001"}`;
-      const rawOrigin = (
-        process.env.FRONTEND_URL ||
-        process.env.CORS_ORIGIN ||
-        ""
-      ).replace(/\/$/, "");
-
-      // 1) 优先从请求头推断（反向代理会设置 X-Forwarded-*）
-      const deriveFromRequest = (): string => {
-        const proto =
-          (req.headers["x-forwarded-proto"] as string) ||
-          req.protocol ||
-          "http";
-        const hostHdr = (
-          (req.headers["x-forwarded-host"] as string) ||
-          req.get("host") ||
-          ""
-        ).trim();
-        if (!hostHdr) return "";
-        const hostname = hostHdr.split(":")[0].toLowerCase();
-        if (
-          hostname === "localhost" ||
-          hostname === "127.0.0.1" ||
-          hostname === "::1"
-        ) {
-          return "";
-        }
-
-        // 检查是否已包含端口号，如果没有则添加默认端口（针对IP地址）
-        const hasPort = hostHdr.includes(":");
-        if (!hasPort) {
-          // 如果是IP地址且没有端口，添加前端端口
-          const frontendPort = process.env.FRONTEND_PORT || "3000";
-          return `${proto}://${hostHdr}:${frontendPort}`;
-        }
-
-        return `${proto}://${hostHdr}`;
-      };
-
-      // 2) 其次使用环境变量（当其不是本地域名时）
-      const normalizeEnvUrl = (url: string): string => {
-        if (!url) return "";
-        try {
-          const u = new URL(url);
-          const hn = u.hostname.toLowerCase();
-          if (hn === "localhost" || hn === "127.0.0.1" || hn === "::1")
-            return "";
-          return `${u.protocol}//${u.host}`;
-        } catch {
-          return "";
-        }
-      };
-
-      const serverUrl =
-        normalizeEnvUrl(process.env.PUBLIC_URL || "") ||
-        deriveFromRequest() ||
-        normalizeEnvUrl(rawOrigin) ||
-        `http://localhost:${backendPort}`;
-
-      const apiKey = await apiKeyService.getSystemApiKey();
-
-      // 检查API密钥安全性
+      const serverUrl = buildPublicServerUrl(req);
+      const { token, expiresAt } = agentInstallTokenService.issueToken();
       const securityCheck = await apiKeyService.checkApiKeySecurity();
+      const allowedControlIpsHint = buildAllowedControlIpsHint(serverUrl);
 
       if (!securityCheck.isSecure) {
         logger.warn(
@@ -1129,28 +1088,27 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
         );
       }
 
-      // 生成快速安装命令（自动配置）
-      const quickCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --auto-config --force-root --master-url "${serverUrl}" --api-key "${apiKey}"`;
-
-      // 生成交互式安装命令（无参数，脚本内可选择 安装/卸载/退出）
-      const interactiveCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s`;
-
-      // 生成快速卸载命令（仅卸载Agent节点，不影响主服务）
+      const commandComment = allowedControlIpsHint?.commandComment || "";
+      const quickCommand = `${commandComment}curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --auto-config --force-root --master-url "${serverUrl}" --bootstrap-token "${token}"`;
+      const interactiveCommand = `${commandComment}curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s`;
       const quickUninstallCommand = `curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall`;
 
       const response: ApiResponse = {
         success: true,
         data: {
           masterUrl: serverUrl,
-          apiKey: apiKey,
-          quickCommand: quickCommand,
-          interactiveCommand: interactiveCommand,
-          quickUninstallCommand: quickUninstallCommand,
-          command: interactiveCommand, // 保持向后兼容
+          installToken: token,
+          tokenExpiresAt: expiresAt,
+          quickCommand,
+          interactiveCommand,
+          quickUninstallCommand,
+          command: interactiveCommand,
           security: {
             isSecure: securityCheck.isSecure,
             warnings: securityCheck.warnings,
-            recommendations: securityCheck.recommendations,
+            recommendations: allowedControlIpsHint
+              ? [...securityCheck.recommendations, `${allowedControlIpsHint.note} 参数示例：${allowedControlIpsHint.flag}`]
+              : securityCheck.recommendations,
           },
         },
       };
@@ -1167,6 +1125,43 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
         error: "Failed to get install command",
       };
       res.status(500).json(response);
+    }
+  }
+
+  async exchangeInstallToken(req: Request, res: Response): Promise<void> {
+    try {
+      const token = String(req.body?.token || "").trim();
+      if (!token) {
+        res.status(400).json({
+          success: false,
+          error: "Install token is required",
+        } satisfies ApiResponse);
+        return;
+      }
+
+      const consumed = agentInstallTokenService.consumeToken(token);
+      if (!consumed.ok) {
+        res.status(401).json({
+          success: false,
+          error: "Invalid or expired install token",
+          message: consumed.reason,
+        } satisfies ApiResponse);
+        return;
+      }
+
+      const apiKey = await apiKeyService.getSystemApiKey();
+      res.json({
+        success: true,
+        data: {
+          apiKey,
+        },
+      } satisfies ApiResponse<{ apiKey: string }>);
+    } catch (error) {
+      logger.error("Exchange install token error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to exchange install token",
+      } satisfies ApiResponse);
     }
   }
 
@@ -1458,3 +1453,10 @@ echo "✅ 安装完成！探针已连接到主服务器: ${serverUrl}"
 }
 
 export const nodeController = new NodeController();
+
+
+
+
+
+
+

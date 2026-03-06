@@ -5,7 +5,11 @@ import { authController } from "../controllers/AuthController";
 import { adminController } from "../controllers/AdminController";
 import { systemConfigController } from "../controllers/SystemConfigController";
 import { clientLatencyController } from "../controllers/ClientLatencyController";
-import { authenticateToken, requireAdmin } from "../middleware/auth";
+import {
+  authenticateToken,
+  optionalAuth,
+  requireAdmin,
+} from "../middleware/auth";
 import {
   loginLimiter,
   agentLimiter,
@@ -17,6 +21,7 @@ import {
   AgentRegisterSchema,
   AgentHeartbeatSchema,
   AgentDiagnosticSchema,
+  InstallTokenExchangeSchema,
 } from "../schemas/agent";
 import {
   LoginSchema,
@@ -133,11 +138,13 @@ router.get(
 // 节点管理路由
 router.get(
   "/nodes",
+  optionalAuth,
   publicLimiter,
   nodeController.getAllNodes.bind(nodeController),
 );
 router.get(
   "/nodes/:id",
+  optionalAuth,
   publicLimiter,
   nodeController.getNodeById.bind(nodeController),
 );
@@ -164,22 +171,26 @@ router.delete(
 // 节点诊断路由
 router.get(
   "/nodes/:id/diagnostics",
+  authenticateToken,
   nodeController.getNodeDiagnostics.bind(nodeController),
 );
 
 // 节点心跳数据路由
 router.get(
   "/nodes/:id/heartbeat",
+  authenticateToken,
   nodeController.getNodeHeartbeatData.bind(nodeController),
 );
 router.get(
   "/nodes/:id/events",
+  authenticateToken,
   nodeController.getNodeEvents.bind(nodeController),
 );
 
 // 全局活动日志路由
 router.get(
   "/activities",
+  authenticateToken,
   nodeController.getGlobalActivities.bind(nodeController),
 );
 
@@ -248,6 +259,12 @@ router.get(
   authenticateToken,
   requireAdmin,
   nodeController.getInstallCommand.bind(nodeController),
+);
+router.post(
+  "/agents/install-token/exchange",
+  agentLimiter,
+  validateBody(InstallTokenExchangeSchema),
+  nodeController.exchangeInstallToken.bind(nodeController),
 );
 
 // 认证相关路由
@@ -530,3 +547,6 @@ router.use("/", streamingRouter);
 router.use("/", servicesRouter);
 
 export default router;
+
+
+

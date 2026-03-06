@@ -5,11 +5,11 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { logger } from './utils/logger';
 import { config, serverConfig, serviceDetectionConfig } from './config';
-import { getSystemInfo } from './utils/system';
 import { diagnosticController } from './controllers/DiagnosticController';
 import { registrationService } from './services/RegistrationService';
 import { streamingTestService } from './services/StreamingTestService';
 import { serviceDetectionService } from './services/ServiceDetectionService';
+import { verifySignedControlRequest } from './utils/signing';
 
 const execAsync = promisify(exec);
 
@@ -189,13 +189,44 @@ const readApiKey = (req: Request): string => {
   return trimmed;
 };
 
+const allowHeaderAuthFallback =
+  (process.env.AGENT_ALLOW_HEADER_AUTH_FALLBACK || '').toLowerCase() === 'true';
+
 const requireAgentApiKey = (req: Request, res: Response, next: NextFunction) => {
-  const provided = readApiKey(req);
-  if (!provided || provided !== expectedApiKey) {
-    res.status(401).json({ success: false, error: 'Unauthorized' });
+  const timestamp = (req.headers['x-timestamp'] as string) || undefined;
+  const nonce = (req.headers['x-nonce'] as string) || undefined;
+  const signature = (req.headers['x-signature'] as string) || undefined;
+  const signCheck = verifySignedControlRequest({
+    apiKey: expectedApiKey,
+    method: req.method,
+    requestPath: req.originalUrl || req.url,
+    body: req.body,
+    timestamp,
+    nonce,
+    signature,
+  });
+
+  if (signCheck.ok) {
+    next();
     return;
   }
-  next();
+
+  if (allowHeaderAuthFallback) {
+    const provided = readApiKey(req);
+    if (provided && provided === expectedApiKey) {
+      logger.warn(
+        `[agent-auth] Allowing deprecated header auth fallback for ${req.method} ${req.originalUrl}`,
+      );
+      next();
+      return;
+    }
+  }
+
+  res.status(401).json({
+    success: false,
+    error: 'Unauthorized',
+    reason: signCheck.reason || 'missing_signature',
+  });
 };
 
 // 中间件配置
@@ -206,72 +237,32 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req: Request, res: Response) => {
   res.json({
     success: true,
-    message: 'SsalgTen Agent is running',
-    agent: {
-      id: config.id,
-      name: config.name,
-      location: config.location,
-      provider: config.provider,
-      version: '0.1.0'
-    },
+    status: 'running',
+    service: 'SsalgTen Agent',
+    version: '0.1.0',
+    uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
 });
 
+const buildHealthPayload = () => ({
+  success: true,
+  status: 'healthy',
+  service: 'SsalgTen Agent',
+  version: '0.1.0',
+  uptime: process.uptime(),
+  timestamp: new Date().toISOString()
+});
+
 // 健康检查
-app.get('/health', async (req: Request, res: Response) => {
-  try {
-    const systemInfo = await getSystemInfo();
-    
-    res.json({
-      success: true,
-      status: 'healthy',
-      agent: {
-        id: config.id,
-        name: config.name,
-        version: '0.1.0',
-        uptime: process.uptime()
-      },
-      system: systemInfo,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Health check failed:', error);
-    res.status(500).json({
-      success: false,
-      status: 'unhealthy',
-      error: 'System information unavailable'
-    });
-  }
+app.get('/health', (req: Request, res: Response) => {
+  res.json(buildHealthPayload());
 });
 
 // 兼容旧的健康检查路径（部分编排使用 /api/health）
-app.get('/api/health', async (req: Request, res: Response) => {
-  try {
-    const systemInfo = await getSystemInfo();
-    
-    res.json({
-      success: true,
-      status: 'healthy',
-      agent: {
-        id: config.id,
-        name: config.name,
-        version: '0.1.0',
-        uptime: process.uptime()
-      },
-      system: systemInfo,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Health check failed:', error);
-    res.status(500).json({
-      success: false,
-      status: 'unhealthy',
-      error: 'System information unavailable'
-    });
-  }
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json(buildHealthPayload());
 });
-
 // Protect all remaining /api endpoints (except /api/health defined above)
 app.use('/api', requireAgentApiKey, rateLimitMiddleware, concurrencyMiddleware);
 
@@ -280,33 +271,21 @@ app.get('/info', (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      agent: {
-        id: config.id,
-        name: config.name,
-        location: config.location,
-        provider: config.provider,
-        masterUrl: config.masterUrl,
-        version: '0.1.0'
+      service: 'SsalgTen Agent',
+      version: '0.1.0',
+      api: {
+        health: '/health',
+        legacyHealth: '/api/health',
+        protectedBase: '/api/*'
       },
       capabilities: [
         'ping',
-        'traceroute', 
+        'traceroute',
         'mtr',
         'speedtest',
         'latency-test',
         'system-monitoring'
-      ],
-      endpoints: {
-        health: '/health',
-        info: '/info',
-        ping: '/api/ping/:target',
-        traceroute: '/api/traceroute/:target',
-        mtr: '/api/mtr/:target',
-        speedtest: '/api/speedtest',
-        latencyTest: '/api/latency-test',
-        networkInfo: '/api/network-info',
-        connectivity: '/api/connectivity'
-      }
+      ]
     }
   });
 });
@@ -460,3 +439,6 @@ const gracefulShutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+
+

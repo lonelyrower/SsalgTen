@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import { nodeService } from "../services/NodeService";
-import { apiKeyService } from "../services/ApiKeyService";
+import {
+  buildAgentBaseUrl,
+  buildSignedAgentHeaders,
+  resolveAgentControlApiKey,
+} from "../utils/agentControl";
 import { logger } from "../utils/logger";
 import { getSystemConfig } from "../utils/initSystemConfig";
 
@@ -54,16 +58,6 @@ const ensureEnabled = async (res: Response): Promise<boolean> => {
   }
 };
 
-const buildAgentEndpoint = (node: {
-  ipv4?: string | null;
-  ipv6?: string | null;
-}): string | null => {
-  const host = node?.ipv4 || node?.ipv6;
-  if (!host) return null;
-  const formattedHost = host.includes(":") ? `[${host}]` : host;
-  return `http://${formattedHost}:3002`;
-};
-
 const clampInt = (
   value: unknown,
   min: number,
@@ -76,39 +70,6 @@ const clampInt = (
   if (i < min) return min;
   if (i > max) return max;
   return i;
-};
-
-const resolveAgentControlApiKey = async (): Promise<string | null> => {
-  try {
-    const key = await apiKeyService.getSystemApiKey();
-    const trimmed = (key || "").trim();
-    if (trimmed) return trimmed;
-  } catch (error) {
-    logger.error(
-      "[DiagnosticsProxyController] Failed to resolve system agent API key:",
-      error,
-    );
-  }
-
-  const fallback = (
-    process.env.AGENT_CONTROL_API_KEY ||
-    process.env.DEFAULT_AGENT_API_KEY ||
-    ""
-  ).trim();
-  if (fallback) {
-    if (!apiKeyService.isSecureAgentApiKey(fallback)) {
-      logger.error(
-        "[DiagnosticsProxyController] Environment agent API key is not secure. Refusing to use fallback value.",
-      );
-      return null;
-    }
-    logger.warn(
-      "[DiagnosticsProxyController] Falling back to environment agent API key. Verify system API key configuration if issues persist.",
-    );
-    return fallback;
-  }
-
-  return null;
 };
 
 export class DiagnosticsProxyController {
@@ -129,15 +90,16 @@ export class DiagnosticsProxyController {
         res.status(404).json({ success: false, error: "Node not found" });
         return;
       }
-      const endpoint = buildAgentEndpoint(node);
+      const endpoint = buildAgentBaseUrl(node);
       if (!endpoint) {
         res
           .status(400)
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const agentKey = await resolveAgentControlApiKey();
-      if (!agentKey) {
+      const resolvedKey = await resolveAgentControlApiKey();
+      const agentKey = resolvedKey?.key || "";
+      if (!resolvedKey || !agentKey) {
         res
           .status(500)
           .json({ success: false, error: "Agent API key is not configured" });
@@ -148,7 +110,7 @@ export class DiagnosticsProxyController {
       const url = `${endpoint}/api/ping/${encodeURIComponent(String(target))}${safeCount ? `?count=${encodeURIComponent(String(safeCount))}` : ""}`;
       const r = await axios.get(url, {
         timeout: 60000,
-        headers: { "x-agent-api-key": agentKey },
+        headers: buildSignedAgentHeaders(agentKey, "GET", url),
       });
       res.status(r.status).json(r.data);
     } catch (e) {
@@ -174,15 +136,16 @@ export class DiagnosticsProxyController {
         res.status(404).json({ success: false, error: "Node not found" });
         return;
       }
-      const endpoint = buildAgentEndpoint(node);
+      const endpoint = buildAgentBaseUrl(node);
       if (!endpoint) {
         res
           .status(400)
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const agentKey = await resolveAgentControlApiKey();
-      if (!agentKey) {
+      const resolvedKey = await resolveAgentControlApiKey();
+      const agentKey = resolvedKey?.key || "";
+      if (!resolvedKey || !agentKey) {
         res
           .status(500)
           .json({ success: false, error: "Agent API key is not configured" });
@@ -196,7 +159,7 @@ export class DiagnosticsProxyController {
       const url = `${endpoint}/api/traceroute/${encodeURIComponent(String(target))}${qp}`;
       const r = await axios.get(url, {
         timeout: 60000,
-        headers: { "x-agent-api-key": agentKey },
+        headers: buildSignedAgentHeaders(agentKey, "GET", url),
       });
       res.status(r.status).json(r.data);
     } catch (e) {
@@ -224,15 +187,16 @@ export class DiagnosticsProxyController {
         res.status(404).json({ success: false, error: "Node not found" });
         return;
       }
-      const endpoint = buildAgentEndpoint(node);
+      const endpoint = buildAgentBaseUrl(node);
       if (!endpoint) {
         res
           .status(400)
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const agentKey = await resolveAgentControlApiKey();
-      if (!agentKey) {
+      const resolvedKey = await resolveAgentControlApiKey();
+      const agentKey = resolvedKey?.key || "";
+      if (!resolvedKey || !agentKey) {
         res
           .status(500)
           .json({ success: false, error: "Agent API key is not configured" });
@@ -246,7 +210,7 @@ export class DiagnosticsProxyController {
       const url = `${endpoint}/api/mtr/${encodeURIComponent(String(target))}${qp}`;
       const r = await axios.get(url, {
         timeout: 120000,
-        headers: { "x-agent-api-key": agentKey },
+        headers: buildSignedAgentHeaders(agentKey, "GET", url),
       });
       res.status(r.status).json(r.data);
     } catch (e) {
@@ -264,15 +228,16 @@ export class DiagnosticsProxyController {
         res.status(404).json({ success: false, error: "Node not found" });
         return;
       }
-      const endpoint = buildAgentEndpoint(node);
+      const endpoint = buildAgentBaseUrl(node);
       if (!endpoint) {
         res
           .status(400)
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const agentKey = await resolveAgentControlApiKey();
-      if (!agentKey) {
+      const resolvedKey = await resolveAgentControlApiKey();
+      const agentKey = resolvedKey?.key || "";
+      if (!resolvedKey || !agentKey) {
         res
           .status(500)
           .json({ success: false, error: "Agent API key is not configured" });
@@ -281,7 +246,7 @@ export class DiagnosticsProxyController {
       const url = `${endpoint}/api/speedtest`;
       const r = await axios.get(url, {
         timeout: 180000,
-        headers: { "x-agent-api-key": agentKey },
+        headers: buildSignedAgentHeaders(agentKey, "GET", url),
       });
       res.status(r.status).json(r.data);
     } catch (e) {
@@ -300,15 +265,16 @@ export class DiagnosticsProxyController {
         res.status(404).json({ success: false, error: "Node not found" });
         return;
       }
-      const endpoint = buildAgentEndpoint(node);
+      const endpoint = buildAgentBaseUrl(node);
       if (!endpoint) {
         res
           .status(400)
           .json({ success: false, error: "Node has no reachable IP" });
         return;
       }
-      const agentKey = await resolveAgentControlApiKey();
-      if (!agentKey) {
+      const resolvedKey = await resolveAgentControlApiKey();
+      const agentKey = resolvedKey?.key || "";
+      if (!resolvedKey || !agentKey) {
         res
           .status(500)
           .json({ success: false, error: "Agent API key is not configured" });
@@ -320,7 +286,7 @@ export class DiagnosticsProxyController {
       const url = `${endpoint}/api/latency-test${qp}`;
       const r = await axios.get(url, {
         timeout: 60000,
-        headers: { "x-agent-api-key": agentKey },
+        headers: buildSignedAgentHeaders(agentKey, "GET", url),
       });
       res.status(r.status).json(r.data);
     } catch (e) {
@@ -333,3 +299,6 @@ export class DiagnosticsProxyController {
 }
 
 export const diagnosticsProxyController = new DiagnosticsProxyController();
+
+
+

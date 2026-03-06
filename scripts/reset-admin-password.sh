@@ -144,13 +144,14 @@ echo "🔧 正在重置管理员密码..."
 echo ""
 
 # 直接尝试重置（如果 Prisma Client 缺失，后面的备用方案会处理）
-if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && timeout 30 npm run reset-admin 2>&1" | grep -q "✅"; then
-    # 成功
+if RESET_OUTPUT=$($EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && timeout 30 npm run reset-admin" 2>&1); then
+    echo "$RESET_OUTPUT"
     echo ""
 else
+    echo "$RESET_OUTPUT"
     # 备用方案：先确保生成 Prisma Client，然后使用内联脚本
     echo "⚠️  使用备用方案..."
-    echo "� 生成 Prisma Client（这可能需要几秒钟）..."
+    echo "⏳ 生成 Prisma Client（这可能需要几秒钟）..."
     
     # 使用 timeout 防止卡死
     if $EXEC_CMD $BACKEND_CONTAINER sh -c "cd /app && timeout 60 npx prisma generate" 2>&1 | tail -5; then
@@ -162,10 +163,13 @@ else
     # 创建临时重置脚本内容
     RESET_CODE='const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
+const { randomBytes } = require("crypto");
 const prisma = new PrismaClient();
 async function reset() {
   try {
-    const hashedPassword = await bcrypt.hash("admin123", 12);
+    const nextPassword = process.env.DEFAULT_ADMIN_PASSWORD || process.env.ADMIN_BOOTSTRAP_PASSWORD || randomBytes(18).toString("base64url");
+    const source = process.env.DEFAULT_ADMIN_PASSWORD || process.env.ADMIN_BOOTSTRAP_PASSWORD ? "configured" : "generated";
+    const hashedPassword = await bcrypt.hash(nextPassword, 12);
     const result = await prisma.user.updateMany({
       where: { role: "ADMIN" },
       data: { password: hashedPassword, active: true }
@@ -185,6 +189,16 @@ async function reset() {
         }
       });
       console.log("✅ 成功创建管理员用户");
+    }
+    console.log("");
+    console.log("🔑 当前管理员登录信息:");
+    console.log("   用户名: admin");
+    console.log("   密码:   " + nextPassword);
+    console.log("");
+    if (source === "generated") {
+      console.log("⚠️  这是本次临时生成的新密码，只会显示一次，请立即保存并在登录后修改。");
+    } else {
+      console.log("ℹ️  本次使用的是 DEFAULT_ADMIN_PASSWORD / ADMIN_BOOTSTRAP_PASSWORD 中配置的密码。");
     }
     process.exit(0);
   } catch (error) {
@@ -218,14 +232,8 @@ fi
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "🔑 默认登录凭据："
-echo ""
-echo "   用户名: admin"
-echo "   密码:   admin123"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
 echo "⚠️  安全提醒："
+echo "   • 上方输出已经显示当前管理员密码，请立即妥善保存"
 echo "   • 请立即登录系统"
 echo "   • 进入【系统管理】→【用户管理】"
 echo "   • 修改 admin 账户密码"
@@ -235,3 +243,5 @@ echo "📍 访问地址："
 echo "   开发环境: http://localhost:3000"
 echo "   生产环境: 使用你的域名或 IP"
 echo ""
+
+

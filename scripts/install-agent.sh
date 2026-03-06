@@ -8,7 +8,8 @@
 #   
 # 常用参数:
 #   --master-url URL         主服务器地址
-#   --api-key KEY           API密钥
+#   --bootstrap-token TOKEN  短期安装令牌
+#   --api-key KEY           Agent API密钥（仅兼容旧流程）
 #   --auto-config           自动配置模式（跳过交互）
 #   --force-root            允许root用户运行（跳过安全提醒）
 #   --node-name NAME        节点名称
@@ -211,24 +212,25 @@ show_help() {
     echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash"
     echo ""
     echo "  自动化安装 (Docker 模式 - 默认):"
-    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\"
-    echo "      --auto-config \\"
-    echo "      --master-url https://your-domain.com \\"
-    echo "      --api-key your-api-key"
+    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\" 
+    echo "      --auto-config \\" 
+    echo "      --master-url https://your-domain.com \\" 
+    echo "      --bootstrap-token your-install-token"
     echo ""
     echo "  自动化安装 (宿主机模式):"
-    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\"
-    echo "      --auto-config \\"
-    echo "      --deploy-mode native \\"
-    echo "      --master-url https://your-domain.com \\"
-    echo "      --api-key your-api-key"
+    echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \\" 
+    echo "      --auto-config \\" 
+    echo "      --deploy-mode native \\" 
+    echo "      --master-url https://your-domain.com \\" 
+    echo "      --bootstrap-token your-install-token"
     echo ""
     echo "  卸载Agent:"
     echo "    curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- --uninstall"
     echo ""
     echo "必需参数 (自动配置模式):"
-    echo "  --master-url URL     主服务器地址"
-    echo "  --api-key KEY        API密钥"
+    echo "  --master-url URL         主服务器地址"
+    echo "  --bootstrap-token TOKEN  短期安装令牌（推荐）"
+    echo "  --api-key KEY            Agent API密钥（仅兼容旧流程）"
     echo ""
     echo "可选参数:"
     echo "  --auto-config        启用自动配置模式"
@@ -239,6 +241,7 @@ show_help() {
     echo "  --node-city NAME     城市"
     echo "  --node-provider NAME 服务商"
     echo "  --agent-port PORT    Agent端口 (默认3002)"
+    echo "  --allowed-control-ips CSV  手动指定可信控制端IP白名单（逗号分隔）"
     echo "  --uninstall          卸载Agent"
     echo "  --help               显示此帮助信息"
     echo ""
@@ -258,6 +261,10 @@ parse_arguments() {
                 ;;
             --master-url)
                 MASTER_URL="$2"
+                shift 2
+                ;;
+            --bootstrap-token)
+                AGENT_BOOTSTRAP_TOKEN="$2"
                 shift 2
                 ;;
             --api-key)
@@ -301,6 +308,10 @@ parse_arguments() {
                 AGENT_PORT="$2"
                 shift 2
                 ;;
+            --allowed-control-ips)
+                AGENT_ALLOWED_CONTROL_IPS="$2"
+                shift 2
+                ;;
             *)
                 log_warning "未知参数: $1 (使用 --help 查看帮助)"
                 shift
@@ -336,6 +347,59 @@ detect_same_host() {
     if echo " $local_ips " | grep -q " $resolved_ip "; then
         SAME_HOST=true
     fi
+}
+
+resolve_allowed_control_ips() {
+    if [[ -n "${AGENT_ALLOWED_CONTROL_IPS:-}" ]]; then
+        AGENT_ALLOWED_CONTROL_IPS=$(echo "$AGENT_ALLOWED_CONTROL_IPS" | tr ',' '\n' | sed '/^$/d' | sort -u | tr '\n' ',' | sed 's/,$//')
+        log_info "使用手动指定的可信控制端 IP 白名单: $AGENT_ALLOWED_CONTROL_IPS"
+        return 0
+    fi
+
+    parse_master_host_port
+
+    local collected=""
+    if [[ "$SAME_HOST" == "true" ]]; then
+        local local_ips
+        local_ips=$(hostname -I 2>/dev/null | tr ' ' ',')
+        collected="127.0.0.1,::1,172.17.0.1,${local_ips}"
+    elif [[ "$MASTER_HOST" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ || "$MASTER_HOST" == *:* ]]; then
+        collected="$MASTER_HOST"
+    else
+        log_warning "MASTER_URL 使用的是域名，出于安全考虑，不会自动把域名解析结果加入白名单"
+        log_warning "如果前面挂了 Cloudflare/CDN，请通过 --allowed-control-ips 手动传入主控服务器真实出口 IP"
+    fi
+
+    AGENT_ALLOWED_CONTROL_IPS=$(echo "$collected" | tr ',' '\n' | sed '/^$/d' | sort -u | tr '\n' ',' | sed 's/,$//')
+}
+exchange_bootstrap_token() {
+    if [[ -n "${AGENT_API_KEY:-}" ]]; then
+        return 0
+    fi
+
+    if [[ -z "${AGENT_BOOTSTRAP_TOKEN:-}" ]]; then
+        log_error "缺少安装令牌或 Agent API 密钥"
+        return 1
+    fi
+
+    log_info "使用短期安装令牌向主服务器换取运行凭据..."
+    if [[ "$MASTER_URL" =~ ^http:// ]]; then
+        log_warning "当前主服务器地址使用 HTTP，运行凭据交换链路不会被 TLS 加密，生产环境建议启用 HTTPS"
+    fi
+    local exchange_url="${MASTER_URL%/}/api/agents/install-token/exchange"
+    local payload
+    payload=$(printf '{"token":"%s"}' "$AGENT_BOOTSTRAP_TOKEN")
+    local response
+    response=$(curl -fsSL -X POST "$exchange_url" -H "Content-Type: application/json" --data "$payload")
+
+    AGENT_API_KEY=$(printf '%s' "$response" | python3 -c "import json,sys; data=json.load(sys.stdin); assert data.get('success'), data; print(((data.get('data') or {}).get('apiKey') or '').strip())")
+
+    if [[ -z "$AGENT_API_KEY" ]]; then
+        log_error "安装令牌换取凭据失败：服务器未返回 Agent API 密钥"
+        return 1
+    fi
+
+    log_success "安装令牌校验通过，已获取运行凭据"
 }
 
 # 自动获取地理位置信息
@@ -422,7 +486,7 @@ collect_node_info() {
     log_info "收集节点信息..."
     
     # 总是需要收集必需的参数（master-url 和 api-key）
-    if [[ -z "$MASTER_URL" || -z "$AGENT_API_KEY" ]]; then
+    if [[ -z "$MASTER_URL" || ( -z "${AGENT_API_KEY:-}" && -z "${AGENT_BOOTSTRAP_TOKEN:-}" ) ]]; then
         echo ""
         echo "请提供以下信息来配置您的监控节点："
         echo ""
@@ -454,15 +518,20 @@ collect_node_info() {
             done
         fi
         
-        # API密钥
-        if [[ -z "$AGENT_API_KEY" ]]; then
+        # 安装令牌 / API密钥
+        if [[ -z "${AGENT_API_KEY:-}" && -z "${AGENT_BOOTSTRAP_TOKEN:-}" ]]; then
             while true; do
-                AGENT_API_KEY=$(read_from_tty "Agent API密钥: ")
+                AGENT_BOOTSTRAP_TOKEN=$(read_from_tty "安装令牌（推荐，直接回车可改为输入 API 密钥）: ")
+                if [[ -n "$AGENT_BOOTSTRAP_TOKEN" ]]; then
+                    break
+                fi
+
+                AGENT_API_KEY=$(read_from_tty "Agent API密钥（仅兼容旧流程）: ")
                 if [[ -n "$AGENT_API_KEY" && ${#AGENT_API_KEY} -ge 16 ]]; then
                     break
-                else
-                    log_error "API密钥长度至少16个字符"
                 fi
+
+                log_error "请至少提供安装令牌或长度不少于16位的 Agent API 密钥"
             done
         fi
     fi
@@ -515,6 +584,7 @@ collect_node_info() {
 
     # 如果与主站同机，则将 MASTER_URL 切换为 host.docker.internal 以避免容器访问宿主公网IP的回环问题
     detect_same_host
+    resolve_allowed_control_ips
     EFFECTIVE_MASTER_URL="$MASTER_URL"
     if [[ "$SAME_HOST" == "true" ]]; then
         log_info "检测到与主站同机部署，准备选择最优内部地址..."
@@ -1237,6 +1307,8 @@ NODE_NAME=${NODE_NAME}
 # 服务器连接（同机部署自动切换为 host.docker.internal）
 MASTER_URL=${EFFECTIVE_MASTER_URL}
 AGENT_API_KEY=${AGENT_API_KEY}
+AGENT_ALLOW_HEADER_AUTH_FALLBACK=false
+AGENT_CONTROL_SIGNATURE_TTL_SECONDS=300
 
 # 地理位置信息
 NODE_COUNTRY=${NODE_COUNTRY}
@@ -1375,18 +1447,34 @@ EOF
 # 配置防火墙
 configure_firewall() {
     log_info "配置防火墙..."
-    
+
+    if [[ -z "${AGENT_ALLOWED_CONTROL_IPS:-}" ]]; then
+        log_warning "未能自动解析可信控制端 IP，默认不自动对公网开放端口 $AGENT_PORT"
+        log_warning "如需远程控制，请仅允许主控服务器出口 IP 访问 TCP/$AGENT_PORT"
+        return 0
+    fi
+
+    IFS=',' read -r -a allowed_ips <<< "$AGENT_ALLOWED_CONTROL_IPS"
+
     if command -v ufw >/dev/null 2>&1; then
-        # Ubuntu/Debian的ufw
-        sudo ufw allow $AGENT_PORT/tcp
-        log_success "UFW防火墙规则添加完成"
+        for ip in "${allowed_ips[@]}"; do
+            [[ -n "$ip" ]] || continue
+            sudo ufw allow from "$ip" to any port "$AGENT_PORT" proto tcp >/dev/null
+        done
+        log_success "已仅对可信控制端 IP 开放端口 $AGENT_PORT"
     elif command -v firewall-cmd >/dev/null 2>&1; then
-        # CentOS/RHEL的firewalld
-        sudo firewall-cmd --permanent --add-port=$AGENT_PORT/tcp
-        sudo firewall-cmd --reload
-        log_success "Firewalld防火墙规则添加完成"
+        for ip in "${allowed_ips[@]}"; do
+            [[ -n "$ip" ]] || continue
+            local family="ipv4"
+            if [[ "$ip" == *:* ]]; then
+                family="ipv6"
+            fi
+            sudo firewall-cmd --permanent --add-rich-rule="rule family='${family}' source address='${ip}' port protocol='tcp' port='${AGENT_PORT}' accept" >/dev/null
+        done
+        sudo firewall-cmd --reload >/dev/null
+        log_success "已仅对可信控制端 IP 开放端口 $AGENT_PORT"
     else
-        log_warning "未检测到防火墙管理工具，请手动开放端口 $AGENT_PORT"
+        log_warning "未检测到防火墙管理工具，请手动仅向以下可信地址开放 TCP/$AGENT_PORT: $AGENT_ALLOWED_CONTROL_IPS"
     fi
 }
 
@@ -1523,7 +1611,7 @@ show_installation_result() {
     echo ""
     
     echo -e "${YELLOW}⚠️ 下一步:${NC}"
-    echo "1. 检查防火墙是否开放端口 $AGENT_PORT"
+    echo "1. 确认仅可信主控机 IP 可以访问 TCP/$AGENT_PORT"
     echo "2. 在主服务器控制台查看节点是否上线"
     echo "3. 如有问题，查看日志: docker compose logs -f"
     echo ""
@@ -3150,16 +3238,15 @@ show_main_menu() {
     echo ""
 
     # 如果检测到预置参数，显示特殊提示
-    if [[ -n "${MASTER_URL:-}" && -n "${AGENT_API_KEY:-}" ]]; then
+    if [[ -n "${MASTER_URL:-}" && ( -n "${AGENT_API_KEY:-}" || -n "${AGENT_BOOTSTRAP_TOKEN:-}" ) ]]; then
         echo -e "${GREEN}🔗 已检测到预置连接参数${NC}"
         echo "   服务器地址: ${MASTER_URL}"
-        echo "   API密钥: ${AGENT_API_KEY:0:8}..."
         echo ""
     fi
 
     echo "请选择要执行的操作："
     echo ""
-    if [[ -n "${MASTER_URL:-}" && -n "${AGENT_API_KEY:-}" ]]; then
+    if [[ -n "${MASTER_URL:-}" && ( -n "${AGENT_API_KEY:-}" || -n "${AGENT_BOOTSTRAP_TOKEN:-}" ) ]]; then
         echo -e "${GREEN}1.${NC} 一键安装监控节点 ${GREEN}(无需输入参数)${NC}"
     else
         echo -e "${GREEN}1.${NC} 安装监控节点"
@@ -3538,6 +3625,8 @@ NODE_NAME=${NODE_NAME}
 # 服务器连接
 MASTER_URL=${MASTER_URL}
 AGENT_API_KEY=${AGENT_API_KEY}
+AGENT_ALLOW_HEADER_AUTH_FALLBACK=false
+AGENT_CONTROL_SIGNATURE_TTL_SECONDS=300
 
 # 地理位置信息
 NODE_COUNTRY=${NODE_COUNTRY}
@@ -3582,6 +3671,7 @@ EOF
 install_agent_native() {
     log_info "使用宿主机部署模式安装 Agent"
     ensure_native_dependencies
+    exchange_bootstrap_token
     ensure_agent_user
     sync_agent_source_native
     create_env_config_native
@@ -3617,7 +3707,7 @@ main() {
             ;;
         *)
             # 检查是否有命令行参数（自动配置模式）
-            if [[ -n "${MASTER_URL:-}" || -n "${AGENT_API_KEY:-}" || "${AUTO_CONFIG:-false}" == "true" ]]; then
+            if [[ -n "${MASTER_URL:-}" || -n "${AGENT_API_KEY:-}" || -n "${AGENT_BOOTSTRAP_TOKEN:-}" || "${AUTO_CONFIG:-false}" == "true" ]]; then
                 # 有参数时，先显示欢迎和更新检查
                 show_welcome
                 check_script_update
@@ -3655,7 +3745,7 @@ main() {
                         1)
                             log_info "开始安装监控节点..."
                             # 如果已经有预置参数，直接使用自动配置模式
-                            if [[ -n "${MASTER_URL:-}" && -n "${AGENT_API_KEY:-}" ]]; then
+                            if [[ -n "${MASTER_URL:-}" && ( -n "${AGENT_API_KEY:-}" || -n "${AGENT_BOOTSTRAP_TOKEN:-}" ) ]]; then
                                 log_info "检测到预置参数，使用自动配置模式"
                                 AUTO_CONFIG=true
                                 FORCE_ROOT=true
@@ -3800,6 +3890,7 @@ main() {
         fi
         create_app_directory
         download_agent_code
+        exchange_bootstrap_token
         create_docker_compose
         create_env_config
         create_dockerfile
@@ -3821,3 +3912,12 @@ trap 'log_error "安装过程中发生错误，请检查日志并重试"; exit 1
 
 # 运行主函数
 main "$@"
+
+
+
+
+
+
+
+
+
