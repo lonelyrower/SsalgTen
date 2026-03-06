@@ -324,13 +324,14 @@ curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/s
 - **🖥️ 主界面**: <http://localhost:3000> - 实时监控地图
 - **🛡️ 管理后台**: <http://localhost:3000/admin> - 系统管理
 - **📊 API 接口**: <http://localhost:3001/api> - RESTful API
-- **⚙️ 代理接口**: <http://localhost:3002> - 代理节点状态
+- **⚙️ Agent 健康检查**: <http://localhost:3002/health> - 仅供 Agent 所在机器或受信网络排障使用
 
-**默认管理员账号:**
+**管理员初始化信息:**
 
 - 用户名: `admin`
-- 密码: `admin123`
-- ⚠️ **生产环境请立即修改密码！**
+- 密码: 部署时自动生成，或读取 `DEFAULT_ADMIN_PASSWORD` / `ADMIN_BOOTSTRAP_PASSWORD`
+- 如忘记密码，可运行 `bash scripts/reset-admin-password.sh`
+- ⚠️ **首次登录后请立即修改密码！**
 
 ## 📁 项目结构
 
@@ -581,39 +582,23 @@ SsalgTen/
 - ✅ 服务发现功能更强大
 - ✅ 适合：需要检测本机服务的场景
 
-#### 使用 agent.sh 统一管理脚本（推荐）
-
-```bash
-# 远程一键安装（交互式中文界面）
-curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/agent.sh | bash
-
-# 本地使用（提供完整菜单）
-./agent.sh
-
-# 菜单功能包括：
-# 1. 安装 Agent（Docker/宿主机模式选择）
-# 2. 卸载 Agent
-# 3. 更新 Agent
-# 4. 重启 Agent
-# 5. 查看应用日志
-# 6. 更新脚本本身
-# 7. 帮助信息
-```
-
-#### 自动部署（使用 install-agent.sh）
+#### 使用 install-agent.sh 自动部署（推荐）
 
 ```bash
 # 一键安装代理到远程服务器
 curl -fsSL https://raw.githubusercontent.com/lonelyrower/SsalgTen/main/scripts/install-agent.sh | bash -s -- \
   --master-url "https://your-domain.com" \
-  --api-key "your-secure-api-key" \
+  --bootstrap-token "your-install-token" \
   --node-name "Tokyo-Node-1" \
-  --country "Japan" \
-  --city "Tokyo" \
-  --provider "AWS" \
-  --latitude "35.6762" \
-  --longitude "139.6503"
+  --node-country "Japan" \
+  --node-city "Tokyo" \
+  --node-provider "AWS" \
+  --allowed-control-ips "1.2.3.4"
 ```
+
+> 说明：`--bootstrap-token` 是当前推荐的安装方式，`--api-key` 只保留给旧流程兼容使用。
+>
+> 如果 `--master-url` 使用的是域名，尤其前面挂了 Cloudflare/CDN，请把 `--allowed-control-ips` 设置成主控服务器真实公网出口 IP，而不是 CDN 的 IP。
 
 #### 手动部署（宿主机模式）
 
@@ -1260,7 +1245,10 @@ describe('API Integration', () => {
   it('should authenticate user and return token', async () => {
     const response = await request(app)
       .post('/api/auth/login')
-      .send({ username: 'admin', password: 'admin123' })
+      .send({
+        username: 'admin',
+        password: process.env.TEST_ADMIN_PASSWORD || 'replace-with-current-admin-password',
+      })
       .expect(200);
       
     expect(response.body).toHaveProperty('token');
@@ -1319,7 +1307,7 @@ perf(database): 优化节点查询性能
 ### 🔗 相关链接
 
 - 🏠 **项目主页**: <https://github.com/lonelyrower/SsalgTen>
-- 📊 **在线演示**: (即将推出)
+- 📊 **在线演示**: 暂无公共演示站点
 - 📚 **API 文档**: <http://localhost:3001/api> (本地部署后访问)
 - 🐳 **Docker Hub**: (即将推出)
 

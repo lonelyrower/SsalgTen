@@ -156,3 +156,14 @@ preset-params-demo.md
 check-*.js
 create-test-*.js
 fix-*.js
+# Sensitive deployment artifacts (local only)
+.env.backup*
+deployment-info.txt
+DEPLOYMENT_INFO.txt
+backup_*.sql
+backup-*.sql
+backup-*.sql.gz
+emergency-backup-*.sql
+.backup/
+.update/
+PRIVATE_DEPLOYMENT_NOTES.md
