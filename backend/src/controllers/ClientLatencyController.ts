@@ -124,7 +124,7 @@ export class ClientLatencyController {
       }, 30000);
       this.testTimeouts.set(clientIP, timeout);
 
-            // 优先使用后端到 Agent 的签名请求触发各节点探测
+      // 优先使用后端到 Agent 的签名请求触发各节点探测
       const httpPromises = onlineNodes.map(async (node) => {
         const endpoint = buildAgentBaseUrl(node);
         if (!endpoint) {
@@ -412,7 +412,3 @@ export class ClientLatencyController {
 }
 
 export const clientLatencyController = new ClientLatencyController();
-
-
-
-

@@ -18,7 +18,9 @@ class AgentInstallTokenService {
 
   private getSecret(): string {
     const secret = (
-      process.env.AGENT_INSTALL_TOKEN_SECRET || process.env.JWT_SECRET || ""
+      process.env.AGENT_INSTALL_TOKEN_SECRET ||
+      process.env.JWT_SECRET ||
+      ""
     ).trim();
     if (!secret) {
       throw new Error("AGENT_INSTALL_TOKEN_SECRET or JWT_SECRET must be set");
@@ -45,14 +47,19 @@ class AgentInstallTokenService {
     };
   }
 
-  consumeToken(token: string): { ok: true; payload: InstallTokenPayload } | {
-    ok: false;
-    reason: string;
-  } {
+  consumeToken(token: string):
+    | { ok: true; payload: InstallTokenPayload }
+    | {
+        ok: false;
+        reason: string;
+      } {
     this.cleanupConsumedTokens();
 
     try {
-      const decoded = jwt.verify(token, this.getSecret()) as InstallTokenPayload;
+      const decoded = jwt.verify(
+        token,
+        this.getSecret(),
+      ) as InstallTokenPayload;
       if (decoded.purpose !== "agent-install" || !decoded.jti) {
         return { ok: false, reason: "invalid_purpose" };
       }

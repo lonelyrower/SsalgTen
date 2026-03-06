@@ -299,6 +299,3 @@ export class DiagnosticsProxyController {
 }
 
 export const diagnosticsProxyController = new DiagnosticsProxyController();
-
-
-

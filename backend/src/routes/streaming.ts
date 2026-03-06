@@ -1,10 +1,7 @@
 import { Router } from "express";
 import { StreamingController } from "../controllers/StreamingController";
 import { authenticateToken, requireAdmin } from "../middleware/auth";
-import {
-  agentLimiter,
-  streamingTestLimiter,
-} from "../middleware/rateLimit";
+import { agentLimiter, streamingTestLimiter } from "../middleware/rateLimit";
 
 const router = Router();
 

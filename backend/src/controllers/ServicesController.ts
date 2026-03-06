@@ -103,7 +103,9 @@ export class ServicesController {
         body: req.body,
       });
       if (!signCheck.ok) {
-        logger.warn(`[ServicesController] Signature validation failed: ${signCheck.reason}`);
+        logger.warn(
+          `[ServicesController] Signature validation failed: ${signCheck.reason}`,
+        );
         if (
           (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
           "true"
@@ -909,19 +911,15 @@ export class ServicesController {
       };
 
       try {
-        await axios.post(
-          `${agentBaseUrl}/api/services/scan`,
-          triggerPayload,
-          {
-            headers: buildSignedAgentHeaders(
-              agentControlApiKey,
-              "POST",
-              `${agentBaseUrl}/api/services/scan`,
-              triggerPayload,
-            ),
-            timeout: AGENT_CONTROL_TIMEOUT,
-          },
-        );
+        await axios.post(`${agentBaseUrl}/api/services/scan`, triggerPayload, {
+          headers: buildSignedAgentHeaders(
+            agentControlApiKey,
+            "POST",
+            `${agentBaseUrl}/api/services/scan`,
+            triggerPayload,
+          ),
+          timeout: AGENT_CONTROL_TIMEOUT,
+        });
       } catch (error: unknown) {
         logger.error(
           `Failed to trigger service scan on agent ${node.agentId} (${agentBaseUrl}):`,
@@ -974,8 +972,6 @@ export class ServicesController {
     }
   }
 }
-
-
 
 function isMissingServicesTableError(
   error: unknown,
@@ -1051,8 +1047,3 @@ function buildServiceAccess(service: {
 
   return access;
 }
-
-
-
-
-

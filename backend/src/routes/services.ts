@@ -34,11 +34,7 @@ router.get(
 );
 
 // 获取所有服务（支持筛选） - General route, comes after specific ones
-router.get(
-  "/services",
-  authenticateToken,
-  ServicesController.getAllServices,
-);
+router.get("/services", authenticateToken, ServicesController.getAllServices);
 
 // 更新服务信息（需要管理员权限） - :id route comes last
 router.put(

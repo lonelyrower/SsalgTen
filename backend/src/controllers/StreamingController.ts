@@ -149,19 +149,15 @@ export class StreamingController {
       };
 
       try {
-        await axios.post(
-          `${agentBaseUrl}/api/streaming/test`,
-          triggerPayload,
-          {
-            headers: buildSignedAgentHeaders(
-              agentControlApiKey,
-              "POST",
-              `${agentBaseUrl}/api/streaming/test`,
-              triggerPayload,
-            ),
-            timeout: AGENT_CONTROL_TIMEOUT,
-          },
-        );
+        await axios.post(`${agentBaseUrl}/api/streaming/test`, triggerPayload, {
+          headers: buildSignedAgentHeaders(
+            agentControlApiKey,
+            "POST",
+            `${agentBaseUrl}/api/streaming/test`,
+            triggerPayload,
+          ),
+          timeout: AGENT_CONTROL_TIMEOUT,
+        });
       } catch (error) {
         logger.error(
           `Failed to trigger streaming detection on agent ${node.agentId} (${agentBaseUrl}):`,
@@ -1010,19 +1006,15 @@ export class StreamingController {
         };
 
         try {
-          await axios.post(
-            `${baseUrl}/api/streaming/test`,
-            triggerPayload,
-            {
-              headers: buildSignedAgentHeaders(
-                agentControlApiKey,
-                "POST",
-                `${baseUrl}/api/streaming/test`,
-                triggerPayload,
-              ),
-              timeout: AGENT_CONTROL_TIMEOUT,
-            },
-          );
+          await axios.post(`${baseUrl}/api/streaming/test`, triggerPayload, {
+            headers: buildSignedAgentHeaders(
+              agentControlApiKey,
+              "POST",
+              `${baseUrl}/api/streaming/test`,
+              triggerPayload,
+            ),
+            timeout: AGENT_CONTROL_TIMEOUT,
+          });
           successCount += 1;
           if (io) {
             notifyStreamingTestStart(io, node.id);
@@ -1291,7 +1283,3 @@ function isMissingStreamingTableError(
     error.code === "P2021"
   );
 }
-
-
-
-

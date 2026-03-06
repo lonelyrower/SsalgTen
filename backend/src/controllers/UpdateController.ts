@@ -161,6 +161,3 @@ export class UpdateController {
 }
 
 export const updateController = new UpdateController();
-
-
-

@@ -92,5 +92,3 @@ resetAdminPassword()
     console.error("❌ 发生错误:", error);
     process.exit(1);
   });
-
-

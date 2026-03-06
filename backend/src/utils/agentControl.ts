@@ -34,7 +34,10 @@ export const resolveAgentControlApiKey = async (): Promise<{
       return { key: key.trim(), source: "system" };
     }
   } catch (error) {
-    logger.error("[agentControl] Failed to resolve system agent API key:", error);
+    logger.error(
+      "[agentControl] Failed to resolve system agent API key:",
+      error,
+    );
   }
 
   const fallback = FALLBACK_AGENT_CONTROL_API_KEY?.trim();
