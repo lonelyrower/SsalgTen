@@ -101,6 +101,7 @@ export class ServicesController {
         signature: sig,
         nonce,
         body: req.body,
+        rawBody: (req as Request & { rawBody?: string }).rawBody,
       });
       if (!signCheck.ok) {
         logger.warn(

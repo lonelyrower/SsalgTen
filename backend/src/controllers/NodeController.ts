@@ -564,6 +564,7 @@ export class NodeController {
         signature: sig,
         nonce,
         body: req.body,
+        rawBody: (req as Request & { rawBody?: string }).rawBody,
       });
       if (!signCheck.ok) {
         logger.warn(`[NodeController] 签名校验失败: ${signCheck.reason}`);
@@ -868,6 +869,7 @@ export class NodeController {
         signature: sig,
         nonce,
         body: req.body,
+        rawBody: (req as Request & { rawBody?: string }).rawBody,
       });
       if (!signCheck.ok) {
         logger.warn(`[NodeController] 心跳签名校验失败: ${signCheck.reason}`);
@@ -975,6 +977,7 @@ export class NodeController {
         signature: sig,
         nonce,
         body: req.body,
+        rawBody: (req as Request & { rawBody?: string }).rawBody,
       });
       if (!signCheck.ok) {
         logger.warn(`[NodeController] 诊断签名校验失败: ${signCheck.reason}`);

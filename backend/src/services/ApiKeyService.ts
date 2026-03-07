@@ -547,8 +547,9 @@ export class ApiKeyService {
     signature?: string;
     nonce?: string;
     body?: unknown;
+    rawBody?: string;
   }): Promise<{ ok: boolean; reason?: string }> {
-    const { timestamp, signature, nonce, body } = options;
+    const { timestamp, signature, nonce, body, rawBody } = options;
     if (!this.requireSignature) {
       // 未强制要求时，如果未提供签名则放行，但记录提示
       if (!signature) {
@@ -590,7 +591,9 @@ export class ApiKeyService {
         candidates.push(previousKey);
       }
 
-      const payload = `${timestamp}.${JSON.stringify(body ?? {})}`;
+      const normalizedBody =
+        typeof rawBody === "string" ? rawBody : JSON.stringify(body ?? {});
+      const payload = `${timestamp}.${normalizedBody}`;
       const compute = (key: string) =>
         crypto.createHmac("sha256", key).update(payload).digest("hex");
       const matched = candidates.some((k) => compute(k) === signature);
