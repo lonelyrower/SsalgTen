@@ -2679,7 +2679,7 @@ restart_agent() {
         log_error "未找到 Agent 安装目录: $APP_DIR"
         log_info "请先安装 Agent"
         echo ""
-        read -p "按回车键返回主菜单..." -r
+        read -p "按回车键退出脚本..." -r
         return
     fi
 
@@ -2692,7 +2692,7 @@ restart_agent() {
     confirm=$(read_from_tty "确认重启 Agent 服务？[y/N]: ")
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         log_info "已取消操作"
-        read -p "按回车键返回主菜单..." -r
+        read -p "按回车键退出脚本..." -r
         return
     fi
 
@@ -2751,7 +2751,7 @@ restart_agent() {
     echo ""
     log_success "✅ 重启完成！"
     echo ""
-    read -p "按回车键返回主菜单..." -r
+    read -p "按回车键退出脚本..." -r
 }
 
 # 检测部署模式
@@ -3802,6 +3802,7 @@ main() {
                             ;;
                         4)
                             restart_agent
+                            exit 0
                             ;;
                         5)
                             view_logs
@@ -3923,12 +3924,3 @@ trap 'log_error "安装过程中发生错误，请检查日志并重试"; exit 1
 
 # 运行主函数
 main "$@"
-
-
-
-
-
-
-
-
-
