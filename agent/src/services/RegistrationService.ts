@@ -9,6 +9,7 @@ import { networkMonitor } from './NetworkMonitor';
 import { fileMonitor } from './FileMonitor';
 import { emailAlertService } from './EmailAlertService';
 import { buildSignedHeaders } from '../utils/signing';
+import { http } from '../utils/http';
 
 export interface RegistrationResult {
   success: boolean;
@@ -41,16 +42,57 @@ export class RegistrationService {
     this.sendHeartbeat = this.sendHeartbeat.bind(this);
   }
 
+  private buildMasterUrlCandidates(masterUrl: string): string[] {
+    const normalizedMasterUrl = masterUrl.replace(/\/$/, '');
+
+    try {
+      const u = new URL(normalizedMasterUrl);
+      const scheme = u.protocol;
+      const port = u.port || (scheme === 'https:' ? '443' : '80');
+      const originNoSlash = `${scheme}//${u.hostname}${u.port ? `:${u.port}` : ''}`;
+      const candidates = [originNoSlash];
+
+      if (u.hostname === 'host.docker.internal' || u.hostname === '172.17.0.1') {
+        candidates.push(`${scheme}//localhost:${u.port || port}`);
+        candidates.push(`${scheme}//127.0.0.1:${u.port || port}`);
+      } else if (
+        u.hostname === 'localhost' ||
+        u.hostname === '127.0.0.1' ||
+        u.hostname === '::1'
+      ) {
+        candidates.push(`${scheme}//host.docker.internal:${u.port || port}`);
+        candidates.push(`${scheme}//172.17.0.1:${u.port || port}`);
+      }
+
+      return [...new Set(candidates)];
+    } catch {
+      return [normalizedMasterUrl];
+    }
+  }
+
+  private formatAxiosError(error: unknown): string {
+    if (axios.isAxiosError(error)) {
+      const parts = [
+        error.code,
+        error.message,
+        error.response ? `status=${error.response.status}` : '',
+      ].filter(Boolean);
+      return parts.join(' | ');
+    }
+
+    return error instanceof Error ? error.message : 'Unknown error';
+  }
+
   // 注册Agent到主服务器
   async registerAgent(): Promise<RegistrationResult> {
     try {
       logger.info('Attempting to register agent with master server...');
-      
+
       const systemInfo = await getSystemInfo();
       const publicIPs = await getPublicIPs();
       const registrationData = {
         agentId: config.id,
-        apiKey: config.apiKey, // 直接在body中包含API Key
+        apiKey: config.apiKey,
         nodeInfo: {
           name: config.name,
           country: config.location.country,
@@ -65,140 +107,126 @@ export class RegistrationService {
           platform: systemInfo.platform,
           version: systemInfo.version,
           hostname: systemInfo.hostname,
-          uptime: systemInfo.uptime
-        }
+          uptime: systemInfo.uptime,
+        },
       };
 
-      let masterUrl = config.masterUrl.replace(/\/$/, ''); // 移除尾部斜杠
-
-      // 解析原始URL以便构造回退地址
-      let urlsToTry: string[] = [];
-      try {
-        const u = new URL(masterUrl);
-        const scheme = u.protocol; // 'http:' or 'https:'
-        const port = u.port || (scheme === 'https:' ? '443' : '80');
-        const originNoSlash = `${scheme}//${u.hostname}${u.port ? `:${u.port}` : ''}`;
-
-        // 1) 原始地址优先
-        urlsToTry.push(originNoSlash);
-
-        // 2) 基于不同宿主访问方式的回退
-        if (u.hostname === 'host.docker.internal') {
-          urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
-          urlsToTry.push(`${scheme}//localhost:${u.port || port}`);
-          urlsToTry.push(`${scheme}//127.0.0.1:${u.port || port}`);
-        } else if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
-          urlsToTry.push(`${scheme}//host.docker.internal:${u.port || port}`);
-          urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
-        } else {
-          // 保守追加同机常见回退（置于末尾，避免影响异机部署）
-          urlsToTry.push(`${scheme}//host.docker.internal:${u.port || port}`);
-          urlsToTry.push(`${scheme}//172.17.0.1:${u.port || port}`);
-          urlsToTry.push(`${scheme}//localhost:${u.port || port}`);
-          urlsToTry.push(`${scheme}//127.0.0.1:${u.port || port}`);
-        }
-      } catch {
-        // URL解析失败时维持原行为
-        urlsToTry = [masterUrl];
-      }
+      const masterUrl = config.masterUrl.replace(/\/$/, '');
+      const urlsToTry = this.buildMasterUrlCandidates(masterUrl);
 
       let lastError;
       for (const tryUrl of urlsToTry) {
         try {
           logger.info(`尝试连接到: ${tryUrl}`);
 
-          // 先做一次健康检查，快速过滤明显不可达地址
           try {
-            const health = await axios.get(`${tryUrl}/api/health`, { timeout: 3000 });
-            if (!health.data?.success) {
-              logger.warn(`健康检查未通过: ${tryUrl}`);
+            const health = await http.get(`${tryUrl}/api/health`, {
+              timeout: 3000,
+              validateStatus: () => true,
+              headers: {
+                'User-Agent': `SsalgTen-Agent/${config.id}`,
+              },
+            });
+
+            if (health.status !== 200 || !health.data?.success) {
+              logger.warn(
+                `健康检查未通过: ${tryUrl} (status=${health.status}, success=${String(health.data?.success ?? 'n/a')})`,
+              );
               continue;
             }
-          } catch (e) {
-            logger.warn(`健康检查失败，跳过: ${tryUrl}`);
+          } catch (error) {
+            logger.warn(
+              `健康检查失败，跳过: ${tryUrl} (${this.formatAxiosError(error)})`,
+            );
             continue;
           }
 
-          const response = await axios.post(
+          const response = await http.post(
             `${tryUrl}/api/agents/register`,
             registrationData,
             {
-              // 合理超时，避免长时间阻塞
               timeout: 10000,
+              validateStatus: () => true,
               headers: {
                 'Content-Type': 'application/json',
                 'User-Agent': `SsalgTen-Agent/${config.id}`,
                 ...buildSignedHeaders(config.apiKey, registrationData),
-              }
-            }
+              },
+            },
           );
 
-          // 如果成功，更新配置中的masterUrl为可工作的URL
-          if (response.data.success && tryUrl !== masterUrl) {
-            logger.info(`连接成功，使用URL: ${tryUrl}`);
-            config.masterUrl = tryUrl;
-          }
+          if (response.status === 200 && response.data?.success) {
+            if (tryUrl !== masterUrl) {
+              logger.info(`连接成功，使用URL: ${tryUrl}`);
+              config.masterUrl = tryUrl;
+            }
 
-          if (response.data.success) {
             this.isRegistered = true;
             this.nodeInfo = response.data.data;
-            
+
             logger.info('Agent registration successful!', {
               nodeId: this.nodeInfo.nodeId,
               nodeName: this.nodeInfo.nodeName,
-              location: this.nodeInfo.location
+              location: this.nodeInfo.location,
             });
 
-            // 初始化安全监控服务
             this.initializeSecurityServices();
-
-            // 开始发送心跳
             this.startHeartbeat();
 
             return {
               success: true,
               nodeId: this.nodeInfo.nodeId,
               nodeName: this.nodeInfo.nodeName,
-              location: this.nodeInfo.location
+              location: this.nodeInfo.location,
             };
-          } else {
-            logger.error(`Agent registration failed with ${tryUrl}:`, response.data.error);
-            lastError = new Error(response.data.error || 'Registration failed');
           }
+
+          const responseStatus = response.status || 'unknown';
+          const responseError =
+            response.data?.error || response.statusText || 'Registration failed';
+          logger.error(
+            `Agent registration failed with ${tryUrl}: status=${responseStatus}, error=${responseError}`,
+          );
+          lastError = new Error(`${responseError}`);
         } catch (error) {
-          logger.warn(`Failed to connect to ${tryUrl}:`, error instanceof Error ? error.message : 'Unknown error');
+          logger.warn(
+            `Failed to connect to ${tryUrl}: ${this.formatAxiosError(error)}`,
+          );
           lastError = error instanceof Error ? error : new Error('Unknown error');
         }
       }
 
-      // 如果所有URL都失败了，抛出最后一个错误
       throw lastError || new Error('All connection attempts failed');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown registration error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown registration error';
       logger.error('Agent registration error:', errorMessage);
-      
-      // 检查是否是网络连接问题
+
       if (axios.isAxiosError(error)) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-          logger.warn(`Cannot connect to master server at ${config.masterUrl}. Will retry later.`);
+          logger.warn(
+            `Cannot connect to master server at ${config.masterUrl}. Will retry later.`,
+          );
           return {
             success: false,
-            error: `Master server unreachable: ${config.masterUrl}`
+            error: `Master server unreachable: ${config.masterUrl}`,
           };
         }
-        
+
         if (error.response?.status === 404) {
-          logger.warn('Agent not found in master server. Please add this agent in the admin panel first.');
+          logger.warn(
+            'Agent not found in master server. Please add this agent in the admin panel first.',
+          );
           return {
             success: false,
-            error: 'Agent not registered in master server. Contact administrator.'
+            error: 'Agent not registered in master server. Contact administrator.',
           };
         }
       }
 
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }
@@ -425,7 +453,7 @@ export class RegistrationService {
       }
 
       const masterUrl = config.masterUrl.replace(/\/$/, '');
-      const response = await axios.post(
+      const response = await http.post(
         `${masterUrl}/api/agents/${config.id}/heartbeat`,
         heartbeatData,
         {

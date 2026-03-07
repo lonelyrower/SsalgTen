@@ -154,7 +154,7 @@ show_welcome() {
     echo ""
     echo -e "${YELLOW}使用方法:${NC}"
     echo "  交互式安装: curl -fsSL ... | bash"
-    echo "  自动化安装: curl -fsSL ... | bash -s -- --auto-config --master-url URL --api-key KEY"
+    echo "  自动化安装: curl -fsSL ... | bash -s -- --auto-config --master-url URL --bootstrap-token TOKEN"
     echo "  更新心跳配置: curl -fsSL ... | bash (选择菜单选项 2)"
     echo "  卸载Agent: curl -fsSL ... | bash -s -- --uninstall"
     echo ""
@@ -368,6 +368,17 @@ resolve_allowed_control_ips() {
     else
         log_warning "MASTER_URL 使用的是域名，出于安全考虑，不会自动把域名解析结果加入白名单"
         log_warning "如果前面挂了 Cloudflare/CDN，请通过 --allowed-control-ips 手动传入主控服务器真实出口 IP"
+
+        if [[ "${AUTO_CONFIG:-false}" != "true" ]]; then
+            echo ""
+            local manual_allowed_ips
+            manual_allowed_ips=$(read_from_tty "可选：请输入主控服务器公网出口 IP 白名单（多个逗号分隔，直接回车跳过）: ")
+            if [[ -n "$manual_allowed_ips" ]]; then
+                AGENT_ALLOWED_CONTROL_IPS=$(echo "$manual_allowed_ips" | tr ',' '\n' | sed '/^$/d' | sort -u | tr '\n' ',' | sed 's/,$//')
+                log_info "已设置可信控制端 IP 白名单: $AGENT_ALLOWED_CONTROL_IPS"
+                return 0
+            fi
+        fi
     fi
 
     AGENT_ALLOWED_CONTROL_IPS=$(echo "$collected" | tr ',' '\n' | sed '/^$/d' | sort -u | tr '\n' ',' | sed 's/,$//')
