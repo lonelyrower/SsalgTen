@@ -190,19 +190,6 @@ export const LoginPage: React.FC = () => {
               )}
             </Button>
           </form>
-
-          {/* 默认账户提示 */}
-          <div className="mt-8 rounded-[var(--radius-xl)] border border-cyan-200/70 bg-cyan-50/70 p-4 text-cyan-700 shadow-[var(--shadow-inner)] shadow-cyan-500/10 dark:border-cyan-900/50 dark:bg-sky-900/20 dark:text-cyan-200">
-            <p className="text-sm text-center font-semibold">
-              <strong>管理员账户提示：</strong>
-            </p>
-            <p className="text-sm text-center mt-1">
-              用户名固定为 admin，初始密码以部署或重置脚本的实时输出为准。
-            </p>
-            <p className="text-xs text-center mt-2 opacity-80">
-              ⚠️ 如忘记密码，请使用 scripts/reset-admin-password.sh 重新生成。
-            </p>
-          </div>
           </div>
         </div>
       </div>
