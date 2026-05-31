@@ -108,7 +108,7 @@ export class ServicesController {
           `[ServicesController] Signature validation failed: ${signCheck.reason}`,
         );
         if (
-          (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
+          (process.env.AGENT_REQUIRE_SIGNATURE ?? "true").toLowerCase() ===
           "true"
         ) {
           return res.status(401).json({

@@ -112,7 +112,7 @@ const defaultConfig: Partial<EnvConfig> = {
   MTR_COUNT: 10,
   SPEEDTEST_SERVER_ID: "auto",
 
-  TRUST_PROXY: true,
+  TRUST_PROXY: false,
   ENABLE_SYSTEM_METRICS: false,
   HEALTH_CHECK_INTERVAL: 30000, // 30 seconds
 

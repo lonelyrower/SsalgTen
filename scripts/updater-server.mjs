@@ -13,6 +13,11 @@ const MAX_BODY_BYTES = process.env.UPDATER_MAX_BODY_BYTES
   ? Number(process.env.UPDATER_MAX_BODY_BYTES)
   : 1024 * 1024; // 1 MiB
 
+if (!TOKEN.trim()) {
+  console.error('UPDATER_TOKEN must be set; refusing to start updater without authentication.');
+  process.exit(1);
+}
+
 mkdirSync(LOG_DIR, { recursive: true });
 
 function send(res, code, obj) {
@@ -42,7 +47,6 @@ function parseBody(req) {
 }
 
 function isAuthorized(req) {
-  if (!TOKEN) return true;
   return req.headers['x-updater-token'] === TOKEN;
 }
 

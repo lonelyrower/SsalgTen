@@ -7,12 +7,12 @@ services:
     environment:
       POSTGRES_DB: ssalgten
       POSTGRES_USER: ssalgten
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-ssalgten_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     networks:
       - ssalgten-network
     deploy:
@@ -44,16 +44,16 @@ services:
       HOST: 0.0.0.0
       
       # Database Configuration
-      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:?DB_PASSWORD is required}@database:5432/ssalgten
       
       # JWT Configuration
       # REQUIRED in production: use a strong random secret (>= 32 chars)
-      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       
       # API Security
       # REQUIRED in production: use a strong random secret (>= 32 chars)
-      API_KEY_SECRET: ${API_KEY_SECRET:-}
+      API_KEY_SECRET: ${API_KEY_SECRET:?API_KEY_SECRET is required}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://${DOMAIN:-localhost}}
       FRONTEND_URL: ${FRONTEND_URL:-http://${DOMAIN:-localhost}}
       

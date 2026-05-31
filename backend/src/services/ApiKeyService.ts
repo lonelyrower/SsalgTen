@@ -21,7 +21,11 @@ export class ApiKeyService {
     process.env.AGENT_SIGNATURE_TTL_SECONDS || "300",
   );
   private requireSignature =
-    (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() === "true";
+    (process.env.AGENT_REQUIRE_SIGNATURE ?? "true").toLowerCase() === "true";
+  private nonceCacheMaxSize = Math.max(
+    1000,
+    parseInt(process.env.AGENT_SIGNATURE_NONCE_CACHE_MAX || "10000", 10),
+  );
 
   // 内存缓存：系统密钥/旧密钥（减少 Setting 表查询）
   private keyCache: {
@@ -570,10 +574,13 @@ export class ApiKeyService {
     if (Math.abs(nowSec - ts) > this.signatureTtlSec) {
       return { ok: false, reason: "timestamp_out_of_window" };
     }
+    const nowMs = Date.now();
+    this.cleanupNonceCache(nowMs);
+
     // nonce 防重放
     if (nonce) {
       const exist = this.nonceCache.get(nonce);
-      if (exist && exist > Date.now()) {
+      if (exist && exist > nowMs) {
         return { ok: false, reason: "replay_detected" };
       }
     }
@@ -603,11 +610,26 @@ export class ApiKeyService {
       // 记录 nonce
       if (nonce) {
         this.nonceCache.set(nonce, Date.now() + this.signatureTtlSec * 1000);
+        this.cleanupNonceCache();
       }
       return { ok: true };
     } catch (e) {
       logger.warn("[ApiKeyService] Signature validation error:", e);
       return { ok: false, reason: "internal_error" };
+    }
+  }
+
+  private cleanupNonceCache(now = Date.now()): void {
+    for (const [key, expiresAt] of this.nonceCache.entries()) {
+      if (expiresAt <= now) {
+        this.nonceCache.delete(key);
+      }
+    }
+
+    while (this.nonceCache.size > this.nonceCacheMaxSize) {
+      const oldest = this.nonceCache.keys().next().value;
+      if (!oldest) break;
+      this.nonceCache.delete(oldest);
     }
   }
 

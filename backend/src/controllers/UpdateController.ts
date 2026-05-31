@@ -64,6 +64,13 @@ export class UpdateController {
     const updaterToken = process.env.UPDATER_TOKEN || "";
     const forceAgent = Boolean(req.body?.forceAgent);
 
+    if (!updaterToken) {
+      return res.status(503).json({
+        success: false,
+        error: "Updater token is not configured",
+      });
+    }
+
     try {
       const resp = await fetch(updaterUrl, {
         method: "POST",
@@ -118,6 +125,12 @@ export class UpdateController {
       process.env.UPDATER_URL || "http://updater:8765/update"
     ).replace(/\/update$/, "");
     const updaterToken = process.env.UPDATER_TOKEN || "";
+    if (!updaterToken) {
+      return res.status(503).json({
+        success: false,
+        error: "Updater token is not configured",
+      });
+    }
     try {
       const url = `${updaterBase}/jobs/${encodeURIComponent(id)}?tail=${Number(req.query.tail || 500)}`;
       const resp = await fetch(url, {

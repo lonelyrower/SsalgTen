@@ -5,7 +5,7 @@ export const validateBody =
   (schema: ZodObject<ZodRawShape>) =>
   (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.body = schema.parse(req.body);
+      req.body = schema.parse(req.body ?? {});
       next();
     } catch (err) {
       const issues =

@@ -14,7 +14,7 @@ services:
     environment:
       POSTGRES_DB: ssalgten
       POSTGRES_USER: ssalgten
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-ssalgten_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -65,16 +65,16 @@ services:
 
       # Database Configuration
       # Optimized for ~400 agents: larger connection pool and timeout
-      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:-ssalgten_password}@database:5432/ssalgten?connection_limit=100&pool_timeout=60
+      DATABASE_URL: postgresql://ssalgten:${DB_PASSWORD:?DB_PASSWORD is required}@database:5432/ssalgten?connection_limit=100&pool_timeout=60
 
       # JWT Configuration
       # REQUIRED in production: use a strong random secret (>= 32 chars)
-      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       
       # API Security
       # REQUIRED in production: use a strong random secret (>= 32 chars)
-      API_KEY_SECRET: ${API_KEY_SECRET:-}
+      API_KEY_SECRET: ${API_KEY_SECRET:?API_KEY_SECRET is required}
       CORS_ORIGIN: ${CORS_ORIGIN:-}
       
       # Agent Configuration
@@ -104,7 +104,7 @@ services:
 
       # System Update Configuration
       UPDATER_URL: http://updater:8765/update
-      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      UPDATER_TOKEN: ${UPDATER_TOKEN:?UPDATER_TOKEN is required}
       REPO_OWNER: ${REPO_OWNER:-lonelyrower}
       REPO_NAME: ${REPO_NAME:-SsalgTen}
       REPO_BRANCH: ${REPO_BRANCH:-main}
@@ -175,7 +175,7 @@ services:
       PORT: 8765
       WORKSPACE: /workspace
       UPDATE_LOG_DIR: /workspace/.update/logs
-      UPDATER_TOKEN: ${UPDATER_TOKEN:-}
+      UPDATER_TOKEN: ${UPDATER_TOKEN:?UPDATER_TOKEN is required}
 
       # Pass through environment variables for update script
       FRONTEND_PORT: ${FRONTEND_PORT:-80}

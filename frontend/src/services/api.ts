@@ -797,12 +797,15 @@ class ApiService {
   }
 
   async logout(): Promise<void> {
-    TokenManager.removeTokens();
-    // 可以调用后端的logout接口
     try {
-      await this.request("/auth/logout", { method: "POST" }, true);
+      await this.request("/auth/logout", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
     } catch {
       // 忽略logout错误，因为令牌已经被清除
+    } finally {
+      TokenManager.removeTokens();
     }
   }
 
@@ -828,6 +831,7 @@ class ApiService {
     try {
       const response = await this.request<LoginResponse>("/auth/refresh", {
         method: "POST",
+        body: JSON.stringify({}),
       });
 
       if (response.success && response.data) {

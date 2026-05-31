@@ -570,7 +570,7 @@ export class NodeController {
         logger.warn(`[NodeController] 签名校验失败: ${signCheck.reason}`);
         // 若强制要求签名，返回401；否则继续
         if (
-          (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
+          (process.env.AGENT_REQUIRE_SIGNATURE ?? "true").toLowerCase() ===
           "true"
         ) {
           const response: ApiResponse = {
@@ -875,7 +875,7 @@ export class NodeController {
         logger.warn(`[NodeController] 心跳签名校验失败: ${signCheck.reason}`);
         // 仅当强制要求签名时才拒绝；否则放行（即使客户端带了签名也不拒绝）
         if (
-          (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
+          (process.env.AGENT_REQUIRE_SIGNATURE ?? "true").toLowerCase() ===
           "true"
         ) {
           const response: ApiResponse = {
@@ -982,7 +982,7 @@ export class NodeController {
       if (!signCheck.ok) {
         logger.warn(`[NodeController] 诊断签名校验失败: ${signCheck.reason}`);
         if (
-          (process.env.AGENT_REQUIRE_SIGNATURE || "false").toLowerCase() ===
+          (process.env.AGENT_REQUIRE_SIGNATURE ?? "true").toLowerCase() ===
           "true"
         ) {
           const response: ApiResponse = {

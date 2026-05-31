@@ -15,11 +15,13 @@ dotenv.config();
 
 const app = express();
 
-// 当服务位于反向代理或容器网络后面时，信任代理以正确解析 IP（配合 express-rate-limit）
-// 建议设置为精确的跳数或受信网段，避免 express-rate-limit 警告/异常
-// TRUST_PROXY 可设置为：数字（跳数），或逗号分隔的受信代理列表
+// 当服务位于反向代理或容器网络后面时，信任受控代理以正确解析 IP（配合 express-rate-limit）。
+// 默认只信任本机/链路本地/私网代理，避免直接暴露后端时客户端伪造 X-Forwarded-For 绕过限流。
+// TRUST_PROXY 可设置为：false、数字（跳数），或逗号分隔的受信代理列表。
 (() => {
-  const tp = (process.env.TRUST_PROXY || "1").trim();
+  const tp = (
+    process.env.TRUST_PROXY || "loopback, linklocal, uniquelocal"
+  ).trim();
   if (/^\d+$/.test(tp)) {
     app.set("trust proxy", parseInt(tp, 10));
   } else if (tp.toLowerCase() === "false") {
