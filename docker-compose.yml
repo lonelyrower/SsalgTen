@@ -98,7 +98,8 @@ services:
       SPEEDTEST_SERVER_ID: ${SPEEDTEST_SERVER_ID:-auto}
       DEFAULT_PING_COUNT: ${DEFAULT_PING_COUNT:-4}
       DEFAULT_TRACEROUTE_MAX_HOPS: ${DEFAULT_TRACEROUTE_MAX_HOPS:-30}
-      
+      IPINFO_TOKEN: ${IPINFO_TOKEN:-}
+
       # System Update Configuration
       UPDATER_URL: http://updater:8765/update
       UPDATER_TOKEN: ${UPDATER_TOKEN:?UPDATER_TOKEN is required}

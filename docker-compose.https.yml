@@ -109,6 +109,9 @@ services:
       # 监控配置
       METRICS_ENABLED: "true"
       LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # IP 地理位置/ASN 查询（可选，未设置时匿名额度易被限流导致 ASN 显示 Unknown）
+      IPINFO_TOKEN: ${IPINFO_TOKEN:-}
     volumes:
       - ./backend/logs:/app/logs
     networks:
