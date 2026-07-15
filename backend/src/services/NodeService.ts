@@ -376,7 +376,10 @@ export class NodeService {
 
           return {
             ...node,
-            provider: node.asnName || node.provider,
+            provider:
+              node.asnName && node.asnName !== "Unknown"
+                ? node.asnName
+                : node.provider,
             lastHeartbeat: lh
               ? {
                   timestamp: lh.timestamp,
@@ -820,7 +823,10 @@ export class NodeService {
       // 如果存在ASN名称，使用ASN名称作为服务商显示
       return {
         ...node,
-        provider: node.asnName || node.provider,
+        provider:
+          node.asnName && node.asnName !== "Unknown"
+            ? node.asnName
+            : node.provider,
       };
     } catch (error) {
       if (
@@ -1232,7 +1238,10 @@ export class NodeService {
   >(node: T): T {
     return {
       ...node,
-      provider: node.asnName || node.provider,
+      provider:
+        node.asnName && node.asnName !== "Unknown"
+          ? node.asnName
+          : node.provider,
     };
   }
 
@@ -1285,7 +1294,12 @@ export class NodeService {
         where: {
           AND: [
             {
-              OR: [{ asnNumber: null }, { asnNumber: "" }],
+              OR: [
+                { asnNumber: null },
+                { asnNumber: "" },
+                { asnNumber: "Unknown" },
+                { asnName: "Unknown" },
+              ],
             },
             {
               OR: [{ ipv4: { not: null } }, { ipv6: { not: null } }],

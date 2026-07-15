@@ -197,22 +197,8 @@ class IPInfoService {
       const message = error instanceof Error ? error.message : String(error);
       logger.error("获取IP信息失败:", { ip, error: message });
 
-      // 返回基础信息作为降级
-      return {
-        ip,
-        city: "Unknown",
-        region: "Unknown",
-        country: "Unknown",
-        loc: "0,0",
-        timezone: "UTC",
-        asn: {
-          asn: "Unknown",
-          name: "Unknown",
-          org: "Unknown",
-          route: "N/A",
-          type: "N/A",
-        },
-      };
+      // 查询失败时返回 null，避免把字面量 "Unknown" 当作真实数据写入数据库/覆盖已有的 provider 名称
+      return null;
     }
   }
 
