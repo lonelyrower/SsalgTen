@@ -159,6 +159,10 @@ const countryFlagMap: Record<string, string> = {
   巴基斯坦: "🇵🇰",
   Pakistan: "🇵🇰",
   PK: "🇵🇰",
+
+  波黑: "🇧🇦",
+  "Bosnia and Herzegovina": "🇧🇦",
+  BA: "🇧🇦",
 };
 
 /**
@@ -184,10 +188,12 @@ export const getCountryFlag = (countryName: string): string => {
   }
 
   // 部分匹配（处理 "United States of America" 这种情况）
+  // 要求匹配的键足够长，避免像 "IN" 这种短代码被 "Herzegovina" 之类的名称误命中
   const partialKey = Object.keys(countryFlagMap).find(
     (k) =>
-      k.toLowerCase().includes(lowerCountry) ||
-      lowerCountry.includes(k.toLowerCase()),
+      k.length >= 4 &&
+      (k.toLowerCase().includes(lowerCountry) ||
+        lowerCountry.includes(k.toLowerCase())),
   );
   if (partialKey) {
     return countryFlagMap[partialKey];
@@ -315,6 +321,9 @@ const countryCodeMap: Record<string, string> = {
   巴基斯坦: "pk",
   pakistan: "pk",
   pk: "pk",
+  波黑: "ba",
+  "bosnia and herzegovina": "ba",
+  ba: "ba",
 };
 
 export const getCountryCode = (countryName: string): string => {
@@ -323,8 +332,10 @@ export const getCountryCode = (countryName: string): string => {
   if (/^[a-z]{2}$/i.test(raw)) return raw.toLowerCase();
   const key = raw.toLowerCase();
   if (countryCodeMap[key]) return countryCodeMap[key];
-  // 处理包含关系
-  const found = Object.keys(countryCodeMap).find((k) => key.includes(k));
+  // 处理包含关系（要求键长度>=4，避免两位代码被长名称中的巧合子串误命中，例如 "in" 命中 "Herzegovina"）
+  const found = Object.keys(countryCodeMap).find(
+    (k) => k.length >= 4 && key.includes(k),
+  );
   return found ? countryCodeMap[found] : "un";
 };
 

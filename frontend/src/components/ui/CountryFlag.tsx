@@ -118,6 +118,8 @@ const countryCodeMap: Record<string, string> = {
   乌兹别克斯坦: "uz",
   "New Zealand": "nz",
   新西兰: "nz",
+  "Bosnia and Herzegovina": "ba",
+  波黑: "ba",
   // 默认值（使用问号代替，避免与挪威 NO 冲突）
   Unknown: "❓",
   未知: "❓",
