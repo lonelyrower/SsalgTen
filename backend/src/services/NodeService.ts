@@ -381,6 +381,7 @@ export class NodeService {
               node.asnName && node.asnName !== "Unknown"
                 ? node.asnName
                 : node.provider,
+            country: normalizeCountryCode(node.country) || node.country,
             lastHeartbeat: lh
               ? {
                   timestamp: lh.timestamp,
@@ -828,6 +829,7 @@ export class NodeService {
           node.asnName && node.asnName !== "Unknown"
             ? node.asnName
             : node.provider,
+        country: normalizeCountryCode(node.country) || node.country,
       };
     } catch (error) {
       if (
