@@ -452,7 +452,11 @@ get_geo_info() {
             geo_info=$(curl -s --max-time 15 "http://ip-api.com/json/$public_ip" 2>/dev/null)
             
             if [[ -n "$geo_info" && "$geo_info" != *"fail"* ]]; then
-                AUTO_DETECTED_COUNTRY=$(echo "$geo_info" | grep '"country"' | cut -d'"' -f4 2>/dev/null | head -1)
+                # 注意：ip-api.com 的 "country" 字段是完整国家名（如 "Norway"），
+                # 而 ipinfo.io 的 "country" 字段是两位ISO代码（如 "NO"）。
+                # 这里取 "countryCode" 保持两个数据源格式一致，避免国家字段
+                # 有的存代码、有的存全名。
+                AUTO_DETECTED_COUNTRY=$(echo "$geo_info" | grep '"countryCode"' | cut -d'"' -f4 2>/dev/null | head -1)
                 AUTO_DETECTED_CITY=$(echo "$geo_info" | grep '"city"' | cut -d'"' -f4 2>/dev/null | head -1)
                 AUTO_DETECTED_PROVIDER=$(echo "$geo_info" | grep '"isp"' | cut -d'"' -f4 2>/dev/null | head -1)
                 AUTO_DETECTED_LATITUDE=$(echo "$geo_info" | grep '"lat"' | cut -d':' -f2 | cut -d',' -f1 | tr -d ' ' 2>/dev/null)
