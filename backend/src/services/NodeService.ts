@@ -16,6 +16,7 @@ import {
   ServicesDetail,
 } from "../types/heartbeat";
 import { eventService } from "./EventService";
+import { normalizeCountryCode } from "../utils/countryCode";
 
 export interface CreateNodeInput {
   agentId?: string; // 允许指定agentId，用于Agent自动注册
@@ -1234,7 +1235,11 @@ export class NodeService {
 
   // 批量更新节点ASN信息
   private withPreferredProvider<
-    T extends { provider: string | null; asnName: string | null },
+    T extends {
+      provider: string | null;
+      asnName: string | null;
+      country: string;
+    },
   >(node: T): T {
     return {
       ...node,
@@ -1242,6 +1247,7 @@ export class NodeService {
         node.asnName && node.asnName !== "Unknown"
           ? node.asnName
           : node.provider,
+      country: normalizeCountryCode(node.country) || node.country,
     };
   }
 
